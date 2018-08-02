@@ -4,7 +4,9 @@ import os, sys, re
 import argparse, textwrap
 
 
+########## < Core Varialbes > ##########
 
+std_MAIN_PROCESS_NAME = "\n[%s]: " % (os.path.basename(__file__))
 
 """
 
@@ -159,70 +161,97 @@ if __name__ == "__main__":
 
 
     ### sub-parser for 'HLA-Analysis'
-    parser_HLAANALYSIS = subparsers.add_parser('HLAANALYSIS',
-                                               help="HLA_analysis help\n\n",
-                                               formatter_class=argparse.RawTextHelpFormatter,
-                                               add_help=False,
-                                               description=textwrap.dedent('''\
+    parser_HLA_ANALYSIS = subparsers.add_parser('HLAANALYSIS',
+                                                help="HLA_analysis help\n\n",
+                                                formatter_class=argparse.RawTextHelpFormatter,
+                                                add_help=False,
+                                                description=textwrap.dedent('''\
     ###########################################################################################
         
         <HLA-Analysis>
-     
-            1. 만들게 될 HLAStudy 클래스의 instance가 한 개일때
-                - 그냥 study instance의 summary statistics만 곱게 리턴(Logistic_Regression, OmnibusTest, BinaryTest)
-                - BinaryMarker_manhattan
-                - AA_manhattan
-                - HEATMAP
-                - Conditional Analysis
-            
-            2. 만들게 될 HLAStudy 클래스의 instance가 두 개일때(다뤄야할 study가 두 개 이하라고 가정)
-                - Meta-Analysis(얘는 어쩌면 진짜 파일로 받을 필요도 있겠다..)
+
+            under development.     
 
     ###########################################################################################
     '''))
 
-    parser_HLAANALYSIS._optionals.title = "OPTIONS"
+    parser_HLA_ANALYSIS._optionals.title = "OPTIONS"
 
-    parser_HLAANALYSIS.add_argument("-h", "--help", help="\nShow this help message for 'HLAANALYSIS' and exit\n\n", action='help')
-
-    # Basic necessary information for STUDY1 instance of HLAStudy class.
-    parser_HLAANALYSIS.add_argument("-s1t", "--study1-tag", help="\nSpecify study1 tag(name) for analysis\n\n",
-                                    nargs=1, required=True)
-    parser_HLAANALYSIS.add_argument("-s1p", "--study1-phe", help="\nSpecify study1 phenotype name(column name in '*.phe' file) for analysis\n\n",
-                                    nargs=1, required=True)
-    parser_HLAANALYSIS.add_argument("-s1f", "--study1-file", help="\nSpecify study1 file prefix for analysis\n\n",
-                                    nargs=1, required=True)
-    parser_HLAANALYSIS.add_argument("-s1c", "--study1-condition", help="\nSpecify condition for study1\n\n\n\n",
-                                    nargs=1) # 기본적으로는 파일로 받게, 이 외에 2-3개 정도는 그냥 csv string형태로도 받을 수 있게
-
-    parser_HLAANALYSIS.add_argument("-s2t", "--study2-tag", help="\nSpecify study2 tag(name) for analysis\n\n",
-                                    nargs=1)
-    parser_HLAANALYSIS.add_argument("-s2p", "--study2-phe", help="\nSpecify study2 phenotype name(column name in '*.phe' file) for analysis\n\n",
-                                    nargs=1)
-    parser_HLAANALYSIS.add_argument("-s2f", "--study2-file", help="\nSpecify study2 file prefix for analysis\n\n",
-                                    nargs=1)
-    parser_HLAANALYSIS.add_argument("-s2c", "--study2-condition", help="\nSpecify condition for study2\n\n",
-                                    nargs=1) # 기본적으로는 파일로 받게, 이 외에 2-3개 정도는 그냥 csv string형태로도 받을 수 있게
+    parser_HLA_ANALYSIS.add_argument("-h", "--help", help="\nShow this help message for 'HLAANALYSIS' and exit\n\n", action='help')
 
 
-    group1 = parser_HLAANALYSIS.add_argument_group(title='group1', description = "Options for single study analysis.")
-    group1.add_argument("-lr", "--logistic-regression", help="\nConducting logistic regression(Plink v1.07)\n\n",
-                        action="store_true")
-    group1.add_argument("-ot", "--omnibus-test", help="\nConducting OmnibusTest.\n\n",
-                        action="store_true")
-    group1.add_argument("-bt", "--binary-test", help="\nConducting BinaryTest(ANOVA)\n\n",
-                        action="store_true")
+    group_INPUT = parser_HLA_ANALYSIS.add_argument_group(title="INPUT" ,description='')
+    # description = '- The ways to give input files. (ex. {".ped",".map"} or {".bed",".bim",."fam"})'
 
-    # 플로팅(AA_manhattan, Binary_manhattan, HEATMAP) 얘네들 어디다 집어넣을지 고민해볼것
+    PEDorBED = group_INPUT.add_mutually_exclusive_group(required=True)
+    PEDorBED.add_argument("--file", "-f", help="\nInput file Prefixes of \".ped\" and \".map\" files (Plink v1.07).\n\n",
+                          nargs = "+")
+    PEDorBED.add_argument("--bfile", "-bf", help="\nInput file Prefixes of \".bed\", \".fam\" and \".bim\" files (Plink v1.07).\n\n",
+                          nargs = "+")
 
-    group2 = parser_HLAANALYSIS.add_argument_group(title='group2', description = "Options for two studies analysis.")
-    group2.add_argument("-m", "--meta-analysis", help="\nConducting Meta-Analysis(Inverse-Variance Weighting) for two studies.\n\n",
-                        action='store_true')
+    group_INPUT.add_argument("--covar", help="\nSpecify .covar file (Plink v1.07).\n\n")
+    group_INPUT.add_argument("--covar-name", help="\nSpecify the column name(s) in .covar file which you will use.(Plink v1.07).\n\n")
+
+    group_INPUT.add_argument("--pheno", help="\nSpecify phenotype information file (Plink v1.07).\n\n")
+    group_INPUT.add_argument("--pheno-name", help="\nSpecify the column name in phenotype file which you will use.(Plink v1.07).\n\n")
+
+    CondVars = group_INPUT.add_mutually_exclusive_group()
+    CondVars.add_argument("--condition", help="\nSpecify Marker name(s) to condition by comma-separated(\",\") (Plink v1.07).\n\n")
+    CondVars.add_argument("--condition-list", help="\nSpecify Marker name(s) to condition as a file (Plink v1.07).\n\n")
+
+    group_INPUT.add_argument("--reference-allele", help="\nSpecify Reference Allele file (Plink v1.07).\n\n")
+
+
+    group_INPUT.add_argument("--out", "-o", help="\nSpecify Output Prefix (Plink v1.07).\n\n", required=True)
 
 
 
-    # 아예 logistic regression, binary test, omnibus test, aa_manhattan, binary_manhattan, heatmap 이걸 단위로 group으로 묶는게 나을듯(하도 딸려 부가적으로 필요한 argument가 많아서)
-    # 생각해보니 logistic_regression은 디폴트로 해줘야겠구나.. 굳이 옵션 안만들어도 되것다 가 아니라 이경우에는 logistic regression '만' 수행하게 플래그들 케이스분류해야것다.
+
+    # (2018. 8. 2.) Later, Introduce the way that argument can take ped and map files seperately.
+
+    group_AssociationTest = parser_HLA_ANALYSIS.add_argument_group(title='ASSOCIATION TEST', description='')
+
+    group_AssociationTest.add_argument("--logistic-regression", "-lr", help="\nConducting Logistic Regression(Plink v1.07)\n\n",
+                                       action="store_true")
+    group_AssociationTest.add_argument("--omnibus-test", "-ob", help="\nConducting OmnibusTest.\n\n",
+                                       action="store_true")
+    group_AssociationTest.add_argument("--binary-test", "-bt", help="\nConducting BinaryTest(ANOVA).\n\n",
+                                       action="store_true")
+
+    # Later, by using exclusive-nor, Don't allow using "Association Test", "Meta-analysis" and "plotting"(maybe this can be fine.).
+
+    group_MetaAnalysis = parser_HLA_ANALYSIS.add_argument_group(title="META ANALYSIS", description='')
+
+    group_MetaAnalysis.add_argument("--meta-analysis", "-meta", help="\nConducting Meta Analysis(Plink v1.07)\n\n",
+                                    action="store_true")
+
+    group_Plotting = parser_HLA_ANALYSIS.add_argument_group(title="PLOTTING", description='')
+
+    group_Plotting.add_argument("--heatmap", help="\nGenerate Heatmap Plot.\n\n",
+                                    action="store_true")
+    group_Plotting.add_argument("--manhattan", help="\nGenerate Manhattan Plot.\n\n",
+                                    action="store_true")
+
+    # (2018. 8. 2.) deprecated.
+    # # Basic necessary information for STUDY1 instance of HLAStudy class.
+    # parser_HLA_ANALYSIS.add_argument("-s1t", "--study1-tag", help="\nSpecify study1 tag(name) for analysis\n\n",
+    #                                  nargs=1, required=True)
+    # parser_HLA_ANALYSIS.add_argument("-s1p", "--study1-phe", help="\nSpecify study1 phenotype name(column name in '*.phe' file) for analysis\n\n",
+    #                                  nargs=1, required=True)
+    # parser_HLA_ANALYSIS.add_argument("-s1f", "--study1-file", help="\nSpecify study1 file prefix for analysis\n\n",
+    #                                  nargs=1, required=True)
+    # parser_HLA_ANALYSIS.add_argument("-s1c", "--study1-condition", help="\nSpecify condition for study1\n\n\n\n",
+    #                                  nargs=1) # 기본적으로는 파일로 받게, 이 외에 2-3개 정도는 그냥 csv string형태로도 받을 수 있게
+    #
+    # parser_HLA_ANALYSIS.add_argument("-s2t", "--study2-tag", help="\nSpecify study2 tag(name) for analysis\n\n",
+    #                                  nargs=1)
+    # parser_HLA_ANALYSIS.add_argument("-s2p", "--study2-phe", help="\nSpecify study2 phenotype name(column name in '*.phe' file) for analysis\n\n",
+    #                                  nargs=1)
+    # parser_HLA_ANALYSIS.add_argument("-s2f", "--study2-file", help="\nSpecify study2 file prefix for analysis\n\n",
+    #                                  nargs=1)
+    # parser_HLA_ANALYSIS.add_argument("-s2c", "--study2-condition", help="\nSpecify condition for study2\n\n",
+    #                                  nargs=1) # 기본적으로는 파일로 받게, 이 외에 2-3개 정도는 그냥 csv string형태로도 받을 수 있게
+
 
 
 
@@ -283,6 +312,7 @@ if __name__ == "__main__":
 
     # for Publish
     args = parser.parse_args()
+    print(args)
 
     # for Test
     # args = parser.parse_args(["-hg", "19", "-o", "WRAPPER_TEST/imgt370/WRAPER_TEST", "-imgt", "370"])
@@ -293,7 +323,6 @@ if __name__ == "__main__":
     # args = parser.parse_args(["-hg", "19", "-o", "WRAPER_TEST", "-imgt", "370"])
     # args = parser.parse_args(["-hg", "19", "-o", "WRAPER_TEST", "-imgt", "3300"])
 
-    print(args)
 
     # argument passing
 
@@ -303,7 +332,7 @@ if __name__ == "__main__":
 
         from MakeDictionary import MakeDictionary
 
-        print("[%s]: Conducting 'Makedictionary' module." % (__file__))
+        print("[%s]: Conducting 'Makedictionary'." % (__file__))
 
         MakeDictionary(_HG=args.hg, _OUTPUT=args.o, _IMGT=args.imgt, _TYPE=args.type)
 
@@ -312,10 +341,11 @@ if __name__ == "__main__":
 
     elif args.subparser_name == "MAKEREFERENCE":
 
-        print("[%s]: Conducting 'MAKEREFERENCE' module." % (__file__))
+        print("[%s]: Conducting 'MAKEREFERENCE'." % (__file__))
 
-        ##### Additional Argument processing
+        ##### Additional Argument processing #####
 
+        ### Temporary Variables for Arguments.
         t_dict_AA = ""
         t_dict_AA_map = ""
         t_dict_SNPS = ""
@@ -388,14 +418,72 @@ if __name__ == "__main__":
 
     elif args.subparser_name == "HLAANALYSIS":
 
-        print("[%s]: Conducting 'HLAANALYSIS' module." % (__file__))
+        print(std_MAIN_PROCESS_NAME + "Conducting 'HLAANALYSIS'.")
+
+        ##### Additional Argument processing #####
+
+        ### Temporary Variables for Arguments.
+        t_input = None
+
+
+        ### Checking Input file type(.ped vs. .bed)
+
+        if bool(args.bfile):
+
+            # When input is given as .bed, .bim, .fam.
+
+            if len(args.bfile) == 1:
+                print(std_MAIN_PROCESS_NAME + "Single input set.")
+            elif len(args.bfile) > 1:
+                print(std_MAIN_PROCESS_NAME + "Multiple Inputs sets.")
+                #(2018. 8. 2.) Merged or not. Choose to introduce later.
+                # Maybe multiple input will be excluded.
+
+            for item in args.bfile:
+
+                if not (os.path.exists(item + ".bed") and os.path.exists(item + ".bim") and os.path.exists(item + ".fam")):
+                    print(std_MAIN_PROCESS_NAME + "Error. Not all of input files(\".bed\", \".bim\", \".fam\") exist.")
+                    sys.exit()
+
+            args.bfile = args.bfile.pop()
+
+
+        elif bool(args.file):
+
+            # When input is given as .ped and .map.
+
+            if len(args.file) == 1:
+                print(std_MAIN_PROCESS_NAME + "Single input set.")
+            elif len(args.file) > 1:
+                print(std_MAIN_PROCESS_NAME + "Multiple Inputs sets.")
+                #(2018. 8. 2.) Merged or not. Choose to introduce later.
+
+            for item in args.file:
+
+                if not (os.path.exists(item + ".ped") and os.path.exists(item + ".map")):
+                    print(std_MAIN_PROCESS_NAME + "Error. Not all of input files(\".ped\", \".map\") exist.")
+                    sys.exit()
+
+            args.file = args.file.pop()
+
+
+        ### Implementing "HLA_Analysis()"
+        from HLA_Analysis import HLA_Analysis
+
+        HLA_Analysis(_bfile=args.bfile, _file=args.file, _out=args.out,
+                     _covar=args.covar, _covar_names=args.covar_name,
+                     _phe=args.pheno, _phe_name=args.pheno_name,
+                     _condition=args.condition, _condition_list=args.condition_list, _ref_allele=args.reference_allele,
+                     _lr=args.logistic_regression, _ob=args.omnibus_test, _bt=args.binary_test, _meta=args.meta_analysis,
+                     _heatmap=args.heatmap, _manhattan=args.manhattan)
+
 
 
     elif args.subparser_name == "CONVERT":
 
-        print("[%s]: Conducting 'CONVERT' module." % (__file__))
+        print("[%s]: Conducting 'CONVERT'." % (__file__))
 
 
     elif args.subparser_name == "COATING":
 
-        print("[%s]: Conducting 'COATING' module." % (__file__))
+        print("[%s]: Conducting 'COATING'." % (__file__))
