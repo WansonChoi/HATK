@@ -180,64 +180,59 @@ if __name__ == "__main__":
     parser_HLA_ANALYSIS.add_argument("-h", "--help", help="\nShow this help message for 'HLAANALYSIS' and exit\n\n", action='help')
 
 
-    ### < Arguments group for Logistic Regression. > ###
-    group_ASSOCIATION_TEST = parser_HLA_ANALYSIS.add_argument_group(title="LOGISTIC REGRESSION",
-                                                                    description=
+    ### < Arguments group for Input files. > ###
+    group_INPUTS = parser_HLA_ANALYSIS.add_argument_group(title="INPUTs",
+                                                          description=
     '---------------------------------------------------------------------------------\n'
     '- First, Give necessary input information just like using Plink.\n'
-    '- Next, Conduct Logistic Regression.\n'
+    '- Next, Conduct a Associaiton Test or Meta-Analysis.\n'
     '---------------------------------------------------------------------------------\n')
 
-    ### Input
-    PEDorBED = group_ASSOCIATION_TEST.add_mutually_exclusive_group()
+    # Necessary inputs for common.
+    PEDorBED = group_INPUTS.add_mutually_exclusive_group()
+    PEDorBED.add_argument("--file", "-f", help="\nInput file Prefix of \".ped\" and \".map\" files (Plink v1.07).\n\n")
+    PEDorBED.add_argument("--bfile", "-bf", help="\nInput file Prefix of \".bed\", \".fam\" and \".bim\" files (Plink v1.07).\n\n")
 
-    group_ASSOCIATION_TEST.add_argument("--logistic-regression", "-lr", help="\nConducting Logistic Regression(Plink v1.07)\n\n",
-                                        action="store_true")
+    # group_INPUTS.add_argument("--ped", help="\nThe prefix of \".ped\" for input.\n\n", nargs='+')
+    # group_INPUTS.add_argument("--map", help="\nThe prefix of \".map\" for input.\n\n", nargs='+')
 
-    PEDorBED.add_argument("--file", "-f", help="\nInput file Prefixes of \".ped\" and \".map\" files (Plink v1.07).\n\n")
-    PEDorBED.add_argument("--bfile", "-bf", help="\nInput file Prefixes of \".bed\", \".fam\" and \".bim\" files (Plink v1.07).\n\n")
+    group_INPUTS.add_argument("--out", "-o", help="\nSpecify the output prefix (Plink v1.07).\n\n\n\n\n")
 
-    group_ASSOCIATION_TEST.add_argument("--covar", help="\nSpecify .covar file (Plink v1.07).\n\n")
-    group_ASSOCIATION_TEST.add_argument("--covar-name", help="\nSpecify the column name(s) in .covar file which you will use.(Plink v1.07).\n\n")
+    # Additional inputs if available.
+    group_INPUTS.add_argument("--covar", help="\nSpecify .covar file (Plink v1.07).\n\n")
+    group_INPUTS.add_argument("--covar-name", help="\nSpecify the column name(s) in .covar file which you will use.(Plink v1.07).\n\n")
 
-    group_ASSOCIATION_TEST.add_argument("--pheno", help="\nSpecify phenotype information file (Plink v1.07).\n\n")
-    group_ASSOCIATION_TEST.add_argument("--pheno-name", help="\nSpecify the column name in phenotype file which you will use.(Plink v1.07).\n\n")
+    group_INPUTS.add_argument("--pheno", help="\nSpecify phenotype information file (Plink v1.07).\n\n")
+    group_INPUTS.add_argument("--pheno-name", help="\nSpecify the column name in phenotype file which you will use.(Plink v1.07).\n\n")
 
-    CondVars = group_ASSOCIATION_TEST.add_mutually_exclusive_group()
+    CondVars = group_INPUTS.add_mutually_exclusive_group()
     CondVars.add_argument("--condition", help="\nSpecify Marker name(s) to condition as comma-separated(\",\") (Plink v1.07).\n\n")
-    CondVars.add_argument("--condition-list", help="\nSpecify Marker name(s) to condition as a file (Plink v1.07).\n\n")
+    CondVars.add_argument("--condition-list", help="\nSpecify the Marker name(s) to condition as a file (Plink v1.07).\n\n")
 
-    group_ASSOCIATION_TEST.add_argument("--reference-allele", help="\nSpecify Reference Allele file (Plink v1.07).\n\n")
-
-    group_ASSOCIATION_TEST.add_argument("--out", "-o", help="\nSpecify Output Prefix (Plink v1.07).\n\n\n\n\n")
+    group_INPUTS.add_argument("--reference-allele", help="\nSpecify the Reference Allele file (Plink v1.07).\n\n")
 
 
+    # Only for Omnibus Test
+    group_INPUTS.add_argument("--phased", "-ph", help="\nSpecify the \".aa\" file.(for Omnibus Test).\n\n")
+
+    # Only for Meta-Analysis
+    group_INPUTS.add_argument("--rassoc", "-ra", help="\nSpecify the Result file(s) of association test for Meta-Analysis\n"
+                                                    "(ex. \"*.asssoc.logistic\", etc.)\n\n", nargs='+')
 
 
 
-
-
-    ### < Arguments group for Omnibus Test. > ###
-    group_OMNIBUS_TEST = parser_HLA_ANALYSIS.add_argument_group(title="OMNIBUS TEST",
-                                                                description=
+    ### < Arguments group for Logistic Regression. > ###
+    group_ASSOCIATION_TEST = parser_HLA_ANALYSIS.add_argument_group(title="ASSOCIATION TEST",
+                                                                    description=
     '---------------------------------------------------------------------------------\n'
-    '- Conduct Omnibus Test.\n'
+    '(1) Logistic Regression, \n'
+    '(2) Omnibus Test. \n'
     '---------------------------------------------------------------------------------\n')
 
-    ### Necessary Input
-
-    group_OMNIBUS_TEST.add_argument('--input', '-i', help="\nGive input files as prefix.\n\n")
-
-    group_OMNIBUS_TEST.add_argument('--fam', help="\nSpecify the prefix of \".fam\" file.\n\n")
-    group_OMNIBUS_TEST.add_argument('--phased', help="\nSpecify the prefix of \".phased(.aa)\" file.\n\n")
-    group_OMNIBUS_TEST.add_argument('--phe', help="\nSpecify the prefix of \".phe\" file.\n\n")
-    group_OMNIBUS_TEST.add_argument('--cov', help="\nSpecify the prefix of \".covar\" file.\n\n")
-
-    group_OMNIBUS_TEST.add_argument('--out', '-o', help="\nGive the prefix of output files.\n\n")
-
-    CondVars = group_OMNIBUS_TEST.add_mutually_exclusive_group()
-    CondVars.add_argument("--condition", help="\nSpecify Marker name(s) to condition as comma-separated(\",\") (Plink v1.07).\n\n")
-    # CondVars.add_argument("--condition-list", help="\nSpecify Marker name(s) to condition as a file (Plink v1.07).\n\n")
+    group_ASSOCIATION_TEST.add_argument("--logistic-regression", "-lr", help="\nConducting Logistic Regression(Plink v1.07).\n\n",
+                                        action="store_true")
+    group_ASSOCIATION_TEST.add_argument("--omnibus-test", "-om", help="\nConducting Omnibus Test.\n\n",
+                                        action="store_true")
 
 
 
@@ -249,19 +244,17 @@ if __name__ == "__main__":
 
 
 
-
-
     ##### < Arguments for Meta-Analysis. > #####
     group_METAANALYSIS = parser_HLA_ANALYSIS.add_argument_group(title="META ANALYSIS",
                                                                 description=
     '---------------------------------------------------------------------------------\n'
-    '- Give the multiple results of Association Test such as ".assoc.logistic" file\n'
+    '- Give the multiple \".ped\" files.\n'
     '---------------------------------------------------------------------------------\n')
 
     group_METAANALYSIS.add_argument("--meta-analysis", "-meta", help="\nConducting Meta Analysis(Plink v1.07)\n\n",
                                     action="store_true")
 
-    group_METAANALYSIS.add_argument("-i", help="\nThe results of association tests.\n\n", nargs='+')
+    # group_METAANALYSIS.add_argument("-i", help="\nThe results of association tests.\n\n", nargs='+')
 
 
 
@@ -459,41 +452,27 @@ if __name__ == "__main__":
 
         ##### Additional Argument processing #####
 
-        f_ASSOCIATION_TEST = (args.logistic_regression or args.binary_test or args.omnibus_test)
+        f_ASSOCIATION_TEST = (args.logistic_regression or args.omnibus_test)
         f_META_ANALYSIS = args.meta_analysis
-        f_PLOTTING = (args.heatmap or args.manhattan)
 
-        if (int(f_ASSOCIATION_TEST) + int(f_META_ANALYSIS) + int(f_PLOTTING)) == 1:
+        if (int(f_ASSOCIATION_TEST) + int(f_META_ANALYSIS)) == 1:
 
             ### Loading "HLA_Analysis.py"
             import HLA_Analysis
 
             if f_ASSOCIATION_TEST:
 
-                ### Checking necessary input information.
-                if (not bool(args.bfile)) and (not bool(args.file)):
-                    print(std_MAIN_PROCESS_NAME + "Error! You didn't give input file prefix.\n"
-                                                  "Please check \"--file\" or \"--bfile\" options again.\n")
-
-                if not bool(args.out):
-                    print(std_MAIN_PROCESS_NAME + "Error! You didn't give output file prefix.\n"
-                                                  "Please check \"-o\" option again.")
-
                 ### Implementing Association Test.
                 HLA_Analysis.ASSOCIATION_TEST(_bfile=args.bfile, _file=args.file, _out=args.out, _covar=args.covar,
                                               _covar_names=args.covar_name, _phe=args.pheno, _phe_name=args.pheno_name,
                                               _condition=args.condition, _condition_list=args.condition_list,
                                               _ref_allele=args.reference_allele, _lr=args.logistic_regression,
-                                              _ob=args.omnibus_test, _bt=args.binary_test)
+                                              _ob=args.omnibus_test)
 
             elif f_META_ANALYSIS:
 
-                HLA_Analysis.META_ANALYSIS()
-
-
-            elif f_PLOTTING:
-
-                HLA_Analysis.PLOTTING()
+                ### Implementing Meta-Analysis.
+                HLA_Analysis.META_ANALYSIS(args.out, *args.rassoc)
 
 
         else:
