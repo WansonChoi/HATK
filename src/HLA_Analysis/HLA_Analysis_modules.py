@@ -3,7 +3,7 @@
 import os, sys, re
 from shutil import which
 import argparse, textwrap
-import inspect
+# import inspect
 
 
 
@@ -26,7 +26,7 @@ def __hla__Logistic_Regression(_bfile, _file, _out,
                                _covar, _covar_names,
                                _phe, _phe_name,
                                _condition, _condition_list,
-                               _ref_allele,
+                               _ref_allele, # (2018. 8. 6.) Generate default reference_allele file and make it use that file by default.
                                _from_mb = 29, _to_mb = 34, _hide_covar = True, _ci = 0.95,
                                _chr = 6, _allow_no_sex = True):
 
@@ -81,10 +81,10 @@ def __hla__Logistic_Regression(_bfile, _file, _out,
 
     return 0
 
-### (BinaryTest)
-def __hla__Binary_Test():
-
-    return 0
+# ### (BinaryTest)
+# def __hla__Binary_Test():
+#
+#     return 0
 
 ### (OmnibusTest)
 def __hla__Omnibus_Test():
@@ -101,7 +101,21 @@ def __hla__Omnibus_Test():
 
 
 ### < Meta Analysis >
-def __hla__Meta_Analysis():
+def __hla__Meta_Analysis(_out, *assocs):
+
+
+    ### Generating Command
+
+    command = [GLOBAL_p_plink, "--noweb", "--out {0}".format(_out), "--meta-analysis"]
+    command.extend(assocs)
+
+    command = ' '.join(command)
+
+
+    # Conducting Meta-Analysis by Plink(v1.07)
+
+    print(command)
+    os.system(command)
 
     return 0
 
