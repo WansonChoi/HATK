@@ -28,11 +28,19 @@ def ASSOCIATION_TEST(_bfile, _file, _out,
             print(std_MAIN_PROCESS_NAME + "Error! You didn't give input file prefix.\n"
                                           "Please check \"--file\" or \"--bfile\" options again.\n")
 
-        if not bool(args.out):
+        if not bool(_out):
             print(std_MAIN_PROCESS_NAME + "Error! You didn't give output file prefix.\n"
                                           "Please check \"-o\" option again.")
 
-        print(std_MAIN_PROCESS_NAME + "Conducting Logistic Regression.\n")
+        ### Making default reference allele.
+
+        if not bool(_ref_allele):
+
+            if bool(_bfile):
+
+                print(std_MAIN_PROCESS_NAME + "Using default reference allele.")
+                _ref_allele = hla_m.MakeDefaultReferenceAllele(_bfile)
+
 
 
         ### Conducting Logistic Regression.

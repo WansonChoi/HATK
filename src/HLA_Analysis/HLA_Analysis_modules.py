@@ -4,6 +4,7 @@ import os, sys, re
 from shutil import which
 import argparse, textwrap
 # import inspect
+import pandas as pd
 
 
 
@@ -81,10 +82,28 @@ def __hla__Logistic_Regression(_bfile, _file, _out,
 
     return 0
 
-# ### (BinaryTest)
-# def __hla__Binary_Test():
-#
-#     return 0
+
+def MakeDefaultReferenceAllele(_bfile):
+
+    # step1. Load ".bim" file
+    bim = pd.read_table(_bfile+".bim", sep='\t', header=None, usecols=[1,4,5], names=["Label", "Al1", "Al2"])
+
+    l_Al1 = bim.iloc[:, 1].tolist()
+    l_Al2 = bim.iloc[:, 2].tolist()
+
+    for i in range(0, bim.shape[0]):
+
+        if (l_Al1[i] == "A" and l_Al2[i] == "P"):
+            l_Al1[i] = "P"
+
+    # Making the reference allele DataFrame.
+
+    df_Ref_Allele = pd.concat([bim.iloc[:, 0], pd.Series(l_Al1)], axis=1)
+    df_Ref_Allele.to_csv(_bfile+".refallele", sep='\t', header=False, index=False)
+
+    return (_bfile+".refallele")
+
+
 
 ### (OmnibusTest)
 def __hla__Omnibus_Test():
