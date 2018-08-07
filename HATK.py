@@ -190,11 +190,9 @@ if __name__ == "__main__":
 
     # Necessary inputs for common.
     PEDorBED = group_INPUTS.add_mutually_exclusive_group()
-    PEDorBED.add_argument("--file", "-f", help="\nInput file Prefix of \".ped\" and \".map\" files (Plink v1.07).\n\n")
-    PEDorBED.add_argument("--bfile", "-bf", help="\nInput file Prefix of \".bed\", \".fam\" and \".bim\" files (Plink v1.07).\n\n")
-
-    # group_INPUTS.add_argument("--ped", help="\nThe prefix of \".ped\" for input.\n\n", nargs='+')
-    # group_INPUTS.add_argument("--map", help="\nThe prefix of \".map\" for input.\n\n", nargs='+')
+    PEDorBED.add_argument("--bfile", "-bf", help="\nPrefix of \".bed\", \".fam\" and \".bim\" files (Plink v1.07).\n\n")
+    PEDorBED.add_argument("--input", "-i", help="\nPrefix of \".bed\", \".covar\", or \".phe\" etc, when common prefix is prepared.\n\n")
+    # (2018. 8. 7.) "--input" option deals with common prefix of (1) ".bed", (2) ".covar", (3) ".phe", (4) ".aa(phased)".
 
     group_INPUTS.add_argument("--out", "-o", help="\nSpecify the output prefix (Plink v1.07).\n\n\n\n\n")
 
@@ -214,6 +212,7 @@ if __name__ == "__main__":
 
     # Only for Omnibus Test
     group_INPUTS.add_argument("--phased", "-ph", help="\nSpecify the \".aa\" file.(for Omnibus Test).\n\n")
+    group_INPUTS.add_argument("--rare-threshold", "-rth", help="\nSpecify the \".aa\" file.(for Omnibus Test).\n\n")
 
     # Only for Meta-Analysis
     group_INPUTS.add_argument("--rassoc", "-ra", help="\nSpecify the Result file(s) of association test for Meta-Analysis\n"
@@ -490,11 +489,11 @@ if __name__ == "__main__":
             if f_ASSOCIATION_TEST:
 
                 ### Implementing Association Test.
-                HLA_Analysis.ASSOCIATION_TEST(_bfile=args.bfile, _file=args.file, _out=args.out, _covar=args.covar,
+                HLA_Analysis.ASSOCIATION_TEST(_bfile=args.bfile, _input=args.input, _out=args.out, _covar=args.covar,
                                               _covar_names=args.covar_name, _phe=args.pheno, _phe_name=args.pheno_name,
                                               _condition=args.condition, _condition_list=args.condition_list,
-                                              _ref_allele=args.reference_allele, _lr=args.logistic_regression,
-                                              _ob=args.omnibus_test)
+                                              _ref_allele=args.reference_allele, _phased=args.phased, _threshold=args.rare_threshold,
+                                              _lr=args.logistic_regression, _ob=args.omnibus_test)
 
             elif f_META_ANALYSIS:
 
@@ -515,7 +514,7 @@ if __name__ == "__main__":
 
     elif args.subparser_name == "NOMENCLEANER":
 
-        print("[%s]: Conducting 'COATING'." % (__file__))
+        print("[%s]: Conducting 'NOMENCLEANER'." % (__file__))
 
         ## Output Format Flags
         FILE_FORMAT = 1 if args.oneF else 2 if args.twoF else 3 if args.threeF else 4 if args.fourF else 5 if args.G_group else 6 if args.P_group else -1
