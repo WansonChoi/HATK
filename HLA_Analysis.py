@@ -9,55 +9,87 @@ import src.HLA_Analysis.HLA_Analysis_modules as hla_m
 ########## < Core Global Varialbes > ##########
 
 std_MAIN_PROCESS_NAME = "\n[%s]: " % (os.path.basename(__file__))
+std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % (os.path.basename(__file__))
 
 
-def ASSOCIATION_TEST(_bfile, _file, _out,
+def ASSOCIATION_TEST(_bfile, _input, _out,
                      _covar, _covar_names,
                      _phe, _phe_name,
                      _condition, _condition_list,
-                     _ref_allele,
+                     _ref_allele, _phased, _threshold,
                      _lr, _ob):
+
+
+    ### General Argument Checking for Association Tests.
+
+    if bool(_input):
+
+        # When "--input" argument is given.
+        print(std_MAIN_PROCESS_NAME + "Necessary input files are given as common prefix(\"--input(-i)\").")
+
+        _bfile = _input
+        _covar = _input + ".covar"
+        _phe = _input + ".phe"
+        _phased = _input + ".aa"
+
+    else:
+
+        if (not bool(_bfile)):
+            print(std_ERROR_MAIN_PROCESS_NAME + "You didn't give input file prefix.\n"
+                                          "Please check \"--bfile\" option again.\n")
+            sys.exit()
+
+
+
+    if not bool(_out):
+        # When "--out" argument is not given.
+        print(std_ERROR_MAIN_PROCESS_NAME + "You didn't give output file prefix. "
+                                            "Please check \"-o\" option again.")
+        sys.exit()
 
 
 
     if _lr:
 
-        ### Argument Checking.
-
-        if (not bool(_bfile)) and (not bool(_file)):
-            print(std_MAIN_PROCESS_NAME + "Error! You didn't give input file prefix.\n"
-                                          "Please check \"--file\" or \"--bfile\" options again.\n")
-
-        if not bool(_out):
-            print(std_MAIN_PROCESS_NAME + "Error! You didn't give output file prefix.\n"
-                                          "Please check \"-o\" option again.")
-
-        ### Making default reference allele.
+        ### Argument Checking for "Logistic Regression".
 
         if not bool(_ref_allele):
-
+            # Making default reference allele.
+            print(std_MAIN_PROCESS_NAME + "Using default reference allele.")
             if bool(_bfile):
-
-                print(std_MAIN_PROCESS_NAME + "Using default reference allele.")
                 _ref_allele = hla_m.MakeDefaultReferenceAllele(_bfile)
 
 
 
         ### Conducting Logistic Regression.
-
         print(std_MAIN_PROCESS_NAME + "Conducting Logistic Regression(Plink v1.07).\n")
 
-        hla_m.__hla__Logistic_Regression(_bfile, _file, _out,
+        hla_m.__hla__Logistic_Regression(_bfile, _input, _out,
                                          _covar, _covar_names, _phe, _phe_name, _condition, _condition_list, _ref_allele)
+
+
 
     if _ob:
 
-        ### Argument Checking.
+        ### Argument Checking for "Omnibus Test".
+
+        if not bool(_condition) and bool(_condition_list):
+
+            # Omnibus doesn't use "--condition-list" but "--condition" only.
+            print(std_MAIN_PROCESS_NAME + "Error. Omnibus Test should use \"--condition\" not \"--condition-list\".")
+            sys.exit()
+
+        if not bool(_threshold):
+            # If user doesn't give "--rare-threshold" option, then set it 0 by default.
+            _threshold = "0"
+
 
 
         ### Conducting Omnibus Test.
         print(std_MAIN_PROCESS_NAME + "Conducting Omnibus Test.\n")
-        hla_m.__hla__OmnibusTest()
+
+        hla_m.__hla__Omnibus_Test(_bfile, _phased, _phe, _covar,
+                                  _out, _phe_name, _threshold, _condition)
 
 
     return 0

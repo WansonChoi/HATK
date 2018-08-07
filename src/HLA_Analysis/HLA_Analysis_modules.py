@@ -23,7 +23,7 @@ GLOBAL_p_JAVA = which("java")
 
 
 ### (Logistic Regression)
-def __hla__Logistic_Regression(_bfile, _file, _out,
+def __hla__Logistic_Regression(_bfile, _input, _out,
                                _covar, _covar_names,
                                _phe, _phe_name,
                                _condition, _condition_list,
@@ -38,8 +38,6 @@ def __hla__Logistic_Regression(_bfile, _file, _out,
 
     if bool(_bfile):
         command.append("--bfile {0}".format(_bfile))
-    elif bool(_file):
-        command.append("--file {0}".format(_file))
 
     if bool(_covar):
         command.append("--covar " + _covar)
@@ -80,7 +78,7 @@ def __hla__Logistic_Regression(_bfile, _file, _out,
     os.system(command)
 
 
-    return 0
+    return (_out + ".assoc.logistic")
 
 
 def MakeDefaultReferenceAllele(_bfile):
@@ -106,9 +104,39 @@ def MakeDefaultReferenceAllele(_bfile):
 
 
 ### (OmnibusTest)
-def __hla__Omnibus_Test():
+def __hla__Omnibus_Test(_bfile, _phased, _phe, _covar,
+                        _out, _phe_name, _threshold, _condition):
 
-    return 0
+    """
+
+    In terms of .covar file, it won't take the column names for selectively using specific columns.
+    In other words, if you pass the .covar file to this omnibus test, all columns will be used as covariates. so, if
+    you want to use specific columns in input .covar file, preprocess it first and give it to this program as an input.
+
+
+    """
+
+    ### File existence Check.
+
+
+
+    ### Argument Processing && Generating Command.
+
+    command = [GLOBAL_p_Rscript, "src/HLA_Analysis/AssociationTest/OmnibusTest_BHv4.R",
+               _bfile+".fam", _phased, _phe, _covar, _out, _phe_name, _threshold]
+
+    if bool(_condition):
+        command.append(_condition)
+    else:
+        command.append("NA")
+
+    command = ' '.join(command)
+    print(command)
+
+    os.system(command)
+
+
+    return (_out + ".omnibus")
 
 
 
