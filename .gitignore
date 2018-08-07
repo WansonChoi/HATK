@@ -5,10 +5,10 @@ __pycache__/
 dependency/
 data/
 
-.Rproj
-.Rproj.user
-.Rhistory
-.ipynb_checkpoints/
-.pversion
-.ipynb
+*.Rproj
+*.Rproj.user
+*.Rhistory
+*.ipynb_checkpoints/
+*.pversion
+*.ipynb
 *.sh
