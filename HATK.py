@@ -319,22 +319,59 @@ if __name__ == "__main__":
 
 
     ### sub-parser for 'COATING'
-    parser_COATING = subparsers.add_parser('COATING',
-                                           help="Transforming HLA allele naming system(2-field vs. 4-field).\n\n",
-                                           formatter_class=argparse.RawTextHelpFormatter,
-                                           add_help=False,
-                                           description=textwrap.dedent('''\
+    parser_NOMENCLEANER = subparsers.add_parser('NOMENCLEANER',
+                                                help="Transforming HLA allele name field format.\n\n",
+                                                formatter_class=argparse.RawTextHelpFormatter,
+                                                add_help=False,
+                                                description=textwrap.dedent('''\
     ###########################################################################################
         
-        <COATING>
+        <NOMENCLENAER>
 
         explanation...
 
     ###########################################################################################
     '''))
 
-    parser_COATING._optionals.title = "OPTIONS"
-    parser_COATING.add_argument("-h", "--help", help="Show this help message for 'COATING' and exit\n\n", action='help')
+    parser_NOMENCLEANER._optionals.title = "OPTIONS"
+    parser_NOMENCLEANER.add_argument("-h", "--help", help="Show this help message for 'COATING' and exit\n\n", action='help')
+
+    # Input (1) : *.ped file
+    PED_TYPE = parser_NOMENCLEANER.add_mutually_exclusive_group(required=True)
+    PED_TYPE.add_argument("-ped", help="\nHLA Type Data(Standard 4-field allele \"*.ped\" file).\n\n", dest="ped",
+                          default="Not_given")
+    PED_TYPE.add_argument("-ped-Ggroup", help="\nHLA Type Data(G-group allele \"*.ped\" file).\n\n", dest="ped_G",
+                          default="Not_given")
+    PED_TYPE.add_argument("-ped-Pgroup", help="\nHLA Type Data(P-group allele \"*.ped\" file).\n\n", dest="ped_P",
+                          default="Not_given")
+
+    # Input (2) : *.iat file
+    parser_NOMENCLEANER.add_argument("-iat", help="\nIntegrated Allele Table file(*.iat).\n\n", required=True)
+
+    # Ouptut Prefix
+    parser_NOMENCLEANER.add_argument("-o", help="\nOutput file prefix.\n\n", required=True)
+
+    # Output format
+    output_digit_selection = parser_NOMENCLEANER.add_mutually_exclusive_group(required=True)
+    output_digit_selection.add_argument("--1field", help="\nOutput ped file as '1-field' format.\n\n",
+                                        action="store_true", dest="oneF")
+    output_digit_selection.add_argument("--2field", help="\nOutput ped file as '2-field' format.\n\n",
+                                        action="store_true", dest="twoF")
+    output_digit_selection.add_argument("--3field", help="\nOutput ped file as '3-field' format.\n\n",
+                                        action="store_true", dest="threeF")
+    output_digit_selection.add_argument("--4field",
+                                        help="\nOutput ped file as '4-field(Current Standard Names)' format.\n\n",
+                                        action="store_true", dest="fourF")
+    output_digit_selection.add_argument("--G-group", help="\nOutput ped file as 'G-group' format.\n\n",
+                                        action="store_true")
+    output_digit_selection.add_argument("--P-group", help="\nOutput ped file as 'P-group' format.\n\n",
+                                        action="store_true")
+
+    # Flag to remove HLA gene caption.
+    parser_NOMENCLEANER.add_argument("--NoCaption", help="\nOutput without HLA gene(ex. \"A*\").\n\n", action='store_true')
+
+
+
 
 
 
@@ -344,19 +381,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     print(args)
 
-    # for Test
-    # args = parser.parse_args(["-hg", "19", "-o", "WRAPPER_TEST/imgt370/WRAPER_TEST", "-imgt", "370"])
-    # args = parser.parse_args(["-hg", "19", "-o", "WRAPPER_TEST/imgt3300_hg19/WRAPER_TEST", "-imgt", "3300"])
-    # args = parser.parse_args(["-hg", "18", "-o", "WRAPPER_TEST/imgt3300_hg18/WRAPER_TEST", "-imgt", "3300"])
-    # args = parser.parse_args(["-hg", "38", "-o", "WRAPPER_TEST/imgt3300_hg38/WRAPER_TEST", "-imgt", "3300"])
-
-    # args = parser.parse_args(["-hg", "19", "-o", "WRAPER_TEST", "-imgt", "370"])
-    # args = parser.parse_args(["-hg", "19", "-o", "WRAPER_TEST", "-imgt", "3300"])
 
 
-    # argument passing
-
-
+    ##### argument passing
 
     if args.subparser_name == "MAKEDICTIONARY":
 
@@ -486,6 +513,50 @@ if __name__ == "__main__":
         print("[%s]: Conducting 'CONVERT'." % (__file__))
 
 
-    elif args.subparser_name == "COATING":
+    elif args.subparser_name == "NOMENCLEANER":
 
         print("[%s]: Conducting 'COATING'." % (__file__))
+
+        ## Output Format Flags
+        FILE_FORMAT = 1 if args.oneF else 2 if args.twoF else 3 if args.threeF else 4 if args.fourF else 5 if args.G_group else 6 if args.P_group else -1
+
+        ## Which type of ped file given?
+        _p_ped = -1
+        _p_ped_descriptor = -1
+
+        if args.ped != "Not_given":
+            # Standard 4-field *.ped file given
+            _p_ped = args.ped
+            _p_ped_descriptor = 1
+        elif args.ped_G != "Not_given":
+            # G-group *.ped file given
+            _p_ped = args.ped_G
+            _p_ped_descriptor = 2
+        elif args.ped_P != "Not_given":
+            # P-group *.ped file given
+            _p_ped = args.ped_P
+            _p_ped_descriptor = 3
+        else:
+            # Assuming at least three of them given, there won't be the case which comes to here.
+            print("\nArgument for input *.ped file has a problem. Please check it again.\n")
+            sys.exit()
+
+        ## If input ped file is given as G-group(or P-group), then user can't choose output format as same G-group(as same to P-group)
+        if (_p_ped_descriptor == 2 and FILE_FORMAT == 5):
+            print("\nYou just asked pointless transformation(Transformation G-group to G-group is pointless).")
+            print("Skip this Transformation Request.\n")
+            sys.exit()
+
+            # (2018. 7. 10.) P to P or G to G 여도 NoDoubleColon인 경우는 할 수 있게 해줘야할듯.
+
+        if (_p_ped_descriptor == 3 and FILE_FORMAT == 6):
+            print("\nYou just asked pointless transformation(Transformation P-group to P-group is pointless).")
+            print("Skip this Transformation Request.\n")
+            sys.exit()
+
+
+        ### Implementing NomenCleaner.
+
+        from src.NomenCleaner import NomenCleaner
+
+        NomenCleaner(_p_ped, _p_ped_descriptor, args.iat, args.o, FILE_FORMAT, _f_NoCaption=args.NoCaption)
