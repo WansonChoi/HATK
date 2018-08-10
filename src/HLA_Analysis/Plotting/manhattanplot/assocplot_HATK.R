@@ -7,25 +7,13 @@
 ##
 
 
-make.fancy.locus.plot.bare <- function(chr, title, locus, min.pos, max.pos, yrange, hitsnp, r.data, yax, pointcolor = "#000000", arrowsnp="", hitsnpB="", hitsnpC="") {
-
-    ## pointcolorB <- "#00FF00"
-    ## pointcolor <- "#00C418"
-
-    
-    # 위 파라미터에서 지금하는 작업 관련해서는 `locus`하고 `r.data`가 중요한데,
-    # 다시 remind를 좀 하자면 locus := *.logistic.assoc파일 가공해서 만든 *.assoc.logistc.input ( "SNP", "BP", "P", "Log10P" )
-    # r.data := *.ld, *.lmap파일 활용해서 자기가 원하는 binary marker가 가지는 ld값만 캐온 *.totophit ( "rs_id", "LD" )
-
+make.fancy.locus.plot.bare <- function(chr, title, locus, min.pos, max.pos, yrange, hitsnp, r.data, yax, pointcolor = "#000000", topcolor = "#FF0000", arrowsnp="", hitsnpB="", hitsnpC="") {
 
     locus <- locus[order(-locus$LOG10P),]
-    
-    print(head(locus))
     
     par(mar=c(0,5.5,2,4))
     plot(0, xlim=c(min.pos, max.pos), ylim=c(0,yrange), xlab="", ylab="", main=title, axes=F)
 
-    ## axis(2, at=seq(0,yrange,floor(yrange/5)), labels=seq(0,yrange,floor(yrange/5)), las=1)
     axis(2, at=yax, las=1, cex.axis=1.5)
     axis(1, at=seq(30,33,1)*1E6, labels=rep("",4),line=0.2)
     mtext(text=bquote(-log[10]~italic("P")), side=2, at=(yrange/2), line=3.5, cex=1)
@@ -48,23 +36,25 @@ make.fancy.locus.plot.bare <- function(chr, title, locus, min.pos, max.pos, yran
     # fillcolors <- rgb( colComb, max=255 )
     
     # fillcolors = "#DCDCDC" # gainsboro / rbg(220,220,220)
-    fillcolors = "#778899" # lightslategrey / rgb(119,136,153)
+    # fillcolors = "#778899" # lightslategrey / rgb(119,136,153) <- This one is better, i think.
 
-    points(locus$BP, -locus$LOG10P, pch=23, cex=1.2, lwd=0.2, bg=fillcolors)
+    points(locus$BP, -locus$LOG10P, pch=23, cex=1.2, lwd=0.2, bg=pointcolor)
 
     if (hitsnp != "") {
         hit <- locus[locus$SNP==hitsnp,]
-        points(hit$BP, -hit$LOG10P, pch=23, cex=2.4, lwd=1.5, bg=pointcolor)
+        points(hit$BP, -hit$LOG10P, pch=23, cex=2.4, lwd=1.5, bg=topcolor)
+        text(x = hit$BP, y = -hit$LOG10P, labels = hitsnp, font = 2, family="sans", adj = c(NA, -2.0), cex = 1.0)
+        
     }
     
     if (hitsnpB != "") {
        hit <- locus[locus$SNP==hitsnpB,]
-       points(hit$BP, -hit$LOG10P, pch=23, cex=2.4, lwd=1.5, bg=pointcolor)
+       points(hit$BP, -hit$LOG10P, pch=23, cex=2.4, lwd=1.5, bg=topcolor)
     }
     
     if (hitsnpC != "") {
        hit <- locus[locus$SNP==hitsnpC,]
-       points(hit$BP, -hit$LOG10P, pch=23, cex=2.4, lwd=1.5, bg=pointcolor)
+       points(hit$BP, -hit$LOG10P, pch=23, cex=2.4, lwd=1.5, bg=topcolor)
     }
     
 
@@ -166,10 +156,6 @@ make.fancy.locus.plot.bottom <- function(chr, min.pos, max.pos, pathToTheGeneBui
         }
     }
 }
-
-
-# getBP.R 스크립트가 하는 핵심 기능을 그냥 함수로 간략화 시켰음
-# manhattan_HLA_WS.R에서 이 스크립트를 필수적으로 로드하기 때문에 같이 활용할 예정
 
 TRIM_LOGISTIC.ASSOC = function(p_assoc.logistic_){
   df_assoc.logistic = read.table(p_assoc.logistic_, header = T)

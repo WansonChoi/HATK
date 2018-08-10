@@ -10,21 +10,11 @@ from mpmath import log10
 p_PLINK = which("plink")
 p_RSCRIPT = which("Rscript")
 
-def MakeLDMatrix(_bfile, _out, _p_plink):
-
-    command = [_p_plink, "--noweb", "--r2", "square", "--bfile", _bfile, "--out", _out]
-    command = ' '.join(command)
-
-    print(command)
-    os.system(command)
-
-
-    return (_out + ".ld")
 
 
 def manhattan(_bfile,
               _lr, _out,
-              _pointcol = "\#FF0000",
+              _pointcol = "\#778899", _topcol = "\#FF0000",
               _min_pos = "29.60E6", _max_pos = "33.2E6",
               _gb = "data/HLA_Analysis/Plotting/manhattanplot/known_genes_build36/known_genes_build36_soumya.txt",
               _p_Rscript = which("Rscript"), _p_plink = which("plink"),
@@ -33,7 +23,7 @@ def manhattan(_bfile,
     std_MAIN_PROCESS_NAME = "\n[%s]: " % (os.path.basename(__file__))
     std_MAIN_PROCESS_ERROR = "\n[%s::ERROR]: " % (os.path.basename(__file__))
 
-    print(std_MAIN_PROCESS_NAME + "Conducting Manhattna Plotting.")
+    print(std_MAIN_PROCESS_NAME + "Conducting Manhattan Plotting.")
 
 
     _out = _out if not _out.endswith('/') else _out.rstrip('/')
@@ -48,19 +38,6 @@ def manhattan(_bfile,
 
     if _pointcol.startswith('#'):
         _pointcol = "\\" + _pointcol
-
-
-    ##### < Making LD matrix. > #####
-
-    if not os.path.isfile(_out+".ld"):
-
-        print(std_MAIN_PROCESS_NAME + "Making LD Matrix.")
-        f_LDMatrix =  MakeLDMatrix(_bfile, _out, _p_plink)
-
-    else:
-
-        print(std_MAIN_PROCESS_NAME + "LD Matrix {0} is found. Skipping making it.".format(_out+".ld"))
-        f_LDMatrix = _out+".ld"
 
 
 
@@ -99,30 +76,13 @@ def manhattan(_bfile,
 
 
 
-    ##### < Extracting R^2 data. > #####
-
-    LD_Matrix = pd.read_table(f_LDMatrix, sep='\t| ', engine='python', header=None, names=MARKER_set).loc[:, TOP_LABEL]
-
-    LD_Matrix.index = pd.Index(MARKER_set)
-
-    print(std_MAIN_PROCESS_NAME + "Loading LD Matrix data.\n")
-    print(LD_Matrix.head())
-    print(LD_Matrix.tail())
-
-    LD_Matrix.dropna().to_csv(_out+".r2totophit", sep='\t', header=False, index=True, na_rep="NA")
-
-
-    # So far, Necessary input files have been prepared.
-
-
-
-
     ##### < Executing Rscript. > #####
 
     command = [_p_Rscript, _Rsrc,
                _lr, _out,
-               _pointcol, _min_pos, _max_pos, TOP_LABEL, str(_yaxis),
-               _gb, _out+".r2totophit"]
+               _pointcol, _topcol,
+               _min_pos, _max_pos, TOP_LABEL, str(_yaxis),
+               _gb]
 
     command = ' '.join(command)
     print(command)
@@ -130,8 +90,6 @@ def manhattan(_bfile,
     os.system(command)
 
 
-
-    ##### < Removing .ld and .r2totophit files. > #####
 
 
 
@@ -146,7 +104,7 @@ if __name__ == "__main__":
            
         manhattan.py
         
-        Explanation.
+        Conducting manhattan plotting.
         
         
         
@@ -162,10 +120,17 @@ if __name__ == "__main__":
     parser.add_argument("--out", "-o", help="\nOuput file prefix\n\n", required=True)
 
     parser.add_argument("--logistic-result", "-lr", help="\nOutput from logistic regression(\".assoc.logstic\").\n\n", required=True)
-
     parser.add_argument("--gene-build", "-gb", help="\nGene Build file.\n\n", required=True)
 
+    parser.add_argument("--point-color", "-pc", help="\nPoint color(ex. \"#778899\").\n\n")
+    parser.add_argument("--top-color", "-tc", help="\nTop signal point color(ex. \"#FF0000\").\n\n")
 
+    parser.add_argument("--Rsrc", help="\nTop signal point color(ex. \"#FF0000\").\n\n",
+                        default="src/HLA_Analysis/Plotting/manhattanplot/manhattan_HLA_HATK.R")
+
+
+    # (2018. 8. 10.)
+    # Arguments for "hg", "min.pos" and "max.pos" should be added later.
 
 
     ### for Testing
@@ -182,6 +147,8 @@ if __name__ == "__main__":
     #                           "-o", "/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/MANHATTAN_test2/merged",
     #                           "-lr", "/Users/wansun/Git_Projects/UC-CD-HLA/UC-CD-HLA/manhattan_plot/Figure1/Assoc_result_Han/01-association/All_CD.assoc.logistic",
     #                           "-gb", "/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/data/HLA_Analysis/Plotting/manhattanplot/known_genes_build36/known_genes_build36_soumya_chr6.txt",
+    #                           "-pc", "#E0FFFF",
+    #                           "--Rsrc", "/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/src/HLA_Analysis/Plotting/manhattanplot/manhattan_HLA_HATK.R"
     #                           ])
 
 
@@ -191,5 +158,7 @@ if __name__ == "__main__":
 
     manhattan(args.bfile,
               args.logistic_result, args.out,
-              _Rsrc="/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/src/HLA_Analysis/Plotting/manhattanplot/manhattan_HLA_HATK.R",
-              _gb=args.gene_build)
+              _gb=args.gene_build,
+              _pointcol=args.point_color,
+              _Rsrc=args.Rsrc,
+              )
