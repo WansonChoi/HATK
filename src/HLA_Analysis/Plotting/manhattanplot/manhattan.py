@@ -12,8 +12,7 @@ p_RSCRIPT = which("Rscript")
 
 
 
-def manhattan(_bfile,
-              _lr, _out,
+def manhattan(_lr, _out,
               _pointcol = "\#778899", _topcol = "\#FF0000",
               _min_pos = "29.60E6", _max_pos = "33.2E6",
               _gb = "data/HLA_Analysis/Plotting/manhattanplot/known_genes_build36/known_genes_build36_soumya.txt",
@@ -116,14 +115,13 @@ if __name__ == "__main__":
 
     parser.add_argument("-h", "--help", help="\nShow this help message and exit\n\n", action='help')
 
-    parser.add_argument("--bfile", help="\nInput Data file.\n\n", required=True)
+    parser.add_argument("--logistic-result", "-lr", help="\nOutput from logistic regression(\".assoc.logstic\").\n\n", required=True)
     parser.add_argument("--out", "-o", help="\nOuput file prefix\n\n", required=True)
 
-    parser.add_argument("--logistic-result", "-lr", help="\nOutput from logistic regression(\".assoc.logstic\").\n\n", required=True)
     parser.add_argument("--gene-build", "-gb", help="\nGene Build file.\n\n", required=True)
 
-    parser.add_argument("--point-color", "-pc", help="\nPoint color(ex. \"#778899\").\n\n")
-    parser.add_argument("--top-color", "-tc", help="\nTop signal point color(ex. \"#FF0000\").\n\n")
+    parser.add_argument("--point-color", "-pc", help="\nPoint color(ex. \"#778899\").\n\n", default="\#778899")
+    parser.add_argument("--top-color", "-tc", help="\nTop signal point color(ex. \"#FF0000\").\n\n", default="\#FF0000")
 
     parser.add_argument("--Rsrc", help="\nTop signal point color(ex. \"#FF0000\").\n\n",
                         default="src/HLA_Analysis/Plotting/manhattanplot/manhattan_HLA_HATK.R")
@@ -140,6 +138,8 @@ if __name__ == "__main__":
     #                           "-o", "/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/MANHATTAN_test/data_Rev_merged.AA.CODED",
     #                           "-lr", "/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/data/HLA_Analysis/Plotting/manhattanplot/data_Rev_merged.AA.CODED.assoc.logistic",
     #                           "-gb", "/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/data/HLA_Analysis/Plotting/manhattanplot/known_genes_build36/known_genes_build36_soumya_chr6.txt",
+    #                           "-pc", "#E0FFFF",
+    #                           "--Rsrc", "/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/src/HLA_Analysis/Plotting/manhattanplot/manhattan_HLA_HATK.R"
     #                           ])
 
     # ## Original Sample
@@ -156,9 +156,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     # print(args)
 
-    manhattan(args.bfile,
-              args.logistic_result, args.out,
+    manhattan(args.logistic_result, args.out,
               _gb=args.gene_build,
               _pointcol=args.point_color,
-              _Rsrc=args.Rsrc,
+              _topcol=args.top_color,
+              _Rsrc=args.Rsrc
               )
