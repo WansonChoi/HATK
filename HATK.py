@@ -7,6 +7,7 @@ import argparse, textwrap
 ########## < Core Varialbes > ##########
 
 std_MAIN_PROCESS_NAME = "\n[%s]: " % (os.path.basename(__file__))
+std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % (os.path.basename(__file__))
 
 """
 
@@ -70,28 +71,25 @@ if __name__ == "__main__":
                                                   description=textwrap.dedent('''\
     ###########################################################################################
         
-        <MakeDictionary>
+        < MakeDictionary >
     
         explanation...
     
     ###########################################################################################
     '''))
-    # parser_makedictionary = subparsers.add_parser('MKDICT', help='makedictionary help', description="This is a desription for makedictionary")
 
     parser_MAKEDICTIONARY._optionals.title = "OPTIONS"
     parser_MAKEDICTIONARY.add_argument("-h", "--help", help="\nShow this help message for 'MAKEDICTIONARY' and exit\n\n", action='help')
-
     parser_MAKEDICTIONARY.add_argument("-hg", help="\nHuman Genome version(18, 19 or 38)\n\n", choices=["18", "19", "38"],
                                        metavar="HG", required=True)
-    # 테스트해보니 "-hg" 이거 sub-parser내부에서는 중복으로 선언해도 상관없는듯.
-    # cf) namespace 이름 설정해주는건 dest파라미터였음.
+    # cf) It was "dest" parameter that setting namespace.
 
     parser_MAKEDICTIONARY.add_argument("-o", help="\nOutput File Prefix\n\n", metavar="OUTPUT", required=True)
 
     parser_MAKEDICTIONARY.add_argument("-imgt", help="\nIMGT-HLA data version(ex. 370, 3300)\n\n", metavar="IMGT_Version",
                                        required=True)
 
-    parser_MAKEDICTIONARY.add_argument("--type", help="\nSNPS or AA or Both\n\n", choices=["AA", "SNPS", "BOTH"],
+    parser_MAKEDICTIONARY.add_argument("--type", "-t", help="\nSNPS or AA or Both.\n\n", choices=["AA", "SNPS", "BOTH"],
                                        metavar="TYPE", default="BOTH")
 
 
@@ -109,7 +107,7 @@ if __name__ == "__main__":
                                                   description=textwrap.dedent('''\
     #################################################################################################
         
-        MakeReference.py
+        < MakeReference.py >
         
         This script helps prepare a reference dataset for HLA imputation
 
@@ -376,7 +374,7 @@ if __name__ == "__main__":
 
 
 
-    # for Publish
+    ##### < for Publish > #####
     args = parser.parse_args()
     print(args)
 
@@ -388,7 +386,7 @@ if __name__ == "__main__":
 
         from MakeDictionary import MakeDictionary
 
-        print("[%s]: Conducting 'Makedictionary'." % (__file__))
+        print("[%s]: Conducting 'MAKEDICTIONARY'." % (__file__))
 
         MakeDictionary(_HG=args.hg, _OUTPUT=args.o, _IMGT=args.imgt, _TYPE=args.type)
 
