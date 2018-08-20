@@ -69,7 +69,7 @@ def HEATMAP(_hla_name, _out, _input,
 
     LOADING_HLA_MARKERS_DICTIONARY = 1
     LOADING_BIM = 1
-    LOADING_ASSOC = 0
+    LOADING_ASSOC = 1
 
     MAKING_NEW_ASSOC = 0
     MAKING_ASSOC_P = 0
@@ -149,6 +149,8 @@ def HEATMAP(_hla_name, _out, _input,
         ### Filtering `H_MARKERS` with 2nd condition.
         sub_H_MARKERS = H_MARKERS.loc[:, flag_Marker_Count]
 
+        # `sub_H_MARKERS` == "maptable" (***)
+
 
         print(sub_H_MARKERS.head())
         print(sub_H_MARKERS.tail())
@@ -158,53 +160,31 @@ def HEATMAP(_hla_name, _out, _input,
 
     if LOADING_ASSOC:
 
-        ### Loading *.assoc.logistic
+        ### Loading *.assoc.logistic. (The reuslt of Logistic Regression on Amino Acid markers)
+
         print(std_MAIN_PROCESS_NAME + "Loading '*.assoc.logistc' file.\n\n")
 
-        assocfile = pd.read_table(_p_assoc_logistic, header=0, sep='\s+', usecols=["SNP", "P", "OR", "A1"]).set_index("SNP", drop=False)
-        ASSOC_LOGISTIC = assocfile.filter(regex="_".join(["AA", _hla_name]), axis=0)
-
-        """
-        (2018. 6. 12) 
-        
-        내가 한 가지 굉장히 크게 헷갈리고 있었음. 위에서 *.markers파일에서는 "HLA_DRB1_****"이런 'HLA marker'를 추려내는게 맞지만
-        (왜냐하면, 정확히는 "HLA-*"로 시작하는 'marker'에 관심을 가지는게 아니라 HLA allele name의 집합(즉, {'01', '0101', ...})에 관심을 가지는 거기때문에
-        그냥 "HLA~"로 시작하는 marker들을 다루면 되는 거임.)
-        
-        그러나, 지금 ASSOC파일의 경우 관심대상이 "AA_DRB1_****" 이런 형태의 '진짜 아미노산 marker들'에 관심을 가지는 상황임(얘로 plot 그려야 하니까)
-        
-        한줄 요약 하자면 그래서 read_table하고 바로 가하는 filter조건에서 "HLA" -> "AA" 이렇게 수정하라구. 
-        
-        The *.assoc.logistic file loading now is the result of logistic regression on "AA" markers.
-        """
+        ASSOC_LOGISTIC = pd.read_table(_p_assoc_logistic, header=0, sep='\s+', usecols=["SNP", "P", "OR", "A1"]
+                                       ).set_index("SNP", drop=False).filter(regex="_".join(["AA", _hla_name]), axis=0).reset_index(drop=True)
 
         print(ASSOC_LOGISTIC.head())
 
+        # In general, the marker set of HLA_Dicitionary(`sub_H_MARKERS`) would be larger than that of `ASSOC_LOGISTIC`.
+        # So, the markers of `sub_H_MARKERS` will be subsetted based on the markers in `ASSOC_LOGISTIC`.
 
-        # maptable상의 marker들 중에, assoc에서도 나타나는애들만. 아마 assoc내의 marker들의 집합의 크기가 더 작을건데, 얘네들을 maptable들의 marker들의 집합과 비교하면 됨.
-
-        # 추가적으로, p-value를 가지고 AA marker별 색을 칠하는거니 OmnibusTest와 BinaryTest의 결과물을 인풋으로 받았을때도 케이스분류해야할듯.
-
-        ### Filtering Markers
-
-        print(filtered_HLA_MARKER_DICTIONARY2.head())
-
-        # RELATIVE_POSITION := marker set of `maptable`
-        MAPTABLE_MARKER_SET = filtered_HLA_MARKER_DICTIONARY2.columns.tolist()
-        MAPTABLE_MARKER_SET = ["_".join(["AA", _hla_name, item[1]]) for item in filtered_HLA_MARKER_DICTIONARY2] # (*****) 여가 핵심.
-        # 결국 `filtered_HLA_MARKERS_DICTIONARY`의 relative_position과 "*.assoc.logistic"에서 나타나는 marker들의 relative poistion을 비교해서 교집합 추리는거.
-
-        print(MAPTABLE_MARKER_SET)
+        # Also, this code block might deal with the result of "Omnibus_Test" too. Ask professor about this.
 
         # ASSOC의 marker set에서 나타나는지...
 
         # (1) `variants`
         ASSOC_MARKER_SET = ASSOC_LOGISTIC.loc[:, "SNP"]
         print("\nASSOC_MARKER_SET")
-        print(ASSOC_MARKER_SET)
+        print(ASSOC_MARKER_SET.head())
 
         # (2) `assocrst`
         assocrst = ASSOC_LOGISTIC.loc[:, "P"]
+        print("\nassocrst")
+        print(assocrst.head())
 
         # # Making Row index which will be used in next 'MAKING_NEW_ASSOC' code block.
         # MARKER_CHARACTERS = [ASSOC_MARKER_SET.apply(lambda x : x.split('_')[-1]).iat[i] for i in range(0, ASSOC_MARKER_SET.shape[0])]
@@ -214,38 +194,41 @@ def HEATMAP(_hla_name, _out, _input,
         # (3) `OR`
         OR = ASSOC_LOGISTIC.loc[:, "OR"]
         # OR.index = idx_asscrst
+        print("\nOR")
+        print(OR.head())
 
         # (4) `A1`
         A1 = ASSOC_LOGISTIC.loc[:, "A1"]
         print("\nA1")
-        print(A1)
-
-
-        print("Assocrst and OR")
-        print(assocrst)
-        print(OR)
+        print(A1.head())
 
 
 
-        # *.assoc.logistc에서만 나타나는 HLA AA marker들만 모아서 filtered_HLA_MARKER_DICTIONARY2에서 솎아냄(정확히는 솎아낸 정보를 가지고 있는 `exist` 벡터를 만듬)
-        exist = [bool(list(filter(lambda x : re.match(pattern=MAPTABLE_MARKER_SET[i], string=x), ASSOC_MARKER_SET))) for i in range(0, len(MAPTABLE_MARKER_SET))]
-        print("exist:")
-        print(exist)
+        ### Subsetting HLA dictionary(`H_MARKERS`) DataFrame
 
-        # 이제 ASSOC에서만 타나나는 AA marker들(HLA_DICTIONARY상의 컬럼)만 추림.
-        filtered_HLA_MARKER_DICTIONARY3 = filtered_HLA_MARKER_DICTIONARY2.loc[:, exist]
+        sub_H_MARKERS_columns = pd.Series(["_".join(["AA", _hla_name, item[1]]) for item in sub_H_MARKERS.columns.tolist()]) # (*****) This part is core to subset
+        # Using "relative_position" information to extract markers which appear in both "sub_H_MARKERS" and "ASSOC_LOGISTIC".
 
+        # (Filtering condition - Overlapping relative position)
 
-        print("\nFinally filtered DataFrame")
-        print(filtered_HLA_MARKER_DICTIONARY3.head(50))
+        p_relPOS = re.compile("(AA_{0}_-?\d+)".format(_hla_name))
 
-        # idx_rel_pos = pd.Index([ '_'.join(["AA", _hla_name, str(item[1])]) for item in filtered_HLA_MARKER_DICTIONARY3.columns.tolist()])
-        idx_rel_pos = pd.Index([str(item[1]) for item in filtered_HLA_MARKER_DICTIONARY3.columns.tolist()])
-        # (2018. 6. 19) 헤더에다가 그냥 relative position만 박음. ("AA_DRB1_-24" => "-24")
+        flag_valid_relPOS = sub_H_MARKERS_columns.isin(ASSOC_MARKER_SET.str.extract(p_relPOS, expand=False).tolist()).tolist()
 
+        ### Filtering `H_MARKERS` with 3rd condition.
+        sub_H_MARKERS = sub_H_MARKERS.loc[:, flag_valid_relPOS]
 
-        # # (2018. 6. 14) polymorphic position test
-        # filtered_HLA_MARKER_DICTIONARY3.to_csv("./checkpolymorphic.txt", sep='\t', header=True, index=True)
+        print("\nFinally subsetted HLA dictionary file(\"maptable\").\n")
+        print(sub_H_MARKERS.head())
+
+        # (deprecated) - 2018. 8. 20.
+        # # idx_rel_pos = pd.Index([ '_'.join(["AA", _hla_name, str(item[1])]) for item in filtered_HLA_MARKER_DICTIONARY3.columns.tolist()])
+        # idx_rel_pos = pd.Index([str(item[1]) for item in filtered_HLA_MARKER_DICTIONARY3.columns.tolist()])
+        # # (2018. 6. 19) 헤더에다가 그냥 relative position만 박음. ("AA_DRB1_-24" => "-24")
+        #
+        #
+        # # # (2018. 6. 14) polymorphic position test
+        # # filtered_HLA_MARKER_DICTIONARY3.to_csv("./checkpolymorphic.txt", sep='\t', header=True, index=True)
 
 
 
