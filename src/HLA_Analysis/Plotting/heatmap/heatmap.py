@@ -10,57 +10,71 @@ from shutil import which
 ########## <Core Global Variable> ##########
 
 # Paths
-# p_HEATMAP = "./src/plot/heatmap"
 p_Rscript = which("Rscript")
 
-def HEATMAP(_hla_name, _out, _p_marker_dict, _p_assoc_logistic, _p_markers, _4field = False, _oldv = False, _p_Rscript = p_Rscript,
-            _p_heatmapR = "./src/HLA_Analysis/plot/heatmap/8b_plot_WS.R"):
-
-    # No need to instance of HLAStudy class. It will be dealt in `HLAStudy.py` script.
+def HEATMAP(_hla_name, _out, _input,
+            _p_hla_dict, _p_assoc_logistic,
+            _bim_HLA = "Not_given", _bim_AA = "Not_given", _bim_merged = "Not_given",
+            _4field=False, _oldv=False,
+            _p_Rscript=p_Rscript, _p_heatmapR="./src/HLA_Analysis/plot/heatmap/8b_plot_WS.R"):
 
     """
-
-    :param _hla_name:
-    :param _out:
-    :param _p_marker_dict:
-    :param _p_assoc_logistic:
-    :param _4field:
-    :return:
-
-
 
     This script is replacement of '7_prepare.R'.
     The main job of that script is to subset and filter HLA marker data given as file '6_table.txt' which is equivalent to HLA marker dicitionary file.
 
-    Finally, after this script implemented, 3 data file should be made.
+    Finally, after this script implemented, 3 data file will be made.
 
         (1) *_map.txt
         (2) *_assoc.txt
         (3) *_alleleP.txt
 
 
-    """
+    (2018. 8. 20.)
+    The argument "_4field" and "_oldv" are deprecated.
 
-    print("\n[heatmap]: Start to plot HeatMap.\n\n")
+    """
 
     ########## < Core Variables > ##########
 
-    HLA_MARKERS_DICTIONARY = pd.DataFrame()
+    std_MAIN_PROCESS_NAME = "\n[%s]: " % (os.path.basename(__file__))
+    std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % (os.path.basename(__file__))
+
+    print(std_MAIN_PROCESS_NAME + "Conducting HeatMap Plotting.\n\n")
+
+    H_MARKERS = pd.DataFrame()
+    BIM_HLA = pd.DataFrame()
+    BIM_AA = pd.DataFrame()
     ASSOC_LOGISTIC = pd.DataFrame()
 
-    MARKERS = pd.DataFrame()
+    # MARKERS = pd.DataFrame()
 
 
-    ### <Control Flags> ###
+    ########## < Additional Argument Checking. > ##########
+
+    # When "_input" argument is given
+    if bool(_input):
+
+        # Override every prefix of dependent files.
+        _p_hla_dict = _input+".txt"
+        _p_assoc_logistic = _input+".assoc.logistic"
+        _bim_merged = _input+".bim" # It is natural that "*.AA.bim" and "*.HLA.bim" are given as merged .bim file.
+
+
+
+
+
+
+    ##### < Control Flags > #####
 
     LOADING_HLA_MARKERS_DICTIONARY = 1
-    LOADING_MARKERS = 1
-    LOADING_ASSOC = 1
+    LOADING_BIM = 1
+    LOADING_ASSOC = 0
 
-    MAKING_NEW_ASSOC = 1
-    MAKING_ASSOC_P = 1
-    EXPORTING_OUTPUT = 1
-    PLOT_HEATMAP = 1
+    MAKING_NEW_ASSOC = 0
+    MAKING_ASSOC_P = 0
+    EXPORTING_OUTPUT = 0
+    PLOT_HEATMAP = 0
 
 
 
@@ -70,130 +84,74 @@ def HEATMAP(_hla_name, _out, _p_marker_dict, _p_assoc_logistic, _p_markers, _4fi
 
     if LOADING_HLA_MARKERS_DICTIONARY:
 
-
         ### Loading HLA_MARKERS_DICTIONARY file.
-        print("\n[heatmap]: Loading HLA_MARKERS_DICTIONARY file.\n\n")
+        print(std_MAIN_PROCESS_NAME + "Loading HLA marker information.\n")
 
-        HLA_MARKERS_DICTIONARY = pd.read_table(_p_marker_dict, sep=' |\t', engine='python', header=[0,1,2], index_col=0).filter(regex=_hla_name+"\*", axis=0)
+        H_MARKERS = pd.read_table(_p_hla_dict, sep=' |\t', engine='python', header=[0, 1, 2], index_col=0).filter(regex=_hla_name + "\*", axis=0)
+        # filter() due to the case of "DRB2", "DRB3", etc.
 
-        # filter function added for the cases that DRB1 includes DRB2, DRB3, ..., too.
-
-        print(HLA_MARKERS_DICTIONARY.head(30))
+        print(H_MARKERS.head())
 
         # So far, Only by loading HLA marker dictionary file, we finished preparing `maptable`.
+        # (2018. 6. 12) Anyway, `H_MARKERS` corresponds to "maptable" in Professor Han's pipeline.
 
-        TWOtoFOUR = MAPPING_2to4FIELD(_hla_name, HLA_MARKERS_DICTIONARY)
-
-        # (2018. 6. 12) 쨌든 그래서 교수님의 Pipeline에서 maptable에 해당하는애가 `HLA_MARKERS_DICTIONARY`임.
-
-    if LOADING_MARKERS:
-
-        ### Loading and Trimming '*.markers' file
-
-        print("\n[heatmap]: Loading and Trimming '*.markers' file.\n\n")
-
-        MARKERS = pd.read_table(_p_markers, sep=' |\t', engine='python', header=None, names=['ID', 'BP', 'A1', 'A2'], usecols=["ID"])
-        # In fact, the only column 'ID' is needed. I won't use rest of columns.
-
-        # print(MARKERS.head())
+        print("\n")
 
 
-        # Originally, Subsetting 4-digit name such as '0801', '0702' was done using "*.alleles.DRB1" file.
-        # Now it's going to be done with "*.markers" file, I should give proper regular expression for 2,4-field name so that it can conduct subsetting job.
+    if LOADING_BIM:
+
+        ### Loading "*.bim" file.
+
+        print(std_MAIN_PROCESS_NAME + "Loading *.bim file.\n")
+
+        # patterns which will be used.
+        p_HLA = re.compile("^HLA_{0}".format(_hla_name))
+
+        # Just classfy the cases where bim files are given separately or not.
+        if (_bim_HLA != "Not_given" and _bim_AA != "Not_given") and _bim_merged == "Not_given":
+
+            # "_bim_HLA" and "_bim_AA" are given.
+            print("\"_bim_HLA\" : {0}\n".format(_bim_HLA))
+
+            # Loading each of bim file
+            BIM_HLA = pd.read_table(_bim_HLA, sep='\t| ', engine='python', header=None,
+                                    names=["Chr", "Label", "GD", "Pos", "Al1", "Al2"],
+                                    usecols=[1,3,4,5]).set_index("Label", drop=False).filter(regex=p_HLA, axis=0).reset_index(drop=True)
 
 
-        """
-        (1) Filtering HLA marker ("HLA_\w+_\w{2,4}") from "*.markers" file.
-        (2) Finding(Matching) those HLA marker in `HLA_MARKERS_DICTIONARY`. for this, 2->4-field transformaiton is needed
-        (3) One more filtering for the markers which has more than 1 sort of a.a.
-        """
-
-        p = re.compile(pattern='_'.join(["HLA", _hla_name, "\d{4}"]))
-        # 2-digit name won't be included.
-
-        # flag vector for which marker has form of "HLA_*_*"
-        flag_onlyHLA = MARKERS.applymap(lambda x: True if p.match(x) else False).iloc[:,0].tolist()
-
-        MARKERS_onlyHLA = MARKERS.loc[flag_onlyHLA, :]
-        MARKERS_onlyHLA = pd.Series([MARKERS_onlyHLA.iat[i,0] for i in range(0, MARKERS_onlyHLA.shape[0])])
-
-        # (2018. 6. 12) 뭐가 됐건 *.markers 파일에서 HLA_*_... 로된 marker들만 우선적으로 추려내는건 유효함.(첫 번째 step에서 활용한 정규표현식이 실제로 이러했기 때문에)
-
-        print("\nFiltered for only AA markers of HLA {0}\n\n".format(_hla_name))
-        print(MARKERS_onlyHLA)
+            print("\nDataFrame \"BIM_HLA\"\n")
+            print(BIM_HLA.head())
+            print(BIM_HLA.tail())
 
 
-        # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+        # *.bim file for HLA markers has been loaded.
 
 
-        Transformed_HLA_alleles = MARKERS_onlyHLA.apply(lambda x: re.search(pattern="\d{4}", string=x).group()).apply(lambda x : single_2DIGIT_CHECK(_hla_name, x, HLA_MARKERS_DICTIONARY)).tolist()
+        ### Subsetting HLA dictionary(`H_MARKERS`) DataFrame
 
-        """
-        ex) 
-        0101 => DRB1*01:01
-        0160 => DRB1*01:60
-        
-        (4-field까지만 말고, 2-field에서 digit만 체킹한 결과(by using `single_2DIGIT_CHECK` function.)
-        """
+        # (Filtering condition 1 - Row) Find the markers of *.bim file in HLA dict(`H_MARKERS`) DataFrame.
 
+        p = re.compile(r'HLA_')
 
-        print("Transformed_HLA_alleles is ")
-        print(Transformed_HLA_alleles)
+        LABELS = BIM_HLA.loc[:, "Label"].apply(lambda x : p.sub(repl='', string=x)).tolist()
+        print("\nLABELS : \n{0}\n".format(LABELS))
 
+        flag_LABELSinDICT = H_MARKERS.index.to_series().isin(LABELS)
 
-        # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
-        # Now we will subset `HLA_MARKERS_DICITONARY` with this set of transformed HLA allele name set given by "*.markers" file.
-        # 이제 Transformed_HLA_alleles들을 TWOtoFOUR에 하나씩 집어넣어서 뭐 리스트를 만들고, 이걸 HLA_MARKERS_DICTIONARY.loc[]해서 필요한 애들만 subset하면 됨.
+        ### Filtering `H_MARKERS` with 1st condition.
+        sub_H_MARKERS = H_MARKERS.loc[flag_LABELSinDICT]
 
 
-        Transformed_HLA_alleles2 = []
+        # (Filtering Condition 2 - Column) Find the spots which have more than equal 2 kind of AA markers.
 
-        for i in range(0, len(Transformed_HLA_alleles)):
+        flag_Marker_Count = sub_H_MARKERS.apply(lambda x : len(set(x)), axis=0) > 1
 
-            # If KeyError happens, it will be thrown away. (ex. 'DRB1*01:60' in `Transformed_HLA_alleles`)
-
-            try:
-                t = TWOtoFOUR[Transformed_HLA_alleles[i]]
-            except KeyError:
-                continue
-
-            Transformed_HLA_alleles2.append(t)
-
-        print("Transformed_HLA_Allele2 is ")
-        print(Transformed_HLA_alleles2)
-
-        # HLA_DICTIONARY에서 *.marker파일에 있는 애들만 추려냄.
+        ### Filtering `H_MARKERS` with 2nd condition.
+        sub_H_MARKERS = H_MARKERS.loc[:, flag_Marker_Count]
 
 
-
-        filtered_HLA_MARKER_DICTIONARY = HLA_MARKERS_DICTIONARY.loc[Transformed_HLA_alleles2,:]
-        print("filtered_HLA_MARKER_DICTIONARY is")
-        print(filtered_HLA_MARKER_DICTIONARY.head(50))
-
-
-        ### relative position별 aa marker의 종류가 2개 이상인 애들(bi-allelic, tri-allelic 등 이상부터)만 모으는 과정
-
-        df_temp = filtered_HLA_MARKER_DICTIONARY.apply(set, axis=0).applymap(lambda x : len(x))
-        NofSORTofMARKERS = pd.Series(df_temp.iloc[0, :])
-
-        print(df_temp.head())
-
-        print("Filtered Relative Position.")
-
-        is_polys = NofSORTofMARKERS[NofSORTofMARKERS > 1].index.tolist() # Now, this idx has the Multi-Indexes which correspond to Relative position(of AA marker), which has more than 2 kinds.
-
-        print(is_polys)
-
-
-        filtered_HLA_MARKER_DICTIONARY2 = filtered_HLA_MARKER_DICTIONARY.loc[:, is_polys]
-
-        print("\n\nFinally, More than 2 kinds of markers.\n")
-
-        print(filtered_HLA_MARKER_DICTIONARY2.head())
-
-
-        # filtered_HLA_MARKER_DICTIONARY2.to_csv('./testseteststsetseetetstes.txt', sep='\t', header=True, index=True)
+        print(sub_H_MARKERS.head())
+        print(sub_H_MARKERS.tail())
 
 
 
@@ -201,7 +159,7 @@ def HEATMAP(_hla_name, _out, _p_marker_dict, _p_assoc_logistic, _p_markers, _4fi
     if LOADING_ASSOC:
 
         ### Loading *.assoc.logistic
-        print("\n[heatmap]: Loading '*.assoc.logistc' file.\n\n")
+        print(std_MAIN_PROCESS_NAME + "Loading '*.assoc.logistc' file.\n\n")
 
         assocfile = pd.read_table(_p_assoc_logistic, header=0, sep='\s+', usecols=["SNP", "P", "OR", "A1"]).set_index("SNP", drop=False)
         ASSOC_LOGISTIC = assocfile.filter(regex="_".join(["AA", _hla_name]), axis=0)
@@ -217,6 +175,7 @@ def HEATMAP(_hla_name, _out, _p_marker_dict, _p_assoc_logistic, _p_markers, _4fi
         
         한줄 요약 하자면 그래서 read_table하고 바로 가하는 filter조건에서 "HLA" -> "AA" 이렇게 수정하라구. 
         
+        The *.assoc.logistic file loading now is the result of logistic regression on "AA" markers.
         """
 
         print(ASSOC_LOGISTIC.head())
@@ -620,7 +579,7 @@ def HEATMAP(_hla_name, _out, _p_marker_dict, _p_assoc_logistic, _p_markers, _4fi
 
             p = re.compile("\d{4}")
 
-            idx_assoc = pd.Series(idx_assoc).apply(lambda x : p.search(string=x).group()).apply(lambda x : single_2DIGIT_CHECK(_hla_name, x, HLA_MARKERS_DICTIONARY))
+            idx_assoc = pd.Series(idx_assoc).apply(lambda x : p.search(string=x).group()).apply(lambda x : single_2DIGIT_CHECK(_hla_name, x, H_MARKERS))
             print("\nold idx_assoc")
             print(idx_assoc)
             # 여기까지 "*.assoc.logistic" 파일의 "HLA_DRB1_****" 마커들을 추리고, 4-digit추리고, 이거 DRB1*01:01형태로 까지 만들었음
@@ -864,8 +823,10 @@ if __name__ == "__main__" :
                                      description=textwrap.dedent('''\
     #################################################################################################
     
-     heatmap.py
+        heatmap.py
     
+        - Originally, Plotting heatmap entailed too many steps based on bash, python and R. Now it is
+        integrated to this python script. It will be used in "HLA_Analysis.py" script.
     
     #################################################################################################
                                      '''),
@@ -877,122 +838,67 @@ if __name__ == "__main__" :
 
     parser.add_argument("-h", "--help", help="\nShow this help message and exit\n\n", action='help')
 
-    parser.add_argument("-tag", help="\nStudy name or tag for this Heatmap plotting.\n\n", required=True)
-
-    parser.add_argument("-hla", help="\nHLA gene name.\n\n", choices = ['A', 'B', 'C', 'DPA1', 'DPB1', 'DQA1', 'DQB1', 'DRB1'],
-                        required=True)
+    parser.add_argument("-hla", help="\nHLA gene name.\n\n", required=True,
+                        choices = ['A', 'B', 'C', 'DPA1', 'DPB1', 'DQA1', 'DQB1', 'DRB1'])
     parser.add_argument("-o", help="\nOutput file name prefix.\n\n", required=True)
 
 
-    parser.add_argument("--4field", help="\nWork based on 4-field HLA allele naming system.\n(If not given, it work in 2-field name system in default.)\n\n",
-                        action='store_true', dest='_4field')
-    parser.add_argument("--HLA-MARKER-DICT", help="\nMarker Dictionary file generated by 'MakeDictionary'.\n(If not given, it will search '~/data/HLA-Analysis/plot/heatmap' in default.)\n\n")
+    # for Merged Prefix use(".bim", ".assoc.logistc", ...).
+    parser.add_argument("--input", "-i", help="\nPrefix of mereged input files(\".bed\", \".covar\", or \".phe\" etc).\n\n")
 
-    parser.add_argument("--logistic-result", help="\nOutput from logtistic regression(*.assoc.logistic) by plink.\n\n")
+    # Respective .bim files.
+    parser.add_argument("--bim-HLA", "-bh", help="\n\".bim\" file of HLA markers.\n\n", default="Not_given")
 
-    parser.add_argument("--markers", help="\nSet of markers file for your Sample.\n\n")
+    # (2018. 8. 20.) Deprecate next two arguments later.
+    parser.add_argument("--bim-AA", "-ba", help="\n\".bim\" file of AA markers.\n\n", default="Not_given")
+    # Merged .bim file.
+    parser.add_argument("--bim-merged", "-bm", help="\nMerged \".bim\" file.\n\n", default="Not_given")
+
+    # Output from MakeDictionary.
+    parser.add_argument("--hla-dict", "-hd", help="\nMarker Dictionary file generated by 'MakeDictionary'.\n"                                                    "(If not given, it will search '~/data/HLA-Analysis/plot/heatmap' in default.)\n\n")
+    # Result of Association Test.
+    parser.add_argument("--logistic-result", "-lr", help="\nOutput from logtistic regression(*.assoc.logistic) by plink.\n\n")
+
 
     # We might need "*.alleles.DRB1" but not for now. because it could be no longer needed in generalizing 2,4-field HLA allele naming system.
 
-    parser.add_argument("--completely-old", help="\nUse file format with previous version.\n\n",
-                        action="store_true", dest="oldv")
 
 
 
 
+    ##### < for Test > #####
 
-
-    # for Publish
-    # args = parser.parse_args()
-
-    # for Testing
-    # args = parser.parse_args(["-tag", "UC",
-    #                           "-hla", "DRB1",
-    #                           "-o", "test_HEATMAP_NAME",
-    #                           "--HLA-MARKER-DICT", "/Users/wansun/Git_Projects/HATK/hatk/data/HLA-Analysis/plot/heatmap/WRAPER_TEST_DRB1.AA.markers.trim.labeled.txt",
-    #                           "--logistic-result", "/Users/wansun/Git_Projects/HATK/hatk/forHEATMAP_test.assoc.logistic",
-    #                           "--markers", "/Users/wansun/Git_Projects/UC-CD-HLA/UC-CD-HLA/data/Merged/merged.markers"
+    # (2018. 8. 20.)
+    # args = parser.parse_args(["-hla", "DRB1",
+    #                           "-o", "/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/HEATMAP_in_HATK2",
+    #                           "-hd", "/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/data/HLA_Analysis/Plotting/heatmap/WRAPER_TEST_DRB1.AA.markers.trim.labeled.txt",
+    #                           "-lr", "/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/data/HLA_Analysis/Plotting/heatmap/forHEATMAP_test.assoc.logistic",
+    #                           "-bm", "/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/data/HLA_Analysis/Plotting/heatmap/merged"
     #                           ])
 
-    args = parser.parse_args(["-tag", "UC",
-                              "-hla", "DRB1",
-                              "-o", "test_HEATMAP_NAME",
-                              "--HLA-MARKER-DICT", "/Users/wansun/Git_Projects/HATK/hatk/data/HLA-Analysis/plot/heatmap/WRAPER_TEST_DRB1.AA.markers.trim.labeled.txt",
-                              "--logistic-result", "/Users/wansun/Git_Projects/HATK/hatk/forHEATMAP_test.assoc.logistic",
-                              "--markers", "/Users/wansun/Git_Projects/UC-CD-HLA/UC-CD-HLA/data/Merged/merged.markers",
-                              "--completely-old"
+    # Cancer data example.
+    args = parser.parse_args(["-hla", "A",
+                              "-o", "/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/HEATMAP_Cancer",
+                              "-hd", "/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/data/HLA_Analysis/Plotting/heatmap/WRAPER_TEST_A.AA.markers.trim.labeled.txt",
+                              "-lr", "/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/data/HLA_Analysis/AssociationTest/CancerResearch_Example/MARKER_PANEL/data_Rev_merged.AA.CODED.assoc.logistic",
+                              "-bh", "/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/data/HLA_Analysis/AssociationTest/CancerResearch_Example/MARKER_PANEL/data_Rev_merged.HLA.bim",
+                              "-ba", "/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/data/HLA_Analysis/AssociationTest/CancerResearch_Example/MARKER_PANEL/data_Rev_merged.AA.CODED.bim"
                               ])
 
+
+    ##### < for Publish > #####
+
+    # args = parser.parse_args()
     print(args)
     # print(vars(args))
 
-    # main 함수
-    HEATMAP(_hla_name=args.hla, _out = args.o, _p_marker_dict=args.HLA_MARKER_DICT, _p_assoc_logistic=args.logistic_result, _p_markers=args.markers, _4field=args._4field, _oldv=args.oldv)
+
+    ##### < Additional Argument Processing. > #####
 
 
-#     def TEMPORARY_TRANSFORM(_hla_name, _2filed_MARKER_NAMES, _HLA_MARKERS_DICTIONARY):
-#
-#     # 한줄 요약 : "0101" => "01:01" (not "01:01:01")
-#
-#     """
-#
-#     :param _hla_name: HLA Name that you are working with for heatmap plotting.
-#     :param _2filed_MARKER_NAMES: (*) Target set of marker labels that should be transformed("0101" => "DRB1*01:01")
-#     :param _HLA_MARKERS_DICTIONARY: i.e. "WRAPER_TEST_DRB1.AA.markers.trim.labeled.txt"
-#
-#     :return: a set(list) of temporarily transformed marker labels.
-#     """
-#
-#
-#     if not isinstance(_2filed_MARKER_NAMES, list):
-#         print("\n[heatmap/TEMPORARY_TRANSFORM]: Input(Marker Labels) should be given as list.")
-#         sys.exit()
-#
-#
-#     ### Extracting 2 or 4 digit numbers
-#
-#     # Assuming "HLA_DRB1_01", "HLA_DRB1_0101" form.
-#
-#     p = re.compile("\d{2,4}")
-#
-#     t_sr1 = pd.Series(_2filed_MARKER_NAMES).apply(lambda x : p.search(string=x).group()) # Assumption that there is no "Not searched" elements.
-#
-#     # print(t_sr1)
-#
-#
-#     ### Main Processing
-#
-#     OUTPUT = []
-#
-#
-#     for i in range(0, len(t_sr1)):
-#
-#
-#
-#         t_name = t_sr1[i]
-#
-#         if len(t_name) == 4:
-#             # print(t_name)
-#             OUTPUT.append(''.join([_hla_name, "*", t_name[0:2], ":", t_name[2:4]]))
-#
-#         elif len(t_name) == 2:
-#             # print(t_name)
-#             OUTPUT.append(''.join([_hla_name, "*", t_name[0:2]]))
-#
-#         elif len(t_name) == 5:
-#
-#             # print(t_name)
-#
-#             try:
-#                 t_name2 = ''.join([_hla_name, "*", t_name[0:2], ":", t_name[2:5]])
-#                 _HLA_MARKERS_DICTIONARY.loc[t_name2, :]  # If 2:3 digit name is wrong, then the program will split an error here.
-#
-#             except KeyError:
-#                 # If error is spitted out above line, then choosing 3:2 digit name is enough.
-#                 t_name2 = ''.join([_hla_name, "*", t_name[0:3], ":", t_name[3:5]])
-#
-#             OUTPUT.append(t_name2)
-#
-#
-#     # If given set of Marker Labels processed well, then just return the list so that it can be utilized directly.
-#     return OUTPUT
+
+    # main function execution.
+    HEATMAP(_hla_name=args.hla, _out=args.o, _input=args.input,
+            _p_hla_dict=args.hla_dict, _p_assoc_logistic=args.logistic_result,
+            _bim_HLA=args.bim_HLA, _bim_AA=args.bim_AA, _bim_merged=args.bim_merged,
+            _p_heatmapR="/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/src/HLA_Analysis/Plotting/heatmap/8b_plot_WS.R")
