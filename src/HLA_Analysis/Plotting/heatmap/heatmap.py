@@ -71,7 +71,7 @@ def HEATMAP(_hla_name, _out, _input,
     LOADING_BIM = 1
     LOADING_ASSOC = 1
 
-    MAKING_NEW_ASSOC = 0
+    MAKING_NEW_ASSOC = 1
     MAKING_ASSOC_P = 0
     EXPORTING_OUTPUT = 0
     PLOT_HEATMAP = 0
@@ -111,7 +111,7 @@ def HEATMAP(_hla_name, _out, _input,
         if (_bim_HLA != "Not_given" and _bim_AA != "Not_given") and _bim_merged == "Not_given":
 
             # "_bim_HLA" and "_bim_AA" are given.
-            print("\"_bim_HLA\" : {0}\n".format(_bim_HLA))
+            print("\"_bim_HLA\" : {0}".format(_bim_HLA))
 
             # Loading each of bim file
             BIM_HLA = pd.read_table(_bim_HLA, sep='\t| ', engine='python', header=None,
@@ -129,7 +129,7 @@ def HEATMAP(_hla_name, _out, _input,
 
         ### Subsetting HLA dictionary(`H_MARKERS`) DataFrame
 
-        # (Filtering condition 1 - Row) Find the markers of *.bim file in HLA dict(`H_MARKERS`) DataFrame.
+        # (1st Filtering condition - Row) Find the markers of *.bim file in HLA dict(`H_MARKERS`) DataFrame.
 
         p = re.compile(r'HLA_')
 
@@ -141,13 +141,15 @@ def HEATMAP(_hla_name, _out, _input,
         ### Filtering `H_MARKERS` with 1st condition.
         sub_H_MARKERS = H_MARKERS.loc[flag_LABELSinDICT]
 
+        # sub_H_MARKERS.to_csv(_out+".1st.txt", sep='\t', header=True, index=True)
 
-        # (Filtering Condition 2 - Column) Find the spots which have more than equal 2 kind of AA markers.
+
+        # (2nd Filtering Condition 2 - Column) Find the spots which have more than equal 2 kind of AA markers.
 
         flag_Marker_Count = sub_H_MARKERS.apply(lambda x : len(set(x)), axis=0) > 1
 
         ### Filtering `H_MARKERS` with 2nd condition.
-        sub_H_MARKERS = H_MARKERS.loc[:, flag_Marker_Count]
+        sub_H_MARKERS = sub_H_MARKERS.loc[:, flag_Marker_Count]
 
         # `sub_H_MARKERS` == "maptable" (***)
 
@@ -155,6 +157,7 @@ def HEATMAP(_hla_name, _out, _input,
         print(sub_H_MARKERS.head())
         print(sub_H_MARKERS.tail())
 
+        # sub_H_MARKERS.to_csv(_out+".2nd.txt", sep='\t', header=True, index=True)
 
 
 
@@ -209,11 +212,12 @@ def HEATMAP(_hla_name, _out, _input,
         sub_H_MARKERS_columns = pd.Series(["_".join(["AA", _hla_name, item[1]]) for item in sub_H_MARKERS.columns.tolist()]) # (*****) This part is core to subset
         # Using "relative_position" information to extract markers which appear in both "sub_H_MARKERS" and "ASSOC_LOGISTIC".
 
-        # (Filtering condition - Overlapping relative position)
+        # (3rd Filtering condition - Overlapping relative position)
 
         p_relPOS = re.compile("(AA_{0}_-?\d+)".format(_hla_name))
 
         flag_valid_relPOS = sub_H_MARKERS_columns.isin(ASSOC_MARKER_SET.str.extract(p_relPOS, expand=False).tolist()).tolist()
+
 
         ### Filtering `H_MARKERS` with 3rd condition.
         sub_H_MARKERS = sub_H_MARKERS.loc[:, flag_valid_relPOS]
@@ -221,92 +225,114 @@ def HEATMAP(_hla_name, _out, _input,
         print("\nFinally subsetted HLA dictionary file(\"maptable\").\n")
         print(sub_H_MARKERS.head())
 
+        # sub_H_MARKERS.to_csv(_out+".3rd.txt", sep='\t', header=True, index=True)
+
         # (deprecated) - 2018. 8. 20.
-        # # idx_rel_pos = pd.Index([ '_'.join(["AA", _hla_name, str(item[1])]) for item in filtered_HLA_MARKER_DICTIONARY3.columns.tolist()])
-        # idx_rel_pos = pd.Index([str(item[1]) for item in filtered_HLA_MARKER_DICTIONARY3.columns.tolist()])
+        # # idx_rel_pos = pd.Index([ '_'.join(["AA", _hla_name, str(item[1])]) for item in sub_H_MARKERS.columns.tolist()])
+        # idx_rel_pos = pd.Index([str(item[1]) for item in sub_H_MARKERS.columns.tolist()])
         # # (2018. 6. 19) 헤더에다가 그냥 relative position만 박음. ("AA_DRB1_-24" => "-24")
         #
         #
         # # # (2018. 6. 14) polymorphic position test
-        # # filtered_HLA_MARKER_DICTIONARY3.to_csv("./checkpolymorphic.txt", sep='\t', header=True, index=True)
+        # # sub_H_MARKERS.to_csv("./checkpolymorphic.txt", sep='\t', header=True, index=True)
+
+
+        ### Reindexing `ASSOC_LOGISTIC` DataFrame with "relative_position".
+
+        p_relPOS = re.compile("AA_{0}_(-?\d+)".format(_hla_name))
+
+        ASSOC_LOGISTIC.index = pd.Index(ASSOC_MARKER_SET.str.extract(p_relPOS, expand=False).tolist())
+
+        # This re-indexing will be used in next code block.
 
 
 
 
     ########## < Main job to process maptable and Making new association > ##########
 
+
+
+
     if MAKING_NEW_ASSOC:
 
         ###### < Making new *.assoc file > #####
-        print("\n[heatmap]: Making new *.assoc file.\n\n")
 
-        """
-        바로 위 코드 블럭에서 만든 `filtered_HLA_MARKER_DICTIONARY3`에 대해서 작업할거임.
-        우선 가장 큰 몸통은 `filtered_HLA_MARKER_DICTIONARY3`의 컬럼의 수만큼 해서 for문을 도는 거임
-        
-        (2018. 6. 19)
-        생각해보니까 `filtered_HLA_MARKER_DICTIONARY3`은 "*.assoc.logistic"에서 나타나는 marker이랑 교집합해놓은 애들이라
-        `filtered_HLA_MARKER_DICTIONARY2`에 대해서 작업해야하는거 아님?
-        
-        ㅇㅇ 아님. 예전 "7_prepare.R"코드에서도 여기서 가져다 쓰는 maptable파일이 `exist`해서 "*.assoc.logistc"과 교집합해서 살아남은
-        애들까지만 한 maptable의 colnames들을 가지고 와서 쓰는거더라.
-        
-        근데 왜이렇게 컬럼이 줄지?
-        """
+        print(std_MAIN_PROCESS_NAME + "Making new *.assoc file.")
 
-        COLNAMES = filtered_HLA_MARKER_DICTIONARY3.columns.tolist()
+        # The main process will be done iterating the column of `sub_H_MARKERS` DataFrame.
+        COLNAMES = sub_H_MARKERS.columns.tolist() # cf) len(COLNAMES) == len(col of `sub_H_MARKERS`)
 
-        # for_new_maptable = []
+        # # Indexing `ASSOC_MARKER_SET` with "relative position" beforehand.
+        # p_relPOS = re.compile("AA_{0}_(-?\d+)".format(_hla_name))
+        # ASSOC_MARKER_SET.index = pd.Index(ASSOC_MARKER_SET.str.extract(p_relPOS).tolist())
+
+
         for_new_assoc = []
 
-        for i in range(0, filtered_HLA_MARKER_DICTIONARY3.shape[1]):
-            # for i in range(0, 20):
+        for i in range(0, sub_H_MARKERS.shape[1]):
+        # for i in range(0, 5):
 
             print("\n=================================\n%d iteration\n=================================" % i)
 
-            AAs = filtered_HLA_MARKER_DICTIONARY3.iloc[:, i]
-
+            ## (variable in R) - (1) : `AAs`
+            AAs = sub_H_MARKERS.iloc[:, i]
             print("\nAAs")
             print(AAs)
 
+
+            ## (variable in R) - (2) : `AAname`
             AAname = COLNAMES[i] # ex) ('32557506', '-25', 'AAG')
             print("\nAAname")
             print(AAname)
 
-            # AAvariants
-            print("Regular Expression : {0}".format('_'.join(["AA", _hla_name, AAname[1]])+"_"))
-            AAvariants = ASSOC_MARKER_SET.filter(regex='_'.join(["AA", _hla_name, AAname[1]])+"_").tolist()
-            # "*.assoc.logistc"의 marker 이름 집합.
 
+            """
+            (2018. 8. 20.)
+            Remember that there could be more than 1 marker in one relative position.
+            That's why one more searching job should be done to `ASSOC_LOGISTIC` DataFrame.
+            
+            ex) HLA-A, rel:-15
+            1. AA_A_-15_29910359_L
+            2. AA_A_-15_29910359_V
+            3. AA_A_-15_29910359_x
+
+            => Three markers in -15 relative position of Amino Acids.
+            
+            """
+
+            # (2018. 8. 20.) This temporary DataFrame `df_temp` will do a central role in each iteration.
+            df_temp = ASSOC_LOGISTIC.loc[[AAname[1]]]
+            print("\ndf_temp : \n")
+            print(df_temp)
+
+
+            ## (variable in R) - (3) : `AAvariants`
+            AAvariants = df_temp.loc[:, "SNP"]
             print("\nAAvariants")
             print(AAvariants)
+
+
 
             if len(AAvariants) > 0:
 
                 """
-                AAvariants에 찾아온 *.assoc.logistic파일 상의 marker가 있다면 아래처럼 진행
+                Introducing this condition (len(AAvariants) > 0) might seem trivial, but it filters unexpected markers 
+                which don't appear in "*.assoc.logistic(`ASSOC_LOGISTIC`)" but in "HLA dictionary(`sub_H_MARKERS`).
                 
-                이 예외처리가 중요한게 *.assoc.logistc파일의 marker 집합에서 관심 대상 마커를 찾아와야하는 부분도 있는데
-                작업하다보니 위에 조건식에서 maptable의 필요한 컬럼들(필요한 relative position)만 추리는 과정에서 분명히 교수님이짜신거랑 똑같이 줬는데
-                결과물이 다르게 나옴.(ex. relative position : -2일때. 얘는 조건넣어서 살아남았는데 *.assoc.logsitc에는 "AA_DRB1_-2_..." 인 마커가 없음.
+                cf) len(AAvariants) == df_temp.shape[0] == The number of rows of `df_temp`
                 
-                그래서 이 조건으로 maptable의 어이없게 살아남은 컬럼들은 전부 skip하기 위해서 도입함.
                 """
 
-                ### Processing assocrst first.
-
-                # print("\nassocrst")
-                # print(assocrst)
-
-                # AAvar_assoc
-                AAvar_assoc = assocrst.loc[AAvariants]
-                print("\nAAvar_assoc")
-                print(AAvar_assoc)
-
-
                 """
+                As iterating over AA poisition of "HLA dictionary(`sub_H_MARKERS`)" and checking how many markers of 
+                "*.assoc.logistc(`ASSOC_LOGISTIC`)" there are, the process should do it considering next two major cases.
                 
-                `assocrst`에서 받아온애들. 결국 "*.assoc.logistc"
+                (1) Bi-allelic,
+                (2) more than Tri-allelic.
+                
+                If the markers of `ASSOC_LOGISTIC` at each relative position is given as `df_temp`, then it would looks
+                like this.
+                
                 
                 ### Tri-allelic ###
 
@@ -322,27 +348,32 @@ def HEATMAP(_hla_name, _out, _input,
                 
                 AAvar_assoc
                 SNP
-                AA_DRB1_-25_32665484    0.3133    # 이렇게 label의 끝에 AA character안 나타나는 애들은 따로 해줘야 한다는 소리.
+                AA_DRB1_-25_32665484    0.3133    # The bi-allelic marker doesn't have AA character('K', 'R', ...) in the label.
                 Name: P, dtype: float64
 
-                
                 """
 
-                # idx_AAvar_assoc = pd.Index([item.split('_')[-1] for item in AAvar_assoc.index.tolist()]) # 그니까 예전에 이런식으로 처리하면 안된다고.
 
-                index_AAvar_assoc = AAvar_assoc.index.tolist()
-                # `AAvariants`나 `AAvar_assoc`이나 결국 둘 다 "*.assoc.logistc"에서 유래한 애들
-                # ex) ['AA_DRB1_-25_32665484_K', 'AA_DRB1_-25_32665484_R', 'AA_DRB1_-25_32665484_x']
+                # AAvar_assoc (P-value column)
+                AAvar_assoc = df_temp.loc[:, "P"]
+                print("\nAAvar_assoc")
+                print(AAvar_assoc)
 
-                if len(index_AAvar_assoc) > 1:
+
+                # Preparing index
+
+                if len(AAvariants) > 1:
 
                     ### Tri-allelic ###
 
-                    # tri-allelic 이상이라서 한 포지션에 3종류이상 마커나타나서 pooling된 애들
-                    index_AAvar_assoc = pd.Index([item.split('_')[-1] for item in index_AAvar_assoc])
+                    # The case where the position has more than 2 kind of markers (=> more than Tri-allelic)
+
+                    index_AAvar_assoc = pd.Index([item.split('_')[-1] for item in AAvariants.tolist()])
+                    # ex) ['AA_DRB1_-25_32665484_K', 'AA_DRB1_-25_32665484_R', 'AA_DRB1_-25_32665484_x']
+                    # => ['K', 'R', 'x']
 
                     """
-                    그니까 아까 
+                    So, in the previous `df_temp` of Bi or Tri -allelic case,
 
                     SNP
                     AA_DRB1_-25_32665484_K    0.3133
@@ -350,16 +381,17 @@ def HEATMAP(_hla_name, _out, _input,
                     AA_DRB1_-25_32665484_x    0.9150
                     Name: P, dtype: float64
 
-                    이거를
+                    
+                    I will make this to next form.
                     
                     K    0.3133
                     R    0.3173
                     x    0.9150
                     Name: P, dtype: float64
                     
-                    이렇게 Index만 간추려서 쓰고 싶은거임.
                     
-                    왜냐하면, filtered_HLA_MARKERS_DICTIONARY3의 실제 내용물이
+                    I want to use the `df_temp` like this with that index.
+                    Because, if that DataFrame is prepared, when `sub_H_MARKERS` is given like this,
                     
                     genomic_position  32557506 32557503 32557482 32557479 32557437 32557434  \
                     relative_position      -25      -24      -17      -16       -2       -1   
@@ -371,55 +403,28 @@ def HEATMAP(_hla_name, _out, _input,
                     DRB1*04:04:01            K        F        A        A        L        A   
                     DRB1*04:05:01            K        F        A        A        L        A     
                     
-                    이런식으로 있으니까, 그냥       
+                    We can make `NEW_ASSOC` just by this single command.       
                     
-                    AAvar_assoc.loc[x])
+                    > AAvar_assoc.loc[x])
                     
-                    이런식으로 해벼리면 편해질 테니까.                                                    
+                    It will be much easier with .loc[] operator.
                     
                     """
 
-                elif len(index_AAvar_assoc) == 1:
+                elif len(AAvariants) == 1:
 
                     ### Bi-allelic ###
 
-                    # bi-allelic 해서 marker label은 한개만 나타나는 경우 (ex. "AA_DRB1_12_32660112" : "T" vs. "K" )
-                    # 얘는 이제 새로운 그래서 AA character가 뭔지 모르니까 로드시켜놓은 `ASSOC_LOGISTC.loc[:, "A1"]`로 character를 가지고 오는거임.
-
                     print("\n\n# of label is 1")
-                    print(index_AAvar_assoc[0])
-                    print(A1.loc[index_AAvar_assoc[0]])
+                    print(df_temp.loc[:, "SNP"])
+                    print(df_temp.loc[:, "A1"])
 
-                    refA = A1.loc[index_AAvar_assoc[0]]
+                    # refA = A1.loc[index_AAvar_assoc[0]]
+                    refA = df_temp.loc[:, "A1"].iat[0]
+
                     index_AAvar_assoc = pd.Index([refA])
 
 
-                    """
-                    T    0.7171
-                    Name: P, dtype: float64
-                    
-                    이렇게 한쪽만 알면 되니까 `refA`로 그냥 찾아옴.
-                    """
-
-                """
-                (2018. 6. 14) 이거 예외찾음. 예외라기보다는 내가 한 가지 엄청 크게 잘못 이해한게 있음.
-                
-                앞서서부터 polymorphic한 relative position을 나타나는 AA marker들의 종류를 2개 이상인 애들이라고 정의했는데 내가 무의식중에
-                이런 애들은 모두 "AA_DRB1_12_12345667_D" 이렇게 pooling된 애들만을 생각하고 있었음. 
-                
-                MakeReference를 통해 Pooling되는 애들은 한 rel_position에서 AA marker의 종류가 3개이상인 애들한테서 저렇게 됨. 다시말해,
-                우리는 polymorphic한 포지션을 한 종류의 마커만 나타나는 homomorphic한 애들만 제외한거고 2종류가 나타나는 우리가 일반적으로 알고 있는
-                bi-alleleic한 marker들도 다루고 있는거임.
-                
-                이게 왜 중요하냐면 우리가 지금 `filtered_HLA_MARKERS_DICTIONARY`의 컬럼 정보로 *.assoc.logistc파일상의 AA_DRB1_12_* 이렇게 생긴 marker들을
-                찾는거잖음. 찾는데 쓴 정규표현식은 큰 문제가 없는데 이제 찾아온애를 다룰때  
-                
-                pd.Index([item.split('_')[-1] for item in AAvar_assoc.index.tolist()])
-                
-                이런식으로 '_'로 split한거 마지막 원소 이렇게 하면 bi-allelic한 marker들은 에러가 날 수 밖에 없음.
-                '_'로 split하고 나서 원소의 개수로 case 분류를 좀 더 해야할 것 같음.
-
-                """
 
                 AAvar_assoc.index = index_AAvar_assoc
 
@@ -427,7 +432,7 @@ def HEATMAP(_hla_name, _out, _input,
                 print(AAvar_assoc)
 
                 """                
-                그래서 결국 새로 만든 `AAvar_assoc`.
+                Newly made `AAvar_assoc`.
 
                 K    0.3133
                 R    0.3173
@@ -437,13 +442,13 @@ def HEATMAP(_hla_name, _out, _input,
                 """
 
 
-                ### 여가 핵심 job임. AA Marker Character로 Transformation하는거.
+                ### This part is core job to transform "AA Marker Character" to the -log10 values.
 
                 try:
-                    # index의 수가 3개 이상일때
+                    # more than Tri-allelic
                     AAs2 = AAs.apply(lambda x : -log10(AAvar_assoc.loc[x]))
                 except KeyError:
-                    # index의 수가 2개 일때
+                    # Bi-allelic
                     AAs2 = AAs.apply(lambda x : -log10(AAvar_assoc.loc[refA]))
 
                 print("\nAAs2")
@@ -453,7 +458,7 @@ def HEATMAP(_hla_name, _out, _input,
 
                 ### Flippng based on OR
 
-                t_OR = OR.loc[AAvariants]
+                t_OR = df_temp.loc[:, "OR"]
                 t_OR.index = index_AAvar_assoc
                 print("\nOR")
                 print(t_OR)
@@ -476,7 +481,7 @@ def HEATMAP(_hla_name, _out, _input,
         NEW_ASSOC = pd.DataFrame(for_new_assoc)
 
         # idx_NEW_ASSOC = [ '_'.join(["AA", _hla_name, item[1]]) for item in NEW_ASSOC.index.tolist()]
-        idx_NEW_ASSOC = [str(item[1]) for item in NEW_ASSOC.index.tolist()]
+        idx_NEW_ASSOC = [str(item[1]) for item in NEW_ASSOC.index.tolist()] # (?) check it later whether it is needed or not.
         # NEW_ASSOC.index = idx_NEW_ASSOC
 
         print("\nNEW_ASSOC : \n{0}\n\n".format(NEW_ASSOC.head()))
@@ -496,9 +501,9 @@ def HEATMAP(_hla_name, _out, _input,
         print("\n[heatmap]: Making Assoc_P file.\n\n")
 
         print("\nmaptable")
-        print(filtered_HLA_MARKER_DICTIONARY3.head())
-        print(filtered_HLA_MARKER_DICTIONARY3.index.tolist())
-        print(len(filtered_HLA_MARKER_DICTIONARY3))
+        print(sub_H_MARKERS.head())
+        print(sub_H_MARKERS.index.tolist())
+        print(len(sub_H_MARKERS))
 
         # 생각해보니 어차피 맨처음 `HLA_MARKERS_DICTIONARY`에서 row의 수가 변하는 거는 filtered1뿐이고 2,3은 컬럼의 수만 변하는거니 여기서 filtered3을 써도 큰 상관은 없겠네
 
@@ -537,7 +542,7 @@ def HEATMAP(_hla_name, _out, _input,
         사실 생각해보면 방금까지 언급한 step들이 위에서 `filtered_HLA_MARKER_DICTIONARY` (진짜 딱 `filtered_HLA_MARKER_DICTIONARY`까지만 만드는 과정)
         까지 만드는 과정과 똑같음. 결국 `TWOtoFOUR` 딕셔너리에 집어넣어서 KeyError뜨는 레이블들까지만 필터링 해놓은 결과물.
         (cf. `filtered_HLA_MARKER_DICTIONARY2`는 relative position당 marker의 종류가 2개 이상 나타난 애들, 
-             `filtered_HLA_MARKER_DICTIONARY3`는 "*.assoc.logistic"의 marker set과의 교집합.)
+             `sub_H_MARKERS`는 "*.assoc.logistic"의 marker set과의 교집합.)
         
         그냥 얘를 가져다 쓰는것도 괜춘할듯.
         
@@ -603,7 +608,7 @@ def HEATMAP(_hla_name, _out, _input,
 
 
         # `filtered_HLA_MARKER_DICTIONARY`의 marker_label로 "*.assoc.logsitc"의 일부인 `asscrst`의 값에 접근하는 상황임.
-        alleleP = [-log10(assocrst.loc[item]) for item in filtered_HLA_MARKER_DICTIONARY3.index.tolist()]
+        alleleP = [-log10(assocrst.loc[item]) for item in sub_H_MARKERS.index.tolist()]
         print("\nalleleP")
         print(alleleP)
 
@@ -631,11 +636,11 @@ def HEATMAP(_hla_name, _out, _input,
         NEW_ASSOC.columns = idx_NEW_ASSOC
         # (2018. 6. 19) 에전에 작업하던거 왜 헤더가 n-1인지 알겠네. 첫번째 라인만 n-1개인데 헤더로 잡아주면 그 아랫줄 부터는 첫번째 컬럼은 모두 인덱스로 알아서 잡음. 다음단계에서 편하게 작업하려고 전부 첫번째 라인만 ncol-1 로 일부러 잡으신거같음 교수님께서.
 
-        filtered_HLA_MARKER_DICTIONARY3.columns = idx_rel_pos
-        filtered_HLA_MARKER_DICTIONARY3 = filtered_HLA_MARKER_DICTIONARY3.loc[:, NEW_ASSOC.columns.tolist()]
+        sub_H_MARKERS.columns = idx_rel_pos
+        sub_H_MARKERS = sub_H_MARKERS.loc[:, NEW_ASSOC.columns.tolist()]
 
         # 혹시 몰라서...
-        if filtered_HLA_MARKER_DICTIONARY3.shape[1] != NEW_ASSOC.shape[1]:
+        if sub_H_MARKERS.shape[1] != NEW_ASSOC.shape[1]:
             print("\n[heatmap]: The number of relative position(# of markers) to plot heatmap is different!\nSomething Wrong!\n")
             sys.exit()
 
@@ -649,7 +654,7 @@ def HEATMAP(_hla_name, _out, _input,
         있는 거기 때문에 이게 낫겠음. 어차피 maptable을 이 로지스틱 리그레션을 거치고 나온 marker들을 그리기 위한 준비물들일 뿐임. 
         """
 
-        filtered_HLA_MARKER_DICTIONARY3.to_csv(_out+'.map.txt', sep='\t', header=True, index=True)
+        sub_H_MARKERS.to_csv(_out+'.map.txt', sep='\t', header=True, index=True)
         alleleP.to_csv(_out+".alleleP.txt", sep='\t', header=True, index=True)
         NEW_ASSOC.to_csv(_out+".assoc.txt", sep='\t', header=True, index=True)
 
@@ -862,7 +867,7 @@ if __name__ == "__main__" :
     # Cancer data example.
     args = parser.parse_args(["-hla", "A",
                               "-o", "/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/HEATMAP_Cancer",
-                              "-hd", "/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/data/HLA_Analysis/Plotting/heatmap/WRAPER_TEST_A.AA.markers.trim.labeled.txt",
+                              "-hd", "/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/data/HLA_Analysis/Plotting/heatmap/forHATK_A.AA.markers.trim.labeled.txt",
                               "-lr", "/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/data/HLA_Analysis/AssociationTest/CancerResearch_Example/MARKER_PANEL/data_Rev_merged.AA.CODED.assoc.logistic",
                               "-bh", "/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/data/HLA_Analysis/AssociationTest/CancerResearch_Example/MARKER_PANEL/data_Rev_merged.HLA.bim",
                               "-ba", "/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/data/HLA_Analysis/AssociationTest/CancerResearch_Example/MARKER_PANEL/data_Rev_merged.AA.CODED.bim"
