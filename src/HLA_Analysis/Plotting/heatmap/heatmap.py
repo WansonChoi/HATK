@@ -72,7 +72,7 @@ def HEATMAP(_hla_name, _out, _input,
     LOADING_ASSOC = 1
 
     MAKING_NEW_ASSOC = 1
-    MAKING_ASSOC_P = 0
+    MAKING_ASSOC_P = 1
     EXPORTING_OUTPUT = 0
     PLOT_HEATMAP = 0
 
@@ -107,7 +107,7 @@ def HEATMAP(_hla_name, _out, _input,
         # patterns which will be used.
         p_HLA = re.compile("^HLA_{0}".format(_hla_name))
 
-        # Just classfy the cases where bim files are given separately or not.
+        # Just classify the cases where bim files are given separately or not.
         if (_bim_HLA != "Not_given" and _bim_AA != "Not_given") and _bim_merged == "Not_given":
 
             # "_bim_HLA" and "_bim_AA" are given.
@@ -445,7 +445,7 @@ def HEATMAP(_hla_name, _out, _input,
                 ### This part is core job to transform "AA Marker Character" to the -log10 values.
 
                 try:
-                    # more than Tri-allelic
+                    # Tri-allelic or more.
                     AAs2 = AAs.apply(lambda x : -log10(AAvar_assoc.loc[x]))
                 except KeyError:
                     # Bi-allelic
@@ -465,9 +465,10 @@ def HEATMAP(_hla_name, _out, _input,
 
                 print("\nCondition")
                 try:
-                    AAs3 = AAs.apply(lambda x : (2*int(t_OR.loc[x] > 1)-1))
+                    AAs3 = AAs.apply(lambda x : (2*int(t_OR.loc[x] > 1) - 1))
                 except KeyError:
-                    AAs3 = AAs.apply(lambda x: (2 * int(t_OR.loc[refA] > 1) - 1))
+                    AAs3 = AAs.apply(lambda x : (2*int(t_OR.loc[refA] > 1) - 1))
+                    # (2018. 8. 21.) 여기 Bi-allelic한케이스 flipping이 덜 됐음.
 
                 print(AAs3)
 
@@ -489,25 +490,15 @@ def HEATMAP(_hla_name, _out, _input,
 
     if MAKING_ASSOC_P:
 
-        """
-        (2018. 6. 18) 여기 코드블럭 마무리하면서
-        
-        어떻게 생각해보면, 이 코드블럭의 가장 중요하고 큰 대전제는 *.marker파일의 marker label들의 집합과 "*.assoc.logistc"파일의 marker label이
-        같아야한다는 거임.(더 구체적으로는 *.marker파일과 *.assoc.logistic파일에 "HLA_DRB1_****" 혹은 "AA_DRB1_****"이렇게 정규표현식을
-        걸어서 갈무리해오면 원소들의 수가 같아야함. 정상적이라면 결국 *.marker파일 등을 활용해서 logistic regression이 수행될테니 위 전제가 잘 보존이 됨.
-        """
-
         ##### < Making Assoc_P file > #####
-        print("\n[heatmap]: Making Assoc_P file.\n\n")
+
+        print(std_MAIN_PROCESS_NAME + "Making Assoc_P file.\n\n")
 
         print("\nmaptable")
         print(sub_H_MARKERS.head())
         print(sub_H_MARKERS.index.tolist())
         print(len(sub_H_MARKERS))
 
-        # 생각해보니 어차피 맨처음 `HLA_MARKERS_DICTIONARY`에서 row의 수가 변하는 거는 filtered1뿐이고 2,3은 컬럼의 수만 변하는거니 여기서 filtered3을 써도 큰 상관은 없겠네
-
-        # 이론상으로 문제가 없다면 `filtered_HLA_MARKER_DICTIONARY`의 row의 수(index, key의 수)와 아래 assoc에서 "HLA_DRB1_0101" 마커들 다듬은거랑 개수가 같을거임.
 
         ### Preparing "HLA_DRB1_***" marker from "*.assoc.logistic" again.
 
