@@ -4,6 +4,7 @@
 import os, sys, re
 import argparse, textwrap
 import pandas as pd
+import numpy as np
 from mpmath import log10
 from shutil import which
 
@@ -13,8 +14,8 @@ from shutil import which
 p_Rscript = which("Rscript")
 
 def HEATMAP(_hla_name, _out, _input,
-            _p_hla_dict, _p_assoc_logistic,
-            _bim_HLA = "Not_given", _bim_AA = "Not_given", _bim_merged = "Not_given",
+            _p_hla_dict,
+            _p_assoc_logistic_AA, _p_assoc_logistic_HLA, _p_assoc_logistic_MERGED,
             _4field=False, _oldv=False,
             _p_Rscript=p_Rscript, _p_heatmapR="./src/HLA_Analysis/plot/heatmap/8b_plot_WS.R"):
 
@@ -68,24 +69,23 @@ def HEATMAP(_hla_name, _out, _input,
     ##### < Control Flags > #####
 
     LOADING_HLA_MARKERS_DICTIONARY = 1
-    LOADING_BIM = 1
+    LOADING_BIM = 0
     LOADING_ASSOC = 1
+    SUBSETTING_MAPTABLE1 = 1
+    SUBSETTING_MAPTABLE2 = 1
 
     MAKING_NEW_ASSOC = 1
     MAKING_ASSOC_P = 1
-    EXPORTING_OUTPUT = 0
+    EXPORTING_OUTPUT = 1
     PLOT_HEATMAP = 0
 
 
 
 
-    ########## < Loading and Preparing Core Data Files given by arguments. > ##########
-
-
     if LOADING_HLA_MARKERS_DICTIONARY:
 
-        ### Loading HLA_MARKERS_DICTIONARY file.
-        print(std_MAIN_PROCESS_NAME + "Loading HLA marker information.\n")
+        ########## < [1] Loading HLA_MARKERS_DICTIONARY("maptable") file > ##########
+        print(std_MAIN_PROCESS_NAME + "[1] Loading HLA_MARKERS_DICTIONARY(\"maptable\") file\n")
 
         H_MARKERS = pd.read_table(_p_hla_dict, sep=' |\t', engine='python', header=[0, 1, 2], index_col=0).filter(regex=_hla_name + "\*", axis=0)
         # filter() due to the case of "DRB2", "DRB3", etc.
@@ -95,36 +95,166 @@ def HEATMAP(_hla_name, _out, _input,
         # So far, Only by loading HLA marker dictionary file, we finished preparing `maptable`.
         # (2018. 6. 12) Anyway, `H_MARKERS` corresponds to "maptable" in Professor Han's pipeline.
 
-        print("\n")
 
 
-    if LOADING_BIM:
+    # if LOADING_BIM:
+    #
+    #     ### Loading "*.bim" file.
+    #
+    #     print(std_MAIN_PROCESS_NAME + "Loading *.bim file.\n")
+    #
+    #     # patterns which will be used.
+    #     p_HLA = re.compile("^HLA_{0}".format(_hla_name))
+    #
+    #     # Just classify the cases where bim files are given separately or not.
+    #     if (_bim_HLA != "Not_given" and _bim_AA != "Not_given") and _bim_merged == "Not_given":
+    #
+    #         # "_bim_HLA" and "_bim_AA" are given.
+    #         print("\"_bim_HLA\" : {0}".format(_bim_HLA))
+    #
+    #         # Loading each of bim file
+    #         BIM_HLA = pd.read_table(_bim_HLA, sep='\t| ', engine='python', header=None,
+    #                                 names=["Chr", "Label", "GD", "Pos", "Al1", "Al2"],
+    #                                 usecols=[1,3,4,5]).set_index("Label", drop=False).filter(regex=p_HLA, axis=0).reset_index(drop=True)
+    #
+    #
+    #         print("\nDataFrame \"BIM_HLA\"\n")
+    #         print(BIM_HLA.head())
+    #         print(BIM_HLA.tail())
+    #
+    #
+    #     # *.bim file for HLA markers has been loaded.
+    #
+    #
+    #     ### Subsetting HLA dictionary(`H_MARKERS`) DataFrame
+    #
+    #     # (1st Filtering condition - Row) Find the markers of *.bim file in HLA dict(`H_MARKERS`) DataFrame.
+    #
+    #     p = re.compile(r'HLA_')
+    #
+    #     LABELS = BIM_HLA.loc[:, "Label"].apply(lambda x : p.sub(repl='', string=x)).tolist()
+    #     print("\nLABELS : \n{0}\n".format(LABELS))
+    #
+    #     flag_LABELSinDICT = H_MARKERS.index.to_series().isin(LABELS)
+    #
+    #     ### Filtering `H_MARKERS` with 1st condition.
+    #     sub_H_MARKERS = H_MARKERS.loc[flag_LABELSinDICT]
+    #
+    #     # sub_H_MARKERS.to_csv(_out+".1st.txt", sep='\t', header=True, index=True)
+    #
+    #
+    #     # (2nd Filtering Condition 2 - Column) Find the spots which have more than equal 2 kind of AA markers.
+    #
+    #     flag_Marker_Count = sub_H_MARKERS.apply(lambda x : len(set(x)), axis=0) > 1
+    #
+    #     ### Filtering `H_MARKERS` with 2nd condition.
+    #     sub_H_MARKERS = sub_H_MARKERS.loc[:, flag_Marker_Count]
+    #
+    #     # `sub_H_MARKERS` == "maptable" (***)
+    #
+    #
+    #     print(sub_H_MARKERS.head())
+    #     print(sub_H_MARKERS.tail())
+    #
+    #     # sub_H_MARKERS.to_csv(_out+".2nd.txt", sep='\t', header=True, index=True)
 
-        ### Loading "*.bim" file.
-
-        print(std_MAIN_PROCESS_NAME + "Loading *.bim file.\n")
-
-        # patterns which will be used.
-        p_HLA = re.compile("^HLA_{0}".format(_hla_name))
-
-        # Just classify the cases where bim files are given separately or not.
-        if (_bim_HLA != "Not_given" and _bim_AA != "Not_given") and _bim_merged == "Not_given":
-
-            # "_bim_HLA" and "_bim_AA" are given.
-            print("\"_bim_HLA\" : {0}".format(_bim_HLA))
-
-            # Loading each of bim file
-            BIM_HLA = pd.read_table(_bim_HLA, sep='\t| ', engine='python', header=None,
-                                    names=["Chr", "Label", "GD", "Pos", "Al1", "Al2"],
-                                    usecols=[1,3,4,5]).set_index("Label", drop=False).filter(regex=p_HLA, axis=0).reset_index(drop=True)
 
 
-            print("\nDataFrame \"BIM_HLA\"\n")
-            print(BIM_HLA.head())
-            print(BIM_HLA.tail())
+    if LOADING_ASSOC:
+
+        ########## < [2] Loading *.assoc.logistic files of AA and HLA markers. > ##########
+
+        print(std_MAIN_PROCESS_NAME + "Loading '*.assoc.logistc' files of AA and HLA markers.\n")
+
+        # ASSOC_LOGISTIC = pd.read_table(_p_assoc_logistic, header=0, sep='\s+', usecols=["SNP", "P", "OR", "A1"]
+        #                                ).set_index("SNP", drop=False).filter(regex="_".join(["AA", _hla_name]), axis=0).reset_index(drop=True)
+
+        p_AA_marker = re.compile("AA_{0}_".format(_hla_name))
+        p_HLA_marker = re.compile("HLA_{0}".format(_hla_name))
+
+        # Just classify the cases where *.assoc.logistic files are given separately or not.
+        if (bool(_p_assoc_logistic_AA) and bool(_p_assoc_logistic_HLA)) and not bool(_p_assoc_logistic_MERGED):
+
+            # Respective
+            print("\nLoading \"*.assoc.logistic\" of AA and HLA markers.\n")
+
+            ASSOC_LOGISTIC_AA = pd.read_table(_p_assoc_logistic_AA, header=0, sep='\s+',
+                                              usecols=["SNP", "BP", "A1", "OR", "P"]
+                                              ).set_index("SNP").filter(regex=p_AA_marker, axis=0).reset_index(drop=False)
+
+            ASSOC_LOGISTIC_HLA = pd.read_table(_p_assoc_logistic_HLA, header=0, sep='\s+',
+                                               usecols=["SNP", "BP", "A1", "OR", "P"]
+                                               ).set_index("SNP").filter(regex=p_HLA_marker, axis=0).reset_index(drop=False)
 
 
-        # *.bim file for HLA markers has been loaded.
+        elif not (bool(_p_assoc_logistic_AA) or bool(_p_assoc_logistic_HLA)) and bool(_p_assoc_logistic_MERGED):
+
+            # When the results of logistic regression for AA and HLA are given as merged single file.
+
+            print("\nLoading \"*.assoc.logistic\" of AA and HLA markers as single file.\n")
+
+            df_temp = pd.read_table(_p_assoc_logistic_MERGED, header=0, sep='\s+',
+                                    usecols=["SNP", "BP", "A1", "OR", "P"]).set_index("SNP")
+
+            ASSOC_LOGISTIC_AA = df_temp.filter(regex="AA_{0}_".format(_hla_name)).reset_index(drop=False)
+            ASSOC_LOGISTIC_HLA = df_temp.filter(regex="HLA_{0}".format(_hla_name)).reset_index(drop=False)
+
+
+        else:
+            print(std_ERROR_MAIN_PROCESS_NAME + "Check the file names of \"*.assoc.logistic.\"")
+
+
+        HLA_MARKERS = ASSOC_LOGISTIC_HLA.loc[:, "SNP"]
+        AA_MARKERS = ASSOC_LOGISTIC_AA.loc[:, "SNP"]
+
+
+        print("\nLogistic Regression of AA :")
+        print(ASSOC_LOGISTIC_AA.head())
+        # print(ASSOC_LOGISTIC_AA.tail())
+
+        print("\nLogistic Regression of HLA :")
+        print(ASSOC_LOGISTIC_HLA.head())
+        # print(ASSOC_LOGISTIC_HLA.tail())
+
+        # # In general, the marker set of HLA_Dicitionary(`sub_H_MARKERS`) would be larger than that of `ASSOC_LOGISTIC`.
+        # # So, the markers of `sub_H_MARKERS` will be subsetted based on the markers in `ASSOC_LOGISTIC`.
+        #
+        # # Also, this code block might deal with the result of "Omnibus_Test" too. Ask professor about this.
+        #
+        # # ASSOC의 marker set에서 나타나는지...
+        #
+        # # (1) `variants`
+        # ASSOC_MARKER_SET = ASSOC_LOGISTIC.loc[:, "SNP"]
+        # print("\nASSOC_MARKER_SET")
+        # print(ASSOC_MARKER_SET.head())
+        #
+        # # (2) `assocrst`
+        # assocrst = ASSOC_LOGISTIC.loc[:, "P"]
+        # print("\nassocrst")
+        # print(assocrst.head())
+        #
+        # # # Making Row index which will be used in next 'MAKING_NEW_ASSOC' code block.
+        # # MARKER_CHARACTERS = [ASSOC_MARKER_SET.apply(lambda x : x.split('_')[-1]).iat[i] for i in range(0, ASSOC_MARKER_SET.shape[0])]
+        # # idx_asscrst = pd.MultiIndex.from_arrays([ASSOC_MARKER_SET.index.tolist(), MARKER_CHARACTERS], names=["LABELS", "AA_CHARACTER"]) # (Marker_Full_Name, Actual_Marker_Character)
+        # # assocrst.index = idx_asscrst
+        #
+        # # (3) `OR`
+        # OR = ASSOC_LOGISTIC.loc[:, "OR"]
+        # # OR.index = idx_asscrst
+        # print("\nOR")
+        # print(OR.head())
+        #
+        # # (4) `A1`
+        # A1 = ASSOC_LOGISTIC.loc[:, "A1"]
+        # print("\nA1")
+        # print(A1.head())
+
+
+    if SUBSETTING_MAPTABLE1:
+
+        ########## < [2] Subsetting maptable ((1) HLA alleles(index), (2) Relative p(column)) > ##########
+
+        print(std_MAIN_PROCESS_NAME + "[2] Subsetting maptable ((1) HLA alleles(index), (2) Relative p(column))")
 
 
         ### Subsetting HLA dictionary(`H_MARKERS`) DataFrame
@@ -133,10 +263,10 @@ def HEATMAP(_hla_name, _out, _input,
 
         p = re.compile(r'HLA_')
 
-        LABELS = BIM_HLA.loc[:, "Label"].apply(lambda x : p.sub(repl='', string=x)).tolist()
-        print("\nLABELS : \n{0}\n".format(LABELS))
+        HLA_alleles = HLA_MARKERS.apply(lambda x : p.sub(repl='', string=x)).tolist()
+        print("\nHLA_alleles in \"*.assoc.logistic\" of HLA markers : \n{0}\n".format(HLA_alleles))
 
-        flag_LABELSinDICT = H_MARKERS.index.to_series().isin(LABELS)
+        flag_LABELSinDICT = H_MARKERS.index.to_series().isin(HLA_alleles)
 
         ### Filtering `H_MARKERS` with 1st condition.
         sub_H_MARKERS = H_MARKERS.loc[flag_LABELSinDICT]
@@ -146,12 +276,10 @@ def HEATMAP(_hla_name, _out, _input,
 
         # (2nd Filtering Condition 2 - Column) Find the spots which have more than equal 2 kind of AA markers.
 
-        flag_Marker_Count = sub_H_MARKERS.apply(lambda x : len(set(x)), axis=0) > 1
+        flag_isPolymorphic = sub_H_MARKERS.apply(lambda x : len(set(x)), axis=0) > 1
 
         ### Filtering `H_MARKERS` with 2nd condition.
-        sub_H_MARKERS = sub_H_MARKERS.loc[:, flag_Marker_Count]
-
-        # `sub_H_MARKERS` == "maptable" (***)
+        sub_H_MARKERS = sub_H_MARKERS.loc[:, flag_isPolymorphic]
 
 
         print(sub_H_MARKERS.head())
@@ -161,62 +289,22 @@ def HEATMAP(_hla_name, _out, _input,
 
 
 
-    if LOADING_ASSOC:
 
-        ### Loading *.assoc.logistic. (The reuslt of Logistic Regression on Amino Acid markers)
+    if SUBSETTING_MAPTABLE2:
 
-        print(std_MAIN_PROCESS_NAME + "Loading '*.assoc.logistc' file.\n\n")
+        ########## < [3] Subsetting maptable ((3) AA marker of "*.assoc.logistic" of AA) > ##########
 
-        ASSOC_LOGISTIC = pd.read_table(_p_assoc_logistic, header=0, sep='\s+', usecols=["SNP", "P", "OR", "A1"]
-                                       ).set_index("SNP", drop=False).filter(regex="_".join(["AA", _hla_name]), axis=0).reset_index(drop=True)
-
-        print(ASSOC_LOGISTIC.head())
-
-        # In general, the marker set of HLA_Dicitionary(`sub_H_MARKERS`) would be larger than that of `ASSOC_LOGISTIC`.
-        # So, the markers of `sub_H_MARKERS` will be subsetted based on the markers in `ASSOC_LOGISTIC`.
-
-        # Also, this code block might deal with the result of "Omnibus_Test" too. Ask professor about this.
-
-        # ASSOC의 marker set에서 나타나는지...
-
-        # (1) `variants`
-        ASSOC_MARKER_SET = ASSOC_LOGISTIC.loc[:, "SNP"]
-        print("\nASSOC_MARKER_SET")
-        print(ASSOC_MARKER_SET.head())
-
-        # (2) `assocrst`
-        assocrst = ASSOC_LOGISTIC.loc[:, "P"]
-        print("\nassocrst")
-        print(assocrst.head())
-
-        # # Making Row index which will be used in next 'MAKING_NEW_ASSOC' code block.
-        # MARKER_CHARACTERS = [ASSOC_MARKER_SET.apply(lambda x : x.split('_')[-1]).iat[i] for i in range(0, ASSOC_MARKER_SET.shape[0])]
-        # idx_asscrst = pd.MultiIndex.from_arrays([ASSOC_MARKER_SET.index.tolist(), MARKER_CHARACTERS], names=["LABELS", "AA_CHARACTER"]) # (Marker_Full_Name, Actual_Marker_Character)
-        # assocrst.index = idx_asscrst
-
-        # (3) `OR`
-        OR = ASSOC_LOGISTIC.loc[:, "OR"]
-        # OR.index = idx_asscrst
-        print("\nOR")
-        print(OR.head())
-
-        # (4) `A1`
-        A1 = ASSOC_LOGISTIC.loc[:, "A1"]
-        print("\nA1")
-        print(A1.head())
-
-
-
-        ### Subsetting HLA dictionary(`H_MARKERS`) DataFrame
+        print(std_MAIN_PROCESS_NAME + "[3] Subsetting maptable ((3) AA marker of \"*.assoc.logistic\" of AA)")
 
         sub_H_MARKERS_columns = pd.Series(["_".join(["AA", _hla_name, item[1]]) for item in sub_H_MARKERS.columns.tolist()]) # (*****) This part is core to subset
-        # Using "relative_position" information to extract markers which appear in both "sub_H_MARKERS" and "ASSOC_LOGISTIC".
+        # Using "relative_position" information to extract markers in both "sub_H_MARKERS" and "ASSOC_LOGISTIC".
+
 
         # (3rd Filtering condition - Overlapping relative position)
 
         p_relPOS = re.compile("(AA_{0}_-?\d+)".format(_hla_name))
 
-        flag_valid_relPOS = sub_H_MARKERS_columns.isin(ASSOC_MARKER_SET.str.extract(p_relPOS, expand=False).tolist()).tolist()
+        flag_valid_relPOS = sub_H_MARKERS_columns.isin(AA_MARKERS.str.extract(p_relPOS, expand=False).tolist()).tolist()
 
 
         ### Filtering `H_MARKERS` with 3rd condition.
@@ -237,13 +325,15 @@ def HEATMAP(_hla_name, _out, _input,
         # # sub_H_MARKERS.to_csv("./checkpolymorphic.txt", sep='\t', header=True, index=True)
 
 
-        ### Reindexing `ASSOC_LOGISTIC` DataFrame with "relative_position".
+        ### Reindexing `ASSOC_LOGISTIC_AA` DataFrame with "relative_position".
 
         p_relPOS = re.compile("AA_{0}_(-?\d+)".format(_hla_name))
 
-        ASSOC_LOGISTIC.index = pd.Index(ASSOC_MARKER_SET.str.extract(p_relPOS, expand=False).tolist())
+        ASSOC_LOGISTIC_AA.index = pd.Index(AA_MARKERS.str.extract(p_relPOS, expand=False).tolist())
 
         # This re-indexing will be used in next code block.
+
+        print(ASSOC_LOGISTIC_AA.head())
 
 
 
@@ -255,16 +345,13 @@ def HEATMAP(_hla_name, _out, _input,
 
     if MAKING_NEW_ASSOC:
 
-        ###### < Making new *.assoc file > #####
+        ########## < [4] Making new *.assoc file for AA markers. > ##########
 
-        print(std_MAIN_PROCESS_NAME + "Making new *.assoc file.")
+
+        print(std_MAIN_PROCESS_NAME + "Making new *.assoc file for AA markers.")
 
         # The main process will be done iterating the column of `sub_H_MARKERS` DataFrame.
         COLNAMES = sub_H_MARKERS.columns.tolist() # cf) len(COLNAMES) == len(col of `sub_H_MARKERS`)
-
-        # # Indexing `ASSOC_MARKER_SET` with "relative position" beforehand.
-        # p_relPOS = re.compile("AA_{0}_(-?\d+)".format(_hla_name))
-        # ASSOC_MARKER_SET.index = pd.Index(ASSOC_MARKER_SET.str.extract(p_relPOS).tolist())
 
 
         for_new_assoc = []
@@ -274,13 +361,7 @@ def HEATMAP(_hla_name, _out, _input,
 
             print("\n=================================\n%d iteration\n=================================" % i)
 
-            ## (variable in R) - (1) : `AAs`
-            AAs = sub_H_MARKERS.iloc[:, i]
-            print("\nAAs")
-            print(AAs)
-
-
-            ## (variable in R) - (2) : `AAname`
+            # (variable in R) - (2) : `AAname`
             AAname = COLNAMES[i] # ex) ('32557506', '-25', 'AAG')
             print("\nAAname")
             print(AAname)
@@ -289,7 +370,7 @@ def HEATMAP(_hla_name, _out, _input,
             """
             (2018. 8. 20.)
             Remember that there could be more than 1 marker in one relative position.
-            That's why one more searching job should be done to `ASSOC_LOGISTIC` DataFrame.
+            That's why one more searching job should be done to `ASSOC_LOGISTIC_AA` DataFrame.
             
             ex) HLA-A, rel:-15
             1. AA_A_-15_29910359_L
@@ -300,40 +381,33 @@ def HEATMAP(_hla_name, _out, _input,
             
             """
 
+            ### Bringing markers in each relative position to `df_temp`.
             # (2018. 8. 20.) This temporary DataFrame `df_temp` will do a central role in each iteration.
-            df_temp = ASSOC_LOGISTIC.loc[[AAname[1]]]
+            df_temp = ASSOC_LOGISTIC_AA.loc[[AAname[1]]]
             print("\ndf_temp : \n")
             print(df_temp)
 
 
-            ## (variable in R) - (3) : `AAvariants`
-            AAvariants = df_temp.loc[:, "SNP"]
-            print("\nAAvariants")
-            print(AAvariants)
 
-
-
-            if len(AAvariants) > 0:
+            if df_temp.shape[0] > 0:
 
                 """
-                Introducing this condition (len(AAvariants) > 0) might seem trivial, but it filters unexpected markers 
-                which don't appear in "*.assoc.logistic(`ASSOC_LOGISTIC`)" but in "HLA dictionary(`sub_H_MARKERS`).
-                
+                Introducing this condition (len(AAvariants) > 0) might seem trivial, but it filters unexpected markers
+                which don't appear in "*.assoc.logistic(`ASSOC_LOGISTIC_AA`)" but in "HLA dictionary(`sub_H_MARKERS`).
+
                 cf) len(AAvariants) == df_temp.shape[0] == The number of rows of `df_temp`
-                
-                """
 
-                """
-                As iterating over AA poisition of "HLA dictionary(`sub_H_MARKERS`)" and checking how many markers of 
+
+                As iterating over AA poisition of "HLA dictionary(`sub_H_MARKERS`)" and checking how many markers of
                 "*.assoc.logistc(`ASSOC_LOGISTIC`)" there are, the process should do it considering next two major cases.
-                
+
                 (1) Bi-allelic,
                 (2) more than Tri-allelic.
-                
-                If the markers of `ASSOC_LOGISTIC` at each relative position is given as `df_temp`, then it would looks
+
+                If the markers of `ASSOC_LOGISTIC_AA` at each relative position is given as `df_temp`, then it would looks
                 like this.
-                
-                
+
+
                 ### Tri-allelic ###
 
                 AAvar_assoc
@@ -342,10 +416,10 @@ def HEATMAP(_hla_name, _out, _input,
                 AA_DRB1_-25_32665484_R    0.3173
                 AA_DRB1_-25_32665484_x    0.9150
                 Name: P, dtype: float64
-                
-                
+
+
                 ### Bi-allelic ###
-                
+
                 AAvar_assoc
                 SNP
                 AA_DRB1_-25_32665484    0.3133    # The bi-allelic marker doesn't have AA character('K', 'R', ...) in the label.
@@ -353,27 +427,52 @@ def HEATMAP(_hla_name, _out, _input,
 
                 """
 
-
+                ### 1. P-value
                 # AAvar_assoc (P-value column)
                 AAvar_assoc = df_temp.loc[:, "P"]
-                print("\nAAvar_assoc")
+                print("\nAAvar_assoc : \n")
                 print(AAvar_assoc)
 
+                ### 2. AA character in "HLA dictionary(sub_H_MARKERS)" - (variable in R : `AAs`)
+                AAs = sub_H_MARKERS.iloc[:, i]
+                print("\nAAs")
+                print(AAs)
 
-                # Preparing index
+                ### 3. OR
+                t_OR = df_temp.loc[:, "OR"]
+                print("\nOR")
+                print(t_OR)
 
-                if len(AAvariants) > 1:
 
-                    ### Tri-allelic ###
+                ### Preparing index for `AAvar_assoc`. ###
 
-                    # The case where the position has more than 2 kind of markers (=> more than Tri-allelic)
+                if df_temp.shape[0] > 1:
 
-                    index_AAvar_assoc = pd.Index([item.split('_')[-1] for item in AAvariants.tolist()])
+                    ##### Tri-allelic or more #####
+
+                    ### Newly index `AAvar_assoc`.
+
+                    # (variable in R) - (3) : `AAvariants`
+                    AAvariants = df_temp.loc[:, "SNP"]
+
+                    AAvar_assoc.index = pd.Index([item.split('_')[-1] for item in AAvariants.tolist()])
                     # ex) ['AA_DRB1_-25_32665484_K', 'AA_DRB1_-25_32665484_R', 'AA_DRB1_-25_32665484_x']
                     # => ['K', 'R', 'x']
 
+                    print("\nNew AAvar_assoc : \n")
+                    print(AAvar_assoc)
+
+                    ### Transforming AA character seq. of `sub_H_MARKERS` to '-log(x)' value.
+                    AAs2 = AAs.apply(lambda x : -log10(AAvar_assoc.loc[x]))
+                    # This part actually needs exception handling for KeyError...
+
+                    ### Flippng based on OR
+                    t_OR.index = AAvar_assoc.index
+                    AAs3 = AAs.apply(lambda x : (2*int(t_OR.loc[x] > 1) - 1))
+
+
                     """
-                    So, in the previous `df_temp` of Bi or Tri -allelic case,
+                    So, when Tri-allelic or more is given like this,
 
                     SNP
                     AA_DRB1_-25_32665484_K    0.3133
@@ -381,280 +480,230 @@ def HEATMAP(_hla_name, _out, _input,
                     AA_DRB1_-25_32665484_x    0.9150
                     Name: P, dtype: float64
 
-                    
-                    I will make this to next form.
-                    
+
+                    I will make this to the next form.
+
                     K    0.3133
                     R    0.3173
                     x    0.9150
                     Name: P, dtype: float64
-                    
-                    
-                    I want to use the `df_temp` like this with that index.
+
+
+                    I want to use the `df_temp` with that index(Only AA character).
                     Because, if that DataFrame is prepared, when `sub_H_MARKERS` is given like this,
-                    
+
                     genomic_position  32557506 32557503 32557482 32557479 32557437 32557434  \
-                    relative_position      -25      -24      -17      -16       -2       -1   
-                    codon                  AAG      CTC      ACA      GCG      TTG      GCT   
-                    DRB1*01:01:01            K        L        T        A        L        A   
-                    DRB1*03:01:01:01         R        L        A        V        L        A   
-                    DRB1*04:01:01            K        F        A        A        L        A   
-                    DRB1*04:03:01            K        F        A        A        L        A   
-                    DRB1*04:04:01            K        F        A        A        L        A   
-                    DRB1*04:05:01            K        F        A        A        L        A     
-                    
-                    We can make `NEW_ASSOC` just by this single command.       
-                    
+                    relative_position      -25      -24      -17      -16       -2       -1
+                    codon                  AAG      CTC      ACA      GCG      TTG      GCT
+                    DRB1*01:01:01            K        L        T        A        L        A
+                    DRB1*03:01:01:01         R        L        A        V        L        A
+                    DRB1*04:01:01            K        F        A        A        L        A
+                    DRB1*04:03:01            K        F        A        A        L        A
+                    DRB1*04:04:01            K        F        A        A        L        A
+                    DRB1*04:05:01            K        F        A        A        L        A
+
+                    We can make `NEW_ASSOC` just by this single command.
+
                     > AAvar_assoc.loc[x])
-                    
+
                     It will be much easier with .loc[] operator.
-                    
+
                     """
 
-                elif len(AAvariants) == 1:
+                elif df_temp.shape[0] == 1:
 
-                    ### Bi-allelic ###
+                    ##### Bi-allelic #####
 
-                    print("\n\n# of label is 1")
-                    print(df_temp.loc[:, "SNP"])
-                    print(df_temp.loc[:, "A1"])
+                    ### Newly indexing `AAvar_assoc`.
 
-                    # refA = A1.loc[index_AAvar_assoc[0]]
                     refA = df_temp.loc[:, "A1"].iat[0]
+                    AAvar_assoc.index = pd.Index([refA])
 
-                    index_AAvar_assoc = pd.Index([refA])
+                    print("\nNew AAvar_assoc : \n")
+                    print(AAvar_assoc)
 
+                    ### Transforming AA character seq. of `sub_H_MARKERS` to '-log(x)' value.
+                    AAs2 = AAs.apply(lambda x: -log10(AAvar_assoc.loc[refA]))
 
-
-                AAvar_assoc.index = index_AAvar_assoc
-
-                print("\nNew AAvar_assoc")
-                print(AAvar_assoc)
-
-                """                
-                Newly made `AAvar_assoc`.
-
-                K    0.3133
-                R    0.3173
-                x    0.9150
-                Name: P, dtype: float64
-                
-                """
-
-
-                ### This part is core job to transform "AA Marker Character" to the -log10 values.
-
-                try:
-                    # Tri-allelic or more.
-                    AAs2 = AAs.apply(lambda x : -log10(AAvar_assoc.loc[x]))
-                except KeyError:
-                    # Bi-allelic
-                    AAs2 = AAs.apply(lambda x : -log10(AAvar_assoc.loc[refA]))
-
-                print("\nAAs2")
-                print(AAs2)
+                    ### Flippng based on OR
+                    t_OR.index = AAvar_assoc.index
+                    AAs3 = AAs.apply(lambda x : (2*int(t_OR.loc[refA] > 1) - 1)*(2*(x == refA)) - 1)
 
 
 
-                ### Flippng based on OR
-
-                t_OR = df_temp.loc[:, "OR"]
-                t_OR.index = index_AAvar_assoc
-                print("\nOR")
-                print(t_OR)
-
-                print("\nCondition")
-                try:
-                    AAs3 = AAs.apply(lambda x : (2*int(t_OR.loc[x] > 1) - 1))
-                except KeyError:
-                    AAs3 = AAs.apply(lambda x : (2*int(t_OR.loc[refA] > 1) - 1))
-                    # (2018. 8. 21.) 여기 Bi-allelic한케이스 flipping이 덜 됐음.
-
-                print(AAs3)
-
+                ### Finally processed AA character seq. of `sub_H_MARKERS`.
                 AAs4 = AAs2*AAs3
-                print("\nAAs4")
+                print("\nAAs4 : \n")
                 print(AAs4)
 
                 for_new_assoc.append(AAs4)
 
 
-        NEW_ASSOC = pd.DataFrame(for_new_assoc)
+        NEW_ASSOC = pd.DataFrame(for_new_assoc).transpose()
 
-        # idx_NEW_ASSOC = [ '_'.join(["AA", _hla_name, item[1]]) for item in NEW_ASSOC.index.tolist()]
-        idx_NEW_ASSOC = [str(item[1]) for item in NEW_ASSOC.index.tolist()] # (?) check it later whether it is needed or not.
-        # NEW_ASSOC.index = idx_NEW_ASSOC
+        # # idx_NEW_ASSOC = [ '_'.join(["AA", _hla_name, item[1]]) for item in NEW_ASSOC.index.tolist()]
+        # idx_NEW_ASSOC = [str(item[1]) for item in NEW_ASSOC.index.tolist()] # (?) check it later whether it is needed or not.
+        # # NEW_ASSOC.index = idx_NEW_ASSOC
 
         print("\nNEW_ASSOC : \n{0}\n\n".format(NEW_ASSOC.head()))
 
 
+
     if MAKING_ASSOC_P:
 
-        ##### < Making Assoc_P file > #####
+        ########## < [5] Making Assoc_P file. > ##########
 
         print(std_MAIN_PROCESS_NAME + "Making Assoc_P file.\n\n")
 
-        print("\nmaptable")
-        print(sub_H_MARKERS.head())
-        print(sub_H_MARKERS.index.tolist())
-        print(len(sub_H_MARKERS))
+
+        # if _oldv:
+        #
+        #     assoc = assocfile.filter(regex="_".join(["HLA", _hla_name, "\d{4,}"]), axis=0)
+        #     # 앞서서는 "*.assoc.logistic"에서 "AA_DRB1_****"형태인 marker를 활용했고, 이번에는 다시 "HLA_DRB1_****"형태의 marker를 활용할 차례.
+        #
+        #     print("\nfirst assoc")
+        #     print(assoc.head(30))
+        #
+        #     # _oldv 라는 가정하에 또 '0101' => '01:01" 이렇게 바꿔줘야함.
+        #     # 그때 함수만들어놓은거 쓰면 될거같음.
+        #
+        #     idx_assoc = assoc.index.tolist()
+        #
+        #     p = re.compile("\d{4}")
+        #
+        #     idx_assoc = pd.Series(idx_assoc).apply(lambda x : p.search(string=x).group()).apply(lambda x : single_2DIGIT_CHECK(_hla_name, x, H_MARKERS))
+        #     print("\nold idx_assoc")
+        #     print(idx_assoc)
+        #     # 여기까지 "*.assoc.logistic" 파일의 "HLA_DRB1_****" 마커들을 추리고, 4-digit추리고, 이거 DRB1*01:01형태로 까지 만들었음
+        #     # 여기까지 작업한 idx_assoc는 아직 "DRB1*01:60"같은 쭉정이 allele들을 포함하고 있음. 여기서 idx_assoc의 원소들 하나하나를 `TWOtoFOUR`에 집어넣어서 쭉정이 allele들만 걸러내면
+        #
+        #     No_Dummy_allele = idx_assoc.apply(lambda x : True if x in TWOtoFOUR.keys() else False).tolist()
+        #     print("\nNo_Dummy")
+        #     print(No_Dummy_allele)
+        #
+        #     idx_assoc = idx_assoc.loc[No_Dummy_allele]
+        #     assoc = assoc.loc[No_Dummy_allele]
+        #
+        #     print("\nNo JJookJungYee")
+        #     print(idx_assoc.head())
+        #
+        #     idx_assoc = idx_assoc.apply(lambda x : TWOtoFOUR[x]) # Now, Finally 4-field allele names for "HLA_DRB1_****" markers for "*.assoc.logistic" 파일
+        #     print("\nnew idx_assoc")
+        #     print(idx_assoc)
+        #     print(len(idx_assoc))
+        #
+        #     assoc.index = pd.Index(idx_assoc)
+        #
+        # else:
+        #     assoc = assocfile.filter(regex="_".join(["HLA", _hla_name, "\d{2,}\:"]), axis=0)
+        #
+        #
+        #     # (2018. 6. 18) 여기 input이 4-field일때 대응해서 처리하는 코드 나중에 추가할 것.
 
 
-        ### Preparing "HLA_DRB1_***" marker from "*.assoc.logistic" again.
+        print("\nHLA markers :\n")
+        print(HLA_MARKERS)
 
-        """
-        앞에서도 "*.assoc.logistic" 파일을 로드해서 다뤘지만 구체적으로 앞에서는 "AA_DRB1_****" 이런형태의 marker들이었음.
-        이번에도 똑같이 logistic regression의 결과가 필요하지만 이번에는 "HLA_DRB1_****"이런 형태의 marker들을 활용해야함.
-        
-        한 가지 recurrent하는 문제는 2,4-field Input/Output 문제임.
-        Output의 경우 뭐 4-field로 작업해서 기본적으로 4-field로 만들어 뽑다가 필요하면 2-field로 잘라서 출력해주는건 쉬우니까 큰 문제는 없고.
-        
-        문제는 Input으로 받을때 
-        
-        (1) 2-field일 경우
-            => "HLA_DRB1_\d{4}"
-            (ex) "HLA_DRB1_0101"
-            
-        (2) 4-field일 경우
-            => "HLA_DRB1_\d{2}\:"
-            (ex) "HLA_DRB1_01:01:01:01}
-            
-        이렇게 받아올거임.
-        
-        또, 이렇게 새로 받아온 `assoc`에서 "P" 컬럼만 따로 때서 `assocsrt`를 준비해야함. 
-        
-        
-        사실 생각해보니, 그래서 "HLA_DRB1_0101"이렇게 생긴애들을 모아다가
-        
-        저 레이블에서 0101추리고,
-        0101 TEMPORARY_TRANSFORMATION에 집어넣어서 digit checking해서 DRB1*01:01 이렇게 만들고,
-        DRB1*01:01이거를 TWOtoFOUR dictionary에 집어넣어서 DRB1*01:01:01 이렇게 만들면되는데.
-        
-        사실 생각해보면 방금까지 언급한 step들이 위에서 `filtered_HLA_MARKER_DICTIONARY` (진짜 딱 `filtered_HLA_MARKER_DICTIONARY`까지만 만드는 과정)
-        까지 만드는 과정과 똑같음. 결국 `TWOtoFOUR` 딕셔너리에 집어넣어서 KeyError뜨는 레이블들까지만 필터링 해놓은 결과물.
-        (cf. `filtered_HLA_MARKER_DICTIONARY2`는 relative position당 marker의 종류가 2개 이상 나타난 애들, 
-             `sub_H_MARKERS`는 "*.assoc.logistic"의 marker set과의 교집합.)
-        
-        그냥 얘를 가져다 쓰는것도 괜춘할듯.
-        
-        
-        야야야 지금 "HLA_DRB1_****"이런 마커 로드하는 작업까지 위에서 한번씩 다 했네 여기 싹다 갈아 엎어도 되겠다.
-        멍청아 그건 maptable에 대해서 한거고 지금은 "*.assoc.logistic"에 대해서 "HLA_DRB1_****" 마커 캐는거라고
-        
-        """
+        flag_subHLAs = sub_H_MARKERS.index.to_series().apply(lambda x : "HLA_"+x).isin(HLA_MARKERS).tolist()
 
-        if _oldv:
+        sub_ASSOC_LOGISTIC_HLA = ASSOC_LOGISTIC_HLA.loc[flag_subHLAs, ["P", "OR"]]
 
-            assoc = assocfile.filter(regex="_".join(["HLA", _hla_name, "\d{4,}"]), axis=0)
-            # 앞서서는 "*.assoc.logistic"에서 "AA_DRB1_****"형태인 marker를 활용했고, 이번에는 다시 "HLA_DRB1_****"형태의 marker를 활용할 차례.
+        HLA_P = sub_ASSOC_LOGISTIC_HLA.loc[:, "P"].values # as numpy array
+        print("\n\"P-values\" of HLA markers : \n")
+        print(HLA_P)
+        print(type(HLA_P))
 
-            print("\nfirst assoc")
-            print(assoc.head(30))
-
-            # _oldv 라는 가정하에 또 '0101' => '01:01" 이렇게 바꿔줘야함.
-            # 그때 함수만들어놓은거 쓰면 될거같음.
-
-            idx_assoc = assoc.index.tolist()
-
-            p = re.compile("\d{4}")
-
-            idx_assoc = pd.Series(idx_assoc).apply(lambda x : p.search(string=x).group()).apply(lambda x : single_2DIGIT_CHECK(_hla_name, x, H_MARKERS))
-            print("\nold idx_assoc")
-            print(idx_assoc)
-            # 여기까지 "*.assoc.logistic" 파일의 "HLA_DRB1_****" 마커들을 추리고, 4-digit추리고, 이거 DRB1*01:01형태로 까지 만들었음
-            # 여기까지 작업한 idx_assoc는 아직 "DRB1*01:60"같은 쭉정이 allele들을 포함하고 있음. 여기서 idx_assoc의 원소들 하나하나를 `TWOtoFOUR`에 집어넣어서 쭉정이 allele들만 걸러내면
-
-            No_Dummy_allele = idx_assoc.apply(lambda x : True if x in TWOtoFOUR.keys() else False).tolist()
-            print("\nNo_Dummy")
-            print(No_Dummy_allele)
-
-            idx_assoc = idx_assoc.loc[No_Dummy_allele]
-            assoc = assoc.loc[No_Dummy_allele]
-
-            print("\nNo JJookJungYee")
-            print(idx_assoc.head())
-
-            idx_assoc = idx_assoc.apply(lambda x : TWOtoFOUR[x]) # Now, Finally 4-field allele names for "HLA_DRB1_****" markers for "*.assoc.logistic" 파일
-            print("\nnew idx_assoc")
-            print(idx_assoc)
-            print(len(idx_assoc))
-
-            assoc.index = pd.Index(idx_assoc)
-
-        else:
-            assoc = assocfile.filter(regex="_".join(["HLA", _hla_name, "\d{2,}\:"]), axis=0)
+        HLA_OR = sub_ASSOC_LOGISTIC_HLA.loc[:, "OR"].values # as numpy array
+        print("\n\"OR\" of HLA markers : \n")
+        print(HLA_OR)
 
 
-            # (2018. 6. 18) 여기 input이 4-field일때 대응해서 처리하는 코드 나중에 추가할 것.
+        t_alleleP = np.apply_along_axis(lambda x : -np.log10(x), 0, HLA_P)
+        t_OR = np.apply_along_axis(lambda x : (2*(x > 1) - 1), 0, HLA_OR)
 
+        ### Processed "alleleP" for HLA markers.
+        alleleP = t_alleleP*t_OR
 
-
-        print("\nold assoc")
-        print(assoc)
-
-        assocrst = assoc.loc[:, "P"]
-        OR = assoc.loc[:, "OR"]
-        print("\nassocrst")
-        print(assocrst)
-
-
-        # `filtered_HLA_MARKER_DICTIONARY`의 marker_label로 "*.assoc.logsitc"의 일부인 `asscrst`의 값에 접근하는 상황임.
-        alleleP = [-log10(assocrst.loc[item]) for item in sub_H_MARKERS.index.tolist()]
-        print("\nalleleP")
+        print("\nprocessed `alleleP` : \n")
         print(alleleP)
 
-        ### Flipping
-        alleleP = [alleleP[i]*(2*(OR.iat[i]>1)-1) for i in range(0, len(alleleP))]
-        print("\nflipped alleleP")
-        print(alleleP)
 
-        alleleP = pd.DataFrame(alleleP)
-        alleleP.index = pd.Index(assoc.loc[:, "SNP"])
-
-        print("\nFinal allelP")
-        alleleP.index.name = None
-        # alleleP.columns.name = "assocrst"
-        print(alleleP)
-
-        ##### OUTPUT 3. alleleP.txt file
 
 
     if EXPORTING_OUTPUT:
 
+        ########## < [6] Exporting output files. > ##########
 
-        ### Introducing new indexes(maptable, assoc)
-        NEW_ASSOC = NEW_ASSOC.transpose()
-        NEW_ASSOC.columns = idx_NEW_ASSOC
-        # (2018. 6. 19) 에전에 작업하던거 왜 헤더가 n-1인지 알겠네. 첫번째 라인만 n-1개인데 헤더로 잡아주면 그 아랫줄 부터는 첫번째 컬럼은 모두 인덱스로 알아서 잡음. 다음단계에서 편하게 작업하려고 전부 첫번째 라인만 ncol-1 로 일부러 잡으신거같음 교수님께서.
-
-        sub_H_MARKERS.columns = idx_rel_pos
-        sub_H_MARKERS = sub_H_MARKERS.loc[:, NEW_ASSOC.columns.tolist()]
-
-        # 혹시 몰라서...
-        if sub_H_MARKERS.shape[1] != NEW_ASSOC.shape[1]:
-            print("\n[heatmap]: The number of relative position(# of markers) to plot heatmap is different!\nSomething Wrong!\n")
-            sys.exit()
+        print(std_MAIN_PROCESS_NAME + "Exporting output files.")
 
         """
-        (2018. 6. 19)
-        그 앞에서도 한번 언급했는데, maptable에서 잘 필터링해도 "*.assoc.logistic"의 결과물에는 안나타나는 AA relative position이 몇개 있음.
-        대표적인 예로 -2인 포지션이 maptable에는 계속 남아있는데 "*.assoc.logistic"에는 안나타남.
+        Files to export.
         
-        이 때문에 그냥 `filtered_HLA_MARKERS_DICTIONARY`를 파일로 방출해버리면 다음 "8b_plot.R"에서 문제가 생겨서 그냥 최종적으로 "*.assoc.txt"의 relative position
-        에 해당하는 애들만 한번더 추려서 maptable을 수정하고 export시키기로 함. 왜냐하면 어차피 heatmap을 그리는 본질적인 목표가 "*.assoc.logistic"에 있는 마커들에 관심이
-        있는 거기 때문에 이게 낫겠음. 어차피 maptable을 이 로지스틱 리그레션을 거치고 나온 marker들을 그리기 위한 준비물들일 뿐임. 
+        (1) *.map.txt (differnt to the ones used by plink.)
+        (2) *.allleP.txt
+        (3) *.assoc.txt
+        
+
+        (2018. 8. 23.)
+        In this code block, the proper index should be made and assigned to `sub_H_MARKERS`, `alleleP` and `NEW_ASSOC`.       
+        Also, as professor Han requested, the HLA allele names in final index should be in the form of 2-field.
+        So, i need the marker labels in the next forms
+        
+        (1) AA_A_-?\d+_
+        (2) HLA_A_\d{2,3}\:\d{2,3}
+        
         """
+
+        ##### Processing HLA markers.
+        p_HLA_marker = re.compile("(%s\*\d{2,3}\:\d{2,3}\w?)" % (_hla_name))
+        t_hla_markers = sub_H_MARKERS.index.to_series().apply(lambda x : "HLA_"+x).str.extract(p_HLA_marker, expand=False)
+
+
+        ##### Processing AA markers.
+        t_aa_markers = sub_H_MARKERS.columns.to_frame().loc[:, "relative_position"].apply(lambda x : "_".join(["AA", _hla_name, x])+"_")
+
+        print("\nt_hla_markers :\n{0}\nt_aa_markers :\n{1}\n".format(t_hla_markers, t_aa_markers))
+
+        ##### Assigning processed indexes.
+
+        # `sub_H_MARKERS`
+        sub_H_MARKERS.index = t_hla_markers
+        sub_H_MARKERS.columns = t_aa_markers
+        sub_H_MARKERS.columns.name = None
+
+        # `alleleP`
+        alleleP = pd.Series(alleleP, index=t_hla_markers)
+        alleleP.index.name = "0" # dummy index to make it loaded in R more efficiently.
+
+        # `NEW_ASSOC`
+        NEW_ASSOC.index = t_hla_markers
+        NEW_ASSOC.columns = t_aa_markers
+        NEW_ASSOC.columns.name = None
+
+
+
+        print("\n(1) sub_H_MARKERS\n")
+        print(sub_H_MARKERS.head())
+
+        print("\n(2) alleleP\n")
+        print(alleleP.head())
+
+        print("\n(3) NEW_ASSOC\n")
+        print(NEW_ASSOC.head())
+
+
 
         sub_H_MARKERS.to_csv(_out+'.map.txt', sep='\t', header=True, index=True)
-        alleleP.to_csv(_out+".alleleP.txt", sep='\t', header=True, index=True)
+        alleleP.to_csv(_out+".alleleP.txt", sep='\t', header=False, index=True)
         NEW_ASSOC.to_csv(_out+".assoc.txt", sep='\t', header=True, index=True)
 
-        # (2018. 6. 19.) 파일이름 관련해서 예전에는 _map.txt 에서 .map.txt이렇게 바꿈
 
 
 
 
     if PLOT_HEATMAP:
+
+        ########## < > ##########
 
         print("\n[heatmap]: Plotting.\n\n")
 
@@ -825,18 +874,23 @@ if __name__ == "__main__" :
     # for Merged Prefix use(".bim", ".assoc.logistc", ...).
     parser.add_argument("--input", "-i", help="\nPrefix of mereged input files(\".bed\", \".covar\", or \".phe\" etc).\n\n")
 
-    # Respective .bim files.
-    parser.add_argument("--bim-HLA", "-bh", help="\n\".bim\" file of HLA markers.\n\n", default="Not_given")
-
-    # (2018. 8. 20.) Deprecate next two arguments later.
-    parser.add_argument("--bim-AA", "-ba", help="\n\".bim\" file of AA markers.\n\n", default="Not_given")
-    # Merged .bim file.
-    parser.add_argument("--bim-merged", "-bm", help="\nMerged \".bim\" file.\n\n", default="Not_given")
+    # # Respective .bim files.
+    # parser.add_argument("--bim-HLA", "-bh", help="\n\".bim\" file of HLA markers.\n\n", default="Not_given")
+    #
+    # # (2018. 8. 20.) Deprecate next two arguments later.
+    # parser.add_argument("--bim-AA", "-ba", help="\n\".bim\" file of AA markers.\n\n", default="Not_given")
+    # # Merged .bim file.
+    # parser.add_argument("--bim-merged", "-bm", help="\nMerged \".bim\" file.\n\n", default="Not_given")
 
     # Output from MakeDictionary.
-    parser.add_argument("--hla-dict", "-hd", help="\nMarker Dictionary file generated by 'MakeDictionary'.\n"                                                    "(If not given, it will search '~/data/HLA-Analysis/plot/heatmap' in default.)\n\n")
+    parser.add_argument("--hla-dict", "-hd", required=True,
+                        help="\nMarker Dictionary file generated by 'MakeDictionary'.\n"
+                             "(If not given, it will search '~/data/HLA-Analysis/plot/heatmap' in default.)\n\n")
+
     # Result of Association Test.
-    parser.add_argument("--logistic-result", "-lr", help="\nOutput from logtistic regression(*.assoc.logistic) by plink.\n\n")
+    parser.add_argument("--logistic-result-AA", "-lrA", help="\nOutput of Amino Acid(AA) logtistic regression(*.assoc.logistic) by plink.\n\n")
+    parser.add_argument("--logistic-result-HLA", "-lrH", help="\nOutput of HLA gene(HLA) logtistic regression(*.assoc.logistic) by plink.\n\n")
+    parser.add_argument("--logistic-result-MERGED", "-lrM", help="\nPrefix for merged output of HLA gene(HLA) and Amino Acid(AA) logtistic regression(*.assoc.logistic) by plink.\n\n")
 
 
     # We might need "*.alleles.DRB1" but not for now. because it could be no longer needed in generalizing 2,4-field HLA allele naming system.
@@ -855,13 +909,21 @@ if __name__ == "__main__" :
     #                           "-bm", "/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/data/HLA_Analysis/Plotting/heatmap/merged"
     #                           ])
 
-    # Cancer data example.
+    # # Cancer data example.
+    # args = parser.parse_args(["-hla", "A",
+    #                           "-o", "/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/HEATMAP_Cancer",
+    #                           "-hd", "/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/data/HLA_Analysis/Plotting/heatmap/forHATK_A.AA.markers.trim.labeled.txt",
+    #                           "-lr", "/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/data/HLA_Analysis/AssociationTest/CancerResearch_Example/MARKER_PANEL/data_Rev_merged.AA.CODED.assoc.logistic",
+    #                           "-bh", "/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/data/HLA_Analysis/AssociationTest/CancerResearch_Example/MARKER_PANEL/data_Rev_merged.HLA.bim",
+    #                           "-ba", "/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/data/HLA_Analysis/AssociationTest/CancerResearch_Example/MARKER_PANEL/data_Rev_merged.AA.CODED.bim"
+    #                           ])
+
+    # No more *.bim file.
     args = parser.parse_args(["-hla", "A",
                               "-o", "/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/HEATMAP_Cancer",
                               "-hd", "/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/data/HLA_Analysis/Plotting/heatmap/forHATK_A.AA.markers.trim.labeled.txt",
-                              "-lr", "/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/data/HLA_Analysis/AssociationTest/CancerResearch_Example/MARKER_PANEL/data_Rev_merged.AA.CODED.assoc.logistic",
-                              "-bh", "/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/data/HLA_Analysis/AssociationTest/CancerResearch_Example/MARKER_PANEL/data_Rev_merged.HLA.bim",
-                              "-ba", "/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/data/HLA_Analysis/AssociationTest/CancerResearch_Example/MARKER_PANEL/data_Rev_merged.AA.CODED.bim"
+                              "-lrA", "/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/data/HLA_Analysis/AssociationTest/CancerResearch_Example/MARKER_PANEL/data_Rev_merged.AA.CODED.assoc.logistic",
+                              "-lrH", "/Users/wansun/Data/HATK/data/HLA_Analysis/AssociationTest/CancerResearch_Example/MARKER_PANEL/data_Rev_merged.HLA.assoc.logistic",
                               ])
 
 
@@ -877,7 +939,6 @@ if __name__ == "__main__" :
 
 
     # main function execution.
-    HEATMAP(_hla_name=args.hla, _out=args.o, _input=args.input,
-            _p_hla_dict=args.hla_dict, _p_assoc_logistic=args.logistic_result,
-            _bim_HLA=args.bim_HLA, _bim_AA=args.bim_AA, _bim_merged=args.bim_merged,
+    HEATMAP(_hla_name=args.hla, _out=args.o, _input=args.input, _p_hla_dict=args.hla_dict,
+            _p_assoc_logistic_AA=args.logistic_result_AA, _p_assoc_logistic_HLA=args.logistic_result_HLA, _p_assoc_logistic_MERGED=args.logistic_result_MERGED,
             _p_heatmapR="/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/src/HLA_Analysis/Plotting/heatmap/8b_plot_WS.R")
