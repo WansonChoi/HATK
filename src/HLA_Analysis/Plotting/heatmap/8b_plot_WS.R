@@ -38,6 +38,15 @@ args5.plot.outf_ = args[5]
 # args4.HLA_name_ = "DRB1"
 # args5.plot.outf_ = "TEST_heatmapheatmapheatmap"
 
+# # static argument preparation for testing((2018. 8. 24.) Cancer Research)
+# args1.disease.map_ = "/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/HEATMAP_Cancer.map.txt"
+# args2.disease.assoc_ = "/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/HEATMAP_Cancer.assoc.txt"
+# args3.disease.alleleP_ = "/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/HEATMAP_Cancer.alleleP.txt"
+# args4.HLA_name_ = "A"
+# args5.plot.outf_ = "/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/HEATMAP_Cancer"
+
+
+
 # ### Arguments checking
 # print("Arguments checking")
 # print(args1.disease.map_)
@@ -51,6 +60,7 @@ args5.plot.outf_ = args[5]
 
 # maptable=as.matrix(read.table(paste0("7_",disease,"_map.txt"))) # argument[1]
 maptable=as.matrix(read.table(args1.disease.map_, check.names = F)) # argument[1]
+print(head(maptable))
 
 # (old)
 #               AA_DRB1_-25_ AA_DRB1_-24_ AA_DRB1_-17_ AA_DRB1_-16_ AA_DRB1_-1_ AA_DRB1_4_ AA_DRB1_9_ AA_DRB1_10_ AA_DRB1_11_ AA_DRB1_12_
@@ -66,6 +76,7 @@ maptable=as.matrix(read.table(args1.disease.map_, check.names = F)) # argument[1
 
 # P=as.matrix(read.table(paste0("7_",disease,"_assoc.txt"))) # argument[2]
 P=as.matrix(read.table(args2.disease.assoc_, check.names = F)) # argument[2]
+print(head(P))
 
 #               AA_DRB1_-25_ AA_DRB1_-24_ AA_DRB1_-17_ AA_DRB1_-16_ AA_DRB1_-1_ AA_DRB1_4_ AA_DRB1_9_ AA_DRB1_10_ AA_DRB1_11_ AA_DRB1_12_
 # HLA_DRB1_0101    0.5040396     4.641114     16.31211    0.4623068   -26.00802   3.916856  17.580375   0.5114493  -2.0530567  -0.1444203
@@ -79,6 +90,7 @@ P=as.matrix(read.table(args2.disease.assoc_, check.names = F)) # argument[2]
 # alleleP=as.matrix(read.table(paste0("7_",disease,"_alleleP.txt"))) # argument[3]
 alleleP=as.matrix(read.table(args3.disease.alleleP_, check.names = F)) # argument[3]
 # (2018.5.21) "AA_DRB1_-25_" 이렇게 읽어야할 label을 자동으로 "AA_DRB1_.25_" 이렇게 읽어오는 문제가 있었음. check.names = F 줘서 해결함.
+print(head(alleleP))
 
 #                        x
 # HLA_DRB1_0101 -2.0555667
@@ -117,7 +129,7 @@ cat("min=", min(P), " max=", max(P), "\n")
 org.ncol=ncol(P)
 
 # MERGE P AND ALLELE.P
-for (i in 1:13) { 
+for (i in 1:11) { 
   # (2018.6.19) 여기가 왜 12일까...
   # (2018. 6. 20.) 이거 뭔지 찾음. 테이블상에 "HLA-
 P=cbind(P, alleleP)
