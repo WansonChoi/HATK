@@ -21,8 +21,12 @@ def MakeDictionary(_HG, _OUTPUT, _IMGT, _TYPE="BOTH"):
 
 
     ### General
-    raw_HLA_names = ["A", "C", "B", "DRB", "DQA", "DQB", "DPA", "DPB"]
-    HLA_names = ["A", "C", "B", "DRB1", "DQA1", "DQB1", "DPA1", "DPB1"]
+    # raw_HLA_names = ["A", "C", "B", "DRB", "DQA", "DQB", "DPA", "DPB"]
+    # HLA_names = ["A", "C", "B", "DRB1", "DQA1", "DQB1", "DPA1", "DPB1"]
+
+    # (2018. 8. 28.)
+    raw_HLA_names = ["A", "B", "C", "DPA", "DPB", "DQA", "DQB", "DRB"]
+    HLA_names = ["A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1"]
 
 
     ### Dictionaries for Raw files.

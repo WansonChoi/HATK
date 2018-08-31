@@ -237,26 +237,22 @@ if __name__ == '__main__':
 
     ##### <for Test> #####
 
-    # (2018.2.9)
-    # args = parser.parse_args(["./HAPMAP_CEU_HLA_switched.ped", "./HLA_DICTIONARY_AA_hg19.txt", "AA", "--OUTPUT", "BROAD_ORDER"])
-
-
-    # (2018.2.26)
-    # args = parser.parse_args(["./COATING_TEST.coated.txt", "./HLA_DICTIONARY_AA.hg19.imgt370.txt", "AA", "--OUTPUT", "TEST_0329_HLAtoSeq"])
-
-    # (2018.3.8)
-    # args = parser.parse_args(["./COATING_TEST.coated.txt", "./HLA_DICTIONARY_SNPS.hg19.imgt370.txt", "SNPS", "--OUTPUT", "BROAD_ORDER"])
-
-    # (2018. 7. 12.)
-    # args = parser.parse_args(["-ped", "/Users/wansun/Git_Projects/MakeReference_RECODE_v2/makereference_recode_v2/data/MakeReference/HAPMAP_CEU_HLA.4field.ped",
-    #                           "-dict", "/Users/wansun/Git_Projects/MakeReference_RECODE_v2/makereference_recode_v2/data/MakeReference/HLA_DICTIONARY_AA.hg18.imgt370.txt",
+    # # (2018. 8. 27.)
+    # args = parser.parse_args(["-ped", "/Users/wansun/Data/HATK/data/HLA_Analysis/AssociationTest/CancerResearch_Example/data_Rev_merged.4field.ped",
+    #                           "-dict", "/Users/wansun/Data/HATK/data/MakeReference/HLA_DICTIONARY_AA.hg19.imgt3320.txt",
     #                           "-type", "AA",
-    #                           "-o", "/Users/wansun/Git_Projects/MakeReference_RECODE_v2/makereference_recode_v2/MODULE_TEST_HAPMAP_CEU_HLA.4field.imgt370"])
+    #                           "-o", "/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/CHECK_HLAtoSeuqences.txt"])
 
-    # args = parser.parse_args(["-ped", "/Users/wansun/Git_Projects/MakeReference_RECODE_v2/makereference_recode_v2/data/MakeReference/HAPMAP_CEU_HLA.4field.ped",
-    #                           "-dict", "/Users/wansun/Git_Projects/MakeReference_RECODE_v2/makereference_recode_v2/data/MakeReference/HLA_DICTIONARY_SNPS.hg18.imgt370.txt",
+    # # (2018. 8. 28.)
+    # args = parser.parse_args(["-ped", "/Users/wansun/Data/HATK/data/MakeReference/HAPMAP_CEU_HLA.4field.ped",
+    #                           "-dict", "/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/IMGT370_fixed/HLA_DICTIONARY_AA.hg18.imgt370.txt",
+    #                           "-type", "AA",
+    #                           "-o", "/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/TEST_HATK"])
+
+    # args = parser.parse_args(["-ped", "/Users/wansun/Data/HATK/data/MakeReference/HAPMAP_CEU_HLA.4field.ped",
+    #                           "-dict", "/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/IMGT370_fixed/HLA_DICTIONARY_SNPS.hg18.imgt370.txt",
     #                           "-type", "SNPS",
-    #                           "-o", "/Users/wansun/Git_Projects/MakeReference_RECODE_v2/makereference_recode_v2/MODULE_TEST_HAPMAP_CEU_HLA.4field.imgt370"])
+    #                           "-o", "/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/TEST_HATK"])
 
 
     ##### <for Publication> #####

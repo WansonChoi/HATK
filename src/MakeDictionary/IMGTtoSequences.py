@@ -31,7 +31,8 @@ def IMGTtoSequences(_inputfile, _OUTPUT, _TYPE, _HLA, _HG=19,
     Sequence_Chunks = [] # list of Dictionarys (which contains chunks of raw sequences).
 
     start_p_AA = {'A': -24, 'C': -24, 'B': -24, 'DRB1': -29, 'DQA1': -23, 'DQB1': -32, 'DPA1': -31, 'DPB1': -29}
-    start_p_SNPS = {'A': -300, 'C': -283, 'B': -284, 'DRB1': -599, 'DQA1': -746, 'DQB1': -525, 'DPA1': -523, 'DPB1': -366}
+    # start_p_SNPS = {'A': -300, 'C': -283, 'B': -284, 'DRB1': -599, 'DQA1': -746, 'DQB1': -525, 'DPA1': -523, 'DPB1': -366}
+    start_p_SNPS = {'A': -300, 'C': -283, 'B': -284, 'DRB1': -599, 'DQA1': -742, 'DQB1': -525, 'DPA1': -523, 'DPB1': -366}
 
     insertions = []
     insertions_idx = []
@@ -708,7 +709,7 @@ def IMGTtoSequences(_inputfile, _OUTPUT, _TYPE, _HLA, _HG=19,
             LABEL_relative_position = []
 
             count_indel = 0
-            gen_start = HLA_POS.iat[0, 0]
+            gen_start = HLA_POS.iat[0, 0] # This part should be modified to the start point of exon1 but not the start point of UTR.
             rel_start = start_p_SNPS[HLA_name]
 
             for i in range(0, len(conserved_1st_seq)):
@@ -894,6 +895,7 @@ if __name__ == "__main__":
 
     ##### < for Publish > #####
     args = parser.parse_args()
+
     # print(args)
 
 
