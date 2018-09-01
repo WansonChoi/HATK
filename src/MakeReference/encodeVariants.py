@@ -57,8 +57,19 @@ def encodeVariants(_p_ped, _p_map, _out):
         flattened = df_pedfile.apply(set, axis=0)
         print(flattened)
 
-        alleles = [tuple(flattened.iat[i].union(flattened.iat[i+1]).difference({0, "0"})) for i in range(0, flattened.shape[0], 2)]
-        print(alleles)
+        # alleles = [tuple(flattened.iat[i].union(flattened.iat[i+1]).difference({0, "0"})) for i in range(0, flattened.shape[0], 2)]
+        # print(alleles)
+
+        # (2018. 9. 1.)
+
+        alleles = []
+
+        for i in range(0, flattened.shape[0], 2):
+
+            l_temp = list(flattened.iat[i].union(flattened.iat[i+1]).difference({0, "0"}))
+            l_temp.sort()
+
+            alleles.append(l_temp)
 
         # (2018. 8. 28.)
         sr_alleles = pd.Series(alleles, index=pd.Index(df_mapfile.iloc[:, 1]))
