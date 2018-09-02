@@ -350,9 +350,9 @@ def PrintGenotypes3(_allele1, _allele2, _seg_ALL_ALLELES):
 
         if ((_allele1 != "0") and (_allele2 != "0")):  # The condition for checking integer value 0 won't be included here because .ped file was read with "dtype=str" option.
 
-            t_sr1 = pd.Series(_seg_ALL_ALLELES, index=pd.Index(_seg_ALL_ALLELES)).apply(lambda x: "P" if (x in _allele1) else "A")
+            t_sr1 = pd.Series(_seg_ALL_ALLELES, index=pd.Index(_seg_ALL_ALLELES)).apply(lambda x: "p" if (x in _allele1) else "a")
             # print("{0} : t_sr1 is \n{1}".format(_locus, t_sr1))
-            t_sr2 = pd.Series(_seg_ALL_ALLELES, index=pd.Index(_seg_ALL_ALLELES)).apply(lambda x: "P" if (x in _allele2) else "A")
+            t_sr2 = pd.Series(_seg_ALL_ALLELES, index=pd.Index(_seg_ALL_ALLELES)).apply(lambda x: "p" if (x in _allele2) else "a")
             # print("{0} : t_sr1 is \n{1}".format(_locus, t_sr2))
 
             for i in range(0, len(t_sr1)):

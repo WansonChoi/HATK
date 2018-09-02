@@ -121,14 +121,14 @@ def encodeVariants(_p_ped, _p_map, _out):
                         else:
 
                             if alleles[idx_alleles][j] == SNP1:
-                                Seq.append("P")
+                                Seq.append("p")
                             else:
-                                Seq.append("A")
+                                Seq.append("a")
 
                             if alleles[idx_alleles][j] == SNP2:
-                                Seq.append("P")
+                                Seq.append("p")
                             else:
-                                Seq.append("A")
+                                Seq.append("a")
 
 
                     if len(alleles[idx_alleles]) > 3:
@@ -144,14 +144,14 @@ def encodeVariants(_p_ped, _p_map, _out):
 
                                 else:
                                     if alleles[idx_alleles][j] == SNP1 or alleles[idx_alleles][k] == SNP1:
-                                        Seq.append("P")
+                                        Seq.append("p")
                                     else:
-                                        Seq.append("A")
+                                        Seq.append("a")
 
                                     if alleles[idx_alleles][j] == SNP2 or alleles[idx_alleles][k] == SNP2:
-                                        Seq.append("P")
+                                        Seq.append("p")
                                     else:
-                                        Seq.append("A")
+                                        Seq.append("a")
 
 
                         if len(alleles[idx_alleles]) > 5:
@@ -167,14 +167,14 @@ def encodeVariants(_p_ped, _p_map, _out):
 
                                         else:
                                             if alleles[idx_alleles][j] == SNP1 or alleles[idx_alleles][k] == SNP1 or alleles[idx_alleles][l] == SNP1:
-                                                Seq.append("P")
+                                                Seq.append("p")
                                             else:
-                                                Seq.append("A")
+                                                Seq.append("a")
 
                                             if alleles[idx_alleles][j] == SNP2 or alleles[idx_alleles][k] == SNP2 or alleles[idx_alleles][l] == SNP2:
-                                                Seq.append("P")
+                                                Seq.append("p")
                                             else:
-                                                Seq.append("A")
+                                                Seq.append("a")
 
 
 

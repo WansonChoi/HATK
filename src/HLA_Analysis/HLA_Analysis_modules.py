@@ -91,8 +91,8 @@ def MakeDefaultReferenceAllele(_bfile):
 
     for i in range(0, bim.shape[0]):
 
-        if (l_Al1[i] == "A" and l_Al2[i] == "P"):
-            l_Al1[i] = "P"
+        if (l_Al1[i] == "a" and l_Al2[i] == "p"):
+            l_Al1[i] = "p"
 
     # Making the reference allele DataFrame.
 
