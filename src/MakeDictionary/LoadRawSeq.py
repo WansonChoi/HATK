@@ -8,19 +8,33 @@ import argparse, textwrap
 
 def main(_nuc, _gen = "Not_given", _prot = "Not_given", _out = "Not_given"):
 
+    HLA_names = ["A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1"]
+
+
     ### Test Stage
 
-    df_raw_Markers_nuc = LoadRawSeq2(_nuc, "nuc")
-    df_raw_Markers_nuc.to_csv(_out+".nuc.raw.markers.txt", sep='\t', header=False, index=True)
+    print("\n=============<NUC>=============\n")
+
+    df_raw_Markers_nuc = LoadRawSeq2(_nuc, "A", "nuc")
+    df_raw_Markers_nuc.to_csv(_out+".HLA_{0}.nuc.raw.markers.txt".format("A"), sep='\t', header=False, index=True)
     print(df_raw_Markers_nuc.head())
+    print(df_raw_Markers_nuc.tail())
 
-    df_raw_Markers_gen = LoadRawSeq2(_gen, "gen")
-    df_raw_Markers_nuc.to_csv(_out+".gen.raw.markers.txt", sep='\t', header=False, index=True)
+    print("\n=============<GEN>=============\n")
+
+    df_raw_Markers_gen = LoadRawSeq2(_gen, "A", "gen")
+    df_raw_Markers_gen.to_csv(_out+".HLA_{0}.gen.raw.markers.txt".format("A"), sep='\t', header=False, index=True)
     print(df_raw_Markers_gen.head())
+    print(df_raw_Markers_gen.tail())
 
-    df_raw_Markers_prot = LoadRawSeq2(_prot, "prot")
-    df_raw_Markers_nuc.to_csv(_out+".prot.raw.markers.txt", sep='\t', header=False, index=True)
+
+
+    print("\n=============<PROT>=============\n")
+
+    df_raw_Markers_prot = LoadRawSeq2(_prot, "A", "prot")
+    df_raw_Markers_prot.to_csv(_out+".HLA_{0}.prot.raw.markers.txt".format("A"), sep='\t', header=False, index=True)
     print(df_raw_Markers_prot.head())
+    print(df_raw_Markers_prot.tail())
 
 
     return 0
@@ -28,11 +42,8 @@ def main(_nuc, _gen = "Not_given", _prot = "Not_given", _out = "Not_given"):
 
 # def LoadRawSeq(_nuc)
 
-def LoadRawSeq2(_nuc_filename,  _type):
+def LoadRawSeq2(_nuc_filename, _hla,  _type):
 
-    if not (_type == "nuc" or _type == "gen" or _type == "prot"):
-        print("\nArugment \"_type\" must be either \"nuc\", \"gen\" or \"prot\"")
-        return -1
 
     print("\n\nLoading \"{0}\" file".format(_nuc_filename))
 
@@ -93,6 +104,22 @@ def LoadRawSeq2(_nuc_filename,  _type):
 
     # print(f_lines[-2]) # "Please see http://hla.alleles.org/terms.html for terms of use."
     line_number_marks.append(len(f_lines) - 2)
+
+
+    ### Acquiring starting offset
+
+    # (2018. 9. 7.) Newly introduced.
+
+    # Using "*_gen.txt" and "*_nuc.txt" files.
+
+    if _type == "nuc":
+        line_offset = re.split('\s+', f_lines[line_number_marks[0] + 1].lstrip(' ').rstrip(' \n')).pop()
+    elif _type == "gen":
+        line_offset = re.split('\s+', f_lines[line_number_marks[0]].lstrip(' ').rstrip(' \n')).pop()
+
+
+    if _type == "nuc" or _type == "gen":
+        print("\nStart Offset is : {0}\n".format(line_offset))
 
 
     ##### APPENDING_RAW_SEQUENCES
