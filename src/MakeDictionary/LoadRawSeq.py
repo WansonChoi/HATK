@@ -6,7 +6,8 @@ import pandas as pd
 import argparse, textwrap
 
 
-def main(_nuc, _gen = "Not_given", _prot = "Not_given", _out = "Not_given"):
+def main(_out, _hla, _type, _hg_Table, _imgt,
+         _nuc, _gen = "Not_given", _prot = "Not_given"):
 
     HLA_names = ["A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1"]
     isREVERSE = {'A': False, 'C': True, 'B': True, 'DRB1': True, 'DQA1': False, 'DQB1': True, 'DPA1': True, 'DPB1': False}
@@ -564,24 +565,43 @@ if __name__ == "__main__":
 
     parser.add_argument("-h", "--help", help="\nShow this help message and exit\n\n", action='help')
 
-    parser.add_argument("-nuc", help="\nInput *_nuc.txt file.\n\n", required=True)
-    parser.add_argument("-gen", help="\nInput *_gen.txt file.\n\n")
-    parser.add_argument("-prot", help="\nInput *_prot.txt file.\n\n")
     parser.add_argument("-o", help="\nOuput file prefix\n\n", required=True)
+
+    parser.add_argument("-HLA", help="\nHLA gene name which you will process.\n\n", required=True, metavar='HLA',
+                        choices=["A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1"])
+
+    parser.add_argument("--type", "-t", help="\nSequence type to deal with(Amino Acids[AA] or SNPs[SNPS]\n\n", required=True, choices=["AA", "SNPS"], metavar='TYPE')
+    parser.add_argument("-hg", help="\nHLA gene position information table.\n\n", required=True)
+    parser.add_argument("-imgt", help="\nIMGT-HLA data version(ex. 370, 3300)\n\n", metavar="IMGT_Version", required=True)
+
+    parser.add_argument("-nuc", help="\nInput *_nuc.txt file.\n\n", required=True)
+    parser.add_argument("-gen", help="\nInput *_gen.txt file.\n\n", default="Not_given")
+    parser.add_argument("-prot", help="\nInput *_prot.txt file.\n\n", default="Not_given")
 
 
     # for Publish
     # args = parser.parse_args()
 
     # for Testing
-    args = parser.parse_args(["-nuc", "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/IMGTHLA/IMGTHLA370/alignments/A_nuc.txt",
+    # args = parser.parse_args(["-nuc", "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/IMGTHLA/IMGTHLA370/alignments/A_nuc.txt",
+    #                           "-gen", "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/IMGTHLA/IMGTHLA370/alignments/A_gen.txt",
+    #                           "-prot", "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/IMGTHLA/IMGTHLA370/alignments/A_prot.txt",
+    #                           "-o", "NEW_Dict"])
+
+    args = parser.parse_args(["-o", "/Users/wansun/Git_Projects/HATK/MkDict_v2/Dictionary.v2",
+                              "-HLA", "A",
+                              "--type", "SNPS",
+                              "-imgt", "370"
+                              "-hg", "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/HATK/data/MakeDictionary/HLA_INTEGRATED_POSITIONS_hg18.txt",
+                              "-nuc", "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/IMGTHLA/IMGTHLA370/alignments/A_nuc.txt",
                               "-gen", "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/IMGTHLA/IMGTHLA370/alignments/A_gen.txt",
-                              "-prot", "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/IMGTHLA/IMGTHLA370/alignments/A_prot.txt",
-                              "-o", "NEW_Dict"])
+                              "-prot", "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/IMGTHLA/IMGTHLA370/alignments/A_prot.txt"
+                              ])
 
     print(args)
 
-    main(args.nuc, args.gen, args.prot, args.o)
+    main(_out = args.o, _hla=args.HLA, _type=args.type, _hg_Table=args.hg, _imgt=args.imgt,
+         _nuc=args.nuc, _gen=args.gen, _prot=args.prot)
 
 
 
