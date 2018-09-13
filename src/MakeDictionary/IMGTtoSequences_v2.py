@@ -5,9 +5,9 @@ import pandas as pd
 import argparse, textwrap
 import re
 
-def IMGTtoSequences(_out, _hla, _hg_Table, _imgt,
-                    _nuc, _type = "BOTH", _gen = "Not_given", _prot = "Not_given",
-                    _no_Indel_AA=False, _no_Indel_SNPS=False):
+def IMGTtoSequences(_out, _hla, _hg_Table, _imgt, _type,
+                    _nuc="Not_given", _gen="Not_given", _prot="Not_given",
+                    _no_Indel=False):
 
 
     ########## < Core Variables > ##########
@@ -36,6 +36,26 @@ def IMGTtoSequences(_out, _hla, _hg_Table, _imgt,
         os.system(' '.join(["mkdir", "-p", INTERMEDIATE_PATH]))
 
 
+    ### Checking necessary raw imgt files.
+    if _type == "AA":
+
+        if _nuc == "Not_given" or _prot == "Not_given":
+            print(std_ERROR_MAIN_PROCESS_NAME + "{0}_prot.txt or {0}_nuc.txt files can't be found. Please check it again.\n".format(_hla))
+            sys.exit()
+
+    elif _type == "SNPS":
+
+        if _gen == "Not_given":
+            print(std_ERROR_MAIN_PROCESS_NAME + "{0}_gen.txt file can't be found. Please check it again.\n".format(_hla))
+            sys.exit()
+
+
+    ### Checking "HLA_INTEGRATED_POSITIONS" file
+
+    if not os.path.exists(_hg_Table):
+
+        print(std_ERROR_MAIN_PROCESS_NAME + "\"HLA_INTEGRATED_TABLE_hg{18,19,38}.txt\" file can't be found. Please check it againg.\n")
+        sys.exit()
 
 
 
@@ -56,7 +76,7 @@ def IMGTtoSequences(_out, _hla, _hg_Table, _imgt,
 
 
 
-    if _type == "AA" or _type=="BOTH":
+    if _type == "AA":
 
 
         ##### Loading *_nuc.txt file.
@@ -94,13 +114,13 @@ def IMGTtoSequences(_out, _hla, _hg_Table, _imgt,
         print("\n\nSeqeunces(without Indels) of nuc splitted.\n")
         print(df_Seqs_splited_noIndel_nuc.head())
 
-        df_Seqs_splited_noIndel_nuc.to_csv(_out + ".HLA_{0}.nuc.seqs.NoIndelChar.splitted.txt".format(_hla), sep='\t', header=True, index=True)  # Exporting 2 for nuc
+        df_Seqs_splited_noIndel_nuc.to_csv(_out + ".HLA_{0}.nuc.seqs.noindel.splitted.txt".format(_hla), sep='\t', header=True, index=True)  # Exporting 2 for nuc
 
         # No more processing to *_nuc.txt file is needed.
 
 
-        print("\n")
-        print("\n=============<Prot>=============\n")
+
+        print("\n\n=============<Prot>=============\n")
         print(std_MAIN_PROCESS_NAME + "Processing Prot files for AA.\n")
 
         # Raw Markers
@@ -112,7 +132,7 @@ def IMGTtoSequences(_out, _hla, _hg_Table, _imgt,
         print(sr_raw_Seqs_prot.head())
 
 
-        if _no_Indel_AA:
+        if _no_Indel:
 
             df_Seqs_IndelProcessed_prot = ProcessIndel(sr_raw_Seqs_prot, _remove_indel=True)
             df_Seqs_IndelProcessed_prot.to_csv(_out + ".HLA_{0}.prot.seqs.noindel.txt".format(_hla), sep='\t', header=False, index=True)
@@ -126,8 +146,8 @@ def IMGTtoSequences(_out, _hla, _hg_Table, _imgt,
         ### Making final outputs.
 
         # Making columns for final outputs.
-        l_genomic_positions = getPositionInfo_AA("gen", df_Seqs_IndelProcessed_prot.iat[0], exon1_offset+1, _has_Indel=(not _no_Indel_AA))
-        l_relative_positions = getPositionInfo_AA("rel", df_Seqs_IndelProcessed_prot.iat[0], int(start_offset_nuc), _has_Indel=(not _no_Indel_AA))
+        l_genomic_positions = getPositionInfo_AA("gen", df_Seqs_IndelProcessed_prot.iat[0], exon1_offset + 1, _has_Indel=(not _no_Indel))
+        l_relative_positions = getPositionInfo_AA("rel", df_Seqs_IndelProcessed_prot.iat[0], int(start_offset_nuc), _has_Indel=(not _no_Indel))
 
         print("\ngenomic positions")
         print(l_genomic_positions)
@@ -140,22 +160,29 @@ def IMGTtoSequences(_out, _hla, _hg_Table, _imgt,
         df_Markers_prot = pd.DataFrame(l_Markers, index=df_Seqs_IndelProcessed_prot.index,
                                        columns=pd.MultiIndex.from_arrays([l_relative_positions, l_genomic_positions], names=["relative_POS", "genomic_POS"]))
 
+        df_forMAP = df_Markers_prot.columns.to_frame(index=False)
+
         print("\nFinal output as markers.\n")
         print(df_Markers_prot.head())
+        print(df_forMAP.head())
 
         # Exporting
-        if _no_Indel_AA:
+        if _no_Indel:
             df_Markers_prot.to_csv(_out + ".HLA_{0}.prot.markers.noindel.txt".format(_hla), sep='\t', header=True, index=True)
+            df_forMAP.to_csv(_out + ".HLA_{0}.prot.noindel.forMAP.txt".format(_hla), sep='\t', header=True, index=False)
         else:
             df_Markers_prot.to_csv(_out + ".HLA_{0}.prot.markers.indel.txt".format(_hla), sep='\t', header=True, index=True)
+            df_forMAP.to_csv(_out + ".HLA_{0}.prot.indel.forMAP.txt".format(_hla), sep='\t', header=True, index=False)
+
+
+        return [df_Markers_prot, df_forMAP]
 
 
 
+    if _type == "SNPS":
 
-    if _type == "SNPS" or _type == "BOTH":
 
-        print("\n")
-        print("\n=============<GEN>=============\n")
+        print("\n\n=============<GEN>=============\n")
         print(std_MAIN_PROCESS_NAME + "Processing gen files for SNPS.\n")
 
         # Raw Markers
@@ -198,7 +225,7 @@ def IMGTtoSequences(_out, _hla, _hg_Table, _imgt,
         print("\n{0}\n".format(l_idx_gen))
 
 
-        if _no_Indel_SNPS:
+        if _no_Indel:
 
             df_Seqs_splited_noIndel_gen.columns = pd.Index(l_idx_gen)
             df_Seqs_splited_noIndel_gen.index.name = "Alleles"
@@ -206,7 +233,7 @@ def IMGTtoSequences(_out, _hla, _hg_Table, _imgt,
             print("\nSeqs without Indel characters of gen splitted.\n")
             print(df_Seqs_splited_noIndel_gen.head())
 
-            df_Seqs_splited_noIndel_gen.to_csv(_out+".HLA_{0}.gen.seqs.NoIndelChar.splitted.txt".format(_hla), sep='\t', header=True, index=True) # **
+            df_Seqs_splited_noIndel_gen.to_csv(_out+".HLA_{0}.gen.seqs.noindel.splitted.txt".format(_hla), sep='\t', header=True, index=True) # **
 
         else:
 
@@ -219,28 +246,28 @@ def IMGTtoSequences(_out, _hla, _hg_Table, _imgt,
             print("\nSeqs with Indel characters of gen splitted.\n")
             print(df_Seqs_splited_Indel_gen.head())
 
-            df_Seqs_splited_Indel_gen.to_csv(_out+".HLA_{0}.gen.seqs.IndelChar.splitted.txt".format(_hla), sep='\t', header=True, index=True) # **
+            df_Seqs_splited_Indel_gen.to_csv(_out+".HLA_{0}.gen.seqs.noindel.splitted.txt".format(_hla), sep='\t', header=True, index=True) # **
 
 
 
         ##### Making final output as markers and seqs.
 
-        df_temp = df_Seqs_splited_Indel_gen if not _no_Indel_SNPS else df_Seqs_splited_noIndel_gen
+        df_temp = df_Seqs_splited_Indel_gen if not _no_Indel else df_Seqs_splited_noIndel_gen
 
         print("\ndf_temp is \n")
         print(df_temp.head())
 
         l_genomic_positions = getPositionInfo_SNPS("gen", df_temp, _hla, isREVERSE[_hla], exon1_offset,
-                                                   _has_Indel=(not _no_Indel_SNPS))
+                                                   _has_Indel=(not _no_Indel))
         l_relative_positions = getPositionInfo_SNPS("rel", df_temp, _hla, isREVERSE[_hla],
-                                                    _has_Indel=(not _no_Indel_SNPS))
+                                                    _has_Indel=(not _no_Indel))
 
         # Final output as markers
         df_Markers_gen = SeqsToMarkers(df_temp, l_genomic_positions, l_relative_positions)
 
         print("\nFinal output as markers\n")
         print(df_Markers_gen.head())
-        df_Markers_gen.to_csv(_out+".HLA_{0}.gen.MarkerTable.txt".format(_hla), sep='\t', header=True, index=True) # ***
+        df_Markers_gen.to_csv(_out+".HLA_{0}.gen.markers.txt".format(_hla), sep='\t', header=True, index=True) # ***
 
 
         df_forMAP = df_Markers_gen.columns.to_frame(index=False)
@@ -257,10 +284,9 @@ def IMGTtoSequences(_out, _hla, _hg_Table, _imgt,
         print(df_Seqs_gen.head())
 
 
-    # else:
-    #
-    #     print(std_ERROR_MAIN_PROCESS_NAME + "You gave wrong value to `_type` argument.")
+        return [df_Seqs_gen, df_forMAP]
 
+# end - IMGTtoSequences()
 
 
 
@@ -404,14 +430,6 @@ def LoadRawSeq2(_nuc_filename, _hla,  _type):
     # (2)
 
     conserved_1st_seq = df_CODON.iloc[0, :]
-    # print("\nconserved_1st_seq\n")
-    # print(conserved_1st_seq)
-
-    # fordrop = conserved_1st_seq[conserved_1st_seq == '.'].index.tolist()
-    #
-    # df_CODON_trimmed = df_CODON.drop(fordrop, axis=1)
-    # df_CODON_trimmed.columns = pd.Index(range(0, df_CODON_trimmed.shape[1]))
-    # DataFrame where insertions('....') are removed.
 
 
     for i in range(0, len(conserved_1st_seq)):
@@ -656,6 +674,7 @@ def getPositionInfo_AA(_type, _1st_string, _start_offset, _has_Indel=False):
     return l_RETURN
 
 
+
 ### Module 6
 def SeqsToMarkers(_df, _l_gen_pos, _l_rel_pos):
 
@@ -742,6 +761,9 @@ def ComplementStr(_string):
     return ''.join(l_result)
 
 
+
+
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,
@@ -769,7 +791,7 @@ if __name__ == "__main__":
     parser.add_argument("-HLA", help="\nHLA gene name which you will process.\n\n", required=True, metavar='HLA',
                         choices=["A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1"])
 
-    parser.add_argument("--type", "-t", help="\nSNPS or AA or Both\n\n", choices=["AA", "SNPS", "BOTH"], metavar="Type", default="BOTH")
+    parser.add_argument("--type", "-t", help="\nSNPS or AA\n\n", choices=["AA", "SNPS"], metavar="Type", required=True)
     parser.add_argument("--hg-table", "-hg", help="\nHLA gene position information table.\n\n", required=True)
     parser.add_argument("-imgt", help="\nIMGT-HLA data version(ex. 370, 3300)\n\n", metavar="imgt_version", required=True)
 
@@ -778,8 +800,7 @@ if __name__ == "__main__":
     parser.add_argument("-prot", help="\nInput *_prot.txt file.\n\n", default="Not_given")
 
     # Optional arguments
-    parser.add_argument("-nI-SNPS", help="\nNo Indel Markers in SNPS.\n\n", action="store_true")
-    parser.add_argument("-nI-AA", help="\nNo Indel Markers in AA\n\n", action="store_true")
+    parser.add_argument("--no-Indel", "-nI", help="\nNo Indels in  Markers.\n\n", action="store_true")
 
 
 
@@ -838,17 +859,7 @@ if __name__ == "__main__":
     #                           "-nuc", "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/IMGTHLA/IMGTHLA370/alignments/C_nuc.txt",
     #                           "-gen", "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/IMGTHLA/IMGTHLA370/alignments/C_gen.txt",
     #                           "-prot", "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/IMGTHLA/IMGTHLA370/alignments/C_prot.txt",
-    #                           "-nI-AA"
-    #                           ])
-
-    # HLA-C / Both
-    # args = parser.parse_args(["-o", "/Users/wansun/Git_Projects/HATK/MkDict_v2/Dictionary.v2",
-    #                           "-HLA", "C",
-    #                           "-imgt", "370",
-    #                           "-hg", "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/HATK/data/MakeDictionary/HLA_INTEGRATED_POSITIONS_hg18.txt",
-    #                           "-nuc", "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/IMGTHLA/IMGTHLA370/alignments/C_nuc.txt",
-    #                           "-gen", "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/IMGTHLA/IMGTHLA370/alignments/C_gen.txt",
-    #                           "-prot", "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/IMGTHLA/IMGTHLA370/alignments/C_prot.txt"
+    #                           "-nI"
     #                           ])
 
     # HLA-B
@@ -885,9 +896,9 @@ if __name__ == "__main__":
     ##### < for Publish > #####
     args = parser.parse_args()
 
-    print(args)
+    # print(args)
 
 
     # main function execution
     IMGTtoSequences(_out = args.o, _hla=args.HLA, _type=args.type, _hg_Table=args.hg_table, _imgt=args.imgt,
-                    _nuc=args.nuc, _gen=args.gen, _prot=args.prot, _no_Indel_SNPS=args.nI_SNPS, _no_Indel_AA=args.nI_AA)
+                    _nuc=args.nuc, _gen=args.gen, _prot=args.prot, _no_Indel=args.no_Indel)
