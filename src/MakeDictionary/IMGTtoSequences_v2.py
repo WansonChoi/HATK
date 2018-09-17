@@ -7,7 +7,7 @@ import re
 
 def IMGTtoSequences(_out, _hla, _hg_Table, _imgt,
                     _nuc="Not_given", _gen="Not_given", _prot="Not_given",
-                    _no_Indel=False):
+                    _no_Indel=False, _remove_intermediates = False):
 
 
     ########## < Core Variables > ##########
@@ -320,12 +320,12 @@ def IMGTtoSequences(_out, _hla, _hg_Table, _imgt,
 
         if _no_Indel:
 
-            df_Seqs_IndelProcessed_prot = ProcessIndel(sr_raw_Seqs_prot, _remove_indel=True)
+            df_Seqs_IndelProcessed_prot = ProcessIndel(sr_raw_Seqs_prot, _remove_indel=True, _hla=("DQB1" if _hla == "DQB1" else "Not_given"))
             df_Seqs_IndelProcessed_prot.to_csv(_out + ".HLA_{0}.prot.seqs.noindel.txt".format(_hla), sep='\t', header=False, index=True)
 
         else:
 
-            df_Seqs_IndelProcessed_prot = ProcessIndel(sr_raw_Seqs_prot, _remove_indel=False)
+            df_Seqs_IndelProcessed_prot = ProcessIndel(sr_raw_Seqs_prot, _remove_indel=False, _hla=("DQB1" if _hla == "DQB1" else "Not_given"))
             df_Seqs_IndelProcessed_prot.to_csv(_out + ".HLA_{0}.prot.seqs.indel.txt".format(_hla), sep='\t', header=False, index=True)
 
 
@@ -394,11 +394,29 @@ def IMGTtoSequences(_out, _hla, _hg_Table, _imgt,
 
 
 
+    if _remove_intermediates:
+
+        print(std_MAIN_PROCESS_NAME + "Removing all intermediates files.\n")
 
 
 
 
-    # return [df_Seqs_IndelProcessed_prot, df_forMAP]
+    ### Complementing reverse strand.
+
+    if isREVERSE[_hla]:
+
+        """
+        (2018. 9. 17.)
+        I decided to complement reverse strands only in final output "HLA_DICTIONARY_{AA,SNPS}_hg{18,19,38}.{txt,map}".
+        """
+
+        df_Seqs_gen = df_Seqs_gen.apply(lambda x : ComplementStr(x))
+
+        df_Seqs_gen.to_csv(_out + ".HLA_{0}.gen.complementSeqs.txt".format(_hla))
+
+
+
+    return [df_Seqs_gen, df_Seqs_IndelProcessed_prot, final_SNPS_forMAP, final_AA_forMAP]
 
 # end - IMGTtoSequences()
 
@@ -584,12 +602,23 @@ def get_DF_rawSeqsSplitted(_sr, _keep_index=True):
 
 
 ### Main Module 3
-def getIndelSpots(_conserved_1st_seq):
+def getIndelSpots(_conserved_1st_seq, _hla = "Not_given"):
 
     p = re.compile('\.+')
 
     iters = p.finditer(_conserved_1st_seq)
     l_INDELs = [i.span() for i in iters]
+
+    if _hla == "DQB1":
+
+        """
+        (2018. 9. 16.)
+        This exception handling was introduced becuase the 5th exon in DQB1 is either exon or indel itself.
+        Also, this exceoption need to be gone through only when dealing with AA not SNPS(I hope so.).
+        """
+
+        l_INDELs.pop() # Abandon last indel assuming this will correspond to exon5.
+
 
     if bool(l_INDELs):
 
@@ -643,10 +672,10 @@ def getTrimmedSeqs(_string, _l_target_idx, _remove_indel=False):
 
 
 
-def ProcessIndel(_sr, _remove_indel=False):
+def ProcessIndel(_sr, _remove_indel=False, _hla="Not_given"):
 
     # Acquiring span information using "conserved_1st_seq"
-    l_spanInfo = getIndelSpots(_sr[0])
+    l_spanInfo = getIndelSpots(_sr[0], _hla)
 
     return _sr.apply(lambda x: getTrimmedSeqs(x, l_spanInfo, _remove_indel))
 
@@ -1240,7 +1269,7 @@ if __name__ == "__main__":
     #                            "-prot", "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/IMGTHLA/IMGTHLA370/alignments/DQA_prot.txt"
     #                           ])
 
-    # HLA-DQB1 / Indel
+    # HLA-DQB1 / Indel / imgt370
     # args = parser.parse_args(["-o", "/Users/wansun/Git_Projects/HATK/MkDict_v2/Dictionary.v2",
     #                            "-HLA", "DQB1",
     #                            "-imgt", "370",
@@ -1248,6 +1277,16 @@ if __name__ == "__main__":
     #                            "-nuc", "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/IMGTHLA/IMGTHLA370/alignments/DQB_nuc.txt",
     #                            "-gen", "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/IMGTHLA/IMGTHLA370/alignments/DQB_gen.txt",
     #                            "-prot", "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/IMGTHLA/IMGTHLA370/alignments/DQB_prot.txt"
+    #                           ])
+
+    # HLA-DQB1 / Indel / imgt3320
+    # args = parser.parse_args(["-o", "/Users/wansun/Git_Projects/HATK/MkDict_v2/Dictionary.v2.imgt3320",
+    #                            "-HLA", "DQB1",
+    #                            "-imgt", "3320",
+    #                            "-hg", "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/HATK/data/MakeDictionary/HLA_INTEGRATED_POSITIONS_hg18.txt",
+    #                            "-nuc", "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/IMGTHLA/IMGTHLA3320/alignments/DQB1_nuc.txt",
+    #                            "-gen", "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/IMGTHLA/IMGTHLA3320/alignments/DQB1_gen.txt",
+    #                            "-prot", "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/IMGTHLA/IMGTHLA3320/alignments/DQB1_prot.txt"
     #                           ])
 
     # HLA-DPA1 / Indel
