@@ -65,13 +65,6 @@ def MakeDictionary(_HG, _OUTPUT, _IMGT, _TYPE="BOTH", _no_Indel=False):
         print(std_ERROR_MAIN_PROCESS_NAME + "\"IMGTtoSequences.v2.py\" doesn't exist!")
         sys.exit()
 
-    # # MakeMap.py
-    # if os.path.exists(os.path.join(p_src, "MakeMap.py")):
-    #     from src.MakeDictionary.MakeMap import MakeMap
-    # else:
-    #     print(std_ERROR_MAIN_PROCESS_NAME + "\"MakeMap.py\" doesn't exist!")
-    #     sys.exit()
-
 
     ##### < Necessary Static Data files > #####
 
@@ -148,9 +141,6 @@ def MakeDictionary(_HG, _OUTPUT, _IMGT, _TYPE="BOTH", _no_Indel=False):
     ########## < Control Flags > ##########
 
     MAKING_DICTIONARY = 1
-    MAKING_MAPFILE = 0
-    MAKING_SNPS_DICTIONARY = 0
-    # MAKING_SNPS_MAPFILE = 0
     CLEAN_UP = 0
 
 
@@ -212,70 +202,6 @@ def MakeDictionary(_HG, _OUTPUT, _IMGT, _TYPE="BOTH", _no_Indel=False):
 
 
 
-
-    # if MAKING_MAPFILE:
-    #
-    #     ########## < 2. Making AA Map file. > ##########
-    #
-    #     print(std_MAIN_PROCESS_NAME + "[2] Making AA Map file.")
-    #
-    #     HLA_DICTIONARY_AA_map = concat([MakeMap(_inputfile=_OUTPUT + "_{0}.AA.forMAP.txt".format(HLA_names[i]),
-    #                                             _TYPE="AA", _HLA=HLA_names[i], _return_as_dataframe=True)
-    #                                     for i in range(0, len(HLA_names))], axis=0)
-    #
-    #     HLA_DICTIONARY_AA_map.to_csv(
-    #         os.path.join(INTERMEDIATE_PATH, 'HLA_DICTIONARY_AA.hg{0}.imgt{1}.map'.format(_HG, _IMGT)),
-    #         sep='\t', header=False, index=False)
-
-
-    # if MAKING_SNPS_DICTIONARY:
-    #
-    #     ########## < 3. Making SNPS Dictionary. > ##########
-    #
-    #     print(std_MAIN_PROCESS_NAME + "[3] Making SNPS dictionary file.")
-    #
-    #     l_df_Seqs = []
-    #     l_df_forMAPs = []
-    #
-    #     for i in range(0, len(HLA_names)):
-    #
-    #         t_df_Seqs, t_df_forMAPs = IMGTtoSequences(_out = _OUTPUT, _hla=HLA_names[i],
-    #                                                 _hg_Table=HLA_INTEGRATED_POSITIONS_filename,
-    #                                                 _imgt=_IMGT, _type="SNPS",
-    #                                                 _gen=TARGET_gen_files[HLA_names[i]])
-    #
-    #         l_df_Seqs.append(t_df_Seqs)
-    #         # l_df_forMAPs.append(MakeMap(t_df_forMAPs, _type="SNPS", _hla=HLA_names[i]))
-    #
-    #
-    #     HLA_DICTIONARY_SNPS = pd.concat(l_df_Seqs, axis=0)
-    #     # HLA_DICTIONARY_SNPS_map = pd.concat(l_df_forMAPs, axis=0)
-    #
-    #
-    #     HLA_DICTIONARY_SNPS.to_csv(
-    #         os.path.join(INTERMEDIATE_PATH, 'HLA_DICTIONARY_SNPS.hg{0}.imgt{1}.txt'.format(_HG, _IMGT)),
-    #         sep='\t', header=False, index=True)
-    #
-    #     # HLA_DICTIONARY_SNPS_map.to_csv(
-    #     #     os.path.join(INTERMEDIATE_PATH, 'HLA_DICTIONARY_SNPS.hg{0}.imgt{1}.map'.format(_HG, _IMGT)),
-    #     #     sep='\t', header=False, index=False)
-
-
-    # if MAKING_SNPS_MAPFILE:
-    #
-    #     ########## < 4. Making SNPS Map file. > ##########
-    #
-    #     print(std_MAIN_PROCESS_NAME + "[4] Making SNPS Map file.")
-    #
-    #     HLA_DICTIONARY_SNPS_map = pd.concat([MakeMap(_inputfile=_OUTPUT + "_{0}.SNPS.forMAP.txt".format(HLA_names[i]),
-    #                                               _TYPE="SNPS", _HLA=HLA_names[i], _return_as_dataframe=True)
-    #                                       for i in range(0, len(HLA_names))], axis=0)
-    #
-    #     HLA_DICTIONARY_SNPS_map.to_csv(
-    #         os.path.join(INTERMEDIATE_PATH, 'HLA_DICTIONARY_SNPS.hg{0}.imgt{1}.map'.format(_HG, _IMGT)),
-    #         sep='\t', header=False, index=False)
-
-
     if CLEAN_UP:
 
         ########## < 5. Removing unnecessary files. > ##########
@@ -325,10 +251,6 @@ def MakeMap(_hla, _type, _df_forMAP):
 
     for i in range(0, _df_forMAP.shape[0]):
 
-        # t_rel_pos = str(_df_forMAP.iat[i, 0])
-        # t_gen_pos = str(_df_forMAP.iat[i, 1])
-        # t_type = str(_df_forMAP.iat[i, 2])
-
         t_rel_pos = _df_forMAP.iat[i, 0]
         t_gen_pos = _df_forMAP.iat[i, 1]
         t_type = _df_forMAP.iat[i, 2]
@@ -345,15 +267,11 @@ def MakeMap(_hla, _type, _df_forMAP):
             #             t_AA_type = _df_forMAP.iat[i, 5]
 
             if t_AA_rel_pos != "nan" and t_AA_rel_pos != "NaN":
-                # additional_label.append(str(int(t_AA_rel_pos)))
                 additional_label.append(t_AA_rel_pos)
 
             if t_AA_gen_pos != "nan" and t_AA_gen_pos != "NaN":
-                # additional_label.append(str(t_AA_gen_pos))
                 additional_label.append(t_AA_gen_pos)
 
-            #             if not pd.isna(t_AA_type):
-            #                 additional_label.append(str(t_AA_type))
 
             if len(additional_label) > 1:
                 additional_label = '_'.join(additional_label)
@@ -364,7 +282,7 @@ def MakeMap(_hla, _type, _df_forMAP):
     df_MAP = pd.concat([sr_Chr, pd.Series(l_Label), sr_GD, sr_GenPos], axis=1)
 
     # Checking as a file.
-    df_MAP.to_csv("Test_MAKEDICTIONARY_Prototype.forMAP.{0}.{1}.txt".format(_hla, _type), sep='\t', header=False, index=False)
+    # df_MAP.to_csv("Test_MAKEDICTIONARY_Prototype.forMAP.{0}.{1}.txt".format(_hla, _type), sep='\t', header=False, index=False)
 
     return df_MAP
 
@@ -400,14 +318,18 @@ if __name__ == "__main__":
 
     ##### < for Test > #####
 
-    # args = parser.parse_args(["-hg", "18", "-o", "MAKEDICTIONARY_v2/makedictionary", "-imgt", "370"])
-    # args = parser.parse_args(["-hg", "19", "-o", "WRAPPER_TEST/imgt370/WRAPER_TEST", "-imgt", "370"])
-    # args = parser.parse_args(["-hg", "19", "-o", "WRAPPER_TEST/imgt3300_hg19/WRAPER_TEST", "-imgt", "3300"])
-    # args = parser.parse_args(["-hg", "18", "-o", "WRAPPER_TEST/imgt3300_hg18/WRAPER_TEST", "-imgt", "3300"])
-    # args = parser.parse_args(["-hg", "38", "-o", "WRAPPER_TEST/imgt3300_hg38/WRAPER_TEST", "-imgt", "3300"])
+    # (2018. 9. 17.)
 
-    # args = parser.parse_args(["-hg", "19", "-o", "WRAPER_TEST", "-imgt", "370"])
-    # args = parser.parse_args(["-hg", "19", "-o", "WRAPER_TEST", "-imgt", "3300"])
+    # Dictionary / hg18 / imgt370
+    # args = parser.parse_args(["-hg", "18", "-o", "MAKEDICTIONARY_v2_hg18_imgt370/makedictionary.hg18.imgt370", "-imgt", "370"])
+
+    # Dictionary / hg18 / imgt3320
+    # args = parser.parse_args(["-hg", "18", "-o", "MAKEDICTIONARY_v2_hg18_imgt3320/makedictionary.hg18.imgt3320", "-imgt", "3320"])
+
+    # Dictionary / hg19 / imgt3320
+    # args = parser.parse_args(["-hg", "19", "-o", "MAKEDICTIONARY_v2_hg19_imgt3320/makedictionary.hg19.imgt3320", "-imgt", "3320"])
+
+
 
 
     ##### < for Publish > #####

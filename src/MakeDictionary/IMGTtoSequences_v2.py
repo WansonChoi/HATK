@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-import os, sys, subprocess
+import os, sys, re, subprocess
 import pandas as pd
 import argparse, textwrap
-import re
+
 
 def IMGTtoSequences(_out, _hla, _hg_Table, _imgt,
                     _nuc="Not_given", _gen="Not_given", _prot="Not_given",
@@ -224,7 +224,7 @@ def IMGTtoSequences(_out, _hla, _hg_Table, _imgt,
             df_Markers_gen.to_csv(_out + ".HLA_{0}.gen.markers.noindel.txt".format(_hla), sep='\t', header=True, index=True)  # ***
 
 
-        # ===== #
+        ### precursor which will be used in making map file.
         precursor_SNPS_forMAP = df_Markers_gen.columns.to_frame(index=False)
         print("\nframes for .map file.\n")
         print(precursor_SNPS_forMAP.head())
@@ -234,7 +234,6 @@ def IMGTtoSequences(_out, _hla, _hg_Table, _imgt,
         else:
             precursor_SNPS_forMAP.to_csv(_out + ".HLA_{0}.gen.precursor_SNPS_forMAP.noindel.txt".format(_hla), sep='\t', header=True, index=False)  # ***
 
-        # ===== # - will be deprecated and moved to 6th block
 
 
         # Final output as Seqs
@@ -681,7 +680,6 @@ def ProcessIndel(_sr, _remove_indel=False, _hla="Not_given"):
 
 
 
-
 ### Main Module 5
 def getPositionInfo_SNPS(_type, _df, _hla, _isReverse, _exon1_offset=1, _as_flattened=False, _has_Indel=False):
 
@@ -719,23 +717,10 @@ def getPositionInfo_SNPS(_type, _df, _hla, _isReverse, _exon1_offset=1, _as_flat
 
     for i in range(0, len(df_UTR)):
 
-        # if (df_UTR[i] == 'A') or (df_UTR[i] == 'C') or (df_UTR[i] == 'G') or (df_UTR[i] == 'T'):
-        #
-        #     if _type == "gen":
-        #         l_UTR.append(offset_UTR + (-(i - N_indel) if not _isReverse else (i - N_indel)))
-        #
-        #     elif _type == "rel":
-        #         l_UTR.append(offset_UTR + (-(i - N_indel)))
-        #
-        # else:
-        #     l_UTR.append('i')
-        #     N_indel += 1
-
         if (df_UTR[i] == 'z') or (df_UTR[i] == 'Z'):
 
             l_UTR.append('i')
             N_indel += 1
-
 
         else:
 
@@ -760,19 +745,6 @@ def getPositionInfo_SNPS(_type, _df, _hla, _isReverse, _exon1_offset=1, _as_flat
         N_indel = 0
 
         for j in range(0, len(curr_string)):
-
-            # if (curr_string[j] == 'A') or (curr_string[j] == 'C') or (curr_string[j] == 'G') or (curr_string[j] == 'T'):
-            #
-            #     if _type == "gen":
-            #         l_Rest.append(curr_POS + ((j - N_indel) if not _isReverse else (-(j - N_indel))))
-            #
-            #     elif _type == "rel":
-            #         l_Rest.append(curr_POS + (j - N_indel))
-            #
-            # else:
-            #     print(curr_string[j])
-            #     l_Rest.append('i')
-            #     N_indel += 1
 
             if (curr_string[j] == 'z') or (curr_string[j] == 'Z'):
 
@@ -895,7 +867,6 @@ def getPositionInfo_AA(_1st_string, _is_Reverse, _rel_s_offset, _has_Indel=False
 
 
 
-
 ### Module 6
 def SeqsToMarkers(_df, _l_gen_pos, _l_rel_pos):
 
@@ -936,14 +907,9 @@ def HardCodingforHLA_C(_df_C):
 
     _exon_name = sr_temp.name
 
-    #     print(sr_temp.head())
-    #     print(s_1st_seq)
-
     p = re.compile('^[^x]+')
     s = p.match(s_1st_seq)
 
-    #     print(s.group())
-    #     print(s.span())
 
     my_span = s.span()
 
@@ -959,18 +925,12 @@ def HardCodingforHLA_C(_df_C):
 
 
 
-
 ### Module 8
 def coatingPrecursor(_df_precursor1_AA, _df_precursor2_AA, _df_precursor1_SNPS):
+
     df_RETURN_AA_forMAP = None
     df_RETURN_SNPS_forMAP = None
 
-    #     print("\nArguemnt1\n")
-    #     print(_df_precursor1_AA.head())
-    #     print("\nArguemnt2\n")
-    #     print(_df_precursor2_AA.head())
-    #     print("\nArguemnt3\n")
-    #     print(_df_precursor1_SNPS.head())
 
     ##### (1) Marking "Signal Peptide" (only for `_df_precursor2_AA`)
     flag1 = _df_precursor2_AA.iloc[:, 0].str.match('^-')
@@ -982,14 +942,12 @@ def coatingPrecursor(_df_precursor1_AA, _df_precursor2_AA, _df_precursor1_SNPS):
 
     t_df_precursor2_AA = pd.concat([_df_precursor2_AA.iloc[:, [0, 1]], sr_Type], axis=1)
 
-    #     print("\nt_df_precursor2_AA\n")
-    #     print(t_df_precursor2_AA.head())
 
     ##### (2) Re-labeling indel("i").
 
     # cf) `_df_precursor1_AA` doesn't have indels.
 
-    ### AA first
+    ### <AA>
 
     flag_indel_AA = t_df_precursor2_AA.iloc[:, 0] == 'i'
     idx_indel_AA = t_df_precursor2_AA.loc[flag_indel_AA, :].index.tolist()
@@ -1003,11 +961,8 @@ def coatingPrecursor(_df_precursor1_AA, _df_precursor2_AA, _df_precursor1_SNPS):
 
     df_RETURN_AA_forMAP = t_df_precursor2_AA  # (***) "forMAP" file for AA is done.
 
-    #     print("\ndf_RETURN_AA_forMAP\n")
-    #     print(df_RETURN_AA_forMAP.head())
-    #     df_RETURN_AA_forMAP.to_csv('df_RETURN_AA_forMAP.txt', sep='\t', header=True, index=False)
 
-    ### SNPS
+    ### <SNPS>
 
     t_df_precursor1_SNPS = _df_precursor1_SNPS.copy()
 
@@ -1021,9 +976,6 @@ def coatingPrecursor(_df_precursor1_AA, _df_precursor2_AA, _df_precursor1_SNPS):
         t_df_precursor1_SNPS.iat[i, 0] = t_rel_pos
         t_df_precursor1_SNPS.iat[i, 1] = t_gen_pos
 
-    #     print("\nt_df_precursor1_SNPS\n")
-    #     print(t_df_precursor1_SNPS.head())
-    #     t_df_precursor1_SNPS.to_csv('t_df_precursor1_SNPS.txt', sep='\t', header=True, index=False)
 
     ##### (3) Merging
 
@@ -1032,8 +984,6 @@ def coatingPrecursor(_df_precursor1_AA, _df_precursor2_AA, _df_precursor1_SNPS):
     df_merged1 = pd.merge(_df_precursor1_AA.astype(str), t_df_precursor2_AA.loc[~flag_indel_AA, :],
                           how='outer', left_on="SNP_gen_pos", right_on="AA_gen_pos")
 
-    #     print("\ndf_merged1\n")
-    #     df_merged1.to_csv('df_merged1.txt', sep='\t', header=True, index=False)
 
     ## dividing `df_merged1` into "Matched" and "Unmatched" parts.
     flag_Unmatched = df_merged1.iloc[:, 0].isna()
@@ -1069,6 +1019,7 @@ def coatingPrecursor(_df_precursor1_AA, _df_precursor2_AA, _df_precursor1_SNPS):
     sr_temp.name = "Type"
     df_merged1_unmatched = pd.concat([df_merged1_unmatched.iloc[:, [3, 4]], sr_temp], axis=1)
 
+
     ### 2nd Merging : `df_merged1_unmatched` vs. `_df_precursor1_SNPS`("3-prime" parts).
 
     df_merged2 = pd.merge(_df_precursor1_SNPS.loc[flag_3_prime, :].astype(str), df_merged1_unmatched,
@@ -1090,6 +1041,7 @@ def coatingPrecursor(_df_precursor1_AA, _df_precursor2_AA, _df_precursor1_SNPS):
         df_merged2.iat[i + 1, 4] = t_AA_gen + "_3rd"
         df_merged2.iat[i + 1, 5] = t_AA_type
 
+
     ### 3rd(Last) Merging
 
     df_merged1_matched = pd.concat([df_merged1_matched, df_merged2]).reset_index(drop=True).iloc[:, [0, 3, 4, 5]]
@@ -1098,6 +1050,7 @@ def coatingPrecursor(_df_precursor1_AA, _df_precursor2_AA, _df_precursor1_SNPS):
                           how='left', left_on="SNP_rel_pos", right_on="SNP_rel_pos")
 
     df_RETURN_SNPS_forMAP = df_merged3  # (***) forMAP file for SNPS is done.
+
 
     return [df_RETURN_AA_forMAP, df_RETURN_SNPS_forMAP]
 
@@ -1157,7 +1110,6 @@ if __name__ == "__main__":
     parser.add_argument("-HLA", help="\nHLA gene name which you will process.\n\n", required=True, metavar='HLA',
                         choices=["A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1"])
 
-    # parser.add_argument("--type", "-t", help="\nSNPS or AA\n\n", choices=["AA", "SNPS"], metavar="Type", required=True)
     parser.add_argument("--hg-table", "-hg", help="\nHLA gene position information table.\n\n", required=True)
     parser.add_argument("-imgt", help="\nIMGT-HLA data version(ex. 370, 3300)\n\n", metavar="imgt_version", required=True)
 
@@ -1165,7 +1117,6 @@ if __name__ == "__main__":
     parser.add_argument("-gen", help="\nInput *_gen.txt file.\n\n", default="Not_given")
     parser.add_argument("-prot", help="\nInput *_prot.txt file.\n\n", default="Not_given")
 
-    # parser.add_argument("-prot-map", help="\nThe prerequisite for AA map file.\n\n", default="Not_given")
 
     # Optional arguments
     parser.add_argument("--no-Indel", "-nI", help="\nNo Indels in  Markers.\n\n", action="store_true")
