@@ -353,7 +353,7 @@ def HLA2MARKER(_HLA_ped, _OUT,
         This part is originally done in "QC" code block in MakeReferene.
         """
 
-        TMP_allele_order = os.path.join(INTERMEDIATE_PATH, OUTPUT+"MERGED.refallele")
+        TMP_allele_order = os.path.join(INTERMEDIATE_PATH, OUTPUT+".MERGED.refallele")
 
         command = ' '.join(["awk", '\'{if (NR > 1){if (($5 == "a" && $6 == "p") || ($6 == "a" && $5 == "p")){print $2 "\tp"}}}\'', OUTPUT+'.MERGED.TMP.bim', ">", TMP_allele_order])
         print(command)
@@ -404,7 +404,7 @@ def HLA2MARKER(_HLA_ped, _OUT,
 
         """
 
-        print("\n[8] Preparing files for Beagle.")
+        print("\n[7] Preparing files for Beagle.")
 
         # *.markers
         command = ' '.join(["awk", '\'{print $2 " " $4 " " $5 " " $6}\'', OUTPUT + '.MERGED.bim', ">", OUTPUT + '.MERGED.markers'])
@@ -426,7 +426,7 @@ def HLA2MARKER(_HLA_ped, _OUT,
         os.system(command)
 
 
-        print("\n[9] Converting to beagle format.")
+        print("\n[8] Converting to beagle format.")
 
         command = ' '.join([linkage2beagle, "pedigree=" + OUTPUT + '.MERGED.nopheno.ped', "data=" + OUTPUT + '.MERGED.dat',
                             "beagle=" + OUTPUT + '.MERGED.bgl', "standard=true", ">", OUTPUT + '.MERGED.bgl.log'])
@@ -445,7 +445,7 @@ def HLA2MARKER(_HLA_ped, _OUT,
         beagle unphased=$OUTPUT.bgl nsamples=4 niterations=10 missing=0 verbose=true maxwindow=1000 log=$OUTPUT.phasing >> $OUTPUT.bgl.log
 
         '''
-        print("\n[10] Phasing reference using Beagle (see progress in $OUTPUT.bgl.log).")
+        print("\n[9] Phasing reference using Beagle (see progress in $OUTPUT.bgl.log).")
 
         command = ' '.join(
             [beagle, "unphased=" + OUTPUT + '.MERGED.bgl', "nsamples=4 niterations=10 missing=0 verbose=true maxwindow=1000",
@@ -458,7 +458,7 @@ def HLA2MARKER(_HLA_ped, _OUT,
 
     if CLEANUP:
 
-        print("\n[11] Removing unnecessary files.")
+        print("\n[10] Removing unnecessary files.")
 
         rm_tlist = ('.nopheno.ped', '.bgl.gprobs', '.bgl.r2', '.bgl', '.ped', '.map', '.dat')
 
@@ -466,7 +466,7 @@ def HLA2MARKER(_HLA_ped, _OUT,
             print("rm " + OUTPUT+".MERGED" + i)
             os.system("rm " + OUTPUT+".MERGED" + i)
 
-    print("\n[12] Done!")
+    print("\n[11] Done!")
 
     return 0
 
@@ -509,60 +509,8 @@ if __name__ == "__main__":
     parser.add_argument("-dict-SNPS", help="\nPrefix of SNP HLA Dictionary file(*.txt, *.map).\n\n", default="Not_given")
 
 
-    # hla_dict = parser.add_argument_group(title='HLA_DICTIONARY',
-    #                                      description='- Arguments to specify HLA_DICTIONARY Information to New version of MakeReference(2.0)\n'
-    #                                                  '- If you\'re going to use previous version of MakeReference, then Don\'t care about these options.')
-    #
-    # hla_dict.add_argument("-dict-AA", help="\nPrefix of AA HLA Dictionary file(*.txt, *.map).\n\n", default="Not_given")
-    #
-    # hla_dict.add_argument("-dict-SNPS", help="\nPrefix of SNP HLA Dictionary file(*.txt, *.map).\n\n", default="Not_given")
-
 
     ##### <for Test> #####
-
-    # # v370, hg18 (perfectly what Sherman dealt with.)
-    # args = parser.parse_args(["-i", "./data/MakeReference/HAPMAP_CEU",
-    #                           "-ped", "./data/MakeReference/HAPMAP_CEU_HLA.4field.ped",
-    #                           "-hg", "18",
-    #                           "-o", "./MAKEREFERENCE/MAKEREFERENCE_PYTHON",
-    #                           "-dict-AA", "./data/MakeReference/HLA_DICTIONARY_AA.hg18.imgt370.txt",
-    #                           "-dict-AA-map", "./data/MakeReference/HLA_DICTIONARY_AA.hg18.imgt370.map",
-    #                           "-dict-SNPS", "./data/MakeReference/HLA_DICTIONARY_SNPS.hg18.imgt370.txt",
-    #                           "-dict-SNPS-map", "./data/MakeReference/HLA_DICTIONARY_SNPS.hg18.imgt370.map",
-    #                           ])
-
-    # # v3320
-    # args = parser.parse_args(["-i", "./data/MakeReference/HAPMAP_CEU",
-    #                           "-ped", "./data/MakeReference/HAPMAP_CEU_HLA.ped",
-    #                           "-o", "OLD_VERSION_TEST/PREV_VERSION_TEST",
-    #                           "-dict-AA", "./data/MakeReference/HLA_DICTIONARY_AA.hg19.imgt3320.txt",
-    #                           "-dict-AA-map", "./data/MakeReference/HLA_DICTIONARY_AA.hg19.imgt3320.map",
-    #                           "-dict-SNPS", "./data/MakeReference/HLA_DICTIONARY_SNPS.hg19.imgt3320.txt",
-    #                           "-dict-SNPS-map", "./data/MakeReference/HLA_DICTIONARY_SNPS.hg19.imgt3320.map",
-    #                           ])
-
-    # (2018. 7. 30.) Fixing output directory and Prefix
-
-    # # in Project Folder
-    # args = parser.parse_args(["-i", "./data/MakeReference/HAPMAP_CEU",
-    #                           "-ped", "./data/MakeReference/HAPMAP_CEU_HLA.ped",
-    #                           "-o", "OUTOUT_CHECK/FIX_OUTPUT_PATH",
-    #                           "-dict-AA", "./data/MakeReference/HLA_DICTIONARY_AA.hg19.imgt3320.txt",
-    #                           "-dict-AA-map", "./data/MakeReference/HLA_DICTIONARY_AA.hg19.imgt3320.map",
-    #                           "-dict-SNPS", "./data/MakeReference/HLA_DICTIONARY_SNPS.hg19.imgt3320.txt",
-    #                           "-dict-SNPS-map", "./data/MakeReference/HLA_DICTIONARY_SNPS.hg19.imgt3320.map",
-    #                           ])
-
-    # # out of Project Folder
-    # args = parser.parse_args(["-i", "./data/MakeReference/HAPMAP_CEU",
-    #                           "-ped", "/Users/wansun/Documents/GarbageCollector/CancerResearch/data1.4field.ped",
-    #                           "-o", "/Users/wansun/Documents/GarbageCollector/CancerResearch/CANCER2/data1/data1",
-    #                           "-dict-AA", "./data/MakeReference/HLA_DICTIONARY_AA.hg19.imgt3320.txt",
-    #                           "-dict-AA-map", "./data/MakeReference/HLA_DICTIONARY_AA.hg19.imgt3320.map",
-    #                           "-dict-SNPS", "./data/MakeReference/HLA_DICTIONARY_SNPS.hg19.imgt3320.txt",
-    #                           "-dict-SNPS-map", "./data/MakeReference/HLA_DICTIONARY_SNPS.hg19.imgt3320.map",
-    #                           ])
-
 
     # HLA2MARKER (2018. 9. 25.) : hg18 / imgt3320
     # args = parser.parse_args(["-ped", "/Users/wansun/Dropbox/_Sync_MyLaptop/from_WansunChoi_to_Professor/20180910_Cancer_fixed/hg18_imgt3320/Cancer_merged.phe_reversed.fam_fixed.imgt3320.4field.ped",
@@ -572,10 +520,27 @@ if __name__ == "__main__":
     #                           "-hg", "18"
     #                           ])
 
+
+    #  HLA2MARKER (2018. 9. 25.) : hg19 / imgt3320
+    # args = parser.parse_args(["-ped", "/Users/wansun/Dropbox/_Sync_MyLaptop/from_WansunChoi_to_Professor/20180910_Cancer_fixed/hg18_imgt3320/Cancer_merged.phe_reversed.fam_fixed.imgt3320.4field.ped",
+    #                           "-o", "/Users/wansun/Git_Projects/HATK/HLA2MARKER_test_hg19/Marker_Panel.hg19.imgt3320",
+    #                           "-dict-AA", "/Users/wansun/Git_Projects/HATK/MAKEDICTIONARY_v2_hg19_imgt3320/HLA_DICTIONARY_AA.hg19.imgt3320",
+    #                           "-dict-SNPS", "/Users/wansun/Git_Projects/HATK/MAKEDICTIONARY_v2_hg19_imgt3320/HLA_DICTIONARY_SNPS.hg19.imgt3320",
+    #                           "-hg", "19"
+    #                           ])
+
+    # #  HLA2MARKER (2018. 9. 25.) : hg38 / imgt3320
+    # args = parser.parse_args(["-ped", "/Users/wansun/Dropbox/_Sync_MyLaptop/from_WansunChoi_to_Professor/20180910_Cancer_fixed/hg18_imgt3320/Cancer_merged.phe_reversed.fam_fixed.imgt3320.4field.ped",
+    #                           "-o", "/Users/wansun/Git_Projects/HATK/HLA2MARKER_test_hg38/Marker_Panel.hg38.imgt3320",
+    #                           "-dict-AA", "",
+    #                           "-dict-SNPS", "",
+    #                           "-hg", "38"
+    #                           ])
+
     ##### <for Publication> #####
 
     args = parser.parse_args()
-    print(args)
+    # print(args)
 
 
 
