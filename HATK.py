@@ -100,29 +100,26 @@ if __name__ == "__main__":
 
 
     ##### sub-parser for 'MakeReference'
-    parser_MAKEREFERENCE = subparsers.add_parser('MAKEREFERENCE',
-                                                  help='MakeReference help\n\n',
+    parser_MAKEREFERENCE = subparsers.add_parser('HLA2MARKER',
+                                                  help='HLA2MARKER help\n\n',
                                                   formatter_class=argparse.RawTextHelpFormatter,
                                                   add_help=False,
                                                   description=textwrap.dedent('''\
     #################################################################################################
         
-        < MakeReference.py >
+        < HLA2MARKER.py >
         
-        This script helps prepare a reference dataset for HLA imputation
+        This script helps to prepare a reference panel for HLA region.
 
-        Usage(1)
-        : python3 MakeReference.py --previous-version -i ./data/MakeReference_old/HAPMAP_CEU 
-            -ped ./data/MakeReference_old/HAPMAP_CEU_HLA.ped -hg 18 -o ./Trial_HAPMAP_CEU
-        
-        Usage(2)
-        : python3 MakeReference.py -i ./data/MakeReference/HAPMAP_CEU 
-            -ped ./data/MakeReference/HAPMAP_CEU_HLA.4field.ped -hg 18 -o ./Trial_HAPMAP_CEU
-            -dict-AA ./data/MakeReference/HLA_DICTIONARY_AA.hg18.imgt370.txt 
-            -dict-AA-map ./data/MakeReference/HLA_DICTIONARY_AA.hg18.imgt370.map 
-            -dict-SNPS ./data/MakeReference/HLA_DICTIONARY_SNPS.hg18.imgt370.txt 
-            -dict-SNPS-map ./data/MakeReference/HLA_DICTIONARY_SNPS.hg18.imgt370.map
-                
+        (ex.)
+
+        : python3 HLA2MARKER.py  
+            -ped ./data/MakeReference/HAPMAP_CEU_HLA.4field.ped 
+            -hg 18 
+            -o ./Trial_HAPMAP_CEU
+            -dict-AA ./data/MakeReference/HLA_DICTIONARY_AA.hg18.imgt370
+            -dict-SNPS ./data/MakeReference/HLA_DICTIONARY_SNPS.hg18.imgt370 
+
         HLA PED file should contain HLA alleles in the following (alphabetical) order:
         HLA-A, B, C, DPA1, DPB1, DQA1, DQB1, DRB1
 
@@ -133,22 +130,73 @@ if __name__ == "__main__":
 
     parser_MAKEREFERENCE.add_argument("-h", "--help", help="\nShow this help message and exit\n\n", action='help')
 
-    parser_MAKEREFERENCE.add_argument("-i", help="\nInput Data file(.bed/.bim/.fam)\n\n", required=True)
     parser_MAKEREFERENCE.add_argument("-ped", help="\nHLA Type Data(.ped)\n\n", required=True)
     parser_MAKEREFERENCE.add_argument("-hg", help="\nHuman Genome version(ex. 18, 19)\n\n", choices=["18", "19", "38"], metavar="hg", default="19")
     parser_MAKEREFERENCE.add_argument("-o", help="\nOutput file prefix\n\n")
-
-    parser_MAKEREFERENCE.add_argument("--previous-version", help="\nIf you give this option, The MakeReference will work as old version.\n\n", action='store_true')
-    parser_MAKEREFERENCE.add_argument("--only-markers", help="\nGenerate a panel for only markers, not entire reference panel.\n\n", action='store_true') # (2018. 8. 1.) Introduced.
 
     hla_dict = parser_MAKEREFERENCE.add_argument_group(title='HLA_DICTIONARY',
                                          description='- Arguments to specify HLA_DICTIONARY Information to New version of MakeReference(2.0)\n'
                                                      '- If you\'re going to use previous version of MakeReference, then Don\'t care about these options.')
 
-    hla_dict.add_argument("-dict-AA", help="\nInput HLA Dictionary file for AA Information.\n\n", default="Not_given")
-    hla_dict.add_argument("-dict-AA-map", help="\nInput HLA Dictionary .map file for AA Information.\n\n", default="Not_given")
-    hla_dict.add_argument("-dict-SNPS", help="\nInput HLA Dictionary file for SNPS Information.\n\n", default="Not_given")
-    hla_dict.add_argument("-dict-SNPS-map", help="\nInput HLA Dictionary .map file for SNPS Information\n\n", default="Not_given")
+    hla_dict.add_argument("-dict-AA", help="\nPrefix of AA HLA Dictionary file(*.txt, *.map).\n\n", default="Not_given")
+    hla_dict.add_argument("-dict-SNPS", help="\nPrefix of SNP HLA Dictionary file(*.txt, *.map).\n\n", default="Not_given")
+
+
+    # parser.add_argument("-dict-AA", help="\nPrefix of AA HLA Dictionary file(*.txt, *.map).\n\n", default="Not_given")
+    # parser.add_argument("-dict-SNPS", help="\nPrefix of SNP HLA Dictionary file(*.txt, *.map).\n\n", default="Not_given")
+
+
+
+    # ##### sub-parser for 'MakeReference'
+    # parser_MAKEREFERENCE = subparsers.add_parser('MAKEREFERENCE',
+    #                                               help='MakeReference help\n\n',
+    #                                               formatter_class=argparse.RawTextHelpFormatter,
+    #                                               add_help=False,
+    #                                               description=textwrap.dedent('''\
+    # #################################################################################################
+    #
+    #     < MakeReference.py >
+    #
+    #     This script helps prepare a reference dataset for HLA imputation
+    #
+    #     Usage(1)
+    #     : python3 MakeReference.py --previous-version -i ./data/MakeReference_old/HAPMAP_CEU
+    #         -ped ./data/MakeReference_old/HAPMAP_CEU_HLA.ped -hg 18 -o ./Trial_HAPMAP_CEU
+    #
+    #     Usage(2)
+    #     : python3 MakeReference.py -i ./data/MakeReference/HAPMAP_CEU
+    #         -ped ./data/MakeReference/HAPMAP_CEU_HLA.4field.ped -hg 18 -o ./Trial_HAPMAP_CEU
+    #         -dict-AA ./data/MakeReference/HLA_DICTIONARY_AA.hg18.imgt370.txt
+    #         -dict-AA-map ./data/MakeReference/HLA_DICTIONARY_AA.hg18.imgt370.map
+    #         -dict-SNPS ./data/MakeReference/HLA_DICTIONARY_SNPS.hg18.imgt370.txt
+    #         -dict-SNPS-map ./data/MakeReference/HLA_DICTIONARY_SNPS.hg18.imgt370.map
+    #
+    #     HLA PED file should contain HLA alleles in the following (alphabetical) order:
+    #     HLA-A, B, C, DPA1, DPB1, DQA1, DQB1, DRB1
+    #
+    # #################################################################################################
+    # '''))
+    #
+    # parser_MAKEREFERENCE._optionals.title = "OPTIONS"
+    #
+    # parser_MAKEREFERENCE.add_argument("-h", "--help", help="\nShow this help message and exit\n\n", action='help')
+    #
+    # parser_MAKEREFERENCE.add_argument("-i", help="\nInput Data file(.bed/.bim/.fam)\n\n", required=True)
+    # parser_MAKEREFERENCE.add_argument("-ped", help="\nHLA Type Data(.ped)\n\n", required=True)
+    # parser_MAKEREFERENCE.add_argument("-hg", help="\nHuman Genome version(ex. 18, 19)\n\n", choices=["18", "19", "38"], metavar="hg", default="19")
+    # parser_MAKEREFERENCE.add_argument("-o", help="\nOutput file prefix\n\n")
+    #
+    # parser_MAKEREFERENCE.add_argument("--previous-version", help="\nIf you give this option, The MakeReference will work as old version.\n\n", action='store_true')
+    # parser_MAKEREFERENCE.add_argument("--only-markers", help="\nGenerate a panel for only markers, not entire reference panel.\n\n", action='store_true') # (2018. 8. 1.) Introduced.
+    #
+    # hla_dict = parser_MAKEREFERENCE.add_argument_group(title='HLA_DICTIONARY',
+    #                                      description='- Arguments to specify HLA_DICTIONARY Information to New version of MakeReference(2.0)\n'
+    #                                                  '- If you\'re going to use previous version of MakeReference, then Don\'t care about these options.')
+    #
+    # hla_dict.add_argument("-dict-AA", help="\nInput HLA Dictionary file for AA Information.\n\n", default="Not_given")
+    # hla_dict.add_argument("-dict-AA-map", help="\nInput HLA Dictionary .map file for AA Information.\n\n", default="Not_given")
+    # hla_dict.add_argument("-dict-SNPS", help="\nInput HLA Dictionary file for SNPS Information.\n\n", default="Not_given")
+    # hla_dict.add_argument("-dict-SNPS-map", help="\nInput HLA Dictionary .map file for SNPS Information\n\n", default="Not_given")
 
 
 
@@ -315,7 +363,7 @@ if __name__ == "__main__":
 
 
 
-    ### sub-parser for 'COATING'
+    ### sub-parser for 'NOMENCLEANER'
     parser_NOMENCLEANER = subparsers.add_parser('NOMENCLEANER',
                                                 help="Transforming HLA allele name field format.\n\n",
                                                 formatter_class=argparse.RawTextHelpFormatter,
