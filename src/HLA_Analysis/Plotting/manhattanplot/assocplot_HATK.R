@@ -18,6 +18,7 @@ make.fancy.locus.plot.bare <- function(chr, title, locus, min.pos, max.pos, yran
     axis(1, at=seq(30,33,1)*1E6, labels=rep("",4),line=0.2)
     mtext(text=bquote(-log[10]~italic("P")), side=2, at=(yrange/2), line=3.5, cex=1)
 
+    
     ## lines(c(min.pos, max.pos), c(0,0), lty="dashed", lwd=1, col="black")
 
     lines(c(min.pos, max.pos), c(-log10(5E-8),-log10(5E-8)), lty="longdash", lwd=1, col="#333333")
@@ -82,7 +83,16 @@ make.fancy.locus.plot.bottom <- function(chr, min.pos, max.pos, pathToTheGeneBui
     ##
     ## genes in the region (build 36)
     ##
+
     genelist <- read.table(pathToTheGeneBuild, header=T)
+    
+    # ### (2018. 9. 24.) Modified to work with pure "knownGene.txt" file distributed by UCSC Annotation Database.
+    # genelist <- read.table(pathToTheGeneBuild, header=F, sep = '\t')
+    # colnames(genelist) = c("bin", "name", "chrom", "strand", "txStart", "txEnd", "cdsStart", "cdsEnd", "exonCount", "exonStarts", "exonEnds", "score", "name2", "cdsStartStat", "cdsEndStat", "exonFrames")
+    
+    # # colnames for "knownGene"  
+    # c("name", "chrom", "strand", "txStart", "txEnd", "cdsStart", "cdsEnd", "exonCount", "exonStarts", "exonEnds", "proteinID", "alignID")
+    
     genelist <- subset(genelist, genelist$chrom == paste("chr", chr, sep=""))
     genes.in.locus <- subset(genelist, (genelist$txStart > min.pos & genelist$txStart < max.pos ) | (genelist$txEnd > min.pos & genelist$txEnd < max.pos))
     genes.in.locus <- genes.in.locus[,c("txStart", "txEnd", "name2")]
