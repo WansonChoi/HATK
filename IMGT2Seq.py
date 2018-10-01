@@ -4,9 +4,10 @@ import os, sys, re
 import pandas as pd
 import argparse, textwrap
 from glob import glob
+import multiprocessing as mp
 
 
-def MakeDictionary(_HG, _OUTPUT, _IMGT, _TYPE="BOTH", _no_Indel=False):
+def MakeDictionary(_HG, _OUTPUT, _IMGT, _no_Indel=False, _no_MultiP = False):
 
     """
     """
@@ -157,11 +158,30 @@ def MakeDictionary(_HG, _OUTPUT, _IMGT, _TYPE="BOTH", _no_Indel=False):
         l_df_forMAP_SNPS = []
 
 
+
+        if not _no_MultiP:
+
+            pool = mp.Pool(processes=8)
+
+            dict_Pool = {HLA_names[i]: pool.apply_async(IMGTtoSequences, (_OUTPUT, HLA_names[i], HLA_INTEGRATED_POSITIONS_filename, _IMGT, TARGET_nuc_files[HLA_names[i]], TARGET_gen_files[HLA_names[i]], TARGET_prot_files[HLA_names[i]]))
+                         for i in range(0, len(HLA_names))}
+
+            pool.close()
+            pool.join()
+
+
         for i in range(0, len(HLA_names)):
 
-            t_df_Seqs_SNPS, t_df_Seqs_AA, t_df_forMAP_SNPS, t_df_forMAP_AA = IMGTtoSequences(
-                _OUTPUT, HLA_names[i], HLA_INTEGRATED_POSITIONS_filename, _IMGT,
-                TARGET_nuc_files[HLA_names[i]], TARGET_gen_files[HLA_names[i]], TARGET_prot_files[HLA_names[i]])
+            if not _no_MultiP:
+
+                t_df_Seqs_SNPS, t_df_Seqs_AA, t_df_forMAP_SNPS, t_df_forMAP_AA = dict_Pool[HLA_names[i]].get()
+
+            else:
+
+                t_df_Seqs_SNPS, t_df_Seqs_AA, t_df_forMAP_SNPS, t_df_forMAP_AA = IMGTtoSequences(
+                    _OUTPUT, HLA_names[i], HLA_INTEGRATED_POSITIONS_filename, _IMGT,
+                    TARGET_nuc_files[HLA_names[i]], TARGET_gen_files[HLA_names[i]], TARGET_prot_files[HLA_names[i]])
+
 
             # Dictionary AA.
             l_df_Seqs_AA.append(t_df_Seqs_AA)
@@ -294,7 +314,7 @@ if __name__ == "__main__":
                                      description=textwrap.dedent('''\
     ###########################################################################################
 
-        MakeDictionary.py
+        IMGT2Seq.py
 
 
 
@@ -312,8 +332,11 @@ if __name__ == "__main__":
 
     parser.add_argument("-imgt", help="\nIMGT-HLA data version(ex. 370, 3300)\n\n", metavar="IMGT_Version",
                         required=True)
-    parser.add_argument("--type", "-t", help="\nSNPS or AA or Both\n\n", choices=["AA", "SNPS", "BOTH"], metavar="Type",
-                        default="BOTH")
+
+    parser.add_argument("--no-indel", help="\nExcluding indel in HLA sequence outputs.\n\n", action='store_true')
+    parser.add_argument("--no-multiprocess", help="\nSetting off parallel multiprocessing.\n\n", action='store_true')
+
+
 
 
     ##### < for Test > #####
@@ -339,4 +362,5 @@ if __name__ == "__main__":
 
 
     ##### < Main function Execution. > #####
-    MakeDictionary(_HG=args.hg, _OUTPUT=args.o, _IMGT=args.imgt, _TYPE=args.type)
+    MakeDictionary(_HG=args.hg, _OUTPUT=args.o, _IMGT=args.imgt,
+                   _no_Indel=args._no_indel, _no_MultiP=args.no_mulitprocess)
