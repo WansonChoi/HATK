@@ -2,6 +2,7 @@
 
 import os, sys, re
 import argparse, textwrap
+import pandas as pd
 
 
 ########## < Core Varialbes > ##########
@@ -41,31 +42,28 @@ if __name__ == "__main__":
     parser._optionals.title = "OPTIONS"
     parser._optionals.description = '\n!-- COMMON ARGUMENTS TO BE USED IN ALL MODULES. --!\n\n'
 
-    # parser._optionals.description = '\n\"\"\" Common arguments to be used in all modules. \"\"\"\n\n'
-
-    # parser._optionals.description =     \
-    #     '---------------------------------------------------------------------------------\n' \
-    #     '- Common arguments to be used in all modules.\n' \
-    #     '---------------------------------------------------------------------------------\n'
-
     parser.add_argument("-h", "--help", help="Show this help message and exit\n\n", action='help')
 
     parser.add_argument("--input", "-i", help="\nCommon prefix of input files.\n\n") # Core argument of this program.
     parser.add_argument("--out", "-o", help="\nOutput file name prefix\n\n")
 
-    parser.add_argument("-hg", help="\nHuman Genome version(ex. 18, 19)\n\n", choices=["18", "19", "38"], metavar="hg", default="19")
+    parser.add_argument("-hg", help="\nHuman Genome version(ex. 18, 19, 38)\n\n", choices=["18", "19", "38"], metavar="HG")
 
     parser.add_argument("-ped", help="\nHLA Type Data(.ped)\n\n")
     parser.add_argument("-hped", help="\nHLA Type Data processed by \'Nomencleaner\'(.hped)\n\n")
 
 
 
-    ### MakeDictionary
+    ### IMGT2Seq
 
-    g_MakeDictionary = parser.add_argument_group(title='MakeDictionary', description='')
+    g_IMGT2Seq = parser.add_argument_group(title='IMGT2Seq', description='')
 
-    g_MakeDictionary.add_argument("--make-dictionary", help="\nGive this argument to implement \"MakeDictionary\" function.\n\n", action='store_true')
-    g_MakeDictionary.add_argument("-imgt", help="\nIMGT-HLA data version(ex. 370, 3300)\n\n")
+    g_IMGT2Seq.add_argument("--imgt2seq", help="\nGive this argument to implement \"IMGT2Seq\" sub-module.\n\n", action='store_true')
+
+    g_IMGT2Seq.add_argument("-imgt", help="\nIMGT-HLA data version(ex. 370, 3300)\n\n")
+
+    g_IMGT2Seq.add_argument("--no-indel", help="\nExcluding indel in HLA sequence outputs.\n\n", action='store_true')
+    g_IMGT2Seq.add_argument("--no-multiprocess", help="\nSetting off parallel multiprocessing.\n\n", action='store_true')
 
 
 
@@ -73,11 +71,11 @@ if __name__ == "__main__":
 
     g_HLA2MARKER = parser.add_argument_group(title='HLA2MARKER', description='')
 
-    g_HLA2MARKER.add_argument("--hla2marker", help="\nGive this argument to implement \"HLA2MARKER\" function.\n\n",
+    g_HLA2MARKER.add_argument("--hla2marker", help="\nGive this argument to implement \"HLA2MARKER\" sub-module.\n\n",
                               action='store_true')
 
-    g_HLA2MARKER.add_argument("--dict-AA", help="\nPrefix of AA HLA Dictionary file(*.txt, *.map).\n\n", default="Not_given")
-    g_HLA2MARKER.add_argument("--dict-SNPS", help="\nPrefix of SNP HLA Dictionary file(*.txt, *.map).\n\n", default="Not_given")
+    g_HLA2MARKER.add_argument("--dict-AA", help="\nPrefix of AA HLA Dictionary file(*.txt, *.map).\n\n")
+    g_HLA2MARKER.add_argument("--dict-SNPS", help="\nPrefix of SNP HLA Dictionary file(*.txt, *.map).\n\n")
 
 
 
@@ -85,14 +83,12 @@ if __name__ == "__main__":
 
     g_NomenCleaner = parser.add_argument_group(title='NomenCleaner', description='')
 
-    g_NomenCleaner.add_argument("--nomencleaner", help="\nGive this argument to implement \"NomenCleaner\" function.\n\n",
+    g_NomenCleaner.add_argument("--nomencleaner", help="\nGive this argument to implement \"NomenCleaner\" sub-module.\n\n",
                                 action='store_true')
 
     # Additional input ped file type.
-    g_NomenCleaner.add_argument("-ped-Ggroup", help="\nHLA Type Data(G-group allele \"*.ped\" file).\n\n", dest="ped_G",
-                          default="Not_given")
-    g_NomenCleaner.add_argument("-ped-Pgroup", help="\nHLA Type Data(P-group allele \"*.ped\" file).\n\n", dest="ped_P",
-                          default="Not_given")
+    g_NomenCleaner.add_argument("-ped-Ggroup", help="\nHLA Type Data(G-group allele \"*.ped\" file).\n\n", dest="ped_G")
+    g_NomenCleaner.add_argument("-ped-Pgroup", help="\nHLA Type Data(P-group allele \"*.ped\" file).\n\n", dest="ped_P")
 
     g_NomenCleaner.add_argument("-iat", help="\nIntegrated Allele Table file(*.iat).\n\n")
 
@@ -123,7 +119,7 @@ if __name__ == "__main__":
 
     g_HLA_Analysis = parser.add_argument_group(title='HLA_Analysis', description='')
 
-    g_HLA_Analysis.add_argument("--hla-analysis", help="\nGive this argument to implement \"HLA-Analysis\" function.\n\n", action='store_true')
+    g_HLA_Analysis.add_argument("--hla-analysis", help="\nGive this argument to implement \"HLA-Analysis\" sub-module.\n\n", action='store_true')
 
     g_HLA_Analysis.add_argument("--covar", help="\nSpecify .covar file (Plink v1.07).\n\n")
     g_HLA_Analysis.add_argument("--covar-name", help="\nSpecify the column name(s) in .covar file which you will use.(Plink v1.07).\n\n")
@@ -143,7 +139,7 @@ if __name__ == "__main__":
 
     g_Plotting = parser.add_argument_group(title='Plotting', description='')
 
-    g_Plotting.add_argument("--plotting", help="\nGive this argument to implement \"Plotting\" function.\n\n", action='store_true')
+    g_Plotting.add_argument("--plotting", help="\nGive this argument to implement \"Plotting\" sub-module.\n\n", action='store_true')
 
     g_Plotting.add_argument("--heatmap", help="\nGenerate Heatmap Plot.\n\n", action="store_true")
     g_Plotting.add_argument("--manhattan", help="\nGenerate Manhattan Plot.\n\n", action="store_true")
@@ -154,7 +150,7 @@ if __name__ == "__main__":
 
     g_Converter = parser.add_argument_group(title='Converter', description='')
 
-    g_Converter.add_argument("--converter", help="\nGive this argument to implement \"Converter\" function.\n\n", action='store_true')
+    g_Converter.add_argument("--converter", help="\nGive this argument to implement \"Converter\" sub-module.\n\n", action='store_true')
 
 
     g_Converter.add_argument("--AXIOM", help="\nAXIOM output file format.\n\n", action="store_true")
@@ -171,24 +167,150 @@ if __name__ == "__main__":
 
     ##### < for Testing > #####
 
-    # args = parser.parse_args(["--make-dictionary", "-imgt", "370", "-o", "TEST/TEST", "-hg", "18"])
+    # args = parser.parse_args(["--imgt2seq", "-imgt", "370", "-o", "TEST/TEST", "-hg", "18"])
 
 
 
 
     ##### < for Publish > #####
     args = parser.parse_args()
-    print(args)
+    # print(args)
 
 
 
-    ### Argument Chekcing
+
+    ########## < Argument Chekcing > ##########
 
 
-    # # [Error] : When more than 1 function flag is given.
-    # if sum([int(args.)])
-    #
-    # _which_function = -1
+    ### Checking indispensable common arguments
+
+    if not bool(args.out):
+        print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not givne. Please check it again.'.format("--out"))
+        sys.exit()
+
+    if not bool(args.input) and not args.imgt2seq:
+        print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not givne. Please check it again.'.format("--input"))
+        sys.exit()
+
+    if not (args.imgt2seq or args.hla2marker or args.nomencleaner or args.hla_analysis or args.plotting or args.converter):
+        # if none of flag for sub-module is given, then it is false state.
+        print(std_ERROR_MAIN_PROCESS_NAME + "You should give at least on flag for sub-module to use.\n")
+        sys.exit()
+
+
+
+
+
+    if args.imgt2seq:
+
+        ##### IMGT2Seq #####
+
+        print(std_MAIN_PROCESS_NAME + "Implementing IMGT2Seq.")
+
+        """
+        List of necessary arguments.
+
+        1. -hg 
+        2. -o (*)
+        3. -imgt
+        """
+
+        if not bool(args.hg):
+            print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not givne. Please check it again.'.format("-hg"))
+            sys.exit()
+
+        if not bool(args.imgt):
+            print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not givne. Please check it again.'.format("-imgt"))
+            sys.exit()
+
+
+        from IMGT2Seq import MakeDictionary
+
+        MakeDictionary(_HG=args.hg, _OUTPUT=args.out, _IMGT=args.imgt,
+                       _no_Indel=args.no_indel, _no_MultiP=args.no_multiprocess)
+
+
+
+    elif args.hla2marker:
+
+        ##### HLA2MARKER #####
+
+        print(std_MAIN_PROCESS_NAME + "Implementing HLA2MARKER.")
+
+        """
+        List of necessary arguments.
+
+        1. -hped
+        2. -hg
+        3. -o
+        4. --dict-AA
+        5. --dict-SNPS
+        """
+
+
+    elif args.nomencleaner:
+
+        ##### NomenCleaner #####
+
+        print(std_MAIN_PROCESS_NAME + "Implementing NomenCleaner.")
+
+        """
+        List of necessary arguments.
+
+        1. either -ped, -ped-Ggroup or -ped-Pgroup
+        2. -iat
+        3. -o
+        4. output format(ex. --1field, etc.)
+
+        (optionals)
+        5. --No-caption
+        """
+
+
+    elif args.hla_analysis:
+
+        ##### HLA_Analysis #####
+
+        print(std_MAIN_PROCESS_NAME + "Implementing HLA_Analysis.")
+
+        """
+        List of necessary arguments.
+
+        1. -input(--bfile)
+        2. -o
+        3. either -lr or -ob
+
+        (optionals)
+        4. -covar (with -covar-name)
+        5. -phe (with -phe-name)
+        6. either --condition or --condition-list
+        7. --reference-allele
+        8. threshold
+        9. phased.
+
+        """
+
+
+    elif args.plotting:
+
+        ##### Plotting #####
+
+        print(std_MAIN_PROCESS_NAME + "Implementing Plotting.")
+
+        """
+        List of necessary arguments.
+        """
+
+
+    elif args.converter:
+
+        ##### Converter #####
+
+        print(std_MAIN_PROCESS_NAME + "Implementing Converter.")
+
+        """
+        List of necessary arguments.
+        """
 
 
 
