@@ -541,20 +541,33 @@ def Find_1st_Allele(_the_allele, _IAT_Allelelist):
         It means digit information isn't fully considered in this function, i.e. this part which makes regular expression pattern.
         
         As a solution, I decided to add more classification related to `len(_the_allele)`.
+
+
+        (2018. 9. 5.)
+        ex. B*51:11N and B*51:110N
+
+        55:11: 이렇게 해서 찾아보면 없음
+        => 51:11 로 찾으면 51:11N을 찾아오는게 가장 적절하지만 결과적으로 51:110N을 찾아옴.
         """
 
-        Flag_Found = t_sr.str.match(str(_the_allele)+":")
+        Flag_Found_1st = t_sr.str.match(str(_the_allele)+":")
 
-        if Flag_Found.any():
-            return t_sr.loc[Flag_Found].iat[0]
+        if Flag_Found_1st.any():
+            return t_sr.loc[Flag_Found_1st].iat[0]
         else:
-            # One more time
-            Flag_Found = t_sr.str.match(str(_the_allele))
+            
+            Flag_Found_2nd = t_sr.str.match(str(_the_allele) + "[A-Z]?$")
 
-            if Flag_Found.any():
-                return t_sr.loc[Flag_Found].iat[0]
+            if Flag_Found_2nd.any():
+                return t_sr.loc[Flag_Found_2nd].iat[0]
             else:
-                return 0
+
+                Flag_Found_3rd = t_sr.str.match(str(_the_allele))
+
+                if Flag_Found_3rd.any():
+                    return t_sr.loc[Flag_Found_3rd].iat[0]
+                else:
+                    return 0
 
 
     else:
