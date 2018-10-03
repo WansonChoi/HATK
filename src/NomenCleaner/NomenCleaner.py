@@ -26,6 +26,15 @@ def NomenCleaner(_p_ped, _ped_descriptor, _p_iat, _out, _field_format, _f_NoCapt
     PED = None
     IAT = None
 
+    ### OUTPUT prefix
+
+    _out = _out if not _out.endswith('/') else _out.rstrip('/')
+    INTERMEDIATE_PATH = os.path.dirname(_out)
+
+    if not os.path.exists(INTERMEDIATE_PATH):
+        os.system(' '.join(["mkdir", "-p", INTERMEDIATE_PATH]))
+
+
     ########## < Loading "*.ped" file > ##########
 
     PED = pd.read_table(_p_ped, sep='\t', header=None, dtype=str,

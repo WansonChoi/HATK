@@ -49,7 +49,6 @@ if __name__ == "__main__":
 
     parser.add_argument("-hg", help="\nHuman Genome version(ex. 18, 19, 38)\n\n", choices=["18", "19", "38"], metavar="HG")
 
-    parser.add_argument("-ped", help="\nHLA Type Data(.ped)\n\n")
     parser.add_argument("-hped", help="\nHLA Type Data processed by \'Nomencleaner\'(.hped)\n\n")
 
 
@@ -87,8 +86,10 @@ if __name__ == "__main__":
                                 action='store_true')
 
     # Additional input ped file type.
-    g_NomenCleaner.add_argument("-ped-Ggroup", help="\nHLA Type Data(G-group allele \"*.ped\" file).\n\n", dest="ped_G")
-    g_NomenCleaner.add_argument("-ped-Pgroup", help="\nHLA Type Data(P-group allele \"*.ped\" file).\n\n", dest="ped_P")
+    PED_TYPE = g_NomenCleaner.add_mutually_exclusive_group()
+    PED_TYPE.add_argument("-ped", help="\nHLA Type Data.\n\n")
+    PED_TYPE.add_argument("-ped-Ggroup", help="\nHLA Type Data(G-group allele \"*.ped\" file).\n\n", dest="ped_G")
+    PED_TYPE.add_argument("-ped-Pgroup", help="\nHLA Type Data(P-group allele \"*.ped\" file).\n\n", dest="ped_P")
 
     g_NomenCleaner.add_argument("-iat", help="\nIntegrated Allele Table file(*.iat).\n\n")
 
@@ -190,11 +191,11 @@ if __name__ == "__main__":
     ### Checking indispensable common arguments
 
     if not bool(args.out):
-        print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.'.format("--out"))
+        print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("--out"))
         sys.exit()
 
-    if not bool(args.input) and not (args.imgt2sequence or args.hla2marker):
-        print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.'.format("--input"))
+    if not bool(args.input) and not (args.imgt2sequence or args.hla2marker or args.nomencleaner):
+        print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("--input"))
         sys.exit()
 
     if not (args.imgt2sequence or args.hla2marker or args.nomencleaner or args.hla_analysis or args.plotting or args.converter):
@@ -221,11 +222,11 @@ if __name__ == "__main__":
         """
 
         if not bool(args.hg):
-            print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.'.format("-hg"))
+            print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("-hg"))
             sys.exit()
 
         if not bool(args.imgt):
-            print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.'.format("-imgt"))
+            print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("-imgt"))
             sys.exit()
 
 
@@ -253,7 +254,7 @@ if __name__ == "__main__":
         """
 
         if not bool(args.hped):
-            print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.'.format("-hped"))
+            print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("-hped"))
             sys.exit()
         else:
 
@@ -261,7 +262,7 @@ if __name__ == "__main__":
 
             if not args.hped.endswith(".hped"):
                 print(std_ERROR_MAIN_PROCESS_NAME + 'Given ped file should be processed by "NomenCleaner.py". '
-                                                    '(The file extension of its output is ".hped".)')
+                                                    '(The file extension of its output is ".hped".)\n')
 
                 """
                 Add code to implement "NomenCleaner.py" here.
@@ -269,7 +270,7 @@ if __name__ == "__main__":
                 sys.exit()
 
         if not bool(args.hg):
-            print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.'.format("-hg"))
+            print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("-hg"))
             sys.exit()
 
 
@@ -293,7 +294,7 @@ if __name__ == "__main__":
 
         MakeReference(_HLA_ped=args.hped, _OUT=args.out, _hg=args.hg,
                       _dictionary_AA=_t_dict_AA, _dictionary_SNPS=_t_dict_SNPS,
-                      _plain_SNP_DATA=bool(args.input))
+                      _plain_SNP_DATA=args.input)
 
 
 
@@ -308,12 +309,67 @@ if __name__ == "__main__":
 
         1. either -ped, -ped-Ggroup or -ped-Pgroup
         2. -iat
-        3. -o
+        3. -o (*)
         4. output format(ex. --1field, etc.)
 
         (optionals)
         5. --No-caption
         """
+
+        t_ped = ""
+        t_ped_descriptor = -1
+        t_FILE_FORMAT = -1
+
+
+        if not(bool(args.ped) or bool(args.ped_Ggroup) or bool(args.ped_Pgroup)):
+            print(std_ERROR_MAIN_PROCESS_NAME + "You must give at least one argument among \"-ped\", \"-ped-Ggroup\", \"-ped-Pgroup\".\n")
+            sys.exit()
+        else:
+
+            if bool(args.ped):
+                t_ped_descriptor = 1
+                t_ped = args.ped
+            elif bool(args.ped_Ggroup):
+                t_ped_descriptor = 2
+                t_ped = args.ped_Ggroup
+            elif bool(args.ped_Pgroup):
+                t_ped_descriptor = 3
+                t_ped = args.ped_Pgroup
+            else:
+                print(std_ERROR_MAIN_PROCESS_NAME + "The arguments related to ped(\"-ped\", \"-ped-Ggroup\" or \"-ped-Pgroup\") has wrong values."
+                                                    "Please check them again.\n")
+                sys.exit()
+
+
+
+        if not bool(args.iat):
+            print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("-iat"))
+            sys.exit()
+
+        if not(bool(args.oneF) or bool(args.twoF) or bool(args.threeF) or bool(args.fourF) or bool(args.G_group) or bool(args.P_group)):
+            print(std_ERROR_MAIN_PROCESS_NAME + "The argument related to field format has not given. Please check it again.\n")
+            sys.exit()
+        else:
+            t_FILE_FORMAT = (1 if bool(args.oneF) else 2 if bool(args.twoF) else 3 if bool(args.threeF) else 4
+                                if bool(args.fourF) else 5 if bool(args.G_group) else 6 if bool(args.P_group) else -1)
+
+
+        if t_ped_descriptor == 2 and t_FILE_FORMAT == 5:
+            print(std_ERROR_MAIN_PROCESS_NAME + "Pointless transformation. (Transformation G-group to G-group is meaningless.)")
+            print("Skip this Transformation Request.\n")
+            sys.exit()
+
+        if t_ped_descriptor == 3 and t_FILE_FORMAT == 6:
+            print(std_ERROR_MAIN_PROCESS_NAME + "Pointless transformation. (Transformation P-group to P-group is meaningless.)")
+            print("Skip this Transformation Request.\n")
+            sys.exit()
+
+
+        from src.NomenCleaner.NomenCleaner import NomenCleaner
+
+        NomenCleaner(_p_ped=t_ped, _ped_descriptor=t_ped_descriptor, _p_iat=args.iat, _out=args.out,
+                     _field_format=t_FILE_FORMAT, _f_NoCaption=bool(args.NoCaption))
+
 
 
     elif args.hla_analysis:
