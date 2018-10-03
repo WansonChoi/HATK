@@ -24,18 +24,19 @@ def HLAtoSequences(_p_ped, _dictionary, _type, _out):
     ########## < Argument checking > ##########
 
     # (1) ped file existence
-    if not os.path.isfile(_p_ped):
-        print(std_MAIN_PROCESS_NAME + "Given ped file doen't exist. Please check it againg.\n")
+    if not os.path.exists(_p_ped):
+        print(_p_ped)
+        print(std_MAIN_PROCESS_NAME + "Given ped file dosen't exist. Please check it again.\n")
         sys.exit()
 
     # (2) HLA DICTIONARY file
-    if not os.path.isfile(_dictionary):
-        print(std_MAIN_PROCESS_NAME + "Given dictionary file doen't exist. Please check it againg.\n")
+    if not os.path.exists(_dictionary):
+        print(std_MAIN_PROCESS_NAME + "Given dictionary file dosen't exist. Please check it again.\n")
         sys.exit()
 
     # (3) Chekcing `_type`
     if not (_type == "AA" or _type == "SNPS"):
-        print(std_MAIN_PROCESS_NAME + "Given value for argument `_type` has wrong value. Please check it againg.\n")
+        print(std_MAIN_PROCESS_NAME + "Given value for argument `_type` has wrong value. Please check it again.\n")
         sys.exit()
 
 

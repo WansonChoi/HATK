@@ -46,6 +46,8 @@ def MakeDictionary(_HG, _OUTPUT, _IMGT, _no_Indel=False, _no_MultiP = False):
         os.system(' '.join(["mkdir", "-p", INTERMEDIATE_PATH]))
 
 
+    _OUTPUT_AA_RETURN = os.path.join(INTERMEDIATE_PATH, 'HLA_DICTIONARY_AA.hg{0}.imgt{1}'.format(_HG, _IMGT))
+    _OUTPUT_SNPS_RETURN = os.path.join(INTERMEDIATE_PATH, 'HLA_DICTIONARY_SNPS.hg{0}.imgt{1}'.format(_HG, _IMGT)),
 
 
     ########## < Dependency Checking > ##########
@@ -201,24 +203,14 @@ def MakeDictionary(_HG, _OUTPUT, _IMGT, _no_Indel=False, _no_MultiP = False):
 
 
         # Exporting AA dictionary.
-        HLA_DICTIONARY_AA.to_csv(
-            os.path.join(INTERMEDIATE_PATH, 'HLA_DICTIONARY_AA.hg{0}.imgt{1}.txt'.format(_HG, _IMGT)),
-            sep='\t', header=False, index=True)
+        HLA_DICTIONARY_AA.to_csv(_OUTPUT_AA_RETURN + ".txt", sep='\t', header=False, index=True)
 
-        HLA_DICTIONARY_AA_map.to_csv(
-            os.path.join(INTERMEDIATE_PATH, 'HLA_DICTIONARY_AA.hg{0}.imgt{1}.map'.format(_HG, _IMGT)),
-            sep='\t', header=False, index=False
-        )
+        HLA_DICTIONARY_AA_map.to_csv(_OUTPUT_AA_RETURN + ".map", sep='\t', header=False, index=False)
 
         # Exporting SNPS dictionary.
-        HLA_DICTIONARY_SNPS.to_csv(
-            os.path.join(INTERMEDIATE_PATH, 'HLA_DICTIONARY_SNPS.hg{0}.imgt{1}.txt'.format(_HG, _IMGT)),
-            sep='\t', header=False, index=True)
+        HLA_DICTIONARY_SNPS.to_csv(_OUTPUT_SNPS_RETURN+".txt", sep='\t', header=False, index=True)
 
-        HLA_DICTIONARY_SNPS_map.to_csv(
-            os.path.join(INTERMEDIATE_PATH, 'HLA_DICTIONARY_SNPS.hg{0}.imgt{1}.map'.format(_HG, _IMGT)),
-            sep='\t', header=False, index=False
-        )
+        HLA_DICTIONARY_SNPS_map.to_csv(_OUTPUT_SNPS_RETURN+".map", sep='\t', header=False, index=False)
 
 
 
@@ -231,7 +223,8 @@ def MakeDictionary(_HG, _OUTPUT, _IMGT, _no_Indel=False, _no_MultiP = False):
     print("\n")
     print(std_MAIN_PROCESS_NAME + "Making Dictionary is done.\n")
 
-    return 0
+
+    return [_OUTPUT_AA_RETURN, _OUTPUT_SNPS_RETURN]
 
 
 

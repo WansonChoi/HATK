@@ -181,6 +181,11 @@ if __name__ == "__main__":
 
     ########## < Argument Chekcing > ##########
 
+    ### < Temporary variables for argument checking > ###
+
+    _t_dict_AA = None
+    _t_dict_SNPS = None
+
 
     ### Checking indispensable common arguments
 
@@ -188,7 +193,7 @@ if __name__ == "__main__":
         print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.'.format("--out"))
         sys.exit()
 
-    if not bool(args.input) and not args.imgt2sequence:
+    if not bool(args.input) and not (args.imgt2sequence or args.hla2marker):
         print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.'.format("--input"))
         sys.exit()
 
@@ -226,8 +231,7 @@ if __name__ == "__main__":
 
         from src.IMGT2Sequence.IMGT2Seqeunce import MakeDictionary
 
-        MakeDictionary(_HG=args.hg, _OUTPUT=args.out, _IMGT=args.imgt,
-                       _no_Indel=args.no_indel, _no_MultiP=args.no_multiprocess)
+        _t_dict_AA, _t_dict_SNPS = MakeDictionary(_HG=args.hg, _OUTPUT=args.out, _IMGT=args.imgt, _no_Indel=args.no_indel, _no_MultiP=args.no_multiprocess)
 
 
 
@@ -240,13 +244,57 @@ if __name__ == "__main__":
         """
         List of necessary arguments.
 
-        1. -input
-        2. -hped
+        1. -input (*)
+        2. -hped or -ped
         3. -hg
-        4. -o
+        4. -o (*)
         5. --dict-AA
         6. --dict-SNPS
         """
+
+        if not bool(args.hped):
+            print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.'.format("-hped"))
+            sys.exit()
+        else:
+
+            # Checking whether it went through "NomenCleaner.py".
+
+            if not args.hped.endswith(".hped"):
+                print(std_ERROR_MAIN_PROCESS_NAME + 'Given ped file should be processed by "NomenCleaner.py". '
+                                                    '(The file extension of its output is ".hped".)')
+
+                """
+                Add code to implement "NomenCleaner.py" here.
+                """
+                sys.exit()
+
+        if not bool(args.hg):
+            print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.'.format("-hg"))
+            sys.exit()
+
+
+        if bool(args.imgt2sequence) and (bool(_t_dict_AA) and bool(_t_dict_SNPS)):
+
+            # When "--imgt2sequence" given with "--hla2marker".
+            # "--dict-AA" and "--dict-SNPS" will be overridden.
+            print(std_MAIN_PROCESS_NAME + "Using newly generated Dictionary for \"--dict-AA\" and \"--dict-SNPS\".\n")
+
+        else:
+
+            if bool(args.dict_AA) and bool(args.dict_SNPS):
+                _t_dict_AA = args.dict_AA
+                _t_dict_SNPS = args.dict_SNPS
+            else:
+                print(std_ERROR_MAIN_PROCESS_NAME + 'One of "--dict-AA" or "--dict-SNPS" options(or Both) are not given. Please check them again.\n')
+                sys.exit()
+
+
+        from src.HLA2MARKER.HLA2MARKER import MakeReference
+
+        MakeReference(_HLA_ped=args.hped, _OUT=args.out, _hg=args.hg,
+                      _dictionary_AA=_t_dict_AA, _dictionary_SNPS=_t_dict_SNPS,
+                      _plain_SNP_DATA=bool(args.input))
+
 
 
     if args.nomencleaner:

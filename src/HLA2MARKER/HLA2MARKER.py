@@ -24,7 +24,7 @@ def MakeReference(_HLA_ped, _OUT, _hg, _dictionary_AA, _dictionary_SNPS,
     ### Major Path Variables
 
     # [1] src (with "_p_src")
-    p_src_MakeReferece = os.path.join(_p_src, "MakeReference")
+    p_src_MakeReferece = os.path.join(_p_src, "HLA2MARKER")
 
 
     # [2] dependency (with "_p_dependency")
@@ -134,7 +134,7 @@ def MakeReference(_HLA_ped, _OUT, _hg, _dictionary_AA, _dictionary_SNPS,
     HLA_DATA = _HLA_ped
 
     # Input 2 : Plain SNP data
-    if not f_plain_SNP:
+    if f_plain_SNP:
 
         SNP_DATA = _plain_SNP_DATA
         SNP_DATA2 = os.path.join(INTERMEDIATE_PATH, os.path.basename(_plain_SNP_DATA))
@@ -158,7 +158,7 @@ def MakeReference(_HLA_ped, _OUT, _hg, _dictionary_AA, _dictionary_SNPS,
     ENCODE_HLA = 1
     ENCODE_SNPS = 1
 
-    EXTRACT_FOUNDERS = 1
+    EXTRACT_FOUNDERS = 1 if f_plain_SNP else 0
     MERGE = 1
     QC = 1
 
@@ -496,14 +496,14 @@ def MakeReference(_HLA_ped, _OUT, _hg, _dictionary_AA, _dictionary_SNPS,
         
         """
 
-        TMP_allele_order = os.path.join(INTERMEDIATE_PATH, "allele.order")
-        TMP_all_remove_snps = os.path.join(INTERMEDIATE_PATH, "all.remove.snps")
 
 
         if f_plain_SNP:
 
             print("\n[7] Performing quality control.")
 
+            TMP_allele_order = os.path.join(INTERMEDIATE_PATH, "allele.order")
+            TMP_all_remove_snps = os.path.join(INTERMEDIATE_PATH, "all.remove.snps")
 
             command = ' '.join([plink, "--bfile", OUTPUT+'.MERGED.FOUNDERS', "--freq", "--out", OUTPUT+'.MERGED.FOUNDERS.FRQ'])
             print(command)
@@ -540,7 +540,7 @@ def MakeReference(_HLA_ped, _OUT, _hg, _dictionary_AA, _dictionary_SNPS,
             print("\n[7] (only HLA) Generating \"*.reference\" file. (\"p\", \"a\")")
 
 
-            TMP_allele_order = os.path.join(INTERMEDIATE_PATH, OUTPUT + ".MERGED.refallele")
+            TMP_allele_order = OUTPUT + ".MERGED.refallele"
 
             command = ' '.join(
                 ["awk", '\'{if (NR > 1){if (($5 == "a" && $6 == "p") || ($6 == "a" && $5 == "p")){print $2 "\tp"}}}\'',
