@@ -34,7 +34,7 @@ def MakeDictionary(_HG, _OUTPUT, _IMGT, _no_Indel=False, _no_MultiP = False):
 
     ### Variables for Paths.
     p_data = "./data/MakeDictionary"
-    p_src = "./src/MakeDictionary"
+    p_src = "./src/IMGT2Sequence"
 
 
     ### OUTPUT prefix
@@ -61,7 +61,7 @@ def MakeDictionary(_HG, _OUTPUT, _IMGT, _no_Indel=False, _no_MultiP = False):
 
     # IMGTtoSequences.py
     if os.path.exists(os.path.join(p_src, "IMGTtoSequences_v2.py")):
-        from src.MakeDictionary.IMGTtoSequences_v2 import IMGTtoSequences
+        from src.IMGT2Sequence.IMGTtoSequences_v2 import IMGTtoSequences
     else:
         print(std_ERROR_MAIN_PROCESS_NAME + "\"IMGTtoSequences.v2.py\" doesn't exist!")
         sys.exit()

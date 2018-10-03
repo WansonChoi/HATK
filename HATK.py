@@ -54,16 +54,16 @@ if __name__ == "__main__":
 
 
 
-    ### IMGT2Seq
+    ### IMGT2Sequence
 
-    g_IMGT2Seq = parser.add_argument_group(title='IMGT2Seq', description='')
+    g_IMGT2Sequence = parser.add_argument_group(title='IMGT2Sequence', description='')
 
-    g_IMGT2Seq.add_argument("--imgt2seq", help="\nGive this argument to implement \"IMGT2Seq\" sub-module.\n\n", action='store_true')
+    g_IMGT2Sequence.add_argument("--imgt2sequence", help="\nGive this argument to implement \"IMGT2Sequence\" sub-module.\n\n", action='store_true')
 
-    g_IMGT2Seq.add_argument("-imgt", help="\nIMGT-HLA data version(ex. 370, 3300)\n\n")
+    g_IMGT2Sequence.add_argument("-imgt", help="\nIMGT-HLA data version(ex. 370, 3300)\n\n")
 
-    g_IMGT2Seq.add_argument("--no-indel", help="\nExcluding indel in HLA sequence outputs.\n\n", action='store_true')
-    g_IMGT2Seq.add_argument("--no-multiprocess", help="\nSetting off parallel multiprocessing.\n\n", action='store_true')
+    g_IMGT2Sequence.add_argument("--no-indel", help="\nExcluding indel in HLA sequence outputs.\n\n", action='store_true')
+    g_IMGT2Sequence.add_argument("--no-multiprocess", help="\nSetting off parallel multiprocessing.\n\n", action='store_true')
 
 
 
@@ -167,14 +167,14 @@ if __name__ == "__main__":
 
     ##### < for Testing > #####
 
-    # args = parser.parse_args(["--imgt2seq", "-imgt", "370", "-o", "TEST/TEST", "-hg", "18"])
+    # args = parser.parse_args(["--imgt2sequence", "-imgt", "370", "-o", "TEST/TEST", "-hg", "18"])
 
 
 
 
     ##### < for Publish > #####
     args = parser.parse_args()
-    # print(args)
+    print(args)
 
 
 
@@ -185,14 +185,14 @@ if __name__ == "__main__":
     ### Checking indispensable common arguments
 
     if not bool(args.out):
-        print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not givne. Please check it again.'.format("--out"))
+        print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.'.format("--out"))
         sys.exit()
 
-    if not bool(args.input) and not args.imgt2seq:
-        print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not givne. Please check it again.'.format("--input"))
+    if not bool(args.input) and not args.imgt2sequence:
+        print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.'.format("--input"))
         sys.exit()
 
-    if not (args.imgt2seq or args.hla2marker or args.nomencleaner or args.hla_analysis or args.plotting or args.converter):
+    if not (args.imgt2sequence or args.hla2marker or args.nomencleaner or args.hla_analysis or args.plotting or args.converter):
         # if none of flag for sub-module is given, then it is false state.
         print(std_ERROR_MAIN_PROCESS_NAME + "You should give at least on flag for sub-module to use.\n")
         sys.exit()
@@ -201,11 +201,11 @@ if __name__ == "__main__":
 
 
 
-    if args.imgt2seq:
+    if args.imgt2sequence:
 
-        ##### IMGT2Seq #####
+        ##### IMGT2Sequence #####
 
-        print(std_MAIN_PROCESS_NAME + "Implementing IMGT2Seq.")
+        print(std_MAIN_PROCESS_NAME + "Implementing IMGT2Sequence.")
 
         """
         List of necessary arguments.
@@ -216,22 +216,22 @@ if __name__ == "__main__":
         """
 
         if not bool(args.hg):
-            print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not givne. Please check it again.'.format("-hg"))
+            print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.'.format("-hg"))
             sys.exit()
 
         if not bool(args.imgt):
-            print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not givne. Please check it again.'.format("-imgt"))
+            print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.'.format("-imgt"))
             sys.exit()
 
 
-        from IMGT2Seq import MakeDictionary
+        from src.IMGT2Sequence.IMGT2Seqeunce import MakeDictionary
 
         MakeDictionary(_HG=args.hg, _OUTPUT=args.out, _IMGT=args.imgt,
                        _no_Indel=args.no_indel, _no_MultiP=args.no_multiprocess)
 
 
 
-    elif args.hla2marker:
+    if args.hla2marker:
 
         ##### HLA2MARKER #####
 
@@ -240,15 +240,16 @@ if __name__ == "__main__":
         """
         List of necessary arguments.
 
-        1. -hped
-        2. -hg
-        3. -o
-        4. --dict-AA
-        5. --dict-SNPS
+        1. -input
+        2. -hped
+        3. -hg
+        4. -o
+        5. --dict-AA
+        6. --dict-SNPS
         """
 
 
-    elif args.nomencleaner:
+    if args.nomencleaner:
 
         ##### NomenCleaner #####
 
@@ -291,7 +292,7 @@ if __name__ == "__main__":
         """
 
 
-    elif args.plotting:
+    if args.plotting:
 
         ##### Plotting #####
 
@@ -302,7 +303,7 @@ if __name__ == "__main__":
         """
 
 
-    elif args.converter:
+    if args.converter:
 
         ##### Converter #####
 
