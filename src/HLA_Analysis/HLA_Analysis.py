@@ -10,6 +10,7 @@ import src.HLA_Analysis.HLA_Analysis_modules as hla_m
 
 std_MAIN_PROCESS_NAME = "\n[%s]: " % (os.path.basename(__file__))
 std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % (os.path.basename(__file__))
+std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % (os.path.basename(__file__))
 
 
 def ASSOCIATION_TEST(_bfile, _input, _out,
@@ -96,6 +97,143 @@ def ASSOCIATION_TEST(_bfile, _input, _out,
 
 
 
+def ASSOC1_Logistic_Regression(_input, _out, _covar, _covar_names, _phe, _phe_name,
+                               _condition, _condition_list, _ref_allele):
+
+
+    ##### < Core Variable > #####
+
+    bFILE = None
+    COVAR = None
+    PHE = None
+    REFERENCE_ALLELE = None
+
+
+    # _input
+    if bool(input):
+
+        bFILE = _input
+        COVAR = (_input + ".covar") if os.path.exists(_input + ".covar") else (_input + ".cov") if os.path.exists(_input + ".cov") else None
+        PHE = (_input + ".phe") if os.path.exists(_input + ".phe") else (_input + ".pheno") if os.path.exists(_input + ".pheno") else None
+        REFERENCE_ALLELE = (_input + ".refallele") if os.path.exists(_input + ".refallele") else hla_m.MakeDefaultReferenceAllele(_input)
+
+    else:
+        print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("--input(-i)"))
+        sys.exit()
+
+
+    # _covar
+    if bool(_covar):
+
+        # When the argument "--covar" is given. (with or without "--covar-name" argument)
+        if os.path.exists(_covar):
+            COVAR = (_covar)
+        elif os.path.exists(_covar):
+            COVAR = (_covar)
+        else:
+            print(std_ERROR_MAIN_PROCESS_NAME + "The covariate file \"{0}\" given by the argument \"--covar\" doesn't exist. Please check that again.\n")
+            sys.exit()
+
+    # _pheno
+    if bool(_phe):
+
+        # When the argument "--pheno" is given. (with or without "--pheno-name" argument)
+        if os.path.exists(_phe):
+            PHE = (_phe)
+        elif os.path.exists(_phe):
+            PHE = (_phe)
+        else:
+            print(std_ERROR_MAIN_PROCESS_NAME + "The phenotype file \"{0}\" given by the argument \"--pheno\" doesn't exist. Please check that again.\n")
+            sys.exit()
+
+
+    # _covar_names
+    if not bool(COVAR):
+
+        print(std_MAIN_PROCESS_NAME + "No Covariate file has given.\n")
+
+        if bool(_covar_names):
+            print(std_WARNING_MAIN_PROCESS_NAME + "Covaraite file han't given but the argument \"--covar-names\" has given. "
+                                                  "The argument \"--covar-names\" will be ignored.\n")
+            _covar_names = None
+    else:
+        print(std_MAIN_PROCESS_NAME + "Given covariate file is \"{0}\"".format(COVAR))
+
+
+    # _pheno_name
+    if not bool(PHE):
+
+        print(std_MAIN_PROCESS_NAME + "No Phenotype file has given.\n")
+
+        if bool(_phe_name):
+            print(std_WARNING_MAIN_PROCESS_NAME + "Phenotype file han't given but the argument \"--pheno-name\" has given. "
+                                                  "The argument \"--pheno-name\" will be ignored.\n")
+            _phe_name = None
+    else:
+        print(std_MAIN_PROCESS_NAME + "Given phenotype file is \"{0}\"".format(PHE))
+
+
+    # _ref_allele
+    if bool(_ref_allele):
+
+        # When the argument "--reference-allele" is given.
+        if os.path.exists(_ref_allele):
+            REFERENCE_ALLELE = _ref_allele
+        else:
+            print(std_ERROR_MAIN_PROCESS_NAME + "The reference allele file \"{0}\" given by the argument \"--reference-allele\" doesn't exist. Please check that again.\n")
+            sys.exit()
+
+    if not bool(REFERENCE_ALLELE):
+        print(std_MAIN_PROCESS_NAME + "No Reference Allele file has given.\n")
+    else:
+        print(std_MAIN_PROCESS_NAME + "Given Reference Allele file is \"{0}\"".format(REFERENCE_ALLELE))
+
+
+    # _codition and _condition_list
+    if bool(_condition) and bool(_condition_list):
+        print(std_ERROR_MAIN_PROCESS_NAME + "Either \"{0}\" or \"{1}\" should be given.\n".format("--condition", "--conditino-list"))
+        sys.exit()
+
+    elif not bool(_condition) and bool(_condition_list):
+
+        # When _condition_list is given.
+        if not os.path.isfile(_condition_list):
+            print(std_ERROR_MAIN_PROCESS_NAME + "Given file of the argument \"{0}\" doesn't exist. Please check it again.\n".format(_condition_list))
+            sys.exit()
+
+
+    # _out
+    if not bool(_out):
+        print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("--out(-o)"))
+        sys.exit()
+    else:
+        # Intermediate path.
+        _out = _out if not _out.endswith('/') else _out.rstrip('/')
+        INTERMEDIATE_PATH = os.path.dirname(_out)
+
+        if not os.path.exists(INTERMEDIATE_PATH):
+            os.system(' '.join(["mkdir", "-p", INTERMEDIATE_PATH]))
+
+
+
+    print(std_MAIN_PROCESS_NAME + "Conducting Logistic Regression(Plink v1.07).\n")
+
+    return hla_m.__hla__Logistic_Regression(_bfile=bFILE, _out=_out, _covar=COVAR, _covar_names=_covar_names,
+                                            _phe=PHE, _phe_name=_phe_name, _condition=_condition, _condition_list=_condition_list,
+                                            _ref_allele=REFERENCE_ALLELE)
+
+
+
+
+
+
+def ASSOC2_Omnibus_Test(_input, _out, _phased, _phe, _phe_name, _covar, _threshold, _condition):
+
+
+    return hla_m.__hla__Omnibus_Test()
+
+
+
 def META_ANALYSIS(_out, *rassoc):
 
     print(std_MAIN_PROCESS_NAME + "function META_ANALYSIS().")
@@ -129,17 +267,6 @@ def META_ANALYSIS(_out, *rassoc):
     return 0
 
 
-
-
-def Pipeline1():
-
-
-    return 0
-
-
-def Pipeline2():
-
-    return 0
 
 
 if __name__ == "__main__":

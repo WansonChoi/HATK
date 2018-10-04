@@ -9,6 +9,7 @@ import pandas as pd
 
 std_MAIN_PROCESS_NAME = "\n[%s]: " % (os.path.basename(__file__))
 std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % (os.path.basename(__file__))
+std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % (os.path.basename(__file__))
 
 
 
@@ -231,10 +232,11 @@ if __name__ == "__main__":
         print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("--input"))
         sys.exit()
 
-    if not (args.imgt2sequence or args.hla2marker or args.nomencleaner or args.manhattan or args.heatmap or args.converter):
-        # if none of flag for sub-module is given, then it is false state.
-        print(std_ERROR_MAIN_PROCESS_NAME + "You should give at least on flag for sub-module to use.\n")
-        sys.exit()
+    # (2018. 10. 04.) Turning off it for a while.
+    # if not (args.imgt2sequence or args.hla2marker or args.nomencleaner or args.manhattan or args.heatmap or args.converter):
+    #     # if none of flag for sub-module is given, then it is false state.
+    #     print(std_ERROR_MAIN_PROCESS_NAME + "You should give at least on flag for sub-module to use.\n")
+    #     sys.exit()
 
 
 
@@ -405,28 +407,42 @@ if __name__ == "__main__":
 
 
 
-    # elif args.hla_analysis:
-    #
-    #     ##### HLA_Analysis #####
-    #
-    #     print(std_MAIN_PROCESS_NAME + "Implementing HLA_Analysis.")
-    #
-    #     """
-    #     List of necessary arguments.
-    #
-    #     1. -input(--bfile)
-    #     2. -o (*)
-    #     3. either -lr or -ob
-    #
-    #     (optionals)
-    #     4. -covar (with -covar-name)
-    #     5. -phe (with -phe-name)
-    #     6. either --condition or --condition-list
-    #     7. --reference-allele
-    #     8. threshold
-    #     9. phased.
-    #
-    #     """
+    if args.logistic:
+
+        ##### (Association Test 1) logistic regression(by Plink 1.07) #####
+
+        print(std_MAIN_PROCESS_NAME + "Implementing Logistic Regression(Association Test, plink 1.07).")
+
+        """
+        List of necessary arguments.
+
+        1. -input(--bfile) (*)
+        2. -o (*)
+
+        (optionals)
+        3. -covar (with -covar-name)
+        4. -phe (with -phe-name)
+        5. either --condition or --condition-list
+        6. --reference-allele
+
+        """
+
+        if not bool(args.covar) and bool(args.covar_name):
+            print(std_WARNING_MAIN_PROCESS_NAME + 'You gave "{0}" argument while "{1}" wasn\'t given. The argument "{0}" will be ignored.\n'.format("--covar-name", "--covar"))
+            args.covar_name = None
+
+        if not bool(args.pheno) and bool(args.pheno_name):
+            print(std_WARNING_MAIN_PROCESS_NAME + 'You gave "{0}" argument while "{1}" wasn\'t given. The argument "{0}" will be ignored.\n'.format("--pheno-name", "--pheno"))
+            args.pheno_name = None
+
+
+
+        from src.HLA_Analysis.HLA_Analysis import ASSOC1_Logistic_Regression
+
+        t_result_logistic = ASSOC1_Logistic_Regression(args.input, args.out, args.covar, args.covar_name, args.pheno, args.pheno_name,
+                                                       args.condition, args.condition_list, args.reference_allele)
+
+
 
 
     if args.meta_analysis:

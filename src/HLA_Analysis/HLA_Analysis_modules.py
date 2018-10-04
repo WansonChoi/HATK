@@ -23,7 +23,7 @@ GLOBAL_p_JAVA = which("java")
 
 
 ### (Logistic Regression)
-def __hla__Logistic_Regression(_bfile, _input, _out,
+def __hla__Logistic_Regression(_bfile, _out,
                                _covar, _covar_names,
                                _phe, _phe_name,
                                _condition, _condition_list,
