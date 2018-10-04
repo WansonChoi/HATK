@@ -51,9 +51,12 @@ if __name__ == "__main__":
 
     parser.add_argument("-hped", help="\nHLA Type Data processed by \'Nomencleaner\'(.hped)\n\n")
 
+    parser.add_argument("--results-assoc", "-ra", help="\nResult files conducted by Association Tests(ex.\"*.assoc.logistic\").\n\n",
+                        nargs='+')
 
 
-    ### IMGT2Sequence
+
+    ##### < IMGT2Sequence > #####
 
     g_IMGT2Sequence = parser.add_argument_group(title='IMGT2Sequence', description='')
 
@@ -66,7 +69,7 @@ if __name__ == "__main__":
 
 
 
-    ### HLA2MARKER
+    ##### < HLA2MARKER > #####
 
     g_HLA2MARKER = parser.add_argument_group(title='HLA2MARKER', description='')
 
@@ -78,7 +81,7 @@ if __name__ == "__main__":
 
 
 
-    ### NomenCleaner
+    ##### < NomenCleaner > #####
 
     g_NomenCleaner = parser.add_argument_group(title='NomenCleaner', description='')
 
@@ -116,43 +119,73 @@ if __name__ == "__main__":
 
 
 
-    ### HLA-Analysis
-
-    g_HLA_Analysis = parser.add_argument_group(title='HLA_Analysis', description='')
-
-    g_HLA_Analysis.add_argument("--hla-analysis", help="\nGive this argument to implement \"HLA-Analysis\" sub-module.\n\n", action='store_true')
-
-    g_HLA_Analysis.add_argument("--covar", help="\nSpecify .covar file (Plink v1.07).\n\n")
-    g_HLA_Analysis.add_argument("--covar-name", help="\nSpecify the column name(s) in .covar file which you will use.(Plink v1.07).\n\n")
-
-    g_HLA_Analysis.add_argument("--pheno", help="\nSpecify phenotype information file (Plink v1.07).\n\n")
-    g_HLA_Analysis.add_argument("--pheno-name", help="\nSpecify the column name in phenotype file which you will use.(Plink v1.07).\n\n")
-
-    CondVars = g_HLA_Analysis.add_mutually_exclusive_group()
-    CondVars.add_argument("--condition", help="\nSpecify Marker name(s) to condition as comma-separated(\",\") (Plink v1.07).\n\n")
-    CondVars.add_argument("--condition-list", help="\nSpecify the Marker name(s) to condition as a file (Plink v1.07).\n\n")
-
-    g_HLA_Analysis.add_argument("--reference-allele", help="\nSpecify the Reference Allele file (Plink v1.07).\n\n")
+    ##### < HLA Analysis related > #####
 
 
+    ### Association Test 1 (Logistic Regression by Plink 1.07)
 
-    ### Plotting
+    g_ASSOC1_Logistic = parser.add_argument_group(title='(Association Test 1) Logistic Regression.', description='')
 
-    g_Plotting = parser.add_argument_group(title='Plotting', description='')
+    g_ASSOC1_Logistic.add_argument("--logistic", "-lr", help="\nGive this argument to implement \"HLA-Analysis\" sub-module. (Plink v1.07)\n\n", action='store_true')
 
-    g_Plotting.add_argument("--plotting", help="\nGive this argument to implement \"Plotting\" sub-module.\n\n", action='store_true')
+    g_ASSOC1_Logistic.add_argument("--covar", help="\nSpecify .covar file (Plink v1.07).\n\n")
+    g_ASSOC1_Logistic.add_argument("--covar-name", help="\nSpecify the column name(s) in .covar file which you will use. (Plink v1.07)\n\n")
 
-    g_Plotting.add_argument("--heatmap", help="\nGenerate Heatmap Plot.\n\n", action="store_true")
-    g_Plotting.add_argument("--manhattan", help="\nGenerate Manhattan Plot.\n\n", action="store_true")
+    g_ASSOC1_Logistic.add_argument("--pheno", help="\nSpecify phenotype information file (Plink v1.07).\n\n")
+    g_ASSOC1_Logistic.add_argument("--pheno-name", help="\nSpecify the column name in phenotype file which you will use. (Plink v1.07)\n\n")
+
+    CondVars = g_ASSOC1_Logistic.add_mutually_exclusive_group()
+    CondVars.add_argument("--condition", help="\nSpecify Marker name(s) to condition as comma-separated(\",\"). (Plink v1.07)\n\n")
+    CondVars.add_argument("--condition-list", help="\nSpecify the Marker name(s) to condition as a file. (Plink v1.07)\n\n")
+
+    g_ASSOC1_Logistic.add_argument("--reference-allele", help="\nSpecify the Reference Allele file. (Plink v1.07)\n\n")
 
 
 
-    ### Converter
+    ### Association Test 2 (Omnibus Test by Buhm Han.)
+
+    g_ASSOC2_Omnibus = parser.add_argument_group(title='(Association Test 2) Omnibus Test.', description='')
+
+    g_ASSOC2_Omnibus.add_argument("--phased", "-ph", help="\nSpecify the \".aa\" file.(for Omnibus Test).\n\n")
+    g_ASSOC2_Omnibus.add_argument("--rare-threshold", "-rth", help="\nSpecify the \".aa\" file.(for Omnibus Test).\n\n")
+
+
+    ### Meta-Analysis (by Plink 1.07)
+
+    g_MetaAnalysis = parser.add_argument_group(title='MetaAnalysis', description='')
+
+    g_MetaAnalysis.add_argument("--meta-analysis", help="\nGive this argument to implement \"Meta-Analysis\" sub-module. (Plink v1.07)\n\n", action='store_true')
+
+    # g_MetaAnalysis.add_argument("--rassoc", "-ra", help="\nSpecify the Result file(s) of association test for Meta-Analysis\n"
+    #                                                     "(ex. \"*.asssoc.logistic\", etc.)\n\n", nargs='+')
+
+
+
+    ##### < Plotting related. > #####
+
+
+    ### heatmap
+
+    g_heatmap = parser.add_argument_group(title='(Plotting 1) Heatmap', description='')
+    g_heatmap.add_argument("--heatmap", help="\nGenerate Heatmap Plot.\n\n", action="store_true")
+
+    # g_heatmap
+
+    ### manhattan
+
+    g_manhattan = parser.add_argument_group(title='(Plotting 2) Manhattan', description='')
+    g_manhattan.add_argument("--manhattan", help="\nGenerate Manhattan Plot.\n\n", action="store_true")
+
+    g_manhattan.add_argument("--point-color", "-pc", help="\nPoint color(ex. \"#778899\").\n\n", default="#778899")
+    g_manhattan.add_argument("--top-color", "-tc", help="\nTop signal point color(ex. \"#FF0000\").\n\n", default="#FF0000")
+
+
+
+    ##### < Converter > #####
 
     g_Converter = parser.add_argument_group(title='Converter', description='')
 
     g_Converter.add_argument("--converter", help="\nGive this argument to implement \"Converter\" sub-module.\n\n", action='store_true')
-
 
     g_Converter.add_argument("--AXIOM", help="\nAXIOM output file format.\n\n", action="store_true")
     g_Converter.add_argument("--HIBAG", help="\nHIBAG output file format.\n\n", action="store_true")
@@ -194,11 +227,11 @@ if __name__ == "__main__":
         print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("--out"))
         sys.exit()
 
-    if not bool(args.input) and not (args.imgt2sequence or args.hla2marker or args.nomencleaner):
+    if not bool(args.input) and not (args.imgt2sequence or args.hla2marker or args.nomencleaner or args.manhattan):
         print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("--input"))
         sys.exit()
 
-    if not (args.imgt2sequence or args.hla2marker or args.nomencleaner or args.hla_analysis or args.plotting or args.converter):
+    if not (args.imgt2sequence or args.hla2marker or args.nomencleaner or args.manhattan or args.heatmap or args.converter):
         # if none of flag for sub-module is given, then it is false state.
         print(std_ERROR_MAIN_PROCESS_NAME + "You should give at least on flag for sub-module to use.\n")
         sys.exit()
@@ -372,50 +405,104 @@ if __name__ == "__main__":
 
 
 
-    elif args.hla_analysis:
+    # elif args.hla_analysis:
+    #
+    #     ##### HLA_Analysis #####
+    #
+    #     print(std_MAIN_PROCESS_NAME + "Implementing HLA_Analysis.")
+    #
+    #     """
+    #     List of necessary arguments.
+    #
+    #     1. -input(--bfile)
+    #     2. -o (*)
+    #     3. either -lr or -ob
+    #
+    #     (optionals)
+    #     4. -covar (with -covar-name)
+    #     5. -phe (with -phe-name)
+    #     6. either --condition or --condition-list
+    #     7. --reference-allele
+    #     8. threshold
+    #     9. phased.
+    #
+    #     """
 
-        ##### HLA_Analysis #####
 
-        print(std_MAIN_PROCESS_NAME + "Implementing HLA_Analysis.")
+    if args.meta_analysis:
+
+        ##### Meta-Analysis #####
+
+        print(std_MAIN_PROCESS_NAME + "Implementing Meta-Analysis.\n")
 
         """
         List of necessary arguments.
 
-        1. -input(--bfile)
-        2. -o
-        3. either -lr or -ob
+        1. -o (*)
+        2. -ra
 
+        """
+
+        if not bool(args.results_assoc):
+            print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("--results-assoc(-ra)"))
+            sys.exit()
+
+
+
+    if args.manhattan:
+
+        ##### manhattan #####
+
+        print(std_MAIN_PROCESS_NAME + "Implementing Manhattan(Plotting).")
+
+        """
+        List of necessary arguments.
+        
+        1. --result-assoc
+        2. --out (*)
+        3. -hg
+        
         (optionals)
-        4. -covar (with -covar-name)
-        5. -phe (with -phe-name)
-        6. either --condition or --condition-list
-        7. --reference-allele
-        8. threshold
-        9. phased.
-
+        4. --point-color
+        5. --top-color
         """
 
+        if not bool(args.results_assoc):
+            print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("--results-assoc(-ra)"))
+            sys.exit()
 
-    if args.plotting:
+        if not bool(args.hg):
+            print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("-hg"))
+            sys.exit()
 
-        ##### Plotting #####
 
-        print(std_MAIN_PROCESS_NAME + "Implementing Plotting.")
+        from src.HLA_Analysis.Plotting.manhattanplot.manhattan import manhattan
+
+        manhattan(_results_assoc=args.results_assoc, _out=args.out, _hg=args.hg,
+                  _pointcol=args.point_color, _topcol=args.top_color)
+
+
+
+    if args.heatmap:
+
+        ##### heatmap #####
+
+        print(std_MAIN_PROCESS_NAME + "Implementing Heatmap(Plotting).")
 
         """
         List of necessary arguments.
         """
 
 
-    if args.converter:
-
-        ##### Converter #####
-
-        print(std_MAIN_PROCESS_NAME + "Implementing Converter.")
-
-        """
-        List of necessary arguments.
-        """
+    # if args.converter:
+    #
+    #     ##### Converter #####
+    #
+    #     print(std_MAIN_PROCESS_NAME + "Implementing Converter.")
+    #
+    #     """
+    #     List of necessary arguments.
+    #     """
 
 
 

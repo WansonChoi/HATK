@@ -11,10 +11,8 @@ p_RSCRIPT = which("Rscript")
 
 
 
-def manhattan(_lr, _out, _knownGene,
-              _pointcol = "#778899", _topcol = "#FF0000",
-              _min_pos = "29.60E6", _max_pos = "33.2E6",
-              _p_Rscript = which("Rscript")):
+def manhattan(_results_assoc, _out, _hg, _pointcol="#778899", _topcol="#FF0000", _min_pos="29.60E6", _max_pos="33.2E6",
+              _p_Rscript=which("Rscript")):
 
 
 
@@ -46,26 +44,32 @@ def manhattan(_lr, _out, _knownGene,
         p_src = "./"
 
 
+    if __name__ == "main":
+        p_data = "./"
+    else:
+        p_data = "data/HLA_Analysis/Plotting/manhattanplot"
+
+
 
     ########## < Dependency and Argument Checking > ##########
 
-    if not isinstance(_lr, list):
+    if not isinstance(_results_assoc, list):
         print(std_MAIN_PROCESS_ERROR + "Something wrong with \"--logistic-result(-lr)\" option. Please check it again.\n")
         sys.exit()
 
     # Logistic Regression
     print(std_MAIN_PROCESS_NAME + "Loading \".assoc.logistic\".\n")
-    print("{0} logistic regression results are given.\n".format(len(_lr)))
+    print("{0} logistic regression results are given.\n".format(len(_results_assoc)))
 
 
     l_TOP_LABEL = []
     l_yaxis = []
 
-    for i in range(0, len(_lr)):
+    for i in range(0, len(_results_assoc)):
 
-        print("\n[{0}] : {1}\n".format(i, _lr[i]))
+        print("\n[{0}] : {1}\n".format(i, _results_assoc[i]))
 
-        t_lr = pd.read_table(_lr[i], sep='\s+', engine='python', header=0, usecols=["SNP", "P"]).dropna().sort_values("P")
+        t_lr = pd.read_table(_results_assoc[i], sep='\s+', engine='python', header=0, usecols=["SNP", "P"]).dropna().sort_values("P")
 
         # MARKER_set = t_lr.iloc[:, 0].tolist()
         # print(std_MAIN_PROCESS_NAME + "Marker Labels are \n{0}".format(MARKER_set))
@@ -97,10 +101,14 @@ def manhattan(_lr, _out, _knownGene,
 
 
 
-    export_lr = ','.join(_lr)
+    export_lr = ','.join(_results_assoc)
     export_TOP_LABEL = ','.join(l_TOP_LABEL)
     export_yaxis = ','.join(l_yaxis)
 
+
+
+    # hg (Human Genome)
+    _knownGene = os.path.join(p_data, 'known_genes/known_genes_soumya_chr6.hg{0}.txt'.format(_hg))
 
 
     print("\n\n\n")
@@ -114,7 +122,7 @@ def manhattan(_lr, _out, _knownGene,
                export_lr, _out,
                _pointcol, _topcol,
                _min_pos, _max_pos, export_TOP_LABEL, export_yaxis,
-               _knownGene]
+               _knownGene, p_src]
 
     command = ' '.join(command)
     print(command)
@@ -167,11 +175,12 @@ if __name__ == "__main__":
 
     parser.add_argument("-h", "--help", help="\nShow this help message and exit\n\n", action='help')
 
-    parser.add_argument("--logistic-result", "-lr", help="\nOutput from logistic regression(\".assoc.logstic\").\n\n", nargs='+', required=True)
+    # parser.add_argument("--logistic-result", "-lr", help="\nOutput from logistic regression(\".assoc.logstic\").\n\n", nargs='+', required=True)
+    parser.add_argument("--results--assoc", "-ra", help="\nOutput from logistic regression(\".assoc.logstic\").\n\n", nargs='+', required=True)
     parser.add_argument("--out", "-o", help="\nOuput file prefix\n\n", required=True)
 
-    # parser.add_argument("-hg", help="\nHuman Genome version(18, 19 or 38)\n\n", choices=["18", "19", "38"], metavar="hg", required=True)
-    parser.add_argument("--knownGene", "-kg",  help="\nPath to knownGene.txt file\n\n", required=True)
+    parser.add_argument("-hg", help="\nHuman Genome version(18, 19 or 38)\n\n", choices=["18", "19", "38"], metavar="hg", required=True)
+    # parser.add_argument("--knownGene", "-kg",  help="\nPath to knownGene.txt file\n\n", required=True)
 
     parser.add_argument("--point-color", "-pc", help="\nPoint color(ex. \"#778899\").\n\n", default="#778899")
     parser.add_argument("--top-color", "-tc", help="\nTop signal point color(ex. \"#FF0000\").\n\n", default="#FF0000")
@@ -216,9 +225,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
     print(args)
 
-
-
-
-    manhattan(args.logistic_result, args.out, args.knownGene,
-              _pointcol=args.point_color,
-              _topcol=args.top_color)
+    manhattan(args.logistic_result, args.out, args.hg, _pointcol=args.point_color, _topcol=args.top_color)

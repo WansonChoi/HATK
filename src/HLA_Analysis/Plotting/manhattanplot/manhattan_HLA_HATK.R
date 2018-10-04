@@ -1,7 +1,3 @@
-########## <Loading Necessary Scripts(Modules)> ##########
-source("assocplot_HATK.R")
-
-
 ########## <Argument Pasrsing> ##########
 args = commandArgs(trailingOnly = TRUE)
 
@@ -17,10 +13,11 @@ topsignal_ = strsplit(args[7], ',')[[1]] # label of top signal marker
 max.yaxis_ = as.numeric(strsplit(args[8], ',')[[1]])
 
 p_GeneBuild_ = args[9]
+p_src_ = args[10]
 
 ### Checking manually.
 
-# for (i in 1:9) {
+# for (i in 1:10) {
 #   print(args[i])
 # }
 
@@ -31,6 +28,9 @@ p_GeneBuild_ = args[9]
 # print(max.yaxis_)
 # print(length(max.yaxis_))
 
+
+########## <Loading Necessary Scripts(Modules)> ##########
+source(file.path(p_src_, "assocplot_HATK.R"))
 
 
 #### Main
