@@ -67,6 +67,8 @@ if __name__ == "__main__":
 
     g_IMGT2Sequence.add_argument("--no-indel", help="\nExcluding indel in HLA sequence outputs.\n\n", action='store_true')
     g_IMGT2Sequence.add_argument("--no-multiprocess", help="\nSetting off parallel multiprocessing.\n\n", action='store_true')
+    g_IMGT2Sequence.add_argument("--save-intermediates", help="\nDon't remove intermediate files.\n\n", action='store_true')
+    g_IMGT2Sequence.add_argument("--imgt-dir", help="\nIn case User just want to specify the directory of IMGT data folder.\n\n")
 
 
 
@@ -127,7 +129,7 @@ if __name__ == "__main__":
 
     g_ASSOC1_Logistic = parser.add_argument_group(title='(Association Test 1) Logistic Regression.', description='')
 
-    g_ASSOC1_Logistic.add_argument("--logistic", "-lr", help="\nGive this argument to implement \"HLA-Analysis\" sub-module. (Plink v1.07)\n\n", action='store_true')
+    g_ASSOC1_Logistic.add_argument("--logistic", "-lr", help="\nGive this argument to implement \"Logistic Regression\". (Plink v1.07)\n\n", action='store_true')
 
     g_ASSOC1_Logistic.add_argument("--covar", help="\nSpecify .covar file (Plink v1.07).\n\n")
     g_ASSOC1_Logistic.add_argument("--covar-name", help="\nSpecify the column name(s) in .covar file which you will use. (Plink v1.07)\n\n")
@@ -146,9 +148,10 @@ if __name__ == "__main__":
     ### Association Test 2 (Omnibus Test by Buhm Han.)
 
     g_ASSOC2_Omnibus = parser.add_argument_group(title='(Association Test 2) Omnibus Test.', description='')
+    g_ASSOC2_Omnibus.add_argument("--omnibus", "-om", help="\nGive this argument to implement \"Omnibus Test\".\n\n", action='store_true')
 
-    g_ASSOC2_Omnibus.add_argument("--phased", "-ph", help="\nSpecify the \".aa\" file.(for Omnibus Test).\n\n")
-    g_ASSOC2_Omnibus.add_argument("--rare-threshold", "-rth", help="\nSpecify the \".aa\" file.(for Omnibus Test).\n\n")
+    g_ASSOC2_Omnibus.add_argument("--phased", "-ph", help="\nSpecify the \".aa\" file.\n\n")
+    # g_ASSOC2_Omnibus.add_argument("--rare-threshold", "-rth", help="\nSpecify the threshold value for rare variants.\n\n")
 
 
     ### Meta-Analysis (by Plink 1.07)
@@ -256,19 +259,13 @@ if __name__ == "__main__":
         3. -imgt
         """
 
-        if not bool(args.hg):
-            print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("-hg"))
-            sys.exit()
 
-        if not bool(args.imgt):
-            print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("-imgt"))
-            sys.exit()
+        from src.IMGT2Sequence.IMGT2Seqeunce import HATK_IMGT2Sequence
 
-
-        from src.IMGT2Sequence.IMGT2Seqeunce import MakeDictionary
-
-        _t_dict_AA, _t_dict_SNPS = MakeDictionary(_HG=args.hg, _OUTPUT=args.out, _IMGT=args.imgt, _no_Indel=args.no_indel, _no_MultiP=args.no_multiprocess)
-
+        _t_dict_AA, _t_dict_SNPS, _t_IAT = HATK_IMGT2Sequence(_HG=args.hg, _OUTPUT=args.out, _IMGT=args.imgt,
+                                                      _no_Indel=args.no_indel, _no_MultiP=args.no_multiprocess,
+                                                      _save_intermediates=args.save_intermediates,
+                                                      _imgt_dir=args.imgt_dir)
 
 
     if args.hla2marker:
@@ -443,6 +440,56 @@ if __name__ == "__main__":
                                                        args.condition, args.condition_list, args.reference_allele)
 
 
+
+    if args.omnibus:
+
+        ##### (Association Test 2) Omnibus Test #####
+
+        print(std_MAIN_PROCESS_NAME + "Implementing Omnibus Test(Association Test).")
+
+        """
+        List of necessary arguments.
+
+        1. --input
+        2. -o (*)
+        3. --phased
+        4. --pheno
+        5. --pheno-name
+        6. --covar
+        7. --covar-names
+        8. --rare-threshold (2018. 10. 04.) Postponed.
+        9. --condition
+        10. --condition-list
+        
+        """
+
+        # --phased(.aa)
+        if not bool(args.phased):
+            print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("--phased"))
+            sys.exit()
+
+        # --pheno
+        if not bool(args.pheno):
+            print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("--pheno"))
+            sys.exit()
+        else:
+            # Phenotype file is given but the name of phenotype to use isn't given.
+            if not bool(args.pheno_name):
+                print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("--pheno-name"))
+                sys.exit()
+
+
+        # (2018. 10. 04.) Postponed.
+        # # --rare-threshold
+        # if not bool(args.rare_threshold):
+        #     print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("--rare-threshold"))
+        #     sys.exit()
+
+
+        from src.HLA_Analysis.HLA_Analysis import ASSOC2_Omnibus_Test
+
+        ASSOC2_Omnibus_Test(_input=args.input, _out=args.out, _phased=args.phased, _phe=args.pheno, _phe_name=args.pheno_name,
+                            _covar=args.covar, _covar_names=args.covar_name)
 
 
     if args.meta_analysis:

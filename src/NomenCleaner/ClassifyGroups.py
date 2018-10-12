@@ -6,17 +6,17 @@ import argparse, textwrap
 import pandas as pd
 
 
-def ClassifyGroups(_p_allelelist, _p_Ggroup, _p_Pgroup, _p_dict_AA, _p_dict_SNPS, _out, _imgt = ""):
+def ClassifyGroups(_p_allelelist, _p_Ggroup, _p_Pgroup, _p_dict_AA, _p_dict_SNPS, _out):
 
     """
 
     This function takes "hla_nom_g.txt" or "hla_nom_p.txt" file and converts them to
     `INTEGRATED_ALLELELIST` file(".iat" file.)
 
-    The output will be majorly used in "COATING_PED.py" module.
+    The output will be majorly used in "NomenCleaner.py" module.
 
     Sometimes there is no matched group for an allele especially in case of P-group.
-    In this case the matched value will be filled with -1 which represents "Not Found".
+    In this case the matched value will be filled with 0 which represents "Not Found".
 
     """
 
@@ -189,8 +189,8 @@ def ClassifyGroups(_p_allelelist, _p_Ggroup, _p_Pgroup, _p_dict_AA, _p_dict_SNPS
         print(merged_SNPS.head(20))
         # print(len(merged_SNPS))
 
-        SeqisAvailable_AA = merged_AA.loc[:, "Seqs"].apply(lambda x : "P" if x != "-1" else "A")
-        SeqisAvailable_SNPS = merged_SNPS.loc[:, "Seqs"].apply(lambda x : "P" if x != "-1" else "A")
+        SeqisAvailable_AA = merged_AA.loc[:, "Seqs"].apply(lambda x : "p" if x != "-1" else "a")
+        SeqisAvailable_SNPS = merged_SNPS.loc[:, "Seqs"].apply(lambda x : "p" if x != "-1" else "a")
 
         # print("\nLength : {0} and {1}".format(len(SeqisAvailable_AA), len(SeqisAvailable_SNPS)))
 
@@ -231,12 +231,13 @@ def ClassifyGroups(_p_allelelist, _p_Ggroup, _p_Pgroup, _p_dict_AA, _p_dict_SNPS
         print(std_MAIN_PROCESS_NAME+"Output of 'i'ntegrated 'a'llele 't'able(.iat).\n")
         print(df_OUTPUT.head(50))
 
-        df_OUTPUT.to_csv('.'.join([_out + ("imgt"+_imgt if bool(_imgt) else ""), "iat"]), sep='\t', header=True, index=True)
+        df_OUTPUT.to_csv(_out + ".iat", sep='\t', header=True, index=True)
 
 
         print(std_MAIN_PROCESS_NAME+"Finished.\n")
 
-    return 0
+
+    return _out + ".iat"
 
 
 
@@ -288,11 +289,17 @@ if __name__ == "__main__" :
     
         ClassifyGroups.py
         
-        This script converts a file with allels group information to utilizable file.
+        This script generates important file containing classification information of HLA alleles. 
         
-        It takes (1) "Allelelist.xxxx.txt", (2) "hla_nom_g.txt", (3) "hla_nom_p.txt", (4) IMGT-HLA version,
-        (5) "HLA_DICTIONARY_AA", (6) "HLA_DICTIONARY_SNPS" (total 6 things) as an inputs, and generated 
-        "Integrated Allele Table" to be used in "NomenCleaner.py" module.
+        
+        (1) Allelelist file. (ex. "Allelelist.xxxx.txt"), 
+        (2) "hla_nom_g.txt", 
+        (3) "hla_nom_p.txt", 
+        (4) IMGT-HLA version,
+        (5) "HLA_DICTIONARY_AA", 
+        (6) "HLA_DICTIONARY_SNPS" 
+        
+        "*.iat('I'ntegrated 'A'llele 'T'able)" file is generated to be used in "NomenCleaner.py" module.
         
         
         made by Wanson Choi.
@@ -321,9 +328,6 @@ if __name__ == "__main__" :
 
 
 
-    # <for Publish>
-    args = parser.parse_args()
-
     # <for Testing>
 
     # hla_nom_p.txt (imgt3320)
@@ -350,278 +354,10 @@ if __name__ == "__main__" :
     #                           "-imgt", "370"])
 
 
+    # <for Publish>
+    args = parser.parse_args()
 
     print(args)
 
 
     ClassifyGroups(args.al, args.Ggroup, args.Pgroup, args.dict_AA, args.dict_SNPS, args.o, args.imgt)
-
-
-
-
-# ========== < deprecated > ==========
-
-
-
-# def WhatYangMade(_p_input, _group, _out):
-#
-#     """
-#
-#     This function generates an allele information table which Yang has in her project("G-group_alleles.txt").
-#
-#     Output will be either
-#
-#     [1] only groups which have at least 2 elements per goup.
-#     A*01:01:01G 01:01:01:01/01:01:01:02N/01:01:01:03/01:01:01:04/01:01:01:05/01:01:01:06/01:01:01:07/01:01:01:08/01:01:01:09/01:01:01:10/01:01:38L/01:01:51/01:04N/01:22N/01:32/01:37/01:45/01:56N/01:81/01:87N/01:103/01:107/01:109/01:132/01:141/01:142/01:155/01:177/01:212/01:217/01:234
-#     A*01:03:01G 01:03:01:01/01:03:01:02
-#     A*02:01:01G 02:01:01:01/02:01:01:02L/02:01:01:03/02:01:01:04/02:01:01:05/02:01:01:06/02:01:01:07/02:01:01:08/02:01:01:09/02:01:01:10/02:01:01:11/02:01:01:12/02:01:01:13/02:01:01:14/02:01:01:15/02:01:01:16/02:01:01:17/02:01:01:18/02:01:01:19/02:01:01:20/02:01:01:21/02:01:01:22/02:01:01:23/02:01:01:24/02:01:01:25/02:01:01:26/02:01:08/02:01:11/02:01:14Q/02:01:15/02:01:21/02:01:48/02:01:50/02:01:79/02:01:80/02:01:89/02:01:97/02:01:98/02:01:99/02:01:104/02:01:130/02:09/02:43N/02:66/02:75/02:83N/02:89/02:97:01/02:97:02/02:132/02:134/02:140/02:241/02:252/02:256/02:266/02:291/02:294/02:305N/02:327/02:329/02:356N/02:357/02:397/02:411/02:446/02:455/02:469/02:481/02:538/02:559/02:607/02:608N/02:614/02:629/02:642/02:665/02:675N
-#     A*02:02:01G 02:02:01:01/02:02:01:02
-#     A*02:03:01G 02:03:01/02:03:06/02:253/02:264/02:370/02:480/02:505/02:557
-#     A*02:04:01G 02:04/02:664
-#     ...
-#
-#     or
-#
-#     [2] whole groups no matter how many elements in each group.
-#     A*01:01:01G	01:01:01:01/01:01:01:02N/01:01:01:03/01:01:01:04/01:01:01:05/01:01:01:06/01:01:01:07/01:01:01:08/01:01:01:09/01:01:01:10/01:01:01:11/01:01:01:12/01:01:01:13/01:01:38L/01:01:51/01:01:83/01:01:84/01:04N/01:22N/01:32/01:37/01:45/01:56N/01:81/01:87N/01:103/01:107/01:109/01:132/01:141/01:142/01:155/01:177/01:212/01:217/01:234/01:237/01:246/01:248Q/01:249/01:251/01:252/01:253
-#     A*01:01:02	01:01:02
-#     A*01:01:03	01:01:03
-#     A*01:01:04	01:01:04
-#     A*01:01:05	01:01:05
-#     A*01:01:06	01:01:06
-#     ...
-#
-#     Also, "G(3-fields)" or "P(2-fields)" will be determined by a file given to argument `_group`.
-#
-#     There will be no arguemnt for imgt version(ex. 3320) because it will be determined by header information of
-#     given "Allelelist.***.txt" file.
-#
-#     """
-#
-#
-#     ########## < Core Variables > ##########
-#
-#     HLA_names  = ["A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1"]
-#
-#     # General Information
-#     ONLY_GROUPS = None
-#     WHOLE_GROUPS = None
-#
-#     # for Utilization
-#     ONLY_GROUPS_formal = None
-#     WHOLE_GROUPS_formal = None
-#
-#     std_MAIN_PROCESS_NAME = "[%s]: " % (os.path.basename(__file__))
-#
-#     print(std_MAIN_PROCESS_NAME+"Reading \"hla_nom_{0}.txt\" file.\n\n".format(_group))
-#
-#
-#     ########## < Reading "hla_nom_g.txt" or "hla_nom_p.txt" file. > ##########
-#
-#     f = open(_p_input, 'r')
-#     lines = f.readlines()
-#
-#     ### Header info.
-#
-#     # lines[0:6]  first 6 lines are header information.
-#     # Among them, we will take only `data` and `version` info.
-#
-#     date = lines[1]
-#     version = lines[2].rstrip('\n').split(' ')[-1]
-#     version = re.sub(pattern='\.', string=version, repl='')
-#
-#     # print("[ClassifyGroups]: Header information ")
-#     print("\nDate : {0}\nVersion : {1}\n".format(date, version))
-#
-#     sr_hla_g = pd.Series(lines[6:]).apply(lambda x: x.rstrip('\n')).apply(lambda x: x.split(';'))
-#
-#     df_hla_g = pd.DataFrame(sr_hla_g.tolist(), columns=["HLA", "Alleles", "Group"])
-#
-#     print("\nPrimitive DataFrame for Grouped allele information.\n")
-#     print(df_hla_g.head())
-#
-#     ########## < Making `ONLY_GROUPS` DataFrame. > ##########
-#
-#     f_vector = df_hla_g.loc[:, "Group"].apply(lambda x: True if bool(x) else False)
-#
-#     ONLY_GROUPS = df_hla_g.loc[f_vector, :]
-#
-#     print("\nDataFrame for `ONLY_GROUPS`.\n")
-#     print(ONLY_GROUPS.head())
-#
-#     col_temp = ONLY_GROUPS.loc[:, ["HLA", "Group"]].apply(''.join, axis=1)
-#
-#     print("\ncol_temp\n")
-#     print(col_temp.head())
-#
-#     ONLY_GROUPS = pd.concat([col_temp, ONLY_GROUPS.loc[:, "Alleles"]], axis=1)
-#     print("\n`ONLY_GROUPS` done.\n")
-#     print(ONLY_GROUPS.head())
-#
-#     ### Exporting `ONLY_GROUPS`
-#     ONLY_GROUPS.to_csv('.'.join([_out, "imgt" + version, "alleles.{0}_group.txt".format(_group)]), sep='\t',
-#                        header=False, index=False)
-#
-#     ########## < Making `WHOLE_GROUPS` DataFrame. > ##########
-#
-#     col_temp = []
-#
-#     for i in range(0, len(f_vector)):
-#
-#         if f_vector.iat[i]:
-#             # Grouped인 경우
-#             col_temp.append(df_hla_g.iat[i, 2])
-#         else:
-#             # Singleton 인 경우
-#             col_temp.append(df_hla_g.iat[i, 1])
-#
-#     print("\nChoosing group name.\n")
-#     print(col_temp)
-#     col_temp = pd.concat([df_hla_g.loc[:, "HLA"], pd.Series(col_temp)], axis=1).apply(''.join, axis=1)
-#     print(col_temp.head())
-#
-#     WHOLE_GROUPS = pd.concat([col_temp, df_hla_g.loc[:, "Alleles"]], axis=1)
-#     print("\n`WHOLE_GROUPS` done.\n")
-#     print(WHOLE_GROUPS.head())
-#
-#     ### Exporting `WHOLE_GROUPS`
-#     WHOLE_GROUPS.to_csv('.'.join([_out, "imgt" + version, "whole.{0}_group.txt".format(_group)]), sep='\t',
-#                         header=False, index=False)
-#
-#     return 0
-
-
-
-
-# def MakeGroupedAllelelist(_p_allelelist, _p_Ggroup, _p_Pgroup, _out):
-#
-#     """
-#
-#     :param _p_allelelist: "Allelelist.3320.txt".
-#     :param _p_Ggroup: "hla_nom_g.txt".
-#     :param _p_Pgroup: "hla_nom_p.txt".
-#     :param _out: output file name prefix.
-#     :return:
-#     """
-#
-#
-#
-#     ########## < Core Variables > ##########
-#
-#     HLA_names  = ["A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1"]
-#
-#
-#
-#     ########## < Reading "Allelelist.txt" file > ##########
-#
-#     f = open(_p_allelelist, 'r')
-#     lines = f.readlines()
-#
-#     header = lines[6].rstrip('\n').split(',')
-#     major_lines = lines[7:]
-#
-#
-#
-#     df_Allelelist = pd.DataFrame([item.rstrip('\n').split(',') for item in major_lines], columns=header)
-#
-#     print("\nLoaded Allelelist file.\n")
-#     print(df_Allelelist.head())
-#
-#
-#
-#     ########## < Reading "hla_nom_g.txt" file > ##########
-#
-#     f = open(_p_Ggroup, 'r')
-#     lines = f.readlines()
-#     major_lines = lines[6:]
-#
-#     sr_hla_g = pd.Series(major_lines).apply(lambda x: x.rstrip('\n')).apply(lambda x: x.split(';'))
-#     df_hla_g = pd.DataFrame(sr_hla_g.tolist(), columns=["HLA", "alleles", "Group"])
-#
-#     # column trimming
-#     df_hla_g.loc[:, "HLA"] = df_hla_g.loc[:, "HLA"].apply(lambda x : x.rstrip('*'))
-#     df_hla_g.loc[:, "alleles"] = df_hla_g.loc[:, "alleles"].apply(lambda x : x.split('/'))
-#
-#     # setting index with "HLA" column values
-#     df_hla_g = df_hla_g.set_index("HLA")
-#
-#     print("\nLoaded g group file.\n")
-#     print(df_hla_g.head())
-#
-#
-#
-#     dict_hla_g = {HLA_names[i] : df_hla_g.loc[HLA_names[i], :] for i in range(0, len(HLA_names))}
-#
-#
-#
-#     ########## < Reading "hla_nom_p.txt" file > ##########
-#
-#     f = open(_p_Pgroup, 'r')
-#     lines = f.readlines()
-#     major_lines = lines[6:]
-#
-#     sr_hla_p = pd.Series(major_lines).apply(lambda x: x.rstrip('\n')).apply(lambda x: x.split(';'))
-#     df_hla_p = pd.DataFrame(sr_hla_p.tolist(), columns=["HLA", "alleles", "Group"])
-#
-#     # column trimming
-#     df_hla_p.loc[:, "HLA"] = df_hla_p.loc[:, "HLA"].apply(lambda x : x.rstrip('*'))
-#     df_hla_p.loc[:, "alleles"] = df_hla_p.loc[:, "alleles"].apply(lambda x : x.split('/'))
-#
-#     # setting index with "HLA" column values
-#     df_hla_p = df_hla_p.set_index("HLA")
-#
-#
-#     print("\nLoaded p group file.\n")
-#     print(df_hla_p.head(10))
-#
-#
-#
-#     dict_hla_p = {HLA_names[i] : df_hla_p.loc[HLA_names[i], :] for i in range(0, len(HLA_names))}
-#
-#
-#
-#
-#     ########## < Matching Job > ##########
-#
-#     # 이제 df_Allelelist의 "alleles" 컬럼의 원소에 대해 for문을 돌거임.
-#     # 그런데 그전에 우선 HLA_names 애들만 건저내야하 할듯(ex. "W*01:01" 이런애들)
-#
-#     splitted_alleles = pd.DataFrame(df_Allelelist.loc[:, "Allele"].apply(lambda x : x.split('*')).tolist(), columns=["HLA", "Pure_Alleles"])
-#     # print(splitted_alleles.head())
-#
-#     df_Allelelist_filtered = pd.concat([df_Allelelist.loc[:, "Allele"], splitted_alleles], axis=1).set_index("HLA").loc[HLA_names, :] # Filtering only major HLA genes.
-#     df_Allelelist_filtered = df_Allelelist_filtered.reset_index("HLA").set_index("Allele")
-#     print(df_Allelelist_filtered.head())
-#
-#
-#     Found_Gs = pd.Series([whichGroup(df_Allelelist_filtered.iat[i, 1], dict_hla_g[df_Allelelist_filtered.iat[i, 0]]) for i in range(0, len(df_Allelelist_filtered))])
-#     print(Found_Gs)
-#     # Found_Gs.to_csv("./Found_Gs.txt")
-#
-#     Found_Ps = pd.Series([whichGroup(df_Allelelist_filtered.iat[i, 1], dict_hla_p[df_Allelelist_filtered.iat[i, 0]]) for i in range(0, len(df_Allelelist_filtered))])
-#     print(Found_Ps)
-#     # Found_Ps.to_csv("./Found_Ps.txt")
-#
-#
-#
-#     df_OUTPUT = pd.concat([Found_Gs, Found_Ps], axis=1)
-#     df_OUTPUT.index = df_Allelelist_filtered.index
-#     df_OUTPUT.columns = ["G_group", "P_group"]
-#     df_OUTPUT.to_csv('./Allele_Group_table_1st.txt', sep='\t', header=True, index=True)
-#
-#     print("\nOutput\n")
-#     print(df_OUTPUT.head(50))
-#
-#
-#
-#
-#     # # for i in range(0, len(alleles))
-#     # for i in range(0, 30):
-#     #
-#     #     hla, pure_alname = alleles[i].split('*')
-#     #
-#     #     print(whichGroup(pure_alname, dict_hla_g[hla]))
-#     #     # whichGroup(pure_alname, dict_hla_p[hla])
-#
-#
-#     return 0

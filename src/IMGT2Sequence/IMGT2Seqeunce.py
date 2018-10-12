@@ -6,19 +6,67 @@ import argparse, textwrap
 from glob import glob
 import multiprocessing as mp
 
+########## < Core Global Variables > ##########
 
-def MakeDictionary(_HG, _OUTPUT, _IMGT, _no_Indel=False, _no_MultiP = False):
+### Module name && Std template
+std_MAIN_PROCESS_NAME = "\n[%s]: " % (os.path.basename(__file__))
+std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % (os.path.basename(__file__))
+
+
+
+def HATK_IMGT2Sequence(_HG, _OUTPUT, _IMGT, _no_Indel=False, _no_MultiP = False,
+                       _save_intermediates = False, _imgt_dir = None):
+
+    """
+
+    The wrapping function in interface with "HATK.py".
+    Necessary argument checking will be conducted here.
+
+    """
+
+
+    ### Argument(HATK.py) checking.
+
+    # "-hg"
+    if not bool(_HG):
+        print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("-hg"))
+        sys.exit()
+
+    # "-imgt"
+    if not bool(_IMGT):
+        print(
+            std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("-imgt"))
+        sys.exit()
+
+
+    RETURN_dict_AA, RETURN_dict_SNPS, RETURN_IAT = \
+        IMGT2Sequence(_HG=_HG, _OUTPUT=_OUTPUT, _IMGT=_IMGT, _no_Indel=_no_Indel,
+                      _no_MultiP=_no_MultiP, _save_intermediates=_save_intermediates,
+                      _imgt_dir=_imgt_dir)
+
+
+    # Summary
+    print(std_MAIN_PROCESS_NAME + "Output from IMGT2Sequence.\n")
+    print("1. dict_AA : {0}\n".format(RETURN_dict_AA))
+    print("2. dict_SNPS : {0}\n".format(RETURN_dict_SNPS))
+    print("3. IAT : {0}\n".format(RETURN_IAT))
+
+
+    return [RETURN_dict_AA, RETURN_dict_SNPS, RETURN_IAT]
+
+
+
+
+def IMGT2Sequence(_HG, _OUTPUT, _IMGT, _no_Indel=False, _no_MultiP = False,
+                  _save_intermediates = False, _imgt_dir = None):
 
     """
     """
 
     ########## < Core Variables > ##########
 
-    ### Module name.
-    std_MAIN_PROCESS_NAME = "\n[%s]: " % (os.path.basename(__file__))
-    std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % (os.path.basename(__file__))
 
-    print(std_MAIN_PROCESS_NAME + "Conducting MakeDictionary.")
+    print(std_MAIN_PROCESS_NAME + "Conducting IMGT2Sequence.")
 
 
     # (2018. 8. 28.) This order must be kept.
@@ -33,7 +81,7 @@ def MakeDictionary(_HG, _OUTPUT, _IMGT, _no_Indel=False, _no_MultiP = False):
 
 
     ### Variables for Paths.
-    p_data = "./data/MakeDictionary"
+    p_data = "./data/IMGT2Sequence"
     p_src = "./src/IMGT2Sequence"
 
 
@@ -47,7 +95,8 @@ def MakeDictionary(_HG, _OUTPUT, _IMGT, _no_Indel=False, _no_MultiP = False):
 
 
     _OUTPUT_AA_RETURN = os.path.join(INTERMEDIATE_PATH, 'HLA_DICTIONARY_AA.hg{0}.imgt{1}'.format(_HG, _IMGT))
-    _OUTPUT_SNPS_RETURN = os.path.join(INTERMEDIATE_PATH, 'HLA_DICTIONARY_SNPS.hg{0}.imgt{1}'.format(_HG, _IMGT)),
+    _OUTPUT_SNPS_RETURN = os.path.join(INTERMEDIATE_PATH, 'HLA_DICTIONARY_SNPS.hg{0}.imgt{1}'.format(_HG, _IMGT))
+    _OUTPUT_IAT_RETURN = os.path.join(INTERMEDIATE_PATH, 'HLA_INTEGRATED_ALLELE_TABLE.hg{0}.imgt{1}'.format(_HG, _IMGT))
 
 
     ########## < Dependency Checking > ##########
@@ -61,18 +110,26 @@ def MakeDictionary(_HG, _OUTPUT, _IMGT, _no_Indel=False, _no_MultiP = False):
 
     ##### < Necessary Python source files > #####
 
-    # IMGTtoSequences.py
-    if os.path.exists(os.path.join(p_src, "IMGTtoSequences_v2.py")):
-        from src.IMGT2Sequence.IMGTtoSequences_v2 import IMGTtoSequences
+    # ProcessIMGT.py
+    if os.path.exists(os.path.join(p_src, "ProcessIMGT.py")):
+        from src.IMGT2Sequence.ProcessIMGT import ProcessIMGT
     else:
-        print(std_ERROR_MAIN_PROCESS_NAME + "\"IMGTtoSequences.v2.py\" doesn't exist!")
+        print(std_ERROR_MAIN_PROCESS_NAME + "\"src/IMGT2Sequence/ProcessIMGT.py\" doesn't exist!")
         sys.exit()
+
+    # ClassifyGroups.py
+    if os.path.exists("src/NomenCleaner/ClassifyGroups.py"):
+        from src.NomenCleaner.ClassifyGroups import ClassifyGroups
+    else:
+        print(std_ERROR_MAIN_PROCESS_NAME + "\"src/NomenCleaner/ClassifyGroups.py\" doesn't exist!")
+        sys.exit()
+
 
 
     ##### < Necessary Static Data files > #####
 
     HLA_INTEGRATED_POSITIONS_filename = os.path.join(p_data, "HLA_INTEGRATED_POSITIONS_hg{0}.txt".format(_HG))
-    IMGTHLA_directory = os.path.join(p_data, "IMGTHLA{0}".format(_IMGT))
+    IMGTHLA_directory = os.path.join(p_data, "IMGTHLA{0}".format(_IMGT)) if not bool(_imgt_dir) else _imgt_dir
 
     print(HLA_INTEGRATED_POSITIONS_filename)
     print(IMGTHLA_directory)
@@ -139,19 +196,41 @@ def MakeDictionary(_HG, _OUTPUT, _IMGT, _no_Indel=False, _no_MultiP = False):
     print(TARGET_gen_files)
 
 
+    ##### < "Allelelist.txt", "hla_nom_g.txt", "hla_nom_p.txt" > #####
+
+    # (2018. 10. 12.)
+
+    t_allelelist = os.path.join(IMGTHLA_directory, "Allelelist.txt")
+    t_p_Group = os.path.join(IMGTHLA_directory, "wmda/hla_nom_g.txt")
+    t_p_Proup = os.path.join(IMGTHLA_directory, "wmda/hla_nom_p.txt")
+
+    if not os.path.exists(t_allelelist):
+        print(std_ERROR_MAIN_PROCESS_NAME + "\"Allelelist.txt\" file can't be found.\n")
+        sys.exit()
+
+    if not os.path.exists(t_p_Group):
+        print(std_ERROR_MAIN_PROCESS_NAME + "\"hla_nom_g.txt\" file can't be found.\n")
+        sys.exit()
+
+    if not os.path.exists(t_p_Proup):
+        print(std_ERROR_MAIN_PROCESS_NAME + "\"hla_nom_p.txt\" file can't be found.\n")
+        sys.exit()
+
+
 
 
     ########## < Control Flags > ##########
 
-    MAKING_DICTIONARY = 1
+    _1_MAKING_DICTIONARY = 1
+    _2_CLASSIFY_GROUP = 1
     CLEAN_UP = 0
 
 
-    if MAKING_DICTIONARY:
+    if _1_MAKING_DICTIONARY:
 
-        ########## < 1. Making AA Dictionary. > ##########
+        ########## < 1. Making HLA Dictionary. > ##########
 
-        print(std_MAIN_PROCESS_NAME + "[1] Making dictionary file.")
+        print(std_MAIN_PROCESS_NAME + "[1] Making HLA dictionary file.")
 
         l_df_Seqs_AA = []
         l_df_forMAP_AA = []
@@ -165,7 +244,7 @@ def MakeDictionary(_HG, _OUTPUT, _IMGT, _no_Indel=False, _no_MultiP = False):
 
             pool = mp.Pool(processes=8)
 
-            dict_Pool = {HLA_names[i]: pool.apply_async(IMGTtoSequences, (_OUTPUT, HLA_names[i], HLA_INTEGRATED_POSITIONS_filename, _IMGT, TARGET_nuc_files[HLA_names[i]], TARGET_gen_files[HLA_names[i]], TARGET_prot_files[HLA_names[i]]))
+            dict_Pool = {HLA_names[i]: pool.apply_async(ProcessIMGT, (_OUTPUT, HLA_names[i], HLA_INTEGRATED_POSITIONS_filename, _IMGT, TARGET_nuc_files[HLA_names[i]], TARGET_gen_files[HLA_names[i]], TARGET_prot_files[HLA_names[i]]))
                          for i in range(0, len(HLA_names))}
 
             pool.close()
@@ -179,10 +258,10 @@ def MakeDictionary(_HG, _OUTPUT, _IMGT, _no_Indel=False, _no_MultiP = False):
                 t_df_Seqs_SNPS, t_df_Seqs_AA, t_df_forMAP_SNPS, t_df_forMAP_AA = dict_Pool[HLA_names[i]].get()
 
             else:
+                t_df_Seqs_SNPS, t_df_Seqs_AA, t_df_forMAP_SNPS, t_df_forMAP_AA \
+                    = ProcessIMGT(_OUTPUT, HLA_names[i], HLA_INTEGRATED_POSITIONS_filename, _IMGT,
+                                  TARGET_nuc_files[HLA_names[i]], TARGET_gen_files[HLA_names[i]], TARGET_prot_files[HLA_names[i]])
 
-                t_df_Seqs_SNPS, t_df_Seqs_AA, t_df_forMAP_SNPS, t_df_forMAP_AA = IMGTtoSequences(
-                    _OUTPUT, HLA_names[i], HLA_INTEGRATED_POSITIONS_filename, _IMGT,
-                    TARGET_nuc_files[HLA_names[i]], TARGET_gen_files[HLA_names[i]], TARGET_prot_files[HLA_names[i]])
 
 
             # Dictionary AA.
@@ -213,6 +292,20 @@ def MakeDictionary(_HG, _OUTPUT, _IMGT, _no_Indel=False, _no_MultiP = False):
         HLA_DICTIONARY_SNPS_map.to_csv(_OUTPUT_SNPS_RETURN+".map", sep='\t', header=False, index=False)
 
 
+    if _2_CLASSIFY_GROUP:
+
+
+        ########## < 2. Making *.iat file. > ##########
+
+        print(std_MAIN_PROCESS_NAME + "[2] Making \"*.iat\" file.")
+
+        t_dict_AA = _OUTPUT_AA_RETURN + ".txt"
+        t_dict_SNPS = _OUTPUT_SNPS_RETURN+ ".txt"
+
+        _OUTPUT_IAT_RETURN = ClassifyGroups(t_allelelist, t_p_Group, t_p_Proup, t_dict_AA, t_dict_SNPS, _OUTPUT_IAT_RETURN)
+
+
+
 
     if CLEAN_UP:
 
@@ -221,10 +314,10 @@ def MakeDictionary(_HG, _OUTPUT, _IMGT, _no_Indel=False, _no_MultiP = False):
         print(std_MAIN_PROCESS_NAME + "[5] Removing unnecessary files")
 
     print("\n")
-    print(std_MAIN_PROCESS_NAME + "Making Dictionary is done.\n")
+    print(std_MAIN_PROCESS_NAME + "Making HLA Dictionary is done.\n")
 
 
-    return [_OUTPUT_AA_RETURN, _OUTPUT_SNPS_RETURN]
+    return [_OUTPUT_AA_RETURN, _OUTPUT_SNPS_RETURN, _OUTPUT_IAT_RETURN]
 
 
 
@@ -294,8 +387,6 @@ def MakeMap(_hla, _type, _df_forMAP):
 
     df_MAP = pd.concat([sr_Chr, pd.Series(l_Label), sr_GD, sr_GenPos], axis=1)
 
-    # Checking as a file.
-    # df_MAP.to_csv("Test_MAKEDICTIONARY_Prototype.forMAP.{0}.{1}.txt".format(_hla, _type), sep='\t', header=False, index=False)
 
     return df_MAP
 
@@ -307,7 +398,7 @@ if __name__ == "__main__":
                                      description=textwrap.dedent('''\
     ###########################################################################################
 
-        IMGT2Seq.py
+        IMGT2Sequence.py
 
 
 
@@ -328,6 +419,8 @@ if __name__ == "__main__":
 
     parser.add_argument("--no-indel", help="\nExcluding indel in HLA sequence outputs.\n\n", action='store_true')
     parser.add_argument("--no-multiprocess", help="\nSetting off parallel multiprocessing.\n\n", action='store_true')
+    parser.add_argument("--save-intermediates", help="\nDon't remove intermediate files.\n\n", action='store_true')
+    parser.add_argument("--imgt-dir", help="\nIn case User just want to specify the directory of IMGT data folder.\n\n")
 
 
 
@@ -355,5 +448,6 @@ if __name__ == "__main__":
 
 
     ##### < Main function Execution. > #####
-    MakeDictionary(_HG=args.hg, _OUTPUT=args.o, _IMGT=args.imgt,
-                   _no_Indel=args._no_indel, _no_MultiP=args.no_mulitprocess)
+    IMGT2Sequence(_HG=args.hg, _OUTPUT=args.o, _IMGT=args.imgt, _no_Indel=args._no_indel,
+                  _no_MultiP=args.no_mulitprocess, _save_intermediates=args.save_intermediates,
+                  _imgt_dir=args.imgt_dir)
