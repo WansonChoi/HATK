@@ -5,9 +5,8 @@ import pandas as pd
 import argparse, textwrap
 
 
-def IMGTtoSequences(_out, _hla, _hg_Table, _imgt,
-                    _nuc="Not_given", _gen="Not_given", _prot="Not_given",
-                    _no_Indel=False, _remove_intermediates = False):
+def ProcessIMGT(_out, _hla, _hg_Table, _imgt, _nuc="Not_given", _gen="Not_given", _prot="Not_given", _no_Indel=False,
+                _save_intermediates=False):
 
 
     ########## < Core Variables > ##########
@@ -16,7 +15,7 @@ def IMGTtoSequences(_out, _hla, _hg_Table, _imgt,
     std_MAIN_PROCESS_NAME = "\n[%s]: " % (os.path.basename(__file__))
     std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % (os.path.basename(__file__))
 
-    print(std_MAIN_PROCESS_NAME + "Conducting IMGTtoSequences.")
+    print(std_MAIN_PROCESS_NAME + "Conducting \"ProcessIMGT\".")
 
 
     ### General
@@ -146,7 +145,10 @@ def IMGTtoSequences(_out, _hla, _hg_Table, _imgt,
         print("\nSeqs without Indel characters of gen splitted.\n")
         print(df_Seqs_splited_noIndel_gen.head())
 
-        df_Seqs_splited_noIndel_gen.to_csv(_out+".HLA_{0}.gen.seqs.noindel.splitted.txt".format(_hla), sep='\t', header=True, index=True) # **
+
+        # File Writing
+        if _save_intermediates:
+            df_Seqs_splited_noIndel_gen.to_csv(_out+".HLA_{0}.gen.seqs.noindel.splitted.txt".format(_hla), sep='\t', header=True, index=True) # **
 
 
 
@@ -167,7 +169,9 @@ def IMGTtoSequences(_out, _hla, _hg_Table, _imgt,
             print("\n\nMarkers without Indel characters.\n")
             print(df_Markers_NoIndel_gen.head())
 
-            df_Markers_NoIndel_gen.to_csv(_out+".HLA_{0}.gen.markers.noindel.txt".format(_hla), sep='\t', header=True, index=True)
+            # File Writing
+            if _save_intermediates:
+                df_Markers_NoIndel_gen.to_csv(_out+".HLA_{0}.gen.markers.noindel.txt".format(_hla), sep='\t', header=True, index=True)
 
 
         # Filtering only exon columns in `df_Markers_NoIndel_gen`
@@ -181,7 +185,10 @@ def IMGTtoSequences(_out, _hla, _hg_Table, _imgt,
 
         precursor_AA_forMAP = df_Markers_onlyExons.columns.to_frame(index=False)
         precursor_AA_forMAP.columns = pd.Index(["SNP_rel_pos", "SNP_gen_pos", "Type"])
-        precursor_AA_forMAP.to_csv(_out+".HLA_{0}.gen.precursor_AA_forMAP.noindel.txt".format(_hla), sep='\t', header=True, index=False)
+
+        # File Writing
+        if _save_intermediates:
+            precursor_AA_forMAP.to_csv(_out+".HLA_{0}.gen.precursor_AA_forMAP.noindel.txt".format(_hla), sep='\t', header=True, index=False)
 
 
 
@@ -197,7 +204,9 @@ def IMGTtoSequences(_out, _hla, _hg_Table, _imgt,
             print("\nSeqs with Indel characters of gen splitted.\n")
             print(df_Seqs_splited_Indel_gen.head())
 
-            df_Seqs_splited_Indel_gen.to_csv(_out+".HLA_{0}.gen.seqs.indel.splitted.txt".format(_hla), sep='\t', header=True, index=True) # **
+            # File Writing
+            if _save_intermediates:
+                df_Seqs_splited_Indel_gen.to_csv(_out+".HLA_{0}.gen.seqs.indel.splitted.txt".format(_hla), sep='\t', header=True, index=True) # **
 
 
 
@@ -218,10 +227,14 @@ def IMGTtoSequences(_out, _hla, _hg_Table, _imgt,
         print("\nFinal output as markers\n")
         print(df_Markers_gen.head())
 
-        if not _no_Indel:
-            df_Markers_gen.to_csv(_out + ".HLA_{0}.gen.markers.indel.txt".format(_hla), sep='\t', header=True, index=True) # ***
-        else:
-            df_Markers_gen.to_csv(_out + ".HLA_{0}.gen.markers.noindel.txt".format(_hla), sep='\t', header=True, index=True)  # ***
+
+        # File Writing
+        if _save_intermediates:
+
+            if not _no_Indel:
+                df_Markers_gen.to_csv(_out + ".HLA_{0}.gen.markers.indel.txt".format(_hla), sep='\t', header=True, index=True) # ***
+            else:
+                df_Markers_gen.to_csv(_out + ".HLA_{0}.gen.markers.noindel.txt".format(_hla), sep='\t', header=True, index=True)  # ***
 
 
         ### precursor which will be used in making map file.
@@ -229,20 +242,29 @@ def IMGTtoSequences(_out, _hla, _hg_Table, _imgt,
         print("\nframes for .map file.\n")
         print(precursor_SNPS_forMAP.head())
 
-        if not _no_Indel:
-            precursor_SNPS_forMAP.to_csv(_out + ".HLA_{0}.gen.precursor_SNPS_forMAP.indel.txt".format(_hla), sep='\t', header=True, index=False) # ***
-        else:
-            precursor_SNPS_forMAP.to_csv(_out + ".HLA_{0}.gen.precursor_SNPS_forMAP.noindel.txt".format(_hla), sep='\t', header=True, index=False)  # ***
+
+        # File Writing
+        if _save_intermediates:
+
+            if not _no_Indel:
+                precursor_SNPS_forMAP.to_csv(_out + ".HLA_{0}.gen.precursor_SNPS_forMAP.indel.txt".format(_hla), sep='\t', header=True, index=False) # ***
+            else:
+                precursor_SNPS_forMAP.to_csv(_out + ".HLA_{0}.gen.precursor_SNPS_forMAP.noindel.txt".format(_hla), sep='\t', header=True, index=False)  # ***
 
 
 
         # Final output as Seqs
         df_Seqs_gen = df_Markers_gen.apply(lambda x : ''.join(x.astype(str)), axis=1) # *** Final dictionary
 
-        if not _no_Indel:
-            df_Seqs_gen.to_csv(_out+".HLA_{0}.gen.seqs.indel.txt".format(_hla), sep='\t', header=False, index=True) # ***
-        else:
-            df_Seqs_gen.to_csv(_out+".HLA_{0}.gen.seqs.noindel.txt".format(_hla), sep='\t', header=False, index=True) # ***
+
+        # File Writing
+        if _save_intermediates:
+
+            if not _no_Indel:
+                df_Seqs_gen.to_csv(_out+".HLA_{0}.gen.seqs.indel.txt".format(_hla), sep='\t', header=False, index=True) # ***
+            else:
+                df_Seqs_gen.to_csv(_out+".HLA_{0}.gen.seqs.noindel.txt".format(_hla), sep='\t', header=False, index=True) # ***
+
 
         print("\ndf_Markers_gen\n")
         print(df_Seqs_gen.head())
@@ -290,7 +312,10 @@ def IMGTtoSequences(_out, _hla, _hg_Table, _imgt,
         print("\n\nSeqeunces(without Indels) of nuc splitted.\n")
         print(df_Seqs_splited_noIndel_nuc.head())
 
-        df_Seqs_splited_noIndel_nuc.to_csv(_out + ".HLA_{0}.nuc.seqs.noindel.splitted.txt".format(_hla), sep='\t', header=True, index=True)  # Exporting 2 for nuc
+
+        # File Writing
+        if _save_intermediates:
+            df_Seqs_splited_noIndel_nuc.to_csv(_out + ".HLA_{0}.nuc.seqs.noindel.splitted.txt".format(_hla), sep='\t', header=True, index=True)  # Exporting 2 for nuc
 
         # No more processing to *_nuc.txt file is needed.
 
@@ -320,12 +345,18 @@ def IMGTtoSequences(_out, _hla, _hg_Table, _imgt,
         if _no_Indel:
 
             df_Seqs_IndelProcessed_prot = ProcessIndel(sr_raw_Seqs_prot, _remove_indel=True, _hla=("DQB1" if _hla == "DQB1" else "Not_given"))
-            df_Seqs_IndelProcessed_prot.to_csv(_out + ".HLA_{0}.prot.seqs.noindel.txt".format(_hla), sep='\t', header=False, index=True)
+
+            # File Writing
+            if _save_intermediates:
+                df_Seqs_IndelProcessed_prot.to_csv(_out + ".HLA_{0}.prot.seqs.noindel.txt".format(_hla), sep='\t', header=False, index=True)
 
         else:
 
             df_Seqs_IndelProcessed_prot = ProcessIndel(sr_raw_Seqs_prot, _remove_indel=False, _hla=("DQB1" if _hla == "DQB1" else "Not_given"))
-            df_Seqs_IndelProcessed_prot.to_csv(_out + ".HLA_{0}.prot.seqs.indel.txt".format(_hla), sep='\t', header=False, index=True)
+
+            # File Writing
+            if _save_intermediates:
+                df_Seqs_IndelProcessed_prot.to_csv(_out + ".HLA_{0}.prot.seqs.indel.txt".format(_hla), sep='\t', header=False, index=True)
 
 
         ### Making final outputs.
@@ -354,13 +385,14 @@ def IMGTtoSequences(_out, _hla, _hg_Table, _imgt,
         print(df_Markers_prot.head())
         print(precursor2_AA_forMAP.head())
 
-        # Exporting
-        if _no_Indel:
-            df_Markers_prot.to_csv(_out + ".HLA_{0}.prot.markers.noindel.txt".format(_hla), sep='\t', header=True, index=True)
-            precursor2_AA_forMAP.to_csv(_out + ".HLA_{0}.prot.precursor2_AA_forMAP.noindel.txt".format(_hla), sep='\t', header=True, index=False)
-        else:
-            df_Markers_prot.to_csv(_out + ".HLA_{0}.prot.markers.indel.txt".format(_hla), sep='\t', header=True, index=True)
-            precursor2_AA_forMAP.to_csv(_out + ".HLA_{0}.prot.precursor2_AA_forMAP.indel.txt".format(_hla), sep='\t', header=True, index=False)
+        # File Writing
+        if _save_intermediates:
+            if _no_Indel:
+                df_Markers_prot.to_csv(_out + ".HLA_{0}.prot.markers.noindel.txt".format(_hla), sep='\t', header=True, index=True)
+                precursor2_AA_forMAP.to_csv(_out + ".HLA_{0}.prot.precursor2_AA_forMAP.noindel.txt".format(_hla), sep='\t', header=True, index=False)
+            else:
+                df_Markers_prot.to_csv(_out + ".HLA_{0}.prot.markers.indel.txt".format(_hla), sep='\t', header=True, index=True)
+                precursor2_AA_forMAP.to_csv(_out + ".HLA_{0}.prot.precursor2_AA_forMAP.indel.txt".format(_hla), sep='\t', header=True, index=False)
 
 
 
@@ -388,14 +420,11 @@ def IMGTtoSequences(_out, _hla, _hg_Table, _imgt,
         print("\nFinally created \"forMAP\" of SNPS.\n")
         print(final_SNPS_forMAP.head())
 
-        final_AA_forMAP.to_csv(_out + ".HLA_{0}.prot.forMAP.txt".format(_hla), sep='\t', header=True, index=False)
-        final_SNPS_forMAP.to_csv(_out + ".HLA_{0}.gen.forMAP.txt".format(_hla), sep='\t', header=True, index=False)
 
-
-
-    if _remove_intermediates:
-
-        print(std_MAIN_PROCESS_NAME + "Removing all intermediates files.\n")
+        # File Writing
+        if _save_intermediates:
+            final_AA_forMAP.to_csv(_out + ".HLA_{0}.prot.forMAP.txt".format(_hla), sep='\t', header=True, index=False)
+            final_SNPS_forMAP.to_csv(_out + ".HLA_{0}.gen.forMAP.txt".format(_hla), sep='\t', header=True, index=False)
 
 
 
@@ -411,13 +440,16 @@ def IMGTtoSequences(_out, _hla, _hg_Table, _imgt,
 
         df_Seqs_gen = df_Seqs_gen.apply(lambda x : ComplementStr(x))
 
-        df_Seqs_gen.to_csv(_out + ".HLA_{0}.gen.complementSeqs.txt".format(_hla))
+
+        # File Writing
+        if _save_intermediates:
+            df_Seqs_gen.to_csv(_out + ".HLA_{0}.gen.complementSeqs.txt".format(_hla))
 
 
 
     return [df_Seqs_gen, df_Seqs_IndelProcessed_prot, final_SNPS_forMAP, final_AA_forMAP]
 
-# end - IMGTtoSequences()
+# end - ProcessIMGT()
 
 
 
@@ -1089,7 +1121,7 @@ if __name__ == "__main__":
                                      description=textwrap.dedent('''\
     ###########################################################################################
 
-        IMGTtoSequences.v2.py
+        ProcessIMGT.py
 
         : Processing(Parsing HLA sequence information distributed by IMGT-HLA.
         
@@ -1268,6 +1300,5 @@ if __name__ == "__main__":
 
 
     # main function execution
-    IMGTtoSequences(_out = args.o, _hla=args.HLA, _hg_Table=args.hg_table, _imgt=args.imgt,
-                    _nuc=args.nuc, _gen=args.gen, _prot=args.prot,
-                    _no_Indel=args.no_Indel)
+    ProcessIMGT(_out=args.o, _hla=args.HLA, _hg_Table=args.hg_table, _imgt=args.imgt, _nuc=args.nuc, _gen=args.gen,
+                _prot=args.prot, _no_Indel=args.no_Indel)
