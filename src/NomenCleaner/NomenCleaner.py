@@ -6,7 +6,27 @@ import argparse, textwrap
 import pandas as pd
 # from collections import OrderedDict
 
-def NomenCleaner(_p_ped, _ped_descriptor, _p_iat, _out, _field_format, _f_NoCaption = False):
+
+
+########## < Core Global Variables > ##########
+
+std_MAIN_PROCESS_NAME = "\n[%s]: " % (os.path.basename(__file__))
+std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % (os.path.basename(__file__))
+std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % (os.path.basename(__file__))
+
+
+def HATK_NomenCleaner(_p_hped, _ped_descriptor, _p_iat, _out, _field_format, _f_NoCaption=False):
+
+    # (1) _p_hped
+
+    # (2) _ped_descriptor
+
+    return
+
+
+
+def NomenCleaner(_p_hped, _ped_descriptor, _p_iat, _out, _field_format, _f_NoCaption=False):
+
     """
     NomenCleaner.py
 
@@ -20,11 +40,10 @@ def NomenCleaner(_p_ped, _ped_descriptor, _p_iat, _out, _field_format, _f_NoCapt
     HLA_names = ["A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1"]
     header_ped = ["FamID", "IdivID", "P_ID", "M_ID", "Sex", "Phe"]
 
-    std_MAIN_PROCESS_NAME = "\n[%s]: " % (os.path.basename(__file__))
-    print(std_MAIN_PROCESS_NAME + "Init.")
-
-    PED = None
+    hPED = None
+    chPED_RETURN = None
     IAT = None
+
 
     ### OUTPUT prefix
 
@@ -35,13 +54,13 @@ def NomenCleaner(_p_ped, _ped_descriptor, _p_iat, _out, _field_format, _f_NoCapt
         os.system(' '.join(["mkdir", "-p", INTERMEDIATE_PATH]))
 
 
-    ########## < Loading "*.ped" file > ##########
+    ########## < Loading "*.hped" file > ##########
 
-    PED = pd.read_table(_p_ped, sep='\t', header=None, dtype=str,
+    hPED = pd.read_table(_p_hped, sep='\t', header=None, dtype=str,
                         names=header_ped + [item + "_" + str(i) for item in HLA_names for i in range(1, 3)]).set_index((header_ped))
 
-    print(std_MAIN_PROCESS_NAME + "Loaded \"*.ped\" file.")
-    print(PED.head())
+    print(std_MAIN_PROCESS_NAME + "Loaded \"*.hped\" file.")
+    print(hPED.head())
 
     ########## < Loading "*.iat" file > ##########
 
@@ -68,7 +87,7 @@ def NomenCleaner(_p_ped, _ped_descriptor, _p_iat, _out, _field_format, _f_NoCapt
     The variable `_p_ped_descriptor` represents which type of ped file is given among those 3 options. It has a value
     1,2 or 3 which consecutively represents type (1), (2), or (3) mentioned above. 
 
-    I will divide the main process into two major process which basedon type (1) and type (2), (3).
+    I will divide the main process into two major process which based on type (1) and type (2), (3).
     When P or G group allele ped file is given, we can assum that those allele didn't go through trimming job.
     At least I will define this module as a function that takes P or G group allele which didn't go through trimming job.
     So, In case P or G group allele is given, by just checking "Gene caption or not" and "has Double-colon or not",
@@ -90,15 +109,19 @@ def NomenCleaner(_p_ped, _ped_descriptor, _p_iat, _out, _field_format, _f_NoCapt
         # # set of alleles in "Allelelist.txt"
         # idx_list = curr_IAT_dict.index.tolist()
 
-        l_temp.append(PED.loc[:, [curr_hla_name + "_1", curr_hla_name + "_2"]].applymap(
+        l_temp.append(hPED.loc[:, [curr_hla_name + "_1", curr_hla_name + "_2"]].applymap(
             lambda x: Main_Transformation(x, curr_hla_name, curr_IAT_dict, _ped_descriptor) if x != "0" else "0"))
 
     df_TRANSFORMED_4field = pd.concat(l_temp, axis=1)
 
-    print(std_MAIN_PROCESS_NAME + "Transformed ped DataFrame.\n")
+    print(std_MAIN_PROCESS_NAME + "Transformed hped DataFrame.\n")
     print(df_TRANSFORMED_4field.head())
 
-    ### [4] Choosing output format based on `_field_format`
+
+
+
+
+    ### Choosing output format based on `_field_format`
 
     if _field_format == 1:
 
@@ -112,10 +135,12 @@ def NomenCleaner(_p_ped, _ped_descriptor, _p_iat, _out, _field_format, _f_NoCapt
             df_TRANSFORMED_1field = pd.concat([df_TRANSFORMED_1field.iloc[:, [2*i, 2*i+1]].applymap(lambda x : '*'.join([HLA_names[i], x]) if x != "0" else x) for i in range(0, len(HLA_names))], axis=1)
             df_TRANSFORMED_1field.index = df_TRANSFORMED_4field.index
 
-        print(std_MAIN_PROCESS_NAME + "1-field output ped file.\n")
+        print(std_MAIN_PROCESS_NAME + "1-field output chped file.\n")
         print(df_TRANSFORMED_1field.head())
 
-        df_TRANSFORMED_1field.to_csv(_out + ".1field.ped", sep='\t', header=False, index=True)
+        df_TRANSFORMED_1field.to_csv(_out + ".1field.chped", sep='\t', header=False, index=True)
+        chPED_RETURN = _out + ".1field.chped"
+
 
 
     elif _field_format == 2:
@@ -130,10 +155,12 @@ def NomenCleaner(_p_ped, _ped_descriptor, _p_iat, _out, _field_format, _f_NoCapt
             df_TRANSFORMED_2field = pd.concat([df_TRANSFORMED_2field.iloc[:, [2*i, 2*i+1]].applymap(lambda x : '*'.join([HLA_names[i], x]) if x != "0" else x) for i in range(0, len(HLA_names))], axis=1)
             df_TRANSFORMED_2field.index = df_TRANSFORMED_4field.index
 
-        print(std_MAIN_PROCESS_NAME + "2-field output ped file.\n")
+        print(std_MAIN_PROCESS_NAME + "2-field output chped file.\n")
         print(df_TRANSFORMED_2field.head())
 
-        df_TRANSFORMED_2field.to_csv(_out + ".2field.ped", sep='\t', header=False, index=True)
+        df_TRANSFORMED_2field.to_csv(_out + ".2field.chped", sep='\t', header=False, index=True)
+        chPED_RETURN = _out + ".2field.chped"
+
 
 
     elif _field_format == 3:
@@ -148,10 +175,12 @@ def NomenCleaner(_p_ped, _ped_descriptor, _p_iat, _out, _field_format, _f_NoCapt
             df_TRANSFORMED_3field = pd.concat([df_TRANSFORMED_3field.iloc[:, [2*i, 2*i+1]].applymap(lambda x : '*'.join([HLA_names[i], x]) if x != "0" else x) for i in range(0, len(HLA_names))], axis=1)
             df_TRANSFORMED_3field.index = df_TRANSFORMED_4field.index
 
-        print(std_MAIN_PROCESS_NAME + "3-field output ped file.\n")
+        print(std_MAIN_PROCESS_NAME + "3-field output chped file.\n")
         print(df_TRANSFORMED_3field.head())
 
-        df_TRANSFORMED_3field.to_csv(_out + ".3field.ped", sep='\t', header=False, index=True)
+        df_TRANSFORMED_3field.to_csv(_out + ".3field.chped", sep='\t', header=False, index=True)
+        chPED_RETURN = _out + ".3field.chped"
+
 
 
     elif _field_format == 4:
@@ -165,10 +194,12 @@ def NomenCleaner(_p_ped, _ped_descriptor, _p_iat, _out, _field_format, _f_NoCapt
             df_TRANSFORMED_4field = pd.concat([df_TRANSFORMED_4field.iloc[:, [2*i, 2*i+1]].applymap(lambda x : '*'.join([HLA_names[i], x]) if x != "0" else x) for i in range(0, len(HLA_names))], axis=1)
             df_TRANSFORMED_4field.index = df_idx
 
-        print(std_MAIN_PROCESS_NAME + "4-field output ped file.\n")
+        print(std_MAIN_PROCESS_NAME + "4-field output chped file.\n")
         print(df_TRANSFORMED_4field.head())
 
-        df_TRANSFORMED_4field.to_csv(_out + ".4field.ped", sep='\t', header=False, index=True)
+        df_TRANSFORMED_4field.to_csv(_out + ".4field.chped", sep='\t', header=False, index=True)
+        chPED_RETURN = _out + ".4field.chped"
+
 
 
     elif _field_format == 5:
@@ -187,10 +218,12 @@ def NomenCleaner(_p_ped, _ped_descriptor, _p_iat, _out, _field_format, _f_NoCapt
             df_TRANSFORMED_Ggroup = pd.concat([df_TRANSFORMED_Ggroup.iloc[:, [2*i, 2*i+1]].applymap(lambda x : '*'.join([HLA_names[i], x]) if x != "0" else x) for i in range(0, len(HLA_names))], axis=1)
             df_TRANSFORMED_Ggroup.index = df_TRANSFORMED_4field.index
 
-        print(std_MAIN_PROCESS_NAME + "G-group output ped file.\n")
+        print(std_MAIN_PROCESS_NAME + "G-group output chcped file.\n")
         print(df_TRANSFORMED_Ggroup.head())
 
-        df_TRANSFORMED_Ggroup.to_csv(_out + ".Ggroup.ped", sep='\t', header=False, index=True)
+        df_TRANSFORMED_Ggroup.to_csv(_out + ".Ggroup.chped", sep='\t', header=False, index=True)
+        chPED_RETURN = _out + ".Ggroup.chped"
+
 
 
     elif _field_format == 6:
@@ -206,13 +239,23 @@ def NomenCleaner(_p_ped, _ped_descriptor, _p_iat, _out, _field_format, _f_NoCapt
             df_TRANSFORMED_Pgroup = pd.concat([df_TRANSFORMED_Pgroup.iloc[:, [2*i, 2*i+1]].applymap(lambda x : '*'.join([HLA_names[i], x]) if x != "0" else x) for i in range(0, len(HLA_names))], axis=1)
             df_TRANSFORMED_Pgroup.index = df_TRANSFORMED_4field.index
 
-        print(std_MAIN_PROCESS_NAME + "P-group output ped file.\n")
+        print(std_MAIN_PROCESS_NAME + "P-group output chped file.\n")
         print(df_TRANSFORMED_Pgroup.head())
 
-        df_TRANSFORMED_Pgroup.to_csv(_out + ".Pgroup.ped", sep='\t', header=False, index=True)
+        df_TRANSFORMED_Pgroup.to_csv(_out + ".Pgroup.chped", sep='\t', header=False, index=True)
+        chPED_RETURN = _out + ".Pgroup.chped"
 
-    return 0
 
+
+    return chPED_RETURN
+
+
+
+
+
+
+
+### Core Functions.
 
 def isCaptioned(_the_allele, _hla_name):
     """
@@ -654,6 +697,11 @@ def Main_Transformation(_single_allele, _hla_name, _df_IAT_Allelelist, _ped_desc
         _al_filetered3 = Find_1st_Allele_PorGgroup(_al_filetered2, _df_IAT_Allelelist, _ped_descriptor)
 
     return str(_al_filetered3)
+
+
+
+
+
 
 
 if __name__ == '__main__':
