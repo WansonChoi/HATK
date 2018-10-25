@@ -45,12 +45,11 @@ def HATK_IMGT2Sequence(_HG, _OUTPUT, _IMGT, _no_Indel=False, _no_MultiP = False,
                       _imgt_dir=_imgt_dir)
 
 
-    # Summary
-    print(std_MAIN_PROCESS_NAME + "Output from IMGT2Sequence.\n")
-    print("1. dict_AA : {0}\n".format(RETURN_dict_AA))
-    print("2. dict_SNPS : {0}\n".format(RETURN_dict_SNPS))
-    print("3. IAT : {0}\n".format(RETURN_IAT))
-
+    # # Summary
+    # print(std_MAIN_PROCESS_NAME + "Output from IMGT2Sequence.\n")
+    # print("1. dict_AA : {0}\n".format(RETURN_dict_AA))
+    # print("2. dict_SNPS : {0}\n".format(RETURN_dict_SNPS))
+    # print("3. IAT : {0}\n".format(RETURN_IAT))
 
     return [RETURN_dict_AA, RETURN_dict_SNPS, RETURN_IAT]
 

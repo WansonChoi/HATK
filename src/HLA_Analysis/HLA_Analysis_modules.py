@@ -104,8 +104,18 @@ def MakeDefaultReferenceAllele(_bfile):
 
 
 ### (OmnibusTest)
-def __hla__Omnibus_Test(_bfile, _phased, _phe, _covar,
-                        _out, _phe_name, _threshold, _condition):
+def __hla__GetPhasedAlleles(_input, _bgl_phased, _out):
+
+
+    FAM = _input + ".fam"
+
+    command = ' '.join([GLOBAL_p_Rscript, "src/HLA_Analysis/AssociationTest/AllCC_Get_Phased_AA_Calls.R", _bgl_phased, FAM, _out])
+    os.system(command)
+
+    return _out + ".aa"
+
+
+def __hla__Omnibus_Test(_input, _phased, _phe, _covar, _out, _phe_name, _threshold, _condition):
 
     """
 
@@ -123,7 +133,7 @@ def __hla__Omnibus_Test(_bfile, _phased, _phe, _covar,
     ### Argument Processing && Generating Command.
 
     command = [GLOBAL_p_Rscript, "src/HLA_Analysis/AssociationTest/OmnibusTest_BHv4.R",
-               _bfile+".fam", _phased, _phe, _covar, _out, _phe_name, _threshold]
+               _input + ".fam", _phased, _phe, _covar, _out, _phe_name, _threshold]
 
     if bool(_condition):
         command.append(_condition)
@@ -168,39 +178,7 @@ def __hla__Meta_Analysis(_out, *assocs):
 
 
 
-########## < Plotting > ##########
 
-### < heatmap >
-def __hla__Heatmap():
-
-    return 0
-
-### < SNP Manhattan Plot >
-def __hla__Manhattan_Plot():
-
-    return 0
-
-### < AA Manhanttan Plot >
-def __hla__AA_Manhattan_Plot():
-
-    return 0
-
-
-
-"""
-
-Actually, Only functions to conduct bash execution of external modules are supposed to be collected here,
-below "if __name__ == "__main__": ~" aren't necessary.
-
-
-"""
-
-
-def main():
-
-    std_MAIN_PROCESS_NAME = "[%s]: " % (os.path.basename(__file__))
-
-    return 0
 
 
 
@@ -213,15 +191,14 @@ if __name__ == "__main__":
            
         HLA_Analysis_modules.py
         
-        A lot of modules used in "HLA_Analysis.py" is coded by other programming 
-        languages(ex. R).
+        A lot of sub-modules used in "HLA_Analysis.py" conduct a bash execution.
+        (ex. Rscript, plink, ...)
         
-        The functions that conduct a bash execution of those external modules are
-        prepared in this script. These functions are to be used in "HLA_Analysis.py".  
-        
-        
-        made by Wanson Choi.
-        
+        Those sub-modules are prepared in this script so that bash execution doesn't
+        need to be considered anymore. 
+
+        This script is just a collection of those modules.
+                
     ###############################################################################
                                              '''),
                                      add_help=False)
@@ -229,15 +206,3 @@ if __name__ == "__main__":
     parser._optionals.title = "OPTIONS"
 
     parser.add_argument("-h", "--help", help="\nShow this help message and exit\n\n", action='help')
-
-    parser.add_argument("-i", help="\nInput Data file.\n\n", required=True)
-    parser.add_argument("-o", help="\nOuput file prefix\n\n", required=True)
-
-    # for Publish
-    args = parser.parse_args()
-
-    # for Testing
-
-    # print(args)
-
-    main()

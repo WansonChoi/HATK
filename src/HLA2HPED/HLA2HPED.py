@@ -18,14 +18,22 @@ isREVERSE = {'A': False, 'C': True, 'B': True, 'DRB1': True, 'DQA1': False, 'DQB
 
 
 
-def HATK_HLA2HPED():
+def HATK_HLA2HPED(_rhped, _out, _platform):
+
+    if not isinstance(_rhped, list):
+        print(std_ERROR_MAIN_PROCESS_NAME + "The parameter \"_rhped\" to make \"hped\" wans't given as list. Please check the argument \"-rhped\" again.\n")
+        sys.exit()
+
+    if not bool(_out):
+        print(std_ERROR_MAIN_PROCESS_NAME + "Output prefix wasn't given properly. Please check the argument \"--out\" again.\n")
 
 
-    return 0
+
+    return HLA2HPED(_rhped, _out, _platform)
 
 
 
-def HLA2HPED(_i_HLA, _out, _platform):
+def HLA2HPED(_rhped, _out, _platform):
 
     ########## < Core Variables > ##########
 
@@ -56,21 +64,21 @@ def HLA2HPED(_i_HLA, _out, _platform):
 
         print(std_MAIN_PROCESS_NAME + "Converting output files from \"AXIOM\" to \".hped\".\n")
 
-        OUTPUT_RETURN = _convert_AXIOM(_i_HLA, _out)
+        OUTPUT_RETURN = _convert_AXIOM(_rhped, _out)
 
 
     elif _platform == "HIBAG":
 
         print(std_MAIN_PROCESS_NAME + "Converting output files of \"HIBAG\" to \".hped\".\n")
 
-        OUTPUT_RETURN = _convert_HIBAG(_i_HLA, _out)
+        OUTPUT_RETURN = _convert_HIBAG(_rhped, _out)
 
 
     elif _platform == "xHLA":
 
         print(std_MAIN_PROCESS_NAME + "Converting output files of \"xHLA\" to \".hped\".\n")
 
-        OUTPUT_RETURN = _convert_xHLA(_i_HLA, _out)
+        OUTPUT_RETURN = _convert_xHLA(_rhped, _out)
 
     else:
 
@@ -116,7 +124,7 @@ def _convert_AXIOM(_i_HLA, _out):
         N_rows.append(DICT_HLA_INPUTS[HLA_names[i]].shape[0])
 
 
-    print("The numbers of each HLA input files are : {0}".format(N_rows))
+    print("\nThe numbers of each HLA input files are : {0}".format(N_rows))
 
 
 
@@ -165,7 +173,7 @@ def _convert_AXIOM(_i_HLA, _out):
 
 
 
-    print("\ndf_RETURN is \n")
+    print("\ndf_AXIOM is \n")
     print(df_RETURN.head())
 
     # Exporting(File Writing)
@@ -234,7 +242,7 @@ def _convert_HIBAG(_i_HLA, _out):
 
 
 
-    print("\ndf_RETURN is \n")
+    print("\ndf_HIBAG is \n")
     print(df_RETURN.head())
 
     # Exporting(File Writing)
@@ -318,6 +326,7 @@ def _convert_xHLA(_i_HLA, _out):
     df_RETURN.index = idx_REUTURN
 
 
+    print("\ndf_xHLA is \n")
     print(df_RETURN.head())
 
 

@@ -2,12 +2,61 @@
 
 import os, sys, re
 import argparse, textwrap
-from platform import platform
+# from platform import platform
 
 
-def MakeReference(_HLA_ped, _OUT, _hg, _dictionary_AA, _dictionary_SNPS,
-                  _plain_SNP_DATA=None,
-                  _p_src="./src", _p_dependency="./dependency"):
+########## < Core Global Variables > ##########
+
+std_MAIN_PROCESS_NAME = "\n[%s]: " % (os.path.basename(__file__))
+std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % (os.path.basename(__file__))
+std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % (os.path.basename(__file__))
+
+
+def HATK_b_MarkerGenerator(_CHPED, _OUT, _hg, _dictionary_AA, _dictionary_SNPS, _plain_SNP_DATA=None):
+
+
+    if not bool(_CHPED):
+        print(
+            std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("-hped"))
+        sys.exit()
+    else:
+
+        # Checking whether it went through "NomenCleaner.py".
+
+        if not _CHPED.endswith(".chped"):
+            print(std_ERROR_MAIN_PROCESS_NAME + 'Given ped file should be processed by "NomenCleaner.py". '
+                                                '(The file extension of its output is ".hped".)\n')
+
+            """
+            Add code to implement "NomenCleaner.py" here.
+            """
+            sys.exit()
+
+
+    if not bool(_hg):
+        print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("-hg"))
+        sys.exit()
+
+
+    if bool(_dictionary_AA) and bool(_dictionary_SNPS):
+        _t_dict_AA = _dictionary_AA
+        _t_dict_SNPS = _dictionary_SNPS
+    else:
+        print(std_ERROR_MAIN_PROCESS_NAME + 'One of "--dict-AA" or "--dict-SNPS" options(or Both) are not given. Please check them again.\n')
+        sys.exit()
+
+
+    #### b_MarkerGenerator
+
+    b_MarkerGenerator(_CHPED, _OUT, _hg, _dictionary_AA, _dictionary_SNPS, _plain_SNP_DATA)
+
+    return [_OUT+suffix for suffix in (".AA.CODED", ".HLA", ".SNPS.CODED", ".MERGED")]
+
+
+
+
+def b_MarkerGenerator(_CHPED, _OUT, _hg, _dictionary_AA, _dictionary_SNPS, _plain_SNP_DATA=None, _p_src=None,
+                      _p_dependency=None):
 
     """
 
@@ -15,22 +64,18 @@ def MakeReference(_HLA_ped, _OUT, _hg, _dictionary_AA, _dictionary_SNPS,
 
     ########## < Core Variables > ##########
 
-    ### Module name
-
-    std_MAIN_PROCESS_NAME = "\n[%s]: " % (os.path.basename(__file__))
-    print(std_MAIN_PROCESS_NAME + "Init.\n")
-
-
     ### Major Path Variables
 
     # [1] src (with "_p_src")
-    p_src_MakeReferece = os.path.join(_p_src, "HLA2MARKER")
+    p_src_b_MarkerGenerator = "src/b_MarkerGenerator" if not bool(_p_src) else _p_src
+    p_dependency = "dependency" if not bool(_p_dependency) else _p_dependency
 
 
     # [2] dependency (with "_p_dependency")
-    _p_plink = os.path.join(_p_dependency, "plink_mac" if not bool(re.search(pattern="Linux", string=platform())) else "plink_linux")
-    _p_beagle = os.path.join(_p_dependency, "beagle.jar")
-    _p_linkage2beagle = os.path.join(_p_dependency, "linkage2beagle.jar")
+    _p_plink = os.path.join(p_dependency, "plink")
+    # _p_plink = os.path.join(p_dependency, "plink_mac" if not bool(re.search(pattern="Linux", string=platform())) else "plink_linux")
+    _p_beagle = os.path.join(p_dependency, "beagle.jar")
+    _p_linkage2beagle = os.path.join(p_dependency, "linkage2beagle.jar")
 
 
     ### Dictionary Files
@@ -63,43 +108,34 @@ def MakeReference(_HLA_ped, _OUT, _hg, _dictionary_AA, _dictionary_SNPS,
     ### Other Software.
 
     if not os.path.exists(_p_plink):
-        print(
-            std_MAIN_PROCESS_NAME + "Please Prepare 'PLINK' (http://pngu.mgh.harvard.edu/~purcell/plink/download.shtml) in '{0}'\n".format(
-                os.path.dirname(_p_plink)))
+        print(std_MAIN_PROCESS_NAME + "Please Prepare 'PLINK' (http://pngu.mgh.harvard.edu/~purcell/plink/download.shtml) in '{0}'\n".format(os.path.dirname(_p_plink)))
         sys.exit()
+
     if not os.path.exists(_p_beagle):
-        print(
-            std_MAIN_PROCESS_NAME + "Please Prepare 'Beagle 3' (http://faculty.washington.edu/browning/beagle/beagle.html#download) in '{0}'\n".format(
-                os.path.dirname(_p_beagle)))
+        print(std_MAIN_PROCESS_NAME + "Please Prepare 'Beagle 3' (http://faculty.washington.edu/browning/beagle/beagle.html#download) in '{0}'\n".format(os.path.dirname(_p_beagle)))
         sys.exit()
+
     if not os.path.exists(_p_linkage2beagle):
-        print(
-            std_MAIN_PROCESS_NAME + "Please Prepare 'linkage2beagle.jar' (http://faculty.washington.edu/browning/beagle_utilities/utilities.html) (beagle.3.0.4/utility/linkage2beagle.jar) in '{0}'\n".format(
-                os.path.dirname(_p_linkage2beagle)))
+        print(std_MAIN_PROCESS_NAME + "Please Prepare 'linkage2beagle.jar' (http://faculty.washington.edu/browning/beagle_utilities/utilities.html) (beagle.3.0.4/utility/linkage2beagle.jar) in '{0}'\n".format(os.path.dirname(_p_linkage2beagle)))
         sys.exit()
 
 
     ### Dictionary Information for HLA sequence
 
     if not os.path.exists(_dictionary_AA_map):
-        print(
-            std_MAIN_PROCESS_NAME + "Please Prepare 'HLA_DICTIONARY_AA.map' (included with this package) in '{0}'\n".format(
-                os.path.dirname(_dictionary_AA_map)))
+        print(std_MAIN_PROCESS_NAME + "Please Prepare 'HLA_DICTIONARY_AA.map' (included with this package) in '{0}'\n".format(os.path.dirname(_dictionary_AA_map)))
         sys.exit()
 
     if not os.path.exists(_dictionary_AA_seq):
-        print(std_MAIN_PROCESS_NAME + "Please Prepare 'HLA_DICTIONARY_AA.txt' (included with this package) in '{0}'\n".format(
-            os.path.dirname(_dictionary_AA_seq)))
+        print(std_MAIN_PROCESS_NAME + "Please Prepare 'HLA_DICTIONARY_AA.txt' (included with this package) in '{0}'\n".format(os.path.dirname(_dictionary_AA_seq)))
         sys.exit()
 
     if not os.path.exists(_dictionary_SNPS_map):
-        print(std_MAIN_PROCESS_NAME + "Please Prepare 'HLA_DICTIONARY_SNPS.map' (included with this package) in '{0}'\n".format(
-            os.path.dirname(_dictionary_SNPS_map)))
+        print(std_MAIN_PROCESS_NAME + "Please Prepare 'HLA_DICTIONARY_SNPS.map' (included with this package) in '{0}'\n".format(os.path.dirname(_dictionary_SNPS_map)))
         sys.exit()
 
     if not os.path.exists(_dictionary_SNPS_seq):
-        print(std_MAIN_PROCESS_NAME + "Please Prepare 'HLA_DICTIONARY_SNPS.txt' (included with this package) in '{0}'\n".format(
-            os.path.dirname(_dictionary_SNPS_seq)))
+        print(std_MAIN_PROCESS_NAME + "Please Prepare 'HLA_DICTIONARY_SNPS.txt' (included with this package) in '{0}'\n".format(os.path.dirname(_dictionary_SNPS_seq)))
         sys.exit()
 
 
@@ -107,23 +143,23 @@ def MakeReference(_HLA_ped, _OUT, _hg, _dictionary_AA, _dictionary_SNPS,
 
     # New version with Python.
 
-    if not os.path.exists(os.path.join(p_src_MakeReferece, "HLAtoSequences.py")):
-        print(std_MAIN_PROCESS_NAME + "Error. 'HLAtoSequences.py' not found in '{0}'".format(p_src_MakeReferece))
+    if not os.path.exists(os.path.join(p_src_b_MarkerGenerator, "HLAtoSequences.py")):
+        print(std_MAIN_PROCESS_NAME + "Error. 'HLAtoSequences.py' not found in '{0}'".format(p_src_b_MarkerGenerator))
         sys.exit()
     else:
-        from src.HLA2MARKER.HLAtoSequences import HLAtoSequences
+        from src.b_MarkerGenerator.HLAtoSequences import HLAtoSequences
 
-    if not os.path.exists(os.path.join(p_src_MakeReferece, "encodeVariants.py")):
-        print(std_MAIN_PROCESS_NAME + "Error. 'encodeVariants.py' not found in '{0}'".format(p_src_MakeReferece))
+    if not os.path.exists(os.path.join(p_src_b_MarkerGenerator, "encodeVariants.py")):
+        print(std_MAIN_PROCESS_NAME + "Error. 'encodeVariants.py' not found in '{0}'".format(p_src_b_MarkerGenerator))
         sys.exit()
     else:
-        from src.HLA2MARKER.encodeVariants import encodeVariants
+        from src.b_MarkerGenerator.encodeVariants import encodeVariants
 
-    if not os.path.exists(os.path.join(p_src_MakeReferece, "encodeHLA.py")):
-        print(std_MAIN_PROCESS_NAME + "Error. 'encodeHLA.py' not found in '{0}'".format(p_src_MakeReferece))
+    if not os.path.exists(os.path.join(p_src_b_MarkerGenerator, "encodeHLA.py")):
+        print(std_MAIN_PROCESS_NAME + "Error. 'encodeHLA.py' not found in '{0}'".format(p_src_b_MarkerGenerator))
         sys.exit()
     else:
-        from src.HLA2MARKER.encodeHLA import encodeHLA
+        from src.b_MarkerGenerator.encodeHLA import encodeHLA
 
 
 
@@ -131,7 +167,7 @@ def MakeReference(_HLA_ped, _OUT, _hg, _dictionary_AA, _dictionary_SNPS,
     ########## < Core Variables 2 > ##########
 
     # Input 1 : HLA type data
-    HLA_DATA = _HLA_ped
+    HLA_DATA = _CHPED
 
     # Input 2 : Plain SNP data
     if f_plain_SNP:
@@ -732,17 +768,17 @@ if __name__ == "__main__":
                                      description=textwrap.dedent('''\
     #################################################################################################
 
-        HLA2MARKER.py
+        b_MarkerGenerator.py
         
         Generating markers based on HLA sequence information dictionary(generated by "MakeDictionary").
 
         (ex.)
-        : python3 HLA2MARKER.py  
-            -ped ./data/MakeReference/HAPMAP_CEU_HLA.4field.ped 
+        : python3 b_MarkerGenerator.py  
+            -ped ./data/b_MarkerGenerator.py/HAPMAP_CEU_HLA.4field.ped 
             -hg 18 
             -o ./Trial_HAPMAP_CEU
-            -dict-AA ./data/MakeReference/HLA_DICTIONARY_AA.hg18.imgt370
-            -dict-SNPS ./data/MakeReference/HLA_DICTIONARY_SNPS.hg18.imgt370 
+            -dict-AA ./data/b_MarkerGenerator.py/HLA_DICTIONARY_AA.hg18.imgt370
+            -dict-SNPS ./data/b_MarkerGenerator.py/HLA_DICTIONARY_SNPS.hg18.imgt370 
 
         HLA PED file should contain HLA alleles in the following (alphabetical) order:
         HLA-A, B, C, DPA1, DPB1, DQA1, DQB1, DRB1
@@ -757,7 +793,7 @@ if __name__ == "__main__":
     parser.add_argument("-h", "--help", help="\nShow this help message and exit\n\n", action='help')
 
     parser.add_argument("-i", help="\nInput Data file(.bed/.bim/.fam)\n\n", required=True)
-    parser.add_argument("-ped", help="\nHLA Type Data(.ped)\n\n", required=True)
+    parser.add_argument("-hped", help="\nHLA Type Data(.ped)\n\n", required=True)
     parser.add_argument("-hg", help="\nHuman Genome version(ex. 18, 19)\n\n", choices=["18", "19", "38"], metavar="hg", default="19")
     parser.add_argument("-o", help="\nOutput file prefix\n\n")
 
@@ -835,4 +871,4 @@ if __name__ == "__main__":
 
 
     # Implementing Main Function.
-    MakeReference(_HLA_ped=args.ped, _OUT=args.o, _hg=args.hg, _dictionary_AA=t_dict_AA, _dictionary_SNPS=t_dict_SNPS)
+    b_MarkerGenerator(_CHPED=args.ped, _OUT=args.o, _hg=args.hg, _dictionary_AA=t_dict_AA, _dictionary_SNPS=t_dict_SNPS)

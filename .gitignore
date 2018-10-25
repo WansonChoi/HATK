@@ -7,6 +7,8 @@ __pycache__/
 dependency/
 data/
 data
+back_up/
+tests/
 
 # (2018. 8. 21.) "data" (not "data/") has been added to deal with symbolic link file.
 
