@@ -3,17 +3,18 @@ args = commandArgs(trailingOnly = TRUE)
 
 
 p_assoc.logsitic_ = strsplit(args[1], ',')[[1]]
-out_ = args[2]
+plot_label_ = args[2]
+out_ = args[3]
 
-pointcol_ = args[3]
-topcol_ = args[4]
-min.pos_ = as.numeric(args[5])
-max.pos_ = as.numeric(args[6])
-topsignal_ = strsplit(args[7], ',')[[1]] # label of top signal marker
-max.yaxis_ = as.numeric(strsplit(args[8], ',')[[1]])
+pointcol_ = args[4]
+topcol_ = args[5]
+min.pos_ = as.numeric(args[6])
+max.pos_ = as.numeric(args[7])
+topsignal_ = strsplit(args[8], ',')[[1]] # label of top signal marker
+max.yaxis_ = as.numeric(strsplit(args[9], ',')[[1]])
 
-p_GeneBuild_ = args[9]
-p_src_ = args[10]
+p_GeneBuild_ = args[10]
+p_src_ = args[11]
 
 ### Checking manually.
 
@@ -50,7 +51,7 @@ for (i in 1:NumberofLogistic) {
 
   locus <- TRIM_LOGISTIC.ASSOC(p_assoc.logsitic_[i])
   # manhattan plot
-  make.fancy.locus.plot.bare("6", "", locus, min.pos_, max.pos_, max.yaxis_[i], topsignal_[i], NULL, seq(0,max.yaxis_[i],by=5), pointcolor=pointcol_, topcolor=topcol_)
+  make.fancy.locus.plot.bare("6", (if(i == 1) plot_label_ else ""), locus, min.pos_, max.pos_, max.yaxis_[i], topsignal_[i], NULL, seq(0,max.yaxis_[i],by=5), pointcolor=pointcol_, topcolor=topcol_)
   
 }
 # genomic position belt.

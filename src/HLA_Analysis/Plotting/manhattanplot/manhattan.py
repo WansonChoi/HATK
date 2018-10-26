@@ -10,8 +10,32 @@ from mpmath import log10
 p_RSCRIPT = which("Rscript")
 
 
+########## < Core Global Variables > ##########
 
-def manhattan(_results_assoc, _out, _hg, _pointcol="#778899", _topcol="#FF0000", _min_pos="29.60E6", _max_pos="33.2E6",
+std_MAIN_PROCESS_NAME = "\n[%s]: " % (os.path.basename(__file__))
+std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % (os.path.basename(__file__))
+std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % (os.path.basename(__file__))
+
+
+def HATK_manhattan(_results_assoc, _plot_label, _out, _hg, _pointcol="#778899", _topcol="#FF0000", _min_pos="29.60E6", _max_pos="33.2E6",
+                   _p_Rscript=which("Rscript")):
+
+    if not isinstance(_results_assoc, list):
+        print(std_ERROR_MAIN_PROCESS_NAME + "The argument \"--logistic-result(-lr)\" wansn't given as list. Please check it again.\n")
+    else:
+
+        for item in _results_assoc:
+            if not os.path.exists(item):
+                print(std_ERROR_MAIN_PROCESS_NAME + "The given association result file({0}) doesn't exist. Please check it again.\n".format(item))
+                sys.exit()
+
+    return manhattan(_results_assoc, _plot_label, _out, _hg, _pointcol="#778899", _topcol="#FF0000", _min_pos="29.60E6", _max_pos="33.2E6",
+                     _p_Rscript=which("Rscript"))
+
+
+
+
+def manhattan(_results_assoc, _plot_label, _out, _hg, _pointcol="#778899", _topcol="#FF0000", _min_pos="29.60E6", _max_pos="33.2E6",
               _p_Rscript=which("Rscript")):
 
 
@@ -54,7 +78,7 @@ def manhattan(_results_assoc, _out, _hg, _pointcol="#778899", _topcol="#FF0000",
     ########## < Dependency and Argument Checking > ##########
 
     if not isinstance(_results_assoc, list):
-        print(std_MAIN_PROCESS_ERROR + "Something wrong with \"--logistic-result(-lr)\" option. Please check it again.\n")
+        print(std_MAIN_PROCESS_ERROR + "The argument \"--logistic-result(-lr)\" wansn't given as list. Please check it again.\n")
         sys.exit()
 
     # Logistic Regression
@@ -111,7 +135,7 @@ def manhattan(_results_assoc, _out, _hg, _pointcol="#778899", _topcol="#FF0000",
     _knownGene = os.path.join(p_data, 'known_genes/known_genes_soumya_chr6.hg{0}.txt'.format(_hg))
 
 
-    print("\n\n\n")
+    print("\n")
 
 
     ########## < Plotting Manhattan > ##########
@@ -119,7 +143,7 @@ def manhattan(_results_assoc, _out, _hg, _pointcol="#778899", _topcol="#FF0000",
     print(std_MAIN_PROCESS_NAME + "Plotting Manhattan.\n")
 
     command = [_p_Rscript, os.path.join(p_src, "manhattan_HLA_HATK.R"),
-               export_lr, _out,
+               export_lr, re.escape(_plot_label), _out,
                _pointcol, _topcol,
                _min_pos, _max_pos, export_TOP_LABEL, export_yaxis,
                _knownGene, p_src]
@@ -131,10 +155,10 @@ def manhattan(_results_assoc, _out, _hg, _pointcol="#778899", _topcol="#FF0000",
 
 
 
+    return _out + ".pdf"
 
 
 
-    return 0
 
 
 if __name__ == "__main__":
@@ -177,6 +201,7 @@ if __name__ == "__main__":
 
     # parser.add_argument("--logistic-result", "-lr", help="\nOutput from logistic regression(\".assoc.logstic\").\n\n", nargs='+', required=True)
     parser.add_argument("--results--assoc", "-ra", help="\nOutput from logistic regression(\".assoc.logstic\").\n\n", nargs='+', required=True)
+    parser.add_argument("--plot-label", "-pl", help="\nPlot Label\n\n", default="Manhattan Plot")
     parser.add_argument("--out", "-o", help="\nOuput file prefix\n\n", required=True)
 
     parser.add_argument("-hg", help="\nHuman Genome version(18, 19 or 38)\n\n", choices=["18", "19", "38"], metavar="hg", required=True)
@@ -225,4 +250,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
     print(args)
 
-    manhattan(args.logistic_result, args.out, args.hg, _pointcol=args.point_color, _topcol=args.top_color)
+    manhattan(args.logistic_result, args.plot_label, args.out, args.hg, _pointcol=args.point_color, _topcol=args.top_color)
