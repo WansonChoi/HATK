@@ -39,7 +39,7 @@ def HATK_IMGT2Sequence(_HG, _OUTPUT, _IMGT, _no_Indel=False, _no_MultiP = False,
         sys.exit()
 
 
-    RETURN_dict_AA, RETURN_dict_SNPS, RETURN_IAT = \
+    RETURN_dict_AA, RETURN_dict_SNPS, RETURN_IAT, RETURN_MAPTABLE = \
         IMGT2Sequence(_HG=_HG, _OUTPUT=_OUTPUT, _IMGT=_IMGT, _no_Indel=_no_Indel,
                       _no_MultiP=_no_MultiP, _save_intermediates=_save_intermediates,
                       _imgt_dir=_imgt_dir)
@@ -51,7 +51,7 @@ def HATK_IMGT2Sequence(_HG, _OUTPUT, _IMGT, _no_Indel=False, _no_MultiP = False,
     # print("2. dict_SNPS : {0}\n".format(RETURN_dict_SNPS))
     # print("3. IAT : {0}\n".format(RETURN_IAT))
 
-    return [RETURN_dict_AA, RETURN_dict_SNPS, RETURN_IAT]
+    return [RETURN_dict_AA, RETURN_dict_SNPS, RETURN_IAT, RETURN_MAPTABLE]
 
 
 
@@ -83,6 +83,9 @@ def IMGT2Sequence(_HG, _OUTPUT, _IMGT, _no_Indel=False, _no_MultiP = False,
     p_data = "./data/IMGT2Sequence"
     p_src = "./src/IMGT2Sequence"
 
+
+    ### raw MapTables
+    d_MapTables = {}
 
     ### OUTPUT prefix
 
@@ -127,19 +130,16 @@ def IMGT2Sequence(_HG, _OUTPUT, _IMGT, _no_Indel=False, _no_MultiP = False,
 
     ##### < Necessary Static Data files > #####
 
-    HLA_INTEGRATED_POSITIONS_filename = os.path.join(p_data, "HLA_INTEGRATED_POSITIONS_hg{0}.txt".format(_HG))
     IMGTHLA_directory = os.path.join(p_data, "IMGTHLA{0}".format(_IMGT)) if not bool(_imgt_dir) else _imgt_dir
 
-    print(HLA_INTEGRATED_POSITIONS_filename)
     print(IMGTHLA_directory)
-
-    if not os.path.exists(HLA_INTEGRATED_POSITIONS_filename):
-        print(std_ERROR_MAIN_PROCESS_NAME + "\"{0}\" not found!".format(HLA_INTEGRATED_POSITIONS_filename))
-        sys.exit()
 
     if not os.path.isdir(IMGTHLA_directory):
         print(std_ERROR_MAIN_PROCESS_NAME + "\"{0}\" not found!".format(IMGTHLA_directory))
         sys.exit()
+
+    # (2018. 10. 26.) Loading `HLA_INTEGRATED_TABLE` file is moved to "ProcessIMGT.py".
+
 
 
     ##### < "*_nuc.txt", "*_prot.txt", "*_gen.txt" > #####
@@ -243,7 +243,7 @@ def IMGT2Sequence(_HG, _OUTPUT, _IMGT, _no_Indel=False, _no_MultiP = False,
 
             pool = mp.Pool(processes=8)
 
-            dict_Pool = {HLA_names[i]: pool.apply_async(ProcessIMGT, (_OUTPUT, HLA_names[i], HLA_INTEGRATED_POSITIONS_filename, _IMGT, TARGET_nuc_files[HLA_names[i]], TARGET_gen_files[HLA_names[i]], TARGET_prot_files[HLA_names[i]]))
+            dict_Pool = {HLA_names[i]: pool.apply_async(ProcessIMGT, (_OUTPUT, HLA_names[i], _HG, _IMGT, TARGET_nuc_files[HLA_names[i]], TARGET_gen_files[HLA_names[i]], TARGET_prot_files[HLA_names[i]]))
                          for i in range(0, len(HLA_names))}
 
             pool.close()
@@ -254,12 +254,13 @@ def IMGT2Sequence(_HG, _OUTPUT, _IMGT, _no_Indel=False, _no_MultiP = False,
 
             if not _no_MultiP:
 
-                t_df_Seqs_SNPS, t_df_Seqs_AA, t_df_forMAP_SNPS, t_df_forMAP_AA = dict_Pool[HLA_names[i]].get()
+                t_df_Seqs_SNPS, t_df_Seqs_AA, t_df_forMAP_SNPS, t_df_forMAP_AA, t_MAPTABLE = dict_Pool[HLA_names[i]].get()
 
             else:
-                t_df_Seqs_SNPS, t_df_Seqs_AA, t_df_forMAP_SNPS, t_df_forMAP_AA \
-                    = ProcessIMGT(_OUTPUT, HLA_names[i], HLA_INTEGRATED_POSITIONS_filename, _IMGT,
-                                  TARGET_nuc_files[HLA_names[i]], TARGET_gen_files[HLA_names[i]], TARGET_prot_files[HLA_names[i]])
+                t_df_Seqs_SNPS, t_df_Seqs_AA, t_df_forMAP_SNPS, t_df_forMAP_AA, t_MAPTABLE \
+                    = ProcessIMGT(_OUTPUT, HLA_names[i], _HG, _IMGT,
+                                  TARGET_nuc_files[HLA_names[i]], TARGET_gen_files[HLA_names[i]],
+                                  TARGET_prot_files[HLA_names[i]])
 
 
 
@@ -271,6 +272,8 @@ def IMGT2Sequence(_HG, _OUTPUT, _IMGT, _no_Indel=False, _no_MultiP = False,
             l_df_Seqs_SNPS.append(t_df_Seqs_SNPS)
             l_df_forMAP_SNPS.append(MakeMap(HLA_names[i], "SNPS", t_df_forMAP_SNPS))
 
+            # raw MapTable
+            d_MapTables[HLA_names[i]] = t_MAPTABLE
 
 
         HLA_DICTIONARY_AA = pd.concat(l_df_Seqs_AA, axis=0)
@@ -316,7 +319,7 @@ def IMGT2Sequence(_HG, _OUTPUT, _IMGT, _no_Indel=False, _no_MultiP = False,
     print(std_MAIN_PROCESS_NAME + "Making HLA Dictionary is done.\n")
 
 
-    return [_OUTPUT_AA_RETURN, _OUTPUT_SNPS_RETURN, _OUTPUT_IAT_RETURN]
+    return [_OUTPUT_AA_RETURN, _OUTPUT_SNPS_RETURN, _OUTPUT_IAT_RETURN, d_MapTables]
 
 
 

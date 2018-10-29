@@ -8,16 +8,47 @@ import numpy as np
 from mpmath import log10
 from shutil import which
 
-########## <Core Global Variable> ##########
 
 # Paths
 p_Rscript = which("Rscript")
 
-def HEATMAP(_hla_name, _out, _input,
-            _p_hla_dict,
-            _p_assoc_logistic_AA, _p_assoc_logistic_HLA, _p_assoc_logistic_MERGED,
-            _4field=False, _oldv=False,
-            _p_Rscript=p_Rscript, _p_heatmapR="./src/HLA_Analysis/plot/heatmap/8b_plot_WS.R"):
+
+
+########## < Core Global Variables > ##########
+
+std_MAIN_PROCESS_NAME = "\n[%s]: " % (os.path.basename(__file__))
+std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % (os.path.basename(__file__))
+std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % (os.path.basename(__file__))
+
+
+
+def HATK_HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_logistic_AA, _p_assoc_logistic_HLA,
+                 _4field=False, _oldv=False, _p_Rscript=p_Rscript,
+                 _p_heatmapR="./src/HLA_Analysis/plot/heatmap/8b_plot_WS.R"):
+
+
+    # Logistic regression results
+    if not (bool(_p_assoc_logistic_AA) and bool(_p_assoc_logistic_HLA)):
+        print(std_ERROR_MAIN_PROCESS_NAME + "Necessary logistic regression results weren't given properly. Please check them again.\n(\"{0}\",\"{1}\")".format(_p_assoc_logistic_AA, _p_assoc_logistic_HLA))
+        sys.exit()
+
+
+
+
+
+
+    return HEATMAP(_hla_name, _out, None, _p_maptable, _p_assoc_logistic_AA, _p_assoc_logistic_HLA,
+                 _p_assoc_logistic_MERGED=None, _4field=False, _oldv=False, _p_Rscript=p_Rscript,
+                 _p_heatmapR="src/HLA_Analysis/Plotting/heatmap/8b_plot_WS.R")
+
+
+
+
+
+
+def HEATMAP(_hla_name, _out, _input, _p_maptable, _p_assoc_logistic_AA, _p_assoc_logistic_HLA, _p_assoc_logistic_MERGED,
+            _4field=False, _oldv=False, _p_Rscript=p_Rscript, _No_Intermediates=True,
+            _p_heatmapR="src/HLA_Analysis/Plotting/heatmap/8b_plot_WS.R"):
 
     """
 
@@ -57,7 +88,7 @@ def HEATMAP(_hla_name, _out, _input,
     if bool(_input):
 
         # Override every prefix of dependent files.
-        _p_hla_dict = _input+".txt"
+        _p_maptable = _input + ".txt"
         _p_assoc_logistic = _input+".assoc.logistic"
         _bim_merged = _input+".bim" # It is natural that "*.AA.bim" and "*.HLA.bim" are given as merged .bim file.
 
@@ -86,7 +117,7 @@ def HEATMAP(_hla_name, _out, _input,
         ########## < [1] Loading HLA_MARKERS_DICTIONARY("maptable") file > ##########
         print(std_MAIN_PROCESS_NAME + "[1] Loading HLA_MARKERS_DICTIONARY(\"maptable\") file\n")
 
-        H_MARKERS = pd.read_table(_p_hla_dict, sep=' |\t', engine='python', header=[0, 1, 2], index_col=0).filter(regex=_hla_name + "\*", axis=0)
+        H_MARKERS = pd.read_table(_p_maptable, sep=' |\t', engine='python', header=[0, 1, 2], index_col=0).filter(regex=_hla_name + "\*", axis=0)
         # filter() due to the case of "DRB2", "DRB3", etc.
 
         print(H_MARKERS.head())
@@ -138,6 +169,16 @@ def HEATMAP(_hla_name, _out, _input,
 
         else:
             print(std_ERROR_MAIN_PROCESS_NAME + "Check the file names of \"*.assoc.logistic.\"")
+
+
+        # The number of rows
+        if ASSOC_LOGISTIC_AA.shape[0] == 0:
+            print(std_ERROR_MAIN_PROCESS_NAME + "The logistic regression result of AA markers has 0 rows. Please check it again.\n")
+            return -1
+        elif ASSOC_LOGISTIC_HLA.shape[0] == 0:
+            print(std_ERROR_MAIN_PROCESS_NAME + "The logistic regression result of HLA markers has 0 rows. Please check it again.\n")
+            return -1
+
 
 
         HLA_MARKERS = ASSOC_LOGISTIC_HLA.loc[:, "SNP"]
@@ -200,7 +241,7 @@ def HEATMAP(_hla_name, _out, _input,
 
         print(std_MAIN_PROCESS_NAME + "[3] Subsetting maptable ((3) AA marker of \"*.assoc.logistic\" of AA)")
 
-        sub_H_MARKERS_columns = pd.Series(["_".join(["AA", _hla_name, item[1]]) for item in sub_H_MARKERS.columns.tolist()]) # (*****) This part is core to subset
+        sub_H_MARKERS_columns = pd.Series(["_".join(["AA", _hla_name, item[0]]) for item in sub_H_MARKERS.columns.tolist()]) # (*****) This part is core to subset
         # Using "relative_position" information to extract markers in both "sub_H_MARKERS" and "ASSOC_LOGISTIC".
 
 
@@ -217,7 +258,7 @@ def HEATMAP(_hla_name, _out, _input,
         print("\nFinally subsetted HLA dictionary file(\"maptable\").\n")
         print(sub_H_MARKERS.head())
 
-        sub_H_MARKERS.to_csv(_out+".{0}.3rd.txt".format(_hla_name), sep='\t', header=True, index=True)
+        # sub_H_MARKERS.to_csv(_out+".{0}.3rd.txt".format(_hla_name), sep='\t', header=True, index=True)
 
 
         ### Reindexing `ASSOC_LOGISTIC_AA` DataFrame with "relative_position".
@@ -254,12 +295,12 @@ def HEATMAP(_hla_name, _out, _input,
         for i in range(0, sub_H_MARKERS.shape[1]):
         # for i in range(0, 5):
 
-            print("\n=================================\n%d iteration\n=================================" % i)
+            print("=================================%d iteration=================================" % i, end='\r')
 
             # (variable in R) - (2) : `AAname`
-            AAname = COLNAMES[i] # ex) ('32557506', '-25', 'AAG')
-            print("\nAAname")
-            print(AAname)
+            AAname = COLNAMES[i] # ex) ('-25', '32557506', 'AAG')
+            # print("\nAAname")
+            # print(AAname)
 
 
             """
@@ -278,9 +319,9 @@ def HEATMAP(_hla_name, _out, _input,
 
             ### Bringing markers in each relative position to `df_temp`.
             # (2018. 8. 20.) This temporary DataFrame `df_temp` will do a central role in each iteration.
-            df_temp = ASSOC_LOGISTIC_AA.loc[[AAname[1]]]
-            print("\ndf_temp : \n")
-            print(df_temp)
+            df_temp = ASSOC_LOGISTIC_AA.loc[[AAname[0]]]
+            # print("\ndf_temp : \n")
+            # print(df_temp)
 
 
 
@@ -325,18 +366,18 @@ def HEATMAP(_hla_name, _out, _input,
                 ### 1. P-value
                 # AAvar_assoc (P-value column)
                 AAvar_assoc = df_temp.loc[:, "P"]
-                print("\nAAvar_assoc(P-value) : \n")
-                print(AAvar_assoc)
+                # print("\nAAvar_assoc(P-value) : \n")
+                # print(AAvar_assoc)
 
                 ### 2. AA character in "HLA dictionary(sub_H_MARKERS)" - (variable in R : `AAs`)
                 AAs = sub_H_MARKERS.iloc[:, i]
-                print("\nAAs")
-                print(AAs)
+                # print("\nAAs")
+                # print(AAs)
 
                 ### 3. OR
                 t_OR = df_temp.loc[:, "OR"]
-                print("\nOR")
-                print(t_OR)
+                # print("\nOR")
+                # print(t_OR)
 
 
                 ### Preparing index for `AAvar_assoc`. ###
@@ -354,8 +395,8 @@ def HEATMAP(_hla_name, _out, _input,
                     # ex) ['AA_DRB1_-25_32665484_K', 'AA_DRB1_-25_32665484_R', 'AA_DRB1_-25_32665484_x']
                     # => ['K', 'R', 'x']
 
-                    print("\nNew AAvar_assoc : \n")
-                    print(AAvar_assoc)
+                    # print("\nNew AAvar_assoc : \n")
+                    # print(AAvar_assoc)
 
                     ### Transforming AA character seq. of `sub_H_MARKERS` to '-log(x)' value.
                     AAs2 = AAs.apply(lambda x : -log10(AAvar_assoc.loc[x]))
@@ -414,8 +455,8 @@ def HEATMAP(_hla_name, _out, _input,
                     refA = df_temp.loc[:, "A1"].iat[0]
                     AAvar_assoc.index = pd.Index([refA])
 
-                    print("\nNew AAvar_assoc : \n")
-                    print(AAvar_assoc)
+                    # print("\nNew AAvar_assoc : \n")
+                    # print(AAvar_assoc)
 
                     ### Transforming AA character seq. of `sub_H_MARKERS` to '-log(x)' value.
                     AAs2 = AAs.apply(lambda x: -log10(AAvar_assoc.loc[refA]))
@@ -428,15 +469,15 @@ def HEATMAP(_hla_name, _out, _input,
 
                 ### Finally processed AA character seq. of `sub_H_MARKERS`.
                 AAs4 = AAs2*AAs3
-                print("\nAAs4 : \n")
-                print(AAs4)
+                # print("\nAAs4 : \n")
+                # print(AAs4)
 
                 for_new_assoc.append(AAs4)
 
 
         NEW_ASSOC = pd.DataFrame(for_new_assoc).transpose()
 
-        print("\nNEW_ASSOC : \n{0}\n\n".format(NEW_ASSOC.head()))
+        # print("\nNEW_ASSOC : \n{0}\n\n".format(NEW_ASSOC.head()))
 
 
 
@@ -447,7 +488,7 @@ def HEATMAP(_hla_name, _out, _input,
         print(std_MAIN_PROCESS_NAME + "Making Assoc_P file.\n\n")
 
         print("\nHLA markers :\n")
-        print(HLA_MARKERS)
+        print(HLA_MARKERS.head())
 
         flag_subHLAs = sub_H_MARKERS.index.to_series().apply(lambda x : "HLA_"+x).isin(HLA_MARKERS).tolist()
 
@@ -505,7 +546,8 @@ def HEATMAP(_hla_name, _out, _input,
 
 
         ##### Processing AA markers.
-        t_aa_markers = sub_H_MARKERS.columns.to_frame().loc[:, "relative_position"]
+        # t_aa_markers = sub_H_MARKERS.columns.to_frame().loc[:, "relative_position"]
+        t_aa_markers = sub_H_MARKERS.columns.to_frame().loc[:, "AA_rel_pos"]
 
         print("\nt_hla_markers :\n{0}\nt_aa_markers :\n{1}\n".format(t_hla_markers, t_aa_markers))
 
@@ -577,9 +619,19 @@ def HEATMAP(_hla_name, _out, _input,
         os.system(command)
 
 
+    if _No_Intermediates:
+
+        l_remove = [".map.txt", ".alleleP.txt", ".assoc.txt"]
+
+        for item in l_remove:
+
+            command = ' '.join(["rm", _out+item])
+            print(command)
+            os.system(command)
 
 
-    return 0
+
+    return _out + ".pdf"
 
 
 if __name__ == "__main__" :
@@ -653,11 +705,18 @@ if __name__ == "__main__" :
     #                           "-lrH", "/Users/wansun/Data/HATK/data/HLA_Analysis/AssociationTest/CancerResearch_Example/MARKER_PANEL/data_Rev_merged.HLA.assoc.logistic",
     #                           ])
 
+    # (2018. 10. 29.) HATK Integration test
+    args = parser.parse_args(["-hla", "A",
+                              "-o", "/Users/wansun/Git_Projects/HATK/tests/_0_wholeProcess/HAPMAP_CEU/outputs/removelater.A",
+                              "-hd", "/Users/wansun/Git_Projects/HATK/tests/_0_wholeProcess/HAPMAP_CEU/outputs/HLA_MAPTABLE.A.hg18.imgt370.txt",
+                              "-lrA", "/Users/wansun/Git_Projects/HATK/tests/_0_wholeProcess/HAPMAP_CEU/outputs/removelater.AA.CODED.assoc.logistic",
+                              "-lrH", "/Users/wansun/Git_Projects/HATK/tests/_0_wholeProcess/HAPMAP_CEU/outputs/removelater.HLA.assoc.logistic",
+                              ])
+
 
     ##### < for Publish > #####
 
-    args = parser.parse_args()
-
+    # args = parser.parse_args()
     print(args)
     # print(vars(args))
 
@@ -667,6 +726,8 @@ if __name__ == "__main__" :
 
 
     # main function execution.
-    HEATMAP(_hla_name=args.hla, _out=args.o, _input=args.input, _p_hla_dict=args.hla_dict,
-            _p_assoc_logistic_AA=args.logistic_result_AA, _p_assoc_logistic_HLA=args.logistic_result_HLA, _p_assoc_logistic_MERGED=args.logistic_result_MERGED,
-            _p_heatmapR="/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/src/HLA_Analysis/Plotting/heatmap/8b_plot_WS.R")
+    HEATMAP(_hla_name=args.hla, _out=args.o, _input=args.input, _p_maptable=args.hla_dict,
+            _p_assoc_logistic_AA=args.logistic_result_AA, _p_assoc_logistic_HLA=args.logistic_result_HLA,
+            _p_assoc_logistic_MERGED=args.logistic_result_MERGED,
+            _p_heatmapR="/Users/wansun/Git_Projects/HATK/src/HLA_Analysis/Plotting/heatmap/8b_plot_WS.R",
+            _No_Intermediates=False)

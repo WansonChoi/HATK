@@ -45,6 +45,13 @@ args5.plot.outf_ = args[5]
 # args4.HLA_name_ = "A"
 # args5.plot.outf_ = "/Users/wansun/Git_Projects/HATK_2nd/hatk_2nd/HEATMAP_Cancer"
 
+# # (2018. 10. 29.) HATK Integration
+# args1.disease.map_ = "/Users/wansun/Git_Projects/HATK/tests/_0_wholeProcess/HAPMAP_CEU/outputs/removelater.A.map.txt"
+# args2.disease.assoc_ = "/Users/wansun/Git_Projects/HATK/tests/_0_wholeProcess/HAPMAP_CEU/outputs/removelater.A.assoc.txt"
+# args3.disease.alleleP_ = "/Users/wansun/Git_Projects/HATK/tests/_0_wholeProcess/HAPMAP_CEU/outputs/removelater.A.alleleP.txt"
+# args4.HLA_name_ = "A"
+# args5.plot.outf_ = "/Users/wansun/Git_Projects/HATK/tests/_0_wholeProcess/HAPMAP_CEU/outputs/removelater.A.lklkl"
+
 
 
 # ### Arguments checking
@@ -89,7 +96,7 @@ print(head(P))
 
 # alleleP=as.matrix(read.table(paste0("7_",disease,"_alleleP.txt"))) # argument[3]
 alleleP=as.matrix(read.table(args3.disease.alleleP_, check.names = F)) # argument[3]
-# (2018.5.21) "AA_DRB1_-25_" 이렇게 읽어야할 label을 자동으로 "AA_DRB1_.25_" 이렇게 읽어오는 문제가 있었음. check.names = F 줘서 해결함.
+# (2018.5.21) "AA_DRB1_-25_" ????????? ???????????? label??? ???????????? "AA_DRB1_.25_" ????????? ???????????? ????????? ?????????. check.names = F ?????? ?????????.
 print(head(alleleP))
 
 #                        x
@@ -120,8 +127,17 @@ print(head(alleleP))
 
 
 # (new (by. wanson))
-refine.hla.name <- function(x) { paste0("HLA-", x) } # argument[4]
-rownames(P)=sapply(rownames(P), refine.hla.name) # 우선 똑같이 "HLA-DRB1*01:01:01" 이런 형태로 만들어줌.
+
+# White space procesing(To adjust the potision of "HLA-*-..." labels)
+Labels_nchar = sapply(rownames(P), nchar)
+N_WhiteSpace = sapply(Labels_nchar, function(x){max(Labels_nchar)-x})
+Labels_prefix = paste0("HLA-", rownames(P), sapply(N_WhiteSpace, function(x){strrep('  ', x)}))
+
+rownames(P) = Labels_prefix
+
+# refine.hla.name <- function(x) { paste0("HLA-", x) } # argument[4]
+# rownames(P)=sapply(rownames(P), refine.hla.name)
+
 refine.aa.name <- function(x) { paste0(args4.HLA_name_, "#", x) }
 colnames(P)=sapply(colnames(P), refine.aa.name)
 
@@ -130,8 +146,6 @@ org.ncol=ncol(P)
 
 # MERGE P AND ALLELE.P
 for (i in 1:11) { 
-  # (2018.6.19) 여기가 왜 12일까...
-  # (2018. 6. 20.) 이거 뭔지 찾음. 테이블상에 "HLA-
 P=cbind(P, alleleP)
 maptable=cbind(maptable, rep("", nrow(maptable)))
 colnames(P)[ncol(P)]=""
@@ -163,18 +177,18 @@ lmat=matrix(c(0,3,2,1,0,4), 3, 2, byrow=T)
 lwid=c(1, 12)
 lhei=c(1, 4, 0.6)
 
-heatmap.2(P, Rowv=F, Colv=F, dendrogram="none", col=mycol, 
-          # density.info=c("histogram","density","none"), # 얘는 무슨 아래 컬러 스펙트럼 그려주는데다가 어떤 색깔영역이 가장 많이 나왔는지 히스토그램형태로 그려줌
+heatmap.2(P, Rowv=F, Colv=F, dendrogram="none", col=mycol,
+          # density.info=c("histogram","density","none"), # ?????? ?????? ?????? ?????? ???????????? ????????????????????? ?????? ??????????????? ?????? ?????? ???????????? ???????????????????????? ?????????
           density.info="none",
           trace="none", 
-          margin=c(6,6), # 이 margin이 plot area의 heatmap의 전반적인 margin인거같음. 늘리면 AA와 Label이 좌우로 움직임.(아래 색깔표는 가만히 있음.)
+          margin=c(6,6), # ??? margin??? plot area??? heatmap??? ???????????? margin????????????. ????????? AA??? Label??? ????????? ?????????.(?????? ???????????? ????????? ??????.)
           lmat=lmat,lwid=lwid,lhei=lhei,
           cellnote=maptable, notecol="#909090", cexRow=1.2, cexCol=1.2, adjCol=c(NA,0.4), adjRow=c(1.3,NA),
           
           colsep=c(org.ncol), sepcolor="white", sepwidth=.6,
           
           key.title="this is keys", key.par=list(mar=c(4, 4, 0.5 ,10)), ## Bottom, Left, Top, Right
-          key.xlab=bquote(-log[10]~italic("P")), # "-log10P"이거 써지는 부분
+          key.xlab=bquote(-log[10]~italic("P")), # "-log10P"?????? ????????? ??????
           key.xtickfun=function() {
             breaks=pretty(parent.frame()$breaks)
             list(at=parent.frame()$scale01(breaks), labels=abs(breaks))
@@ -210,7 +224,7 @@ dev.off()
 # #arrow(0,0,1,1,xpd=T)
 # dev.off()
 # 
-# # warnings() # (2018.5.21) 그닥 중요하지 않아보여서 뺌.
+# # warnings() # (2018.5.21) ?????? ???????????? ??????????????? ???.
 # 
 # 
 # # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

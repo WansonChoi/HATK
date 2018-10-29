@@ -5,7 +5,7 @@ import pandas as pd
 import argparse, textwrap
 
 
-def ProcessIMGT(_out, _hla, _hg_Table, _imgt, _nuc="Not_given", _gen="Not_given", _prot="Not_given", _no_Indel=False,
+def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc="Not_given", _gen="Not_given", _prot="Not_given", _no_Indel=False,
                 _save_intermediates=False):
 
 
@@ -22,6 +22,8 @@ def ProcessIMGT(_out, _hla, _hg_Table, _imgt, _nuc="Not_given", _gen="Not_given"
     HLA_names = ["A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1"]
     isREVERSE = {'A': False, 'C': True, 'B': True, 'DRB1': True, 'DQA1': False, 'DQB1': True, 'DPA1': True, 'DPB1': False}
 
+    ### Paths
+    p_data = "./data/IMGT2Sequence"
 
 
     ########## < Argument Checking. > ##########
@@ -45,10 +47,14 @@ def ProcessIMGT(_out, _hla, _hg_Table, _imgt, _nuc="Not_given", _gen="Not_given"
 
     ### Checking "HLA_INTEGRATED_POSITIONS" file
 
-    if not os.path.exists(_hg_Table):
+    HLA_INTEGRATED_POSITIONS_filename = os.path.join(p_data, "HLA_INTEGRATED_POSITIONS_hg{0}.txt".format(_hg))
 
-        print(std_ERROR_MAIN_PROCESS_NAME + "\"HLA_INTEGRATED_TABLE_hg{18,19,38}.txt\" file can't be found. Please check it againg.\n")
+    if not os.path.exists(HLA_INTEGRATED_POSITIONS_filename):
+        print(std_ERROR_MAIN_PROCESS_NAME + "\"{0}\" not found!".format(HLA_INTEGRATED_POSITIONS_filename))
         sys.exit()
+
+    print(HLA_INTEGRATED_POSITIONS_filename)
+
 
 
 
@@ -57,7 +63,7 @@ def ProcessIMGT(_out, _hla, _hg_Table, _imgt, _nuc="Not_given", _gen="Not_given"
 
     # (2018/1/17) Preparing HLA position information(exon, intron, etc.)
 
-    HLA_INTEGRATED_POS = pd.read_table(_hg_Table, sep='\t', header=None, usecols = [0,1,2,3],
+    HLA_INTEGRATED_POS = pd.read_table(HLA_INTEGRATED_POSITIONS_filename, sep='\t', header=None, usecols = [0, 1, 2, 3],
                                        names=['HLA', 'start', 'end', 'Type', "Direction"], index_col=0).loc[_hla, :]
     print("\nLoaded HLA information table.\n")
     print(HLA_INTEGRATED_POS.head())
@@ -396,6 +402,14 @@ def ProcessIMGT(_out, _hla, _hg_Table, _imgt, _nuc="Not_given", _gen="Not_given"
 
 
 
+        # Maptable in Heatmap. (2018. 10. 26.)
+        __MAPTABLE__ = os.path.join(INTERMEDIATE_PATH, "HLA_MAPTABLE.{0}.hg{1}.imgt{2}.txt".format(_hla, _hg, _imgt))
+        df_Markers_prot.to_csv(__MAPTABLE__, sep='\t', header=True, index=True)
+
+
+
+
+
 
     if _6_GENERATING_forMAP:
 
@@ -447,7 +461,7 @@ def ProcessIMGT(_out, _hla, _hg_Table, _imgt, _nuc="Not_given", _gen="Not_given"
 
 
 
-    return [df_Seqs_gen, df_Seqs_IndelProcessed_prot, final_SNPS_forMAP, final_AA_forMAP]
+    return [df_Seqs_gen, df_Seqs_IndelProcessed_prot, final_SNPS_forMAP, final_AA_forMAP, __MAPTABLE__]
 
 # end - ProcessIMGT()
 
@@ -1142,7 +1156,7 @@ if __name__ == "__main__":
     parser.add_argument("-HLA", help="\nHLA gene name which you will process.\n\n", required=True, metavar='HLA',
                         choices=["A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1"])
 
-    parser.add_argument("--hg-table", "-hg", help="\nHLA gene position information table.\n\n", required=True)
+    parser.add_argument("-hg", help="\nHuman Genome Version.\n\n", required=True, choices=["18", "19", "38"])
     parser.add_argument("-imgt", help="\nIMGT-HLA data version(ex. 370, 3300)\n\n", metavar="imgt_version", required=True)
 
     parser.add_argument("-nuc", help="\nInput *_nuc.txt file.\n\n", required=True)
@@ -1300,5 +1314,5 @@ if __name__ == "__main__":
 
 
     # main function execution
-    ProcessIMGT(_out=args.o, _hla=args.HLA, _hg_Table=args.hg_table, _imgt=args.imgt, _nuc=args.nuc, _gen=args.gen,
+    ProcessIMGT(_out=args.o, _hla=args.HLA, _hg=args.hg, _imgt=args.imgt, _nuc=args.nuc, _gen=args.gen,
                 _prot=args.prot, _no_Indel=args.no_Indel)
