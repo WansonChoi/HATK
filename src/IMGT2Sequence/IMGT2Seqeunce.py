@@ -243,7 +243,9 @@ def IMGT2Sequence(_HG, _OUTPUT, _IMGT, _no_Indel=False, _no_MultiP = False,
 
             pool = mp.Pool(processes=8)
 
-            dict_Pool = {HLA_names[i]: pool.apply_async(ProcessIMGT, (_OUTPUT, HLA_names[i], _HG, _IMGT, TARGET_nuc_files[HLA_names[i]], TARGET_gen_files[HLA_names[i]], TARGET_prot_files[HLA_names[i]]))
+            dict_Pool = {HLA_names[i]: pool.apply_async(ProcessIMGT, (_OUTPUT, HLA_names[i], _HG, _IMGT,
+                                                                      TARGET_nuc_files[HLA_names[i]], TARGET_gen_files[HLA_names[i]], TARGET_prot_files[HLA_names[i]],
+                                                                      _no_Indel, _save_intermediates))
                          for i in range(0, len(HLA_names))}
 
             pool.close()
@@ -259,8 +261,8 @@ def IMGT2Sequence(_HG, _OUTPUT, _IMGT, _no_Indel=False, _no_MultiP = False,
             else:
                 t_df_Seqs_SNPS, t_df_Seqs_AA, t_df_forMAP_SNPS, t_df_forMAP_AA, t_MAPTABLE \
                     = ProcessIMGT(_OUTPUT, HLA_names[i], _HG, _IMGT,
-                                  TARGET_nuc_files[HLA_names[i]], TARGET_gen_files[HLA_names[i]],
-                                  TARGET_prot_files[HLA_names[i]])
+                                  TARGET_nuc_files[HLA_names[i]], TARGET_gen_files[HLA_names[i]], TARGET_prot_files[HLA_names[i]],
+                                  _no_Indel=_no_Indel, _save_intermediates=_save_intermediates)
 
 
 
