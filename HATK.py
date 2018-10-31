@@ -838,21 +838,27 @@ if __name__ == "__main__":
         #     ##### heatmap #####
         #
         #     print(std_MAIN_PROCESS_NAME + "Implementing Heatmap(Plotting).")
-        # 
-        #     """
-        #     List of necessary arguments.
-        #     """
-
-
-        # if args.converter:
-        #
-        #     ##### Converter #####
-        #
-        #     print(std_MAIN_PROCESS_NAME + "Implementing Converter.")
         #
         #     """
         #     List of necessary arguments.
         #     """
 
 
+        if args.hla2hped:
+
+            ##### Converter #####
+
+            print(std_MAIN_PROCESS_NAME + "Implementing HLA2HPED.")
+
+            """
+            List of necessary arguments.
+            
+            1. --platform
+            2. --rhped
+            3. --out(*)
+            
+            No optional arguments.
+            """
+
+            __HLA_type__ = HATK_HLA2HPED(args.rhped, args.out, args.platform)
 

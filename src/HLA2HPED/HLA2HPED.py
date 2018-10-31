@@ -20,9 +20,17 @@ isREVERSE = {'A': False, 'C': True, 'B': True, 'DRB1': True, 'DQA1': False, 'DQB
 
 def HATK_HLA2HPED(_rhped, _out, _platform):
 
-    if not isinstance(_rhped, list):
-        print(std_ERROR_MAIN_PROCESS_NAME + "The parameter \"_rhped\" to make \"hped\" wans't given as list. Please check the argument \"-rhped\" again.\n")
+    if not bool(_platform):
+        print(std_ERROR_MAIN_PROCESS_NAME + "The argument \"--platform\" wans't given. Please check it again.\n")
         sys.exit()
+
+    if not bool(_rhped):
+        print(std_ERROR_MAIN_PROCESS_NAME + "The argument \"-rhped\" wasn't given. Please check it again.\n")
+        sys.exit()
+    else:
+        if not isinstance(_rhped, list):
+            print(std_ERROR_MAIN_PROCESS_NAME + "The parameter \"_rhped\" to make \"hped\" wans't given as list. Please check the argument \"-rhped\" again.\n")
+            sys.exit()
 
     if not bool(_out):
         print(std_ERROR_MAIN_PROCESS_NAME + "Output prefix wasn't given properly. Please check the argument \"--out\" again.\n")
@@ -48,13 +56,7 @@ def HLA2HPED(_rhped, _out, _platform):
 
     # Preparing intermediate paths.
     _out = _out if not _out.endswith('/') else _out.rstrip('/')
-
-    INTERMEDIATE_PATH = os.path.dirname(_out) if not os.path.dirname(_out) else None
-
-    if bool(INTERMEDIATE_PATH) and not os.path.exists(INTERMEDIATE_PATH):
-        os.system(' '.join(["mkdir", "-p", INTERMEDIATE_PATH]))
-
-
+    if bool(os.path.dirname(_out)): os.makedirs(os.path.dirname(_out), exist_ok=True)
 
 
 
@@ -100,7 +102,7 @@ def HLA2HPED(_rhped, _out, _platform):
 def _convert_AXIOM(_i_HLA, _out):
 
     if len(_i_HLA) != 8:
-        print(std_ERROR_MAIN_PROCESS_NAME + "Platform \"{0}\" needs 8 input files. Please check it again.\n")
+        print(std_ERROR_MAIN_PROCESS_NAME + "Platform \"{0}\" needs 8 input files. Please check it again.\n".format("AXIOM"))
         sys.exit()
 
 
@@ -189,7 +191,7 @@ def _convert_HIBAG(_i_HLA, _out):
 
 
     if len(_i_HLA) != 8:
-        print(std_ERROR_MAIN_PROCESS_NAME + "Platform \"{0}\" needs 8 input files. Please check it again.\n")
+        print(std_ERROR_MAIN_PROCESS_NAME + "Platform \"{0}\" needs 8 input files. Please check it again.\n".format("HIBAG"))
         sys.exit()
 
 
@@ -338,6 +340,20 @@ def _convert_xHLA(_i_HLA, _out):
 
 
 
+
+
+
+def _convert_HISAT(_i_HLA, _out):
+
+    # It is going to be introduced soon.
+
+    return _out+".hped"
+
+
+
+
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,
                                      description=textwrap.dedent('''\
@@ -348,20 +364,19 @@ if __name__ == "__main__":
          This Converts the output results from other HLA imputation software or framework to *.hped 
         format.
         
-         Input file(s) must be at least 1 file or at most 8 files. 
-        (Remember 8 HLA genes - "A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1").
+         The number of raw input file(s) to make a hped file could be 1, 8 or More.
         
-         In other words, user must give either 8 files which corresponds to each 8 HLA genes(ex. 'HIBAG', 
-        'AXIOM'), or 1 file containing 8 HLA genes all in one(ex. 'xHLA'). In case of first option, the
-        8 files should be given with those HLA gene order mentioned above. 
+         In case of 8 raw input files are given by "-rhped" argument(ex. AXIOM, HIBAG), those file 
+        must be given with the below order.
+        (8 HLA genes - "A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1").
+        
         
          List of available HLA sofware is:
          
             (1) HLA*IMP(Axiom)
             (2) HIBAG
             (3) xHLA
-            (4) SNP2HLA
-            (5) CookHLA
+            (4) HISAT
         
         Other HLA software can be added later.
         
@@ -375,11 +390,11 @@ if __name__ == "__main__":
 
     parser.add_argument("-h", "--help", help="\nShow this help message and exit\n\n", action='help')
 
-    parser.add_argument("-i", help="\nInput Data file(Output result(s) from other HLA related software)\n\n", nargs='*')
+    parser.add_argument("-rhped", help="\nInput Data file(Output result(s) from other HLA related software)\n\n", nargs='*')
     parser.add_argument("-o", help="\nOutput file prefix\n\n", required=True)
 
     parser.add_argument("--platform", "-p", help="\nSoftware platform.(ex. 'HIBAG', 'AXIOM', etc.)\n\n", required=True,
-                        choices=["AXIOM", "HIBAG", "xHLA"])
+                        choices=["AXIOM", "HIBAG", "xHLA", "HISAT"])
 
 
 
@@ -387,7 +402,7 @@ if __name__ == "__main__":
 
     ##### < for Test > #####
 
-    # args = parser.parse_args(["-p", "AXIOM", "-i",
+    # args = parser.parse_args(["-p", "AXIOM", "-rhped",
     #                           "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/HATK/data/HLA2HPED/AxiomHLA_TestResult/AxiomHLA_4dig_A_Results.txt",
     #                           "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/HATK/data/HLA2HPED/AxiomHLA_TestResult/AxiomHLA_4dig_B_Results.txt",
     #                           "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/HATK/data/HLA2HPED/AxiomHLA_TestResult/AxiomHLA_4dig_C_Results.txt",
@@ -399,7 +414,7 @@ if __name__ == "__main__":
     #                           "-o", "HLA2HPED_removethis"
     #                           ])
 
-    # args = parser.parse_args(["-p", "HIBAG", "-i",
+    # args = parser.parse_args(["-p", "HIBAG", "-rhped",
     #                           "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/HATK/data/HLA2HPED/HIBAG_TestResult_HLA-A.txt",
     #                           "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/HATK/data/HLA2HPED/HIBAG_TestResult_HLA-A.txt",
     #                           "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/HATK/data/HLA2HPED/HIBAG_TestResult_HLA-A.txt",
@@ -411,7 +426,7 @@ if __name__ == "__main__":
     #                           "-o", "HLA2HPED_removethis_HIBAG"
     #                           ])
 
-    # args = parser.parse_args(["-p", "xHLA", "-i",
+    # args = parser.parse_args(["-p", "xHLA", "-rhped",
     #                           "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/HATK/data/HLA2HPED/test.json",
     #                           "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/HATK/data/HLA2HPED/test2.json",
     #                           "-o", "HLA2HPED_removethis_xHLA"
@@ -425,4 +440,4 @@ if __name__ == "__main__":
 
 
     # Main function execution
-    HLA2HPED(args.i, args.o, args.platform)
+    HLA2HPED(args.rhped, args.o, args.platform)
