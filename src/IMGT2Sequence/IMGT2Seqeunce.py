@@ -89,11 +89,11 @@ def IMGT2Sequence(_HG, _OUTPUT, _IMGT, _no_Indel=False, _no_MultiP = False,
 
     ### OUTPUT prefix
 
+    # Preparing intermediate paths.
     _OUTPUT = _OUTPUT if not _OUTPUT.endswith('/') else _OUTPUT.rstrip('/')
-    INTERMEDIATE_PATH = os.path.dirname(_OUTPUT)
-
-    if not os.path.exists(INTERMEDIATE_PATH):
-        os.system(' '.join(["mkdir", "-p", INTERMEDIATE_PATH]))
+    if bool(os.path.dirname(_OUTPUT)):
+        INTERMEDIATE_PATH = os.path.dirname(_OUTPUT)
+        os.makedirs(INTERMEDIATE_PATH, exist_ok=True)
 
 
     _OUTPUT_AA_RETURN = os.path.join(INTERMEDIATE_PATH, 'HLA_DICTIONARY_AA.hg{0}.imgt{1}'.format(_HG, _IMGT))

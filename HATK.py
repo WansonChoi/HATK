@@ -114,8 +114,8 @@ if __name__ == "__main__":
     # Additional input ped file type.
     PED_TYPE = g_NomenCleaner.add_mutually_exclusive_group()
     # PED_TYPE.add_argument("-ped", help="\nHLA Type Data.\n\n") # moved to main group.
-    PED_TYPE.add_argument("-ped-Ggroup", help="\nHLA Type Data(G-group allele \"*.ped\" file).\n\n", dest="ped_G")
-    PED_TYPE.add_argument("-ped-Pgroup", help="\nHLA Type Data(P-group allele \"*.ped\" file).\n\n", dest="ped_P")
+    PED_TYPE.add_argument("-hped_Ggroup", help="\nHLA Type Data(G-group allele \"*.hped\" file).\n\n", dest="hped_G")
+    PED_TYPE.add_argument("-hped_Pgroup", help="\nHLA Type Data(P-group allele \"*.hped\" file).\n\n", dest="hped_P")
 
     g_NomenCleaner.add_argument("-iat", help="\nIntegrated Allele Table file(*.iat).\n\n")
 
@@ -123,18 +123,18 @@ if __name__ == "__main__":
     format_selection = g_NomenCleaner.add_mutually_exclusive_group()
 
 
-    format_selection.add_argument("--1field", help="\nOutput ped file as '1-field' format.\n\n",
+    format_selection.add_argument("--1field", help="\nOutput *.chped file as '1-field' format.\n\n",
                                         action="store_true", dest="oneF")
-    format_selection.add_argument("--2field", help="\nOutput ped file as '2-field' format.\n\n",
+    format_selection.add_argument("--2field", help="\nOutput *.chped file as '2-field' format.\n\n",
                                         action="store_true", dest="twoF")
-    format_selection.add_argument("--3field", help="\nOutput ped file as '3-field' format.\n\n",
+    format_selection.add_argument("--3field", help="\nOutput *.chped file as '3-field' format.\n\n",
                                         action="store_true", dest="threeF")
     format_selection.add_argument("--4field",
-                                        help="\nOutput ped file as '4-field(Current Standard Names)' format.\n\n",
+                                        help="\nOutput chped file as '4-field(Current Standard Names)' format.\n\n",
                                         action="store_true", dest="fourF")
-    format_selection.add_argument("--G-group", help="\nOutput ped file as 'G-group' format.\n\n",
+    format_selection.add_argument("--G-group", help="\nOutput *.chped file as 'G-group' format.\n\n",
                                         action="store_true")
-    format_selection.add_argument("--P-group", help="\nOutput ped file as 'P-group' format.\n\n",
+    format_selection.add_argument("--P-group", help="\nOutput *.chped file as 'P-group' format.\n\n",
                                         action="store_true")
 
     # Additional utility flags
@@ -253,7 +253,7 @@ if __name__ == "__main__":
 
     from src.HLA2HPED.HLA2HPED import HATK_HLA2HPED
     from src.IMGT2Sequence.IMGT2Seqeunce import HATK_IMGT2Sequence
-    from src.NomenCleaner.NomenCleaner import NomenCleaner
+    from src.NomenCleaner.NomenCleaner import NomenCleaner, HATK_NomenCleaner
     from src.b_MarkerGenerator.b_MarkerGenerator import HATK_b_MarkerGenerator
     import src.HLA_Analysis.HLA_Analysis as HLA_Analysis
     from src.HLA_Analysis.Plotting.heatmap.heatmap import HATK_HEATMAP
@@ -590,81 +590,64 @@ if __name__ == "__main__":
 
 
 
-        # if args.nomencleaner:
-        #
-        #     ##### NomenCleaner #####
-        #
-        #     print(std_MAIN_PROCESS_NAME + "Implementing NomenCleaner.")
-        #
-        #     """
-        #     List of necessary arguments.
-        #
-        #     1. either -ped, -ped-Ggroup or -ped-Pgroup
-        #     2. -iat
-        #     3. -o (*)
-        #     4. output format(ex. --1field, etc.)
-        #
-        #     (optionals)
-        #     5. --No-caption
-        #     """
-        #
-        #     t_ped = ""
-        #     t_ped_descriptor = -1
-        #     t_FILE_FORMAT = -1
-        #
-        #
-        #     if not(bool(args.ped) or bool(args.ped_Ggroup) or bool(args.ped_Pgroup)):
-        #         print(std_ERROR_MAIN_PROCESS_NAME + "You must give at least one argument among \"-ped\", \"-ped-Ggroup\", \"-ped-Pgroup\".\n")
-        #         sys.exit()
-        #     else:
-        #
-        #         if bool(args.ped):
-        #             t_ped_descriptor = 1
-        #             t_ped = args.ped
-        #         elif bool(args.ped_Ggroup):
-        #             t_ped_descriptor = 2
-        #             t_ped = args.ped_Ggroup
-        #         elif bool(args.ped_Pgroup):
-        #             t_ped_descriptor = 3
-        #             t_ped = args.ped_Pgroup
-        #         else:
-        #             print(std_ERROR_MAIN_PROCESS_NAME + "The arguments related to ped(\"-ped\", \"-ped-Ggroup\" or \"-ped-Pgroup\") has wrong values."
-        #                                                 "Please check them again.\n")
-        #             sys.exit()
-        #
-        #
-        #
-        #     if not bool(args.iat):
-        #         print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("-iat"))
-        #         sys.exit()
-        #
-        #     if not(bool(args.oneF) or bool(args.twoF) or bool(args.threeF) or bool(args.fourF) or bool(args.G_group) or bool(args.P_group)):
-        #         print(std_ERROR_MAIN_PROCESS_NAME + "The argument related to field format has not given. Please check it again.\n")
-        #         sys.exit()
-        #     else:
-        #         t_FILE_FORMAT = (1 if bool(args.oneF) else 2 if bool(args.twoF) else 3 if bool(args.threeF) else 4
-        #                             if bool(args.fourF) else 5 if bool(args.G_group) else 6 if bool(args.P_group) else -1)
-        #
-        #
-        #     if t_ped_descriptor == 2 and t_FILE_FORMAT == 5:
-        #         print(std_ERROR_MAIN_PROCESS_NAME + "Pointless transformation. (Transformation G-group to G-group is meaningless.)")
-        #         print("Skip this Transformation Request.\n")
-        #         sys.exit()
-        #
-        #     if t_ped_descriptor == 3 and t_FILE_FORMAT == 6:
-        #         print(std_ERROR_MAIN_PROCESS_NAME + "Pointless transformation. (Transformation P-group to P-group is meaningless.)")
-        #         print("Skip this Transformation Request.\n")
-        #         sys.exit()
-        #
-        #
-        #     from src.NomenCleaner.NomenCleaner import NomenCleaner
-        #
-        #     NomenCleaner(_p_ped=t_ped, _ped_descriptor=t_ped_descriptor, _p_iat=args.iat, _out=args.out,
-        #                  _field_format=t_FILE_FORMAT, _f_NoCaption=bool(args.NoCaption))
-        #
-        #
-        #
-        #
+        if args.nomencleaner:
+
+            ##### NomenCleaner #####
+
+            print(std_MAIN_PROCESS_NAME + "Implementing NomenCleaner.")
+
+            """
+            List of necessary arguments.
+
+            1. either -ped, -ped-Ggroup or -ped-Pgroup
+            2. -iat
+            3. -o (*)
+            4. output format(ex. --1field, etc.)
+
+            (optionals)
+            5. --No-caption
+            """
+
+            t_hped = ""
+            t_hped_descriptor = -1
+            t_FIELD_FORMAT = -1
+
+            # hped type check
+            if not(bool(args.hped) or bool(args.hped_G) or bool(args.hped_P)):
+                print(std_ERROR_MAIN_PROCESS_NAME + "You must give at least one argument among \"-hped\", \"-hped-Ggroup\", \"-hped-Pgroup\".\n")
+                sys.exit()
+            else:
+
+                if bool(args.hped):
+                    t_hped_descriptor = 1
+                    t_hped = args.hped
+                elif bool(args.hped_G):
+                    t_hped_descriptor = 2
+                    t_hped = args.hped_G
+                elif bool(args.hped_P):
+                    t_hped_descriptor = 3
+                    t_hped = args.hped_P
+                else:
+                    print(std_ERROR_MAIN_PROCESS_NAME + "The arguments related to ped(\"-hped\", \"-hped-Ggroup\" or \"-hped-Pgroup\") has wrong values."
+                                                        "Please check them again.\n")
+                    sys.exit()
+
+            # field format request check
+            if not(bool(args.oneF) or bool(args.twoF) or bool(args.threeF) or bool(args.fourF) or bool(args.G_group) or bool(args.P_group)):
+                print(std_ERROR_MAIN_PROCESS_NAME + "The argument related to field format has not given. Please check it again.\n")
+                sys.exit()
+            else:
+                t_FIELD_FORMAT = (1 if bool(args.oneF) else 2 if bool(args.twoF) else 3 if bool(args.threeF) else 4
+                                    if bool(args.fourF) else 5 if bool(args.G_group) else 6 if bool(args.P_group) else -1)
+
+
+
+            HATK_NomenCleaner(_p_hped=t_hped, _ped_descriptor=t_hped_descriptor, _p_iat=args.iat, _out=args.out,
+                              _field_format=t_FIELD_FORMAT, _f_NoCaption=bool(args.NoCaption))
+
+
+
+
         # if args.bmarkergenerator:
         #
         #     ##### b:MarkerGenerator #####

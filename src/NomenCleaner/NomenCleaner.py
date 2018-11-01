@@ -17,11 +17,31 @@ std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % (os.path.basename(__file__
 
 def HATK_NomenCleaner(_p_hped, _ped_descriptor, _p_iat, _out, _field_format, _f_NoCaption=False):
 
-    # (1) _p_hped
+    # _out
+    if not bool(_out):
+        print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("--out"))
+        sys.exit()
 
-    # (2) _ped_descriptor
 
-    return
+    # .iat
+    if not bool(_p_iat):
+        print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("-iat"))
+        sys.exit()
+
+    # Redundant usage check
+    if _ped_descriptor == 2 and _ped_descriptor == 5:
+        print(std_ERROR_MAIN_PROCESS_NAME + "Pointless transformation. (Transformation G-group to G-group is meaningless.)")
+        print("Skip this Transformation Request.\n")
+        sys.exit()
+
+    if _ped_descriptor == 3 and _ped_descriptor == 6:
+        print(std_ERROR_MAIN_PROCESS_NAME + "Pointless transformation. (Transformation P-group to P-group is meaningless.)")
+        print("Skip this Transformation Request.\n")
+        sys.exit()
+
+
+    return NomenCleaner(_p_hped, _ped_descriptor, _p_iat, _out, _field_format, _f_NoCaption=_f_NoCaption)
+
 
 
 
@@ -47,11 +67,9 @@ def NomenCleaner(_p_hped, _ped_descriptor, _p_iat, _out, _field_format, _f_NoCap
 
     ### OUTPUT prefix
 
+    # Preparing intermediate paths.
     _out = _out if not _out.endswith('/') else _out.rstrip('/')
-    INTERMEDIATE_PATH = os.path.dirname(_out)
-
-    if not os.path.exists(INTERMEDIATE_PATH):
-        os.system(' '.join(["mkdir", "-p", INTERMEDIATE_PATH]))
+    if bool(os.path.dirname(_out)): os.makedirs(os.path.dirname(_out), exist_ok=True)
 
 
     ########## < Loading "*.hped" file > ##########
