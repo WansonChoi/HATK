@@ -230,10 +230,7 @@ def HATK_ASSOC1_Logistic_Regression(_input, _out, _covar=None, _covar_names=None
     else:
         # Intermediate path.
         _out = _out if not _out.endswith('/') else _out.rstrip('/')
-        INTERMEDIATE_PATH = os.path.dirname(_out)
-
-        if not os.path.exists(INTERMEDIATE_PATH):
-            os.system(' '.join(["mkdir", "-p", INTERMEDIATE_PATH]))
+        if bool(os.path.dirname(_out)): os.makedirs(os.path.dirname(_out), exist_ok=True)
 
 
 
