@@ -24,12 +24,7 @@ def HATK_b_MarkerGenerator(_CHPED, _OUT, _hg, _dictionary_AA, _dictionary_SNPS, 
         # Checking whether it went through "NomenCleaner.py".
 
         if not _CHPED.endswith(".chped"):
-            print(std_ERROR_MAIN_PROCESS_NAME + 'Given ped file should be processed by "NomenCleaner.py". '
-                                                '(The file extension of its output is ".hped".)\n')
-
-            """
-            Add code to implement "NomenCleaner.py" here.
-            """
+            print(std_ERROR_MAIN_PROCESS_NAME + 'Given ped file should be processed by "NomenCleaner.py"\n')
             sys.exit()
 
 
@@ -42,7 +37,7 @@ def HATK_b_MarkerGenerator(_CHPED, _OUT, _hg, _dictionary_AA, _dictionary_SNPS, 
         _t_dict_AA = _dictionary_AA
         _t_dict_SNPS = _dictionary_SNPS
     else:
-        print(std_ERROR_MAIN_PROCESS_NAME + 'One of "--dict-AA" or "--dict-SNPS" options(or Both) are not given. Please check them again.\n')
+        print(std_ERROR_MAIN_PROCESS_NAME + 'One of "-dict-AA" or "-dict-SNPS" options(or Both) are not given. Please check them again.\n')
         sys.exit()
 
 
@@ -88,15 +83,10 @@ def b_MarkerGenerator(_CHPED, _OUT, _hg, _dictionary_AA, _dictionary_SNPS, _plai
 
 
     ### Intermediate path.
-
     OUTPUT = _OUT if not _OUT.endswith('/') else _OUT.rstrip('/')
-    INTERMEDIATE_PATH = os.path.dirname(OUTPUT)
-
-    print(std_MAIN_PROCESS_NAME + "Intermediate folder path is {0},\nOutput filename prefix is {1}\n\n".format(
-        INTERMEDIATE_PATH, os.path.basename(OUTPUT)))
-
-    if not os.path.exists(INTERMEDIATE_PATH):
-        os.system(' '.join(["mkdir -p", INTERMEDIATE_PATH]))
+    if bool(os.path.dirname(OUTPUT)):
+        INTERMEDIATE_PATH = os.path.dirname(OUTPUT)
+        os.makedirs(INTERMEDIATE_PATH, exist_ok=True)
 
 
     ### Flag for plain SNP markers.

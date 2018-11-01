@@ -92,15 +92,15 @@ if __name__ == "__main__":
 
 
 
-    ##### < HLA2MARKER > #####
+    ##### < b:MarkerGenerator > #####
 
-    g_HLA2MARKER = parser.add_argument_group(title='b:MarkerGenerator', description='')
+    g_b_MarkerGenerator = parser.add_argument_group(title='b:MarkerGenerator', description='')
 
-    g_HLA2MARKER.add_argument("--bmarkergenerator", help="\nGive this argument to implement \"HLA2MARKER\" sub-module.\n\n",
-                              action='store_true')
+    g_b_MarkerGenerator.add_argument("--bmarkergenerator", help="\nGive this argument to implement \"b:MarkerGenerator\" sub-module.\n\n",
+                                     action='store_true')
 
-    g_HLA2MARKER.add_argument("-dict-AA", help="\nPrefix of AA HLA Dictionary file(*.txt, *.map).\n\n")
-    g_HLA2MARKER.add_argument("-dict-SNPS", help="\nPrefix of SNP HLA Dictionary file(*.txt, *.map).\n\n")
+    g_b_MarkerGenerator.add_argument("-dict-AA", help="\nPrefix of AA HLA Dictionary file(*.txt, *.map).\n\n")
+    g_b_MarkerGenerator.add_argument("-dict-SNPS", help="\nPrefix of SNP HLA Dictionary file(*.txt, *.map).\n\n")
 
 
 
@@ -648,32 +648,32 @@ if __name__ == "__main__":
 
 
 
-        # if args.bmarkergenerator:
-        #
-        #     ##### b:MarkerGenerator #####
-        #
-        #     print(std_MAIN_PROCESS_NAME + "Implementing b:MarkerGenerator.")
-        #
-        #     """
-        #     List of necessary arguments.
-        #
-        #     1. -input (*)
-        #     2. -hped or -ped
-        #     3. -hg
-        #     4. -o (*)
-        #     5. --dict-AA
-        #     6. --dict-SNPS
-        #     """
-        #
-        #     from src.b_MarkerGenerator.b_MarkerGenerator import HATK_b_MarkerGenerator
-        #
-        #     HATK_b_MarkerGenerator(HPED=args.hped, _OUT=args.out, _hg=args.hg,
-        #                            _dictionary_AA=__dict_AA__, _dictionary_SNPS=__dict_SNPS__,
-        #                            _plain_SNP_DATA=args.input)
-        #
-        #
-        #
-        #
+        if args.bmarkergenerator:
+
+            ##### b:MarkerGenerator #####
+
+            print(std_MAIN_PROCESS_NAME + "Implementing b:MarkerGenerator.")
+
+            """
+            List of necessary arguments.
+
+            1. -input (*)
+            2. -hped or -ped
+            3. -hg
+            4. -o (*)
+            5. --dict-AA
+            6. --dict-SNPS
+            """
+
+            from src.b_MarkerGenerator.b_MarkerGenerator import HATK_b_MarkerGenerator
+
+            HATK_b_MarkerGenerator(_CHPED=args.chped, _OUT=args.out, _hg=args.hg,
+                                   _dictionary_AA=args.dict_AA, _dictionary_SNPS=args.dict_SNPS,
+                                   _plain_SNP_DATA=args.input)
+
+
+
+
         # if args.logistic:
         #
         #     ##### (Association Test 1) logistic regression(by Plink 1.07) #####
