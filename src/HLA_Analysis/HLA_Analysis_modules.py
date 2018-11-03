@@ -165,23 +165,24 @@ def __hla__Omnibus_Test(_input, _out, _phased, _phe, _phe_name, _covar, _covar_n
 
 
 ### < Meta Analysis >
-def __hla__Meta_Analysis(_out, *assocs):
+def __hla__Meta_Analysis(_out, _rassoc):
 
 
     ### Generating Command
 
-    command = [GLOBAL_p_plink, "--noweb", "--out {0}".format(_out), "--meta-analysis"]
-    command.extend(assocs)
-
+    command = [GLOBAL_p_plink, "--noweb", "--out {0}".format(_out), "--meta-analysis", *_rassoc]
     command = ' '.join(command)
 
 
     # Conducting Meta-Analysis by Plink(v1.07)
 
     print(command)
-    os.system(command)
 
-    return 0
+    if not os.system(command):
+        return (_out + ".meta")
+    else:
+        print(std_ERROR_MAIN_PROCESS_NAME + "Meta-Analysis failed.\n")
+        sys.exit()
 
 
 

@@ -347,35 +347,32 @@ def HATK_ASSOC2_Omnibus_Test(_input, _out, _phased, _phe, _phe_name, _covar, _co
 
 
 
-def META_ANALYSIS(_out, *rassoc):
-
-    print(std_MAIN_PROCESS_NAME + "function META_ANALYSIS().")
+def HATK_META_ANALYSIS(_out, _rassoc):
 
 
     ##### < Argument Checking > #####
 
-    # (1) Output prefix
+    # _out
     if not bool(_out):
-        print(std_MAIN_PROCESS_NAME + "Error! You didn't give output file prefix.\n"
-                                      "Please check \"-o\" option again.")
+        print(std_ERROR_MAIN_PROCESS_NAME + "The argument \"--out\" wasn't given. Please check it again.\n")
+        sys.exit()
+    else:
+        # Intermediate path.
+        _out = _out if not _out.endswith('/') else _out.rstrip('/')
+        if bool(os.path.dirname(_out)): os.makedirs(os.path.dirname(_out), exist_ok=True)
 
-    # (2) Existence of input association result files.
-    for f in rassoc:
 
-        if not os.path.exists(f):
-            print(std_MAIN_PROCESS_NAME + "Error. The file {0} doesn't exist.".format(f))
-            sys.exit()
+    # _rassoc
+    if not (bool(_rassoc) or isinstance(_rassoc, list)):
+        print(std_ERROR_MAIN_PROCESS_NAME + "The argument \"--results-assoc\" has something wrong. Please check it again.\n")
+        sys.exit()
+
 
     # (2018. 8. 6.) As far as input association result files have extension defined by plink(ex. .assoc, .fisher, .assoc.logstic, etc.), Meta-analysis can be conducted.
     # If the result of Omnibus test also could be used in meta-analysis maybe...
 
 
-    ########## < Conducting Meta-Analysis > ##########
-
-    hla_m.__hla__Meta_Analysis(_out, *rassoc)
-
-
-    return 0
+    return hla_m.__hla__Meta_Analysis(_out, _rassoc)
 
 
 

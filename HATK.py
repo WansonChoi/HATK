@@ -752,7 +752,7 @@ if __name__ == "__main__":
 
             ##### Meta-Analysis #####
 
-            print(std_MAIN_PROCESS_NAME + "Implementing Meta-Analysis.\n")
+            print(std_MAIN_PROCESS_NAME + "Implementing Meta-Analysis(Plink1.07).\n")
 
             """
             List of necessary arguments.
@@ -762,9 +762,7 @@ if __name__ == "__main__":
 
             """
 
-            if not bool(args.results_assoc):
-                print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("--results-assoc(-ra)"))
-                sys.exit()
+            __meta__ = HLA_Analysis.HATK_META_ANALYSIS(args.out, args.results_assoc)
 
 
 
