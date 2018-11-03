@@ -13,88 +13,6 @@ std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % (os.path.basename(__file__))
 std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % (os.path.basename(__file__))
 
 
-# def ASSOCIATION_TEST(_bfile, _input, _out,
-#                      _covar, _covar_names,
-#                      _phe, _phe_name,
-#                      _condition, _condition_list,
-#                      _ref_allele, _phased, _threshold,
-#                      _lr, _ob):
-#
-#
-#     ### General Argument Checking for Association Tests.
-#
-#     if bool(_input):
-#
-#         # When "--input" argument is given.
-#         print(std_MAIN_PROCESS_NAME + "Necessary input files are given as common prefix(\"--input(-i)\").")
-#
-#         _bfile = _input
-#         _covar = _input + ".covar"
-#         _phe = _input + ".phe"
-#         _phased = _input + ".aa"
-#
-#     else:
-#
-#         if (not bool(_bfile)):
-#             print(std_ERROR_MAIN_PROCESS_NAME + "You didn't give input file prefix.\n"
-#                                           "Please check \"--bfile\" option again.\n")
-#             sys.exit()
-#
-#
-#
-#     if not bool(_out):
-#         # When "--out" argument is not given.
-#         print(std_ERROR_MAIN_PROCESS_NAME + "You didn't give output file prefix. "
-#                                             "Please check \"-o\" option again.")
-#         sys.exit()
-#
-#
-#
-#     if _lr:
-#
-#         ### Argument Checking for "Logistic Regression".
-#
-#         if not bool(_ref_allele):
-#             # Making default reference allele.
-#             print(std_MAIN_PROCESS_NAME + "Using default reference allele.")
-#             if bool(_bfile):
-#                 _ref_allele = hla_m.MakeDefaultReferenceAllele(_bfile)
-#
-#
-#
-#         ### Conducting Logistic Regression.
-#         print(std_MAIN_PROCESS_NAME + "Conducting Logistic Regression(Plink v1.07).\n")
-#
-#         hla_m.__hla__Logistic_Regression(_bfile, _input, _out,
-#                                          _covar, _covar_names, _phe, _phe_name, _condition, _condition_list, _ref_allele)
-#
-#
-#
-#     if _ob:
-#
-#         ### Argument Checking for "Omnibus Test".
-#
-#         if not bool(_condition) and bool(_condition_list):
-#
-#             # Omnibus doesn't use "--condition-list" but "--condition" only.
-#             print(std_MAIN_PROCESS_NAME + "Error. Omnibus Test should use \"--condition\" not \"--condition-list\".")
-#             sys.exit()
-#
-#         if not bool(_threshold):
-#             # If user doesn't give "--rare-threshold" option, then set it 0 by default.
-#             _threshold = "0"
-#
-#
-#
-#         ### Conducting Omnibus Test.
-#         print(std_MAIN_PROCESS_NAME + "Conducting Omnibus Test.\n")
-#
-#         hla_m.__hla__Omnibus_Test(_bfile, _phased, _phe, _covar,
-#                                   _out, _phe_name, _threshold, _condition)
-#
-#
-#     return 0
-
 
 
 def HATK_ASSOC1_Logistic_Regression(_input, _out, _covar=None, _covar_names=None, _phe=None, _phe_name=None,
@@ -245,15 +163,18 @@ def HATK_ASSOC1_Logistic_Regression(_input, _out, _covar=None, _covar_names=None
 
 
 
-def ASSOC2_Omnibus_Test(_input, _out, _phased, _phe, _phe_name, _covar, _covar_names, _threshold, _condition, _condition_list):
+def HATK_ASSOC2_Omnibus_Test(_input, _out, _phased, _phe, _phe_name, _covar, _covar_names, _condition="NA", _condition_list="NA"):
 
-
+    """
+    Association Test limited to AA markers.
+    """
 
     ##### < Core Variable > #####
 
     PHE = None
     COVAR = None
     PHASED = None
+    BGL = None
 
 
     # _input
@@ -261,9 +182,14 @@ def ASSOC2_Omnibus_Test(_input, _out, _phased, _phe, _phe_name, _covar, _covar_n
         COVAR = (_input + ".covar") if os.path.exists(_input + ".covar") else (_input + ".cov") if os.path.exists(_input + ".cov") else None
         PHE = (_input + ".phe") if os.path.exists(_input + ".phe") else (_input + ".pheno") if os.path.exists(_input + ".pheno") else None
 
+        PHASED = (_input + ".aa") if os.path.exists(_input + ".aa") else None
+        BGL = (_input + ".bgl.phased") if os.path.exists(_input + ".bgl.phased") else None
+
     else:
         print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("--input(-i)"))
         sys.exit()
+
+
 
     # _covar
     if bool(_covar):
@@ -272,11 +198,11 @@ def ASSOC2_Omnibus_Test(_input, _out, _phased, _phe, _phe_name, _covar, _covar_n
         # Change `COVAR` from the one given by "_input" argument to another one given by "_covar" argument.
         if os.path.exists(_covar):
             COVAR = (_covar)
-        elif os.path.exists(_covar):
-            COVAR = (_covar)
         else:
             print(std_ERROR_MAIN_PROCESS_NAME + "The covariate file \"{0}\" given by the argument \"--covar\" doesn't exist. Please check that again.\n")
             sys.exit()
+
+
 
     # _pheno
     if bool(_phe):
@@ -284,49 +210,89 @@ def ASSOC2_Omnibus_Test(_input, _out, _phased, _phe, _phe_name, _covar, _covar_n
         # When the argument "--pheno" is given. (with or without "--pheno-name" argument)
         if os.path.exists(_phe):
             PHE = (_phe)
-        elif os.path.exists(_phe):
-            PHE = (_phe)
         else:
             print(std_ERROR_MAIN_PROCESS_NAME + "The phenotype file \"{0}\" given by the argument \"--pheno\" doesn't exist. Please check that again.\n")
             sys.exit()
 
+        # If pheno file isn't given, then Omnibus Test can't be implemented and will be aborted.
+        # Checking pheno file will be done below with checking pheno_name
+
+
+
     # _covar_names
     if not bool(COVAR):
-
-        # Actually, this part isn't prepared for OmnibusTest.R
 
         print(std_MAIN_PROCESS_NAME + "No Covariate file has given.\n")
 
         if bool(_covar_names):
             print(std_WARNING_MAIN_PROCESS_NAME + "Covaraite file han't given but the argument \"--covar-names\" has given. "
                                                   "The argument \"--covar-names\" will be ignored.\n")
-            _covar_names = None
+            _covar_names = "NA"
     else:
-        print(std_MAIN_PROCESS_NAME + "Given covariate file is \"{0}\"".format(COVAR))
+        if not bool(_covar_names):
+            # covar file given, but covar_name not given.
+            _covar_names = "NA"
+        else:
+            # covar file and covar_name both given. => Just let it be passed to the function.
+            print(std_MAIN_PROCESS_NAME + "Given column name(s) of covariate file is \"{0}\"".format(_covar_names))
+
+
 
     # _pheno_name
     if not bool(PHE):
 
-        print(std_MAIN_PROCESS_NAME + "No Phenotype file has given.\n")
+        print(std_ERROR_MAIN_PROCESS_NAME + "Phenotype information must be given.\n")
+        sys.exit()
 
-        if bool(_phe_name):
-            print(std_WARNING_MAIN_PROCESS_NAME + "Phenotype file han't given but the argument \"--pheno-name\" has given. "
-                                                  "The argument \"--pheno-name\" will be ignored.\n")
-            _phe_name = None
+        # 사실 여기서 ped파일 phenotype까지 확인해다가 ped파일에 phenotype정보 준비된거면 얘를 따로 파일로 빼다가 쓰고,
+        # 아니면 여기서 abort시키는 코드를 추가해야함.
+
+        # 우선 지금은 그냥 phenotype 파일 형태로 안주어지면 무조건 abort시키는 형태로.
+
+        # (2018. 11. 2.) Retrieve this part later.
+        # # On the othre hand, Pheno_name must be given.
+        # print(std_MAIN_PROCESS_NAME + "No Phenotype file has given.\n")
+        #
+        # if bool(_phe_name):
+        #     print(std_WARNING_MAIN_PROCESS_NAME + "Phenotype file han't given but the argument \"--pheno-name\" has given. "
+        #                                           "The argument \"--pheno-name\" will be ignored.\n")
+        #     _phe_name = "NA"
+
     else:
-        print(std_MAIN_PROCESS_NAME + "Given phenotype file is \"{0}\"".format(PHE))
+        if not bool(_phe_name):
+            # phenotype file given, but phenotype_name not given.
+            print(std_ERROR_MAIN_PROCESS_NAME + "Phenotype file has given({0}), but Phenotype name(\"--pheno-name\") hasn't given".format(_phe))
+            sys.exit()
+        else:
+            # phenotype file and phenotype_name both given. => Just let it be passed to the function.
+            print(std_MAIN_PROCESS_NAME + "Given column name(s) of phenotype file is \"{0}\"".format(_phe_name))
+
+
 
     # _codition and _condition_list
     if bool(_condition) and bool(_condition_list):
+
         print(std_ERROR_MAIN_PROCESS_NAME + "Either \"{0}\" or \"{1}\" should be given.\n".format("--condition", "--conditino-list"))
         sys.exit()
 
     elif not bool(_condition) and bool(_condition_list):
 
-        # When _condition_list is given.
+        """
+        OmnibusTest script works only with condition_list not with condition as file.
+        This code block is useless but some function to transform the contents of condition file to condition_list would be great.
+        """
+
+        # _condition_list(given as file)
         if not os.path.isfile(_condition_list):
             print(std_ERROR_MAIN_PROCESS_NAME + "Given file of the argument \"{0}\" doesn't exist. Please check it again.\n".format(_condition_list))
             sys.exit()
+
+    elif bool(_condition) and not bool(_condition_list):
+
+        # _condition(given as csv string) => Just let it be passed to the function.
+        pass
+
+
 
     # _out
     if not bool(_out):
@@ -335,23 +301,47 @@ def ASSOC2_Omnibus_Test(_input, _out, _phased, _phe, _phe_name, _covar, _covar_n
     else:
         # Intermediate path.
         _out = _out if not _out.endswith('/') else _out.rstrip('/')
-        INTERMEDIATE_PATH = os.path.dirname(_out)
+        if bool(os.path.dirname(_out)): os.makedirs(os.path.dirname(_out), exist_ok=True)
 
-        if not os.path.exists(INTERMEDIATE_PATH):
-            os.system(' '.join(["mkdir", "-p", INTERMEDIATE_PATH]))
 
 
     # _phased
     if bool(_phased):
+
         if os.path.exists(_phased):
+            # Whatever *.aa file was given by the argument "--intput" or not, it will be overridden by "--phased" argument.
             PHASED = _phased
         else:
-            PHASED = hla_m.__hla__GetPhasedAlleles(_input, _out)
-            ### (2018. 10. 11.) 여기 잠깐 보류해놓음. 나중에 각 implementation wrapper 각각 도입하고 여기좀 다시 돌아올것.
+
+            # (1) *.aa파일이 어떤 이유에서든 존재하진 않으나 *.bgl.phased 파일로 *.aa파일은 만들 수 있는 경우.
+            # (2) *.bgl.phased파일도 --input argument로 안주어지는 경우.
 
 
+            if not bool(PHASED):
 
-    return hla_m.__hla__Omnibus_Test
+                # *.aa file can't be acquired by either "--input" or "--phased".
+
+                if bool(BGL):
+                    PHASED = hla_m.__hla__GetPhasedAlleles(_input, _out)
+                else:
+                    print(std_ERROR_MAIN_PROCESS_NAME + "None of phased file(*.aa) or beagle phased file(*.bgl.phased) given. Please check them again.\n")
+                    sys.exit()
+
+            else:
+                # *.aa file is prepared by "--input" argument. Just let it pass to the function.
+                pass
+
+    """
+    ### (2018. 10. 11.) 여기 잠깐 보류해놓음. 나중에 각 implementation wrapper 각각 도입하고 여기좀 다시 돌아올것.
+    ### (2018. 11. 1.) 여기 또 아직 해결 안 된 문제가 뭐였냐면 covar, pheno파일의 특정 컬럼을 covar_name, pheno_name으로 지시 못하는거.
+    
+    # (2018. 11. 2.)
+    아직도 해결 안된 문제 : 
+    (1) phenotype file & pheno-name형태로 주어지지 않고 그냥 ped에 phenotype 정보가 주어지는 경우,
+    (2) Condition이 파일로 주어진 경우, csv string으로 바꾸는 기능.
+    """
+
+    return hla_m.__hla__Omnibus_Test(_input, _out, PHASED, PHE, _phe_name, COVAR, _covar_names, _condition)
 
 
 

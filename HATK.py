@@ -680,7 +680,7 @@ if __name__ == "__main__":
 
         if args.logistic:
 
-            ##### (Association Test 1) logistic regression(by Plink 1.07) #####
+            ##### (Association Test 1) Logistic regression(by Plink 1.07) #####
 
             print(std_MAIN_PROCESS_NAME + "Implementing Logistic Regression(Association Test, plink 1.07).")
 
@@ -713,77 +713,61 @@ if __name__ == "__main__":
 
 
 
-        # if args.omnibus:
-        #
-        #     ##### (Association Test 2) Omnibus Test #####
-        #
-        #     print(std_MAIN_PROCESS_NAME + "Implementing Omnibus Test(Association Test).")
-        #
-        #     """
-        #     List of necessary arguments.
-        #
-        #     1. --input
-        #     2. -o (*)
-        #     3. --phased
-        #     4. --pheno
-        #     5. --pheno-name
-        #     6. --covar
-        #     7. --covar-names
-        #     8. --rare-threshold (2018. 10. 04.) Postponed.
-        #     9. --condition
-        #     10. --condition-list
-        #
-        #     """
-        #
-        #     # --phased(.aa)
-        #     if not bool(args.phased):
-        #         print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("--phased"))
-        #         sys.exit()
-        #
-        #     # --pheno
-        #     if not bool(args.pheno):
-        #         print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("--pheno"))
-        #         sys.exit()
-        #     else:
-        #         # Phenotype file is given but the name of phenotype to use isn't given.
-        #         if not bool(args.pheno_name):
-        #             print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("--pheno-name"))
-        #             sys.exit()
-        #
-        #
-        #     # (2018. 10. 04.) Postponed.
-        #     # # --rare-threshold
-        #     # if not bool(args.rare_threshold):
-        #     #     print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("--rare-threshold"))
-        #     #     sys.exit()
-        #
-        #
-        #     from src.HLA_Analysis.HLA_Analysis import ASSOC2_Omnibus_Test
-        #
-        #     ASSOC2_Omnibus_Test(_input=args.input, _out=args.out, _phased=args.phased, _phe=args.pheno, _phe_name=args.pheno_name,
-        #                         _covar=args.covar, _covar_names=args.covar_name)
-        #
-        #
-        # if args.meta_analysis:
-        #
-        #     ##### Meta-Analysis #####
-        #
-        #     print(std_MAIN_PROCESS_NAME + "Implementing Meta-Analysis.\n")
-        #
-        #     """
-        #     List of necessary arguments.
-        #
-        #     1. -o (*)
-        #     2. -ra
-        #
-        #     """
-        #
-        #     if not bool(args.results_assoc):
-        #         print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("--results-assoc(-ra)"))
-        #         sys.exit()
-        #
-        #
-        #
+        if args.omnibus:
+
+            ##### (Association Test 2) Omnibus Test #####
+
+            print(std_MAIN_PROCESS_NAME + "Implementing Omnibus Test(Association Test).")
+
+            """
+            List of necessary arguments.
+
+            1. --input
+            2. -o (*)
+            3. --phased
+            4. --pheno
+            5. --pheno-name
+            6. --covar
+            7. --covar-names
+            8. --rare-threshold (2018. 10. 04.) Postponed.
+            9. --condition
+            10. --condition-list
+
+
+            phased파일이 주어질 수 있는 방식이 크게 두가지인거지
+            
+            1. output prefix공유해서 같이 input으로 같이 활용되든지
+            2. 아니면 --phased로 따로 주든지.
+            
+            그리고 다시 한번 정리하자면 phased옵션과 관련해서 가장 중요한건 *.fam파일과 .bgl.phased파일임. 
+            """
+
+            HLA_Analysis.HATK_ASSOC2_Omnibus_Test(_input=args.input, _out=args.out, _phased=args.phased,
+                                                  _phe=args.pheno, _phe_name=args.pheno_name,
+                                                  _covar=args.covar, _covar_names=args.covar_name,
+                                                  _condition=args.condition, _condition_list=args.condition_list)
+
+
+        if args.meta_analysis:
+
+            ##### Meta-Analysis #####
+
+            print(std_MAIN_PROCESS_NAME + "Implementing Meta-Analysis.\n")
+
+            """
+            List of necessary arguments.
+
+            1. -o (*)
+            2. -ra
+
+            """
+
+            if not bool(args.results_assoc):
+                print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("--results-assoc(-ra)"))
+                sys.exit()
+
+
+
         # if args.manhattan:
         #
         #     ##### manhattan #####

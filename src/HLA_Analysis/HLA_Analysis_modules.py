@@ -12,6 +12,8 @@ import pandas as pd
 
 
 std_MAIN_PROCESS_NAME = "\n[%s]: " % (os.path.basename(__file__))
+std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % (os.path.basename(__file__))
+std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % (os.path.basename(__file__))
 
 GLOBAL_p_plink = "./dependency/plink" if os.path.isfile("./dependency/plink") else which("plink")
 GLOBAL_p_Rscript = which("Rscript")
@@ -115,7 +117,7 @@ def __hla__GetPhasedAlleles(_input, _bgl_phased, _out):
     return _out + ".aa"
 
 
-def __hla__Omnibus_Test(_input, _phased, _phe, _covar, _out, _phe_name, _threshold, _condition):
+def __hla__Omnibus_Test(_input, _out, _phased, _phe, _phe_name, _covar, _covar_name="NA", _condition="NA"):
 
     """
 
@@ -132,8 +134,8 @@ def __hla__Omnibus_Test(_input, _phased, _phe, _covar, _out, _phe_name, _thresho
 
     ### Argument Processing && Generating Command.
 
-    command = [GLOBAL_p_Rscript, "src/HLA_Analysis/AssociationTest/OmnibusTest_BHv4.R",
-               _input + ".fam", _phased, _phe, _covar, _out, _phe_name, _threshold]
+    command = [GLOBAL_p_Rscript, "src/HLA_Analysis/AssociationTest/OmnibusTest_BHv5.R",
+               _out, _input + ".fam", _phased, _phe, _phe_name, _covar, _covar_name]
 
     if bool(_condition):
         command.append(_condition)
@@ -143,10 +145,15 @@ def __hla__Omnibus_Test(_input, _phased, _phe, _covar, _out, _phe_name, _thresho
     command = ' '.join(command)
     print(command)
 
-    os.system(command)
+
+    if not os.system(command):
+        return (_out + ".omnibus")
+    else:
+        print(std_ERROR_MAIN_PROCESS_NAME + "Omnibus Test failed.\n")
+        sys.exit()
 
 
-    return (_out + ".omnibus")
+
 
 
 
