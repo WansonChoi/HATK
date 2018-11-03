@@ -698,15 +698,6 @@ if __name__ == "__main__":
 
             """
 
-            if not bool(args.covar) and bool(args.covar_name):
-                print(std_WARNING_MAIN_PROCESS_NAME + 'You gave "{0}" argument while "{1}" wasn\'t given. The argument "{0}" will be ignored.\n'.format("--covar-name", "--covar"))
-                args.covar_name = None
-
-            if not bool(args.pheno) and bool(args.pheno_name):
-                print(std_WARNING_MAIN_PROCESS_NAME + 'You gave "{0}" argument while "{1}" wasn\'t given. The argument "{0}" will be ignored.\n'.format("--pheno-name", "--pheno"))
-                args.pheno_name = None
-
-
             t_result_logistic = HLA_Analysis.HATK_ASSOC1_Logistic_Regression(
                 args.input, args.out, args.covar, args.covar_name, args.pheno, args.pheno_name,
                 args.condition, args.condition_list, args.reference_allele)
@@ -766,40 +757,40 @@ if __name__ == "__main__":
 
 
 
-        # if args.manhattan:
-        #
-        #     ##### manhattan #####
-        #
-        #     print(std_MAIN_PROCESS_NAME + "Implementing Manhattan(Plotting).")
-        #
-        #     """
-        #     List of necessary arguments.
-        #
-        #     1. --result-assoc
-        #     2. --out (*)
-        #     3. -hg
-        #
-        #     (optionals)
-        #     4. --point-color
-        #     5. --top-color
-        #     """
-        #
-        #     if not bool(args.results_assoc):
-        #         print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("--results-assoc(-ra)"))
-        #         sys.exit()
-        #
-        #     if not bool(args.hg):
-        #         print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("-hg"))
-        #         sys.exit()
-        #
-        #
-        #     from src.HLA_Analysis.Plotting.manhattanplot.manhattan import manhattan
-        #
-        #     manhattan(_results_assoc=args.results_assoc, _out=args.out, _hg=args.hg,
-        #               _pointcol=args.point_color, _topcol=args.top_color)
-        #
-        #
-        #
+        if args.manhattan:
+
+            ##### manhattan #####
+
+            print(std_MAIN_PROCESS_NAME + "Implementing Manhattan(Plotting).")
+
+            """
+            List of necessary arguments.
+
+            1. --result-assoc
+            2. --out (*)
+            3. -hg
+
+            (optionals)
+            4. --point-color
+            5. --top-color
+            """
+
+            if not bool(args.results_assoc):
+                print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("--results-assoc(-ra)"))
+                sys.exit()
+
+            if not bool(args.hg):
+                print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("-hg"))
+                sys.exit()
+
+
+            from src.HLA_Analysis.Plotting.manhattanplot.manhattan import manhattan
+
+            manhattan(_results_assoc=args.results_assoc, _out=args.out, _hg=args.hg,
+                      _pointcol=args.point_color, _topcol=args.top_color)
+
+
+
         # if args.heatmap:
         #
         #     ##### heatmap #####
