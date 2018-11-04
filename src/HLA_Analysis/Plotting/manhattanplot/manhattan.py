@@ -20,6 +20,7 @@ std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % (os.path.basename(__file__
 def HATK_manhattan(_results_assoc, _plot_label, _out, _hg, _pointcol="#778899", _topcol="#FF0000", _min_pos="29.60E6", _max_pos="33.2E6",
                    _p_Rscript=which("Rscript")):
 
+
     if not isinstance(_results_assoc, list):
         print(std_ERROR_MAIN_PROCESS_NAME + "The argument \"--logistic-result(-lr)\" wansn't given as list. Please check it again.\n")
     else:
@@ -29,7 +30,21 @@ def HATK_manhattan(_results_assoc, _plot_label, _out, _hg, _pointcol="#778899", 
                 print(std_ERROR_MAIN_PROCESS_NAME + "The given association result file({0}) doesn't exist. Please check it again.\n".format(item))
                 sys.exit()
 
-    return manhattan(_results_assoc, _plot_label, _out, _hg, _pointcol="#778899", _topcol="#FF0000", _min_pos="29.60E6", _max_pos="33.2E6",
+
+    if not bool(_out):
+        print(std_ERROR_MAIN_PROCESS_NAME + "The argument \"--out\" wasn't given. Please check it again.\n")
+        sys.exit()
+
+    if not bool(_hg):
+        print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("-hg"))
+        sys.exit()
+
+    if not bool(_plot_label):
+        _plot_label = " "
+
+
+    return manhattan(_results_assoc, _plot_label, _out, _hg,
+                     _pointcol="#778899", _topcol="#FF0000", _min_pos="29.60E6", _max_pos="33.2E6",
                      _p_Rscript=which("Rscript"))
 
 
@@ -50,11 +65,7 @@ def manhattan(_results_assoc, _plot_label, _out, _hg, _pointcol="#778899", _topc
 
     # Intermediate path.
     _out = _out if not _out.endswith('/') else _out.rstrip('/')
-    INTERMEDIATE_PATH = os.path.dirname(_out)
-
-    if not os.path.exists(INTERMEDIATE_PATH):
-        os.system(' '.join(["mkdir", "-p", INTERMEDIATE_PATH]))
-
+    if bool(os.path.dirname(_out)): os.makedirs(os.path.dirname(_out), exist_ok=True)
 
     # Point color
     _pointcol = re.escape(_pointcol if _pointcol.startswith('#') else ("#"+_pointcol))

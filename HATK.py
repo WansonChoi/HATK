@@ -208,6 +208,7 @@ if __name__ == "__main__":
     g_manhattan = parser.add_argument_group(title='(Plotting 2) Manhattan', description='')
     g_manhattan.add_argument("--manhattan", help="\nGenerate Manhattan Plot.\n\n", action="store_true")
 
+    g_manhattan.add_argument("--title", "-pt", help="\nThe title of output plot.\n\n")
     g_manhattan.add_argument("--point-color", "-pc", help="\nPoint color(ex. \"#778899\").\n\n", default="#778899")
     g_manhattan.add_argument("--top-color", "-tc", help="\nTop signal point color(ex. \"#FF0000\").\n\n", default="#FF0000")
 
@@ -775,19 +776,9 @@ if __name__ == "__main__":
             5. --top-color
             """
 
-            if not bool(args.results_assoc):
-                print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("--results-assoc(-ra)"))
-                sys.exit()
+            __manhattan__ = HATK_manhattan(args.results_assoc, args.title, args.out, args.hg,
+                                           _pointcol=args.point_color, _topcol=args.top_color)
 
-            if not bool(args.hg):
-                print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("-hg"))
-                sys.exit()
-
-
-            from src.HLA_Analysis.Plotting.manhattanplot.manhattan import manhattan
-
-            manhattan(_results_assoc=args.results_assoc, _out=args.out, _hg=args.hg,
-                      _pointcol=args.point_color, _topcol=args.top_color)
 
 
 
@@ -800,6 +791,8 @@ if __name__ == "__main__":
         #     """
         #     List of necessary arguments.
         #     """
+
+
 
 
         if args.hla2hped:
