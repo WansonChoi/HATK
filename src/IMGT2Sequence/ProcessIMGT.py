@@ -403,7 +403,7 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc="Not_given", _gen="Not_given", _pro
 
 
         # Maptable in Heatmap. (2018. 10. 26.)
-        __MAPTABLE__ = os.path.join(INTERMEDIATE_PATH, "HLA_MAPTABLE.{0}.hg{1}.imgt{2}.txt".format(_hla, _hg, _imgt))
+        __MAPTABLE__ = os.path.join(INTERMEDIATE_PATH, "HLA_MAPTABLE_{0}.hg{1}.imgt{2}.txt".format(_hla, _hg, _imgt))
         df_Markers_prot.to_csv(__MAPTABLE__, sep='\t', header=True, index=True)
 
 

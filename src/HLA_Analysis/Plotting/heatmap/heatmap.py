@@ -27,6 +27,35 @@ def HATK_HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_logistic_AA, _p_assoc_lo
                  _p_heatmapR="./src/HLA_Analysis/plot/heatmap/8b_plot_WS.R"):
 
 
+    # _hla_name ("--HLA")
+    if not bool(_hla_name):
+        print(std_ERROR_MAIN_PROCESS_NAME + "The argument \"{0}\" wasn't given. Please check it again.\n".format("--HLA"))
+        sys.exit()
+
+        # Checking whether `_hla_name` belongs to ['A', 'B', 'C', 'DPA1', 'DPB1', 'DQA1', 'DQB1', 'DRB1'] is done in argparse codes.
+
+
+    # _out ("--out")
+    if not bool(_out):
+        print(std_ERROR_MAIN_PROCESS_NAME + "The argument \"{0}\" wasn't given. Please check it again.\n".format("--out"))
+        sys.exit()
+
+
+    # _p_maptable ("--maptable")
+    if not bool(_out):
+        print(std_ERROR_MAIN_PROCESS_NAME + "The argument \"{0}\" wasn't given. Please check it again.\n".format("--maptable"))
+        sys.exit()
+    else:
+        # HLA name and Maptable.
+        p = re.compile(r"HLA_MAPTABLE_{0}".format(_hla_name))
+        m = p.search(_p_maptable)
+        print(_p_maptable)
+
+        if not m:
+            print(std_ERROR_MAIN_PROCESS_NAME + "Given maptable file(\"{0}\") doesn't match to given HLA gene(\"{1}\"). Please check them again.\n".format(_p_maptable, _hla_name))
+            sys.exit()
+
+
     # Logistic regression results
     if not (bool(_p_assoc_logistic_AA) and bool(_p_assoc_logistic_HLA)):
         print(std_ERROR_MAIN_PROCESS_NAME + "Necessary logistic regression results weren't given properly. Please check them again.\n(\"{0}\",\"{1}\")".format(_p_assoc_logistic_AA, _p_assoc_logistic_HLA))
@@ -37,7 +66,7 @@ def HATK_HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_logistic_AA, _p_assoc_lo
 
 
 
-    return HEATMAP(_hla_name, _out, None, _p_maptable, _p_assoc_logistic_AA, _p_assoc_logistic_HLA,
+    return HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_logistic_AA, _p_assoc_logistic_HLA,
                  _p_assoc_logistic_MERGED=None, _4field=False, _oldv=False, _p_Rscript=p_Rscript,
                  _p_heatmapR="src/HLA_Analysis/Plotting/heatmap/8b_plot_WS.R")
 
@@ -46,7 +75,7 @@ def HATK_HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_logistic_AA, _p_assoc_lo
 
 
 
-def HEATMAP(_hla_name, _out, _input, _p_maptable, _p_assoc_logistic_AA, _p_assoc_logistic_HLA, _p_assoc_logistic_MERGED,
+def HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_logistic_AA, _p_assoc_logistic_HLA, _p_assoc_logistic_MERGED,
             _4field=False, _oldv=False, _p_Rscript=p_Rscript, _No_Intermediates=True,
             _p_heatmapR="src/HLA_Analysis/Plotting/heatmap/8b_plot_WS.R"):
 
@@ -82,15 +111,9 @@ def HEATMAP(_hla_name, _out, _input, _p_maptable, _p_assoc_logistic_AA, _p_assoc
     # MARKERS = pd.DataFrame()
 
 
-    ########## < Additional Argument Checking. > ##########
-
-    # When "_input" argument is given
-    if bool(_input):
-
-        # Override every prefix of dependent files.
-        _p_maptable = _input + ".txt"
-        _p_assoc_logistic = _input+".assoc.logistic"
-        _bim_merged = _input+".bim" # It is natural that "*.AA.bim" and "*.HLA.bim" are given as merged .bim file.
+    # Intermediate path.
+    _out = _out if not _out.endswith('/') else _out.rstrip('/')
+    if bool(os.path.dirname(_out)): os.makedirs(os.path.dirname(_out), exist_ok=True)
 
 
 
@@ -136,8 +159,8 @@ def HEATMAP(_hla_name, _out, _input, _p_maptable, _p_assoc_logistic_AA, _p_assoc
         # ASSOC_LOGISTIC = pd.read_table(_p_assoc_logistic, header=0, sep='\s+', usecols=["SNP", "P", "OR", "A1"]
         #                                ).set_index("SNP", drop=False).filter(regex="_".join(["AA", _hla_name]), axis=0).reset_index(drop=True)
 
-        p_AA_marker = re.compile("AA_{0}_".format(_hla_name))
-        p_HLA_marker = re.compile("HLA_{0}".format(_hla_name))
+        p_AA_marker = re.compile(r"AA_{0}_".format(_hla_name))
+        p_HLA_marker = re.compile(r"HLA_{0}".format(_hla_name))
 
         # Just classify the cases where *.assoc.logistic files are given separately or not.
         if (bool(_p_assoc_logistic_AA) and bool(_p_assoc_logistic_HLA)) and not bool(_p_assoc_logistic_MERGED):
@@ -171,12 +194,20 @@ def HEATMAP(_hla_name, _out, _input, _p_maptable, _p_assoc_logistic_AA, _p_assoc
             print(std_ERROR_MAIN_PROCESS_NAME + "Check the file names of \"*.assoc.logistic.\"")
 
 
-        # The number of rows
+        # Checking subsetted logistic regression result.
         if ASSOC_LOGISTIC_AA.shape[0] == 0:
-            print(std_ERROR_MAIN_PROCESS_NAME + "The logistic regression result of AA markers has 0 rows. Please check it again.\n")
+            print(std_ERROR_MAIN_PROCESS_NAME + "The subsetted logistic regression result of AA markers has 0 rows(0 markers). Please check next 2 possible cases.\n"
+                                                "(1) Given logistic regression file for AA markers(\"{0}\") has 0 markers at first, or\n"
+                                                "(2) Given logistic regression file for AA markers doesn't have markers which belongs to target HLA gene(\"{1}\"). "
+                                                .format(_p_assoc_logistic_HLA, _hla_name))
             return -1
-        elif ASSOC_LOGISTIC_HLA.shape[0] == 0:
-            print(std_ERROR_MAIN_PROCESS_NAME + "The logistic regression result of HLA markers has 0 rows. Please check it again.\n")
+
+        if ASSOC_LOGISTIC_HLA.shape[0] == 0:
+            print(std_ERROR_MAIN_PROCESS_NAME + "The subsetted logistic regression result of HLA markers has 0 rows(0 markers). Please check next 2 possible cases.\n"
+                                                "(1) Given logistic regression file for HLA markers(\"{0}\") has 0 markers at first, or\n"
+                                                "(2) Given logistic regression file for HLA markers doesn't have markers which belongs to target HLA gene(\"{1}\"). "
+                                                .format(_p_assoc_logistic_HLA, _hla_name))
+
             return -1
 
 
@@ -705,18 +736,18 @@ if __name__ == "__main__" :
     #                           "-lrH", "/Users/wansun/Data/HATK/data/HLA_Analysis/AssociationTest/CancerResearch_Example/MARKER_PANEL/data_Rev_merged.HLA.assoc.logistic",
     #                           ])
 
-    # (2018. 10. 29.) HATK Integration test
-    args = parser.parse_args(["-hla", "A",
-                              "-o", "/Users/wansun/Git_Projects/HATK/tests/_0_wholeProcess/HAPMAP_CEU/outputs/removelater.A",
-                              "-hd", "/Users/wansun/Git_Projects/HATK/tests/_0_wholeProcess/HAPMAP_CEU/outputs/HLA_MAPTABLE.A.hg18.imgt370.txt",
-                              "-lrA", "/Users/wansun/Git_Projects/HATK/tests/_0_wholeProcess/HAPMAP_CEU/outputs/removelater.AA.CODED.assoc.logistic",
-                              "-lrH", "/Users/wansun/Git_Projects/HATK/tests/_0_wholeProcess/HAPMAP_CEU/outputs/removelater.HLA.assoc.logistic",
-                              ])
+    # # (2018. 10. 29.) HATK Integration test
+    # args = parser.parse_args(["-hla", "A",
+    #                           "-o", "/Users/wansun/Git_Projects/HATK/tests/_0_wholeProcess/HAPMAP_CEU/outputs/removelater.A",
+    #                           "-hd", "/Users/wansun/Git_Projects/HATK/tests/_0_wholeProcess/HAPMAP_CEU/outputs/HLA_MAPTABLE.A.hg18.imgt370.txt",
+    #                           "-lrA", "/Users/wansun/Git_Projects/HATK/tests/_0_wholeProcess/HAPMAP_CEU/outputs/removelater.AA.CODED.assoc.logistic",
+    #                           "-lrH", "/Users/wansun/Git_Projects/HATK/tests/_0_wholeProcess/HAPMAP_CEU/outputs/removelater.HLA.assoc.logistic",
+    #                           ])
 
 
     ##### < for Publish > #####
 
-    # args = parser.parse_args()
+    args = parser.parse_args()
     print(args)
     # print(vars(args))
 
@@ -726,7 +757,7 @@ if __name__ == "__main__" :
 
 
     # main function execution.
-    HEATMAP(_hla_name=args.hla, _out=args.o, _input=args.input, _p_maptable=args.hla_dict,
+    HEATMAP(_hla_name=args.hla, _out=args.o, _p_maptable=args.hla_dict,
             _p_assoc_logistic_AA=args.logistic_result_AA, _p_assoc_logistic_HLA=args.logistic_result_HLA,
             _p_assoc_logistic_MERGED=args.logistic_result_MERGED,
             _p_heatmapR="/Users/wansun/Git_Projects/HATK/src/HLA_Analysis/Plotting/heatmap/8b_plot_WS.R",
