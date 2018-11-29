@@ -169,7 +169,8 @@ colnames(P)[ncol(P)]=""
 
 brew=rev(brewer.pal(11,"Spectral"))
 
-pdf(paste0(args5.plot.outf_, ".pdf"), width=7, height=5.2, pointsize=8) # argument[5]
+# pdf(paste0(args5.plot.outf_, ".pdf"), width=7, height=5.2, pointsize=8) # argument[5]
+pdf(paste0(args5.plot.outf_, ".pdf"), width=7*2, height=5.2*2, pointsize=8) # argument[5] # (2018. 11. 29.) plot size problem is ongoing.
 par(mar=c(5,4,4,3))
 
 mycol=colorRampPalette(brew)(100)

@@ -206,7 +206,7 @@ if __name__ == "__main__":
 
 
 
-    ### manhattand
+    ### manhattan
 
     g_manhattan = parser.add_argument_group(title='(Plotting 2) Manhattan', description='')
     g_manhattan.add_argument("--manhattan", help="\nGenerate Manhattan Plot.\n\n", action="store_true")
@@ -550,23 +550,23 @@ if __name__ == "__main__":
 
         print(__Heatmap_Result__)
 
-        # # Manhattan
-        #
-        # __Manhattan_Result__ = []
-        #
-        # # AA plot
-        # __Manhattan_Result__.append(HATK_manhattan([__Logistic_Result__[0]], "Amino Acid Manhattan", args.out+".manhattan.AA", args.hg))
-        #
-        # # HLA plot
-        # __Manhattan_Result__.append(HATK_manhattan([__Logistic_Result__[1]], "HLA markers", args.out+".manhattan.HLA", args.hg))
-        #
-        # # Stacked plot
-        # __Manhattan_Result__.append(HATK_manhattan(__Logistic_Result__[0:3], "AA - HLA - SNPS Manhattan", args.out+".manhattan.ALL", args.hg))
-        #
-        # # Merged markers plot
-        # __Manhattan_Result__.append(HATK_manhattan([__Logistic_Result__[3]], "Merged(AA,HLA,SNPS) Manhattan", args.out+".manhattan.MERGED", args.hg))
-        #
-        # print(__Manhattan_Result__)
+        # Manhattan
+
+        __Manhattan_Result__ = []
+
+        # AA plot
+        __Manhattan_Result__.append(HATK_manhattan([__Logistic_Result__[0]], "Amino Acid Manhattan", args.out+".manhattan.AA", args.hg))
+
+        # HLA plot
+        __Manhattan_Result__.append(HATK_manhattan([__Logistic_Result__[1]], "HLA markers", args.out+".manhattan.HLA", args.hg))
+
+        # Stacked plot
+        __Manhattan_Result__.append(HATK_manhattan(__Logistic_Result__[0:3], "AA - HLA - SNPS Manhattan", args.out+".manhattan.ALL", args.hg))
+
+        # Merged markers plot
+        __Manhattan_Result__.append(HATK_manhattan([__Logistic_Result__[3]], "Merged(AA,HLA,SNPS) Manhattan", args.out+".manhattan.MERGED", args.hg))
+
+        print(__Manhattan_Result__)
 
 
 
