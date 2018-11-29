@@ -435,7 +435,7 @@ if __name__ == "__main__":
 
                         ### Call IMGT2Sequence
 
-                        __dict_AA__, __dict_SNPS__, __IAT__, __d_MapTable__ = HATK_IMGT2Sequence(args.hg, args.out, args.imgt, _imgt_dir=args.imgt_dir)
+                        __dict_AA__, __dict_SNPS__, __IAT__, __d_MapTable__ = HATK_IMGT2Sequence(args.hg, args.out, args.imgt, _imgt_dir=args.imgt_dir, _no_MultiP=args.no_multiprocess)
 
                         print(std_MAIN_PROCESS_NAME + "(IMGT2Sequence)")
                         print("Newly prepared \"AA_Dictionary\": {0}".format(__dict_AA__))
@@ -479,7 +479,7 @@ if __name__ == "__main__":
 
             ### Call IMGT2Sequence
 
-            __dict_AA__, __dict_SNPS__, __IAT__, __d_MapTable__ = HATK_IMGT2Sequence(args.hg, args.out, args.imgt, _imgt_dir=args.imgt_dir)
+            __dict_AA__, __dict_SNPS__, __IAT__, __d_MapTable__ = HATK_IMGT2Sequence(args.hg, args.out, args.imgt, _imgt_dir=args.imgt_dir, _no_MultiP=args.no_multiprocess)
 
             print(std_MAIN_PROCESS_NAME + "(IMGT2Sequence)")
             print("Newly prepared \"AA_Dictionary\": {0}".format(__dict_AA__))
