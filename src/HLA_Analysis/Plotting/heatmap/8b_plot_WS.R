@@ -1,8 +1,17 @@
 
 ## v.8b: trying coloring HLA alleles.
 
-require(gplots)
-require(RColorBrewer)
+if("gplots" %in% rownames(installed.packages()) == F){
+  install.packages("gplots")
+}else{
+  require(gplots)
+}
+
+if("RColorBrewer" %in% rownames(installed.packages()) == F){
+  install.packages("RColorBrewer")
+}else{
+  require(RColorBrewer)
+}
 
 
 ########## <Argument Processing> ##########
