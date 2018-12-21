@@ -2,6 +2,7 @@
 
 import os, sys, re
 import logging
+import numpy as np
 import argparse, textwrap
 import src.HLA_Analysis.HLA_Analysis_modules as hla_m
 
@@ -55,8 +56,22 @@ class Study(object):
         self.pheno_name = kwargs["pheno_name"]
         self.covar_name = kwargs["covar_name"]
 
+        self.hped = None
+        self.chped = None
+
+        self.normal_SNPs = None
+        self.phenotype = None
+        self.covar = None
+        self.condition = None
+        self.refallele = None
+
         self.hg = kwargs["hg"]
         self.out = kwargs["out"]
+
+        self.summary_string = \
+        "< Summary info of HLA Study('{}') >\n" \
+        "- Used IAT file : {}\n" \
+        "- Human Genome : hg{}\n".format(self.pheno_name, self.iat, self.hg)
 
 
         if kwargs["input"]:
@@ -90,7 +105,9 @@ class Study(object):
 
 
 
-        ### Determining which type of HLA allele information is given.
+
+
+        ### HLA ped (rhped, hped, or chped).
 
         self.__HLA_type__ = None
 
@@ -99,28 +116,84 @@ class Study(object):
             from src.NomenCleaner.NomenCleaner import HATK_NomenCleaner
             self.__HLA_type__ = HATK_NomenCleaner(HATK_HLA2HPED(self.rhped, self.out, self.platform), 1, self.iat, self.out, 4)
 
-        elif self.hped:
-            from src.NomenCleaner.NomenCleaner import HATK_NomenCleaner
-            self.__HLA_type__ = HATK_NomenCleaner(self.hped, 1, self.iat, self.out, 4)
+            self.summary_string = ''.join([self.summary_string, "- Platform : {}\n".format(self.platform)])
 
         elif self.chped:
             self.__HLA_type__ = self.chped
+
+        elif self.hped:
+            from src.NomenCleaner.NomenCleaner import HATK_NomenCleaner
+            self.__HLA_type__ = HATK_NomenCleaner(self.hped, 1, self.iat, self.out, 4)
 
         else:
             # self.logger.error("Please check the arguments for HLA type data.\n")
             sys.exit()
 
+        self.summary_string = ''.join([self.summary_string, "- (Cleaned) HLA ped: {}\n".format(self.__HLA_type__)])
+
+
+
+        ### Variants (normal SNP variants)
+
+
+        ### Phenotye (*.phe and "--pheno-name")
+
+        print(self.phenotype)
+
+        if self.phenotype:
+
+            if not self.pheno_name:
+
+                # only one phenotype columns is given.
+                f = open(self.phenotype, 'r')
+                columns = re.split(r'\s+', f.readline().rstrip('\n'))
+                f.close()
+
+                if columns[0] == "FID" and columns[1] == "IID":
+                    if len(columns) == 3:
+                        self.pheno_name = columns[2]
+                        self.summary_string = ''.join([self.summary_string,
+                                                       "- Phenotype name : {}\n"
+                                                       "- Phenotype file : {}\n".format(self.pheno_name, self.phenotype)])
+
+                    elif len(columns) > 3:
+                        print(std_ERROR_MAIN_PROCESS_NAME + "The phenotype unspecified.\n"
+                                                            "Please specify the phenotype to use.(\"--pheno-name\")\n")
+                        sys.exit()
+
+                else:
+                    print(std_ERROR_MAIN_PROCESS_NAME + "The header line must start with \"FID\" and \"IID\".\n"
+                                                        "Please check \"http://zzz.bwh.harvard.edu/plink/data.shtml#pheno\"\n")
+                    sys.exit()
+
+        else:
+
+            c_phe = np.genfromtxt(self.__HLA_type__, usecols=[5], dtype=str)
+
+            f_phe = (c_phe == '-9').all()
+
+            if f_phe:
+                print(std_ERROR_MAIN_PROCESS_NAME +
+                      "The phenotype information must be given in the 6th column of \"*.chped\" file or as \"*.phe\" file. "
+                      "Please check the phenotype information of your study.")
+                sys.exit()
+            else:
+                self.summary_string = ''.join([self.summary_string,
+                                               "- Phenotype name : {}\n"
+                                               "- Phenotype file : {}\n".format("Not_given", "Included in the 6th column of \"*.chped\" file.")])
+
+        ### Covariate (*.cov(ar) and "--covar-name")
+
+        ### Reference allele
+
+        ###
+
+
+
+
 
     def __str__(self):
-
-        summary_string = \
-        "< Summary info of HLA Study('{}') >\n" \
-        "- (Cleaned) HLA alleles : {}\n" \
-        "- Used IAT file : {}\n" \
-        "- Human Genome : {}\n".format(self.pheno_name, self.__HLA_type__, self.iat, self.hg)
-
-
-        return summary_string
+        return self.summary_string
 
 
 def HATK_ASSOC1_Logistic_Regression(_input, _out, _covar=None, _covar_names=None, _phe=None, _phe_name=None,
