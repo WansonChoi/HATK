@@ -267,16 +267,6 @@ if __name__ == "__main__":
     ########## < All in One Implementation. > ##########
 
 
-    ### Setting Logger
-
-    file_handler1 = logging.FileHandler(args.out+'.log', mode='w')
-    file_handler1.setFormatter(logging.Formatter((std_MAIN_PROCESS_NAME+'%(message)s')))
-
-    log_HATK = logging.getLogger("HATK")
-    log_HATK.setLevel(logging.INFO)
-    log_HATK.addHandler(file_handler1)
-
-
     ### Setting Output path
     if not args.out:
         print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("--out"))
@@ -285,6 +275,15 @@ if __name__ == "__main__":
         args.out = args.out if not args.out.endswith('/') else args.out.rstrip('/')
         if bool(os.path.dirname(args.out)): os.makedirs(os.path.dirname(args.out), exist_ok=True)
 
+
+    ### Setting Logger
+
+    file_handler1 = logging.FileHandler(args.out+'.log', mode='w')
+    file_handler1.setFormatter(logging.Formatter((std_MAIN_PROCESS_NAME+'%(message)s')))
+
+    log_HATK = logging.getLogger("HATK")
+    log_HATK.setLevel(logging.INFO)
+    log_HATK.addHandler(file_handler1)
 
 
 
