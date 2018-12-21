@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os, sys, re
+import logging
 import argparse, textwrap
 import src.HLA_Analysis.HLA_Analysis_modules as hla_m
 
@@ -13,6 +14,113 @@ std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % (os.path.basename(__file__))
 std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % (os.path.basename(__file__))
 
 
+# (2018. 12. 19.)
+class Study(object):
+
+    def __init__(self, *args, **kwargs):
+
+        """
+        (Data)
+        - HLA allele data (*.rhped, *.hped, *.chped)
+        - Platform info. (AXIOM, etc.)
+        - Normal SNP data (*.ped/*.map or *.bed/*.bim/*.fam)
+        - Phenotype data (*.phe)
+        - Phenotype name
+        - Covariate data (*.cov or *.covar)
+        - Covariate name
+        - Condition data (*.condvars or just string)
+        - Reference allele (*.ref or *.refallele)
+        - Human Genome version
+        - Output Prefix
+
+        ex)
+        mystudy = Study(platform=args.platform, rhped=args.rhped, hped=args.hped, chped=args.chped,
+                        pheno=args.pheno, pheno_name=args.pheno_name, ...)
+
+        * --input := the common prefix to represent
+            (1) *.hped or *.chped
+            (2) normal_SNPs
+            (3) phenotype file(*.phe)
+            (4) covariate file(*.covar)
+            (5) condition (*.condvars)
+            (6) reference allele (*.refallele)
+
+        """
+
+        self.iat = kwargs["iat"]
+
+        self.platform = kwargs["platform"]
+        self.rhped = kwargs["rhped"] # supposed to be 'None' or 'list'
+
+        self.pheno_name = kwargs["pheno_name"]
+        self.covar_name = kwargs["covar_name"]
+
+        self.hg = kwargs["hg"]
+        self.out = kwargs["out"]
+
+
+        if kwargs["input"]:
+            self.hped = kwargs["input"]+".hped" if os.path.exists(kwargs["input"]+".hped") else None
+            self.chped = kwargs["input"]+".chped" if os.path.exists(kwargs["input"]+".chped") else None
+
+            # `normal_SNPs` => just as prefix.
+            self.normal_SNPs = kwargs["input"] if os.path.exists(kwargs["input"]+".bed") and os.path.exists(kwargs["input"]+".bim") and os.path.exists(kwargs["input"]+".fam") else None
+            self.phenotype = kwargs["input"]+".phe" if os.path.exists(kwargs["input"]+".phe") else kwargs["input"]+".pheno" if os.path.exists(kwargs["input"]+".pheno") else None
+            self.covar = kwargs["input"]+".covar" if os.path.exists(kwargs["input"]+".covar") else kwargs["input"]+".cov" if os.path.exists(kwargs["input"]+".cov") else None
+            # `condition` => assuming it is a file with suffix('.condvars')
+            self.condition = kwargs["input"]+".condvars" if os.path.exists(kwargs["input"]+".condvars") else None
+            self.refallele = kwargs["input"]+".refallele" if os.path.exists(kwargs["input"]+".refallele") else kwargs["input"]+".ref" if os.path.exists(kwargs["input"]+".ref") else None
+
+
+        if kwargs["hped"]:
+            self.hped = kwargs["hped"]
+        if kwargs["chped"]:
+            self.chped = kwargs["chped"]
+
+        if kwargs["variants"]:
+            self.normal_SNPs = kwargs["variants"]
+        if kwargs["pheno"]:
+            self.phenotype = kwargs["pheno"]
+        if kwargs["covar"]:
+            self.covar = kwargs["covar"]
+        if kwargs["condition_list"]:
+            self.condition = kwargs["condition_list"]
+        if kwargs["refallele"]:
+            self.refallele = kwargs["refallele"]
+
+
+
+        ### Determining which type of HLA allele information is given.
+
+        self.__HLA_type__ = None
+
+        if self.platform and self.rhped:
+            from src.HLA2HPED.HLA2HPED import HATK_HLA2HPED
+            from src.NomenCleaner.NomenCleaner import HATK_NomenCleaner
+            self.__HLA_type__ = HATK_NomenCleaner(HATK_HLA2HPED(self.rhped, self.out, self.platform), 1, self.iat, self.out, 4)
+
+        elif self.hped:
+            from src.NomenCleaner.NomenCleaner import HATK_NomenCleaner
+            self.__HLA_type__ = HATK_NomenCleaner(self.hped, 1, self.iat, self.out, 4)
+
+        elif self.chped:
+            self.__HLA_type__ = self.chped
+
+        else:
+            # self.logger.error("Please check the arguments for HLA type data.\n")
+            sys.exit()
+
+
+    def __str__(self):
+
+        summary_string = \
+        "< Summary info of HLA Study('{}') >\n" \
+        "- (Cleaned) HLA alleles : {}\n" \
+        "- Used IAT file : {}\n" \
+        "- Human Genome : {}\n".format(self.pheno_name, self.__HLA_type__, self.iat, self.hg)
+
+
+        return summary_string
 
 
 def HATK_ASSOC1_Logistic_Regression(_input, _out, _covar=None, _covar_names=None, _phe=None, _phe_name=None,

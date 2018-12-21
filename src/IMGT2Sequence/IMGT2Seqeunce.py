@@ -13,6 +13,95 @@ std_MAIN_PROCESS_NAME = "\n[%s]: " % (os.path.basename(__file__))
 std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % (os.path.basename(__file__))
 
 
+class HLA_Dictionary(object):
+
+    def __init__(self, *args, **kwargs):
+
+        self.hg = kwargs["hg"]
+        self.imgt = kwargs["imgt"]
+
+        self.__dict_AA__ = None
+        self.__dict_SNPS__ = None
+        self.__IAT__ = None
+        self.__d_MapTable__ = None
+
+        self.f__dict_AA__ = False
+        self.f__dict_SNPS__ = False
+        self.f__IAT__ = False
+        self.f__d_MapTable__ = False
+
+
+        dir_path = os.path.dirname(kwargs["out"])
+        version_label = "hg{}.imgt{}".format(self.hg, self.imgt)
+
+        # expected results
+
+        # (1) dict_AA
+        dict_AA_txt = os.path.join(dir_path, "HLA_DICTIONARY_AA.{}.txt".format(version_label))
+        dict_AA_map = os.path.join(dir_path, "HLA_DICTIONARY_AA.{}.map".format(version_label))
+
+        if os.path.exists(dict_AA_txt) and os.path.exists(dict_AA_map):
+            self.__dict_AA__ = os.path.join(dir_path, "HLA_DICTIONARY_AA.{}".format(version_label))
+            self.f__dict_AA__ = True
+
+        # (2) dict_SNPS
+        dict_SNPS_txt = os.path.join(dir_path, "HLA_DICTIONARY_SNPS.{}.txt".format(version_label))
+        dict_SNPS_map = os.path.join(dir_path, "HLA_DICTIONARY_SNPS.{}.map".format(version_label))
+
+        if os.path.exists(dict_SNPS_txt) and os.path.exists(dict_SNPS_map):
+            self.__dict_SNPS__ = os.path.join(dir_path, "HLA_DICTIONARY_SNPS.{}".format(version_label))
+            self.f__dict_SNPS__ = True
+
+        # (3) iat
+        iat = os.path.join(dir_path, "HLA_INTEGRATED_ALLELE_TABLE.{}.iat".format(version_label))
+
+        if os.path.exists(iat):
+            self.__IAT__ = iat
+            self.f__IAT__ = True
+
+        # (4) maptables
+        HLA_names = ["A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1"]
+        self.__d_MapTable__ = {hla_name: None for hla_name in HLA_names}
+
+        f_temp = True
+
+        for hla_name in HLA_names:
+            t_maptable = os.path.join(dir_path, "HLA_MAPTABLE_{}.{}.txt".format(hla_name, version_label))
+            if os.path.exists(t_maptable):
+                self.__d_MapTable__[hla_name] = t_maptable
+            else:
+                f_temp = False
+
+        self.f__d_MapTable__ = f_temp
+
+
+
+    def __bool__(self):
+        return (self.f__dict_AA__ and self.f__dict_SNPS__ and self.f__IAT__ and self.f__d_MapTable__)
+
+
+    def __str__(self):
+        t_string = \
+        "< IMGT2Sequence(Using existing results) >\n" \
+        "- HLA Amino Acids : {}\n" \
+        "- HLA SNPs : {}\n" \
+        "- Integrated Allele Table : {}\n" \
+        "- Maptables for heatmap : \n" \
+        "   A   : {A}\n" \
+        "   B   : {B}\n" \
+        "   C   : {C}\n" \
+        "   DPA1: {DPA1}\n" \
+        "   DPB1: {DPB1}\n" \
+        "   DQA1: {DQA1}\n" \
+        "   DQB1: {DQB1}\n" \
+        "   DRB1: {DRB1}\n".format(self.__dict_AA__, self.__dict_SNPS__, self.__IAT__, **self.__d_MapTable__)
+
+        return t_string
+
+
+    def getDictionaries(self):
+        return [self.__dict_AA__, self.__dict_SNPS__, self.__IAT__, self.__d_MapTable__]
+
 
 def HATK_IMGT2Sequence(_HG, _OUTPUT, _IMGT, _no_Indel=False, _no_MultiP = False,
                        _save_intermediates = False, _imgt_dir = None):
