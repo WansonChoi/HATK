@@ -3,9 +3,7 @@ import os, sys, re
 import pandas as pd
 import argparse, textwrap
 import psutil
-from itertools import repeat
 import time
-# import gc
 
 
 ########## < Core Global Variables > ##########
@@ -17,7 +15,7 @@ std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % (os.path.basename(__file__
 HLA_names = ["A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1"]
 
 
-def HLAtoSequences(_chped, _dictionary, _type, _out, __return_as_DataFrame=False):
+def HLAtoSequences(_chped, _dictionary, _type, _out, __use_pandas=False, __return_as_DataFrame=False):
 
 
     ########## < Core Variables > ##########
@@ -58,7 +56,7 @@ def HLAtoSequences(_chped, _dictionary, _type, _out, __return_as_DataFrame=False
     In other cases, generting sequence informtion will be done with just plain for loops and file writing(I/O).
     """
 
-    if __return_as_DataFrame:
+    if __use_pandas:
 
 
         ########## < Control Flags > ##########
@@ -192,12 +190,16 @@ def HLAtoSequences(_chped, _dictionary, _type, _out, __return_as_DataFrame=False
             print(df_OUTPUT.head())
 
 
-
-            ### Final Output ped file.
-            if _type == 'AA':
-                df_OUTPUT.to_csv(_out + '.AA.ped', sep='\t', header=False, index=True)
-            elif _type == 'SNPS':
-                df_OUTPUT.to_csv(_out + '.SNPS.ped', sep='\t', header=False, index=True)
+            if __return_as_DataFrame:
+                return df_OUTPUT
+            else:
+                ### Final Output ped file.
+                if _type == 'AA':
+                    df_OUTPUT.to_csv(_out + '.AA.ped', sep='\t', header=False, index=True)
+                    return _out + ".AA.ped"
+                elif _type == 'SNPS':
+                    df_OUTPUT.to_csv(_out + '.SNPS.ped', sep='\t', header=False, index=True)
+                    return _out + ".SNPS.ped"
 
 
     else:
@@ -256,7 +258,7 @@ def HLAtoSequences(_chped, _dictionary, _type, _out, __return_as_DataFrame=False
 
         ##### < [2] Transforming each HLA alleles to corresponding sequences > #####
 
-        with open(_out + ".txt", 'w+') as f_output:
+        with open(_out + ".{}.ped".format(_type), 'w') as f_output:
             f_output.writelines(GenerateLines(_chped, HLA_DICTIONARY_byHLA, HLA_SEQ_LENGTH))
 
 
@@ -268,10 +270,11 @@ def HLAtoSequences(_chped, _dictionary, _type, _out, __return_as_DataFrame=False
         print("Time : {}(sec)".format(t2 - t1))
 
 
+        return _out + ".{}.ped".format(_type)
 
 
 
-    return 0
+
 
 def BringSequence(_single_allele, _dict):
 
