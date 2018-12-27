@@ -333,17 +333,18 @@ if __name__ == "__main__":
 
 
         ### [1.5] Summary of Study Information
-        mystudy = HLA_Analysis.Study(rhped=args.rhped, hped=args.hped, chped=args.chped, platform=args.platform,
-                                     variants=args.variants, pheno=args.pheno, pheno_name=args.pheno_name,
-                                     covar=args.covar, covar_name=args.covar_name, condition_list=args.condition_list,
-                                     refallele=args.reference_allele, input=args.input, hg=args.hg, out=args.out,
-                                     iat=__IAT__)
+        myHLAstudy = HLA_Analysis.Study(rhped=args.rhped, hped=args.hped, chped=args.chped, platform=args.platform,
+                                        variants=args.variants, pheno=args.pheno, pheno_name=args.pheno_name,
+                                        covar=args.covar, covar_name=args.covar_name, condition_list=args.condition_list,
+                                        refallele=args.reference_allele, input=args.input, hg=args.hg, out=args.out,
+                                        iat=__IAT__)
 
-        log_HATK.info(mystudy)
+        log_HATK.info(myHLAstudy)
 
 
         ### [2] b:MarkerGenerator
 
+        __b_MARKER_PANELS__ = HATK_b_MarkerGenerator(myHLAstudy.getCHPED(), args.out, args.hg, __dict_AA__, __dict_SNPS__)
 
 
     else:

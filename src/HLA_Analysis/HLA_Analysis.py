@@ -69,9 +69,9 @@ class Study(object):
         self.out = kwargs["out"]
 
         self.summary_string = \
-        "< Summary info of HLA Study('{}') >\n" \
+        "< Summary info of HLA Study >\n" \
         "- Used IAT file : {}\n" \
-        "- Human Genome : hg{}\n".format(self.pheno_name, self.iat, self.hg)
+        "- Human Genome : hg{}\n".format(self.iat, self.hg)
 
 
         if kwargs["input"]:
@@ -138,8 +138,6 @@ class Study(object):
 
         ### Phenotye (*.phe and "--pheno-name")
 
-        print(self.phenotype)
-
         if self.phenotype:
 
             if not self.pheno_name:
@@ -189,11 +187,12 @@ class Study(object):
         ###
 
 
-
-
-
     def __str__(self):
         return self.summary_string
+
+
+    def getCHPED(self):
+        return self.__HLA_type__
 
 
 def HATK_ASSOC1_Logistic_Regression(_input, _out, _covar=None, _covar_names=None, _phe=None, _phe_name=None,
