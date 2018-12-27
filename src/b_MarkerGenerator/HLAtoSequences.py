@@ -2,9 +2,16 @@
 import os, sys
 import pandas as pd
 import argparse, textwrap
+import time
 
 
-def HLAtoSequences(_p_ped, _dictionary, _type, _out):
+std_MAIN_PROCESS_NAME = "\n[%s]: " % (os.path.basename(__file__))
+std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % (os.path.basename(__file__))
+std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % (os.path.basename(__file__))
+
+
+def HLAtoSequences(_p_ped, _dictionary, _type, _out,
+                   __return_as_DataFrame=False):
 
     ########## < Core Variables > ##########
 
@@ -13,12 +20,8 @@ def HLAtoSequences(_p_ped, _dictionary, _type, _out):
     # isREVERSE = {'A': False, 'C': True, 'B': True, 'DRB1': True, 'DQA1': False, 'DQB1': True, 'DPA1': True, 'DPB1': False}
 
     HLA_DICTIONARY = pd.DataFrame()
-    HLA_DICTIONARY_dict = {}
+    HLA_DICTIONARY_byHLA = {}
     ALLELES_SEQ_LENGTH = {}
-
-    # Module Name for stdout
-    std_MAIN_PROCESS_NAME = "\n[%s]: " % (os.path.basename(__file__))
-    print(std_MAIN_PROCESS_NAME + "Init.")
 
 
     ########## < Argument checking > ##########
@@ -26,26 +29,26 @@ def HLAtoSequences(_p_ped, _dictionary, _type, _out):
     # (1) ped file existence
     if not os.path.exists(_p_ped):
         print(_p_ped)
-        print(std_MAIN_PROCESS_NAME + "Given ped file dosen't exist. Please check it again.\n")
+        print(std_ERROR_MAIN_PROCESS_NAME + "Given ped file dosen't exist. Please check it again.\n")
         sys.exit()
 
     # (2) HLA DICTIONARY file
     if not os.path.exists(_dictionary):
-        print(std_MAIN_PROCESS_NAME + "Given dictionary file dosen't exist. Please check it again.\n")
+        print(std_ERROR_MAIN_PROCESS_NAME + "Given dictionary file dosen't exist. Please check it again.\n")
         sys.exit()
 
     # (3) Chekcing `_type`
     if not (_type == "AA" or _type == "SNPS"):
-        print(std_MAIN_PROCESS_NAME + "Given value for argument `_type` has wrong value. Please check it again.\n")
+        print(std_ERROR_MAIN_PROCESS_NAME + "Given value for argument `_type` has wrong value. Please check it again.\n")
         sys.exit()
 
 
     ########## < Control Flags > ##########
 
     LOADING_DICTIONARY = 1
-    LOADING_COATED_PED = 1
+    LOADING_CHPED = 1
     BRINGING_SEQUENCES = 1
-    EXPORTING_OUTPUT_PED = 1
+    EXPORTING_OUTPUT_PED = 0
 
 
 
@@ -53,50 +56,44 @@ def HLAtoSequences(_p_ped, _dictionary, _type, _out):
 
         ########## <1. Dictionary Preparation> ##########
 
-        print("\n[1] Loading Dictionary Data.\n")
+        # print("\n[1] Loading Dictionary Data.\n")
 
         if os.path.isfile(_dictionary):
             HLA_DICTIONARY = pd.read_table(_dictionary, sep='\t', header=None, names=["Alleles", "Seqs"], index_col=0)
         else:
-            print(std_MAIN_PROCESS_NAME + "Given Dictionary file doesn't exit!\n")
+            print(std_ERROR_MAIN_PROCESS_NAME + "Given Dictionary file doesn't exit!\n")
             sys.exit()
 
-        # (2018. 7. 13.) deprecated - going back to use HLA gene captioned way.
-        # # Processing HLA gene caption parts(splited by '*')
-        # df_temp = pd.DataFrame(HLA_DICTIONARY.loc[:, "Alleles"].apply(lambda x : x.split('*')).tolist(), columns=["HLA", "Alleles"])
-        #
-        # HLA_DICTIONARY = pd.concat([df_temp, HLA_DICTIONARY.loc[:, "Seqs"]], axis=1).set_index('HLA')
-        print(HLA_DICTIONARY.head())
+        # print(HLA_DICTIONARY.head())
 
 
         ### Dividing `HLA_DICTIONARY` in advance.
 
-        # For performance efficiency, `HLA_DICTIONARY` will be divded by HLA gene type in advance.
-        HLA_DICTIONARY_dict = {HLA_names[i]: HLA_DICTIONARY.filter(regex= ''.join(["^", HLA_names[i], "\*"]), axis=0) for i in range(0, len(HLA_names))}
-        # HLA_DICTIONARY_dict = {HLA_names[i]: HLA_DICTIONARY.loc[HLA_names[i], :].reset_index(drop=True).set_index('Alleles') for i in range(0, len(HLA_names))}
+        # Dividing `HLA_DICTIONARY` by HLA. (`HLA_DICTIONARY_byHLA`)
+        HLA_DICTIONARY_byHLA = {HLA_names[i]: HLA_DICTIONARY.filter(regex= ''.join(["^", HLA_names[i], "\*"]), axis=0) for i in range(0, len(HLA_names))}
 
-        for i in range(0, len(HLA_names)):
-            print("\nSequence Information of %s" % HLA_names[i])
-            print(HLA_DICTIONARY_dict[HLA_names[i]].head())
+        # for i in range(0, len(HLA_names)):
+        #     print("\nSequence Information of %s" % HLA_names[i])
+        #     print(HLA_DICTIONARY_byHLA[HLA_names[i]].head())
 
-        ALLELES_SEQ_LENGTH = {HLA_names[i] : len(HLA_DICTIONARY_dict[HLA_names[i]].iat[0, 0]) for i in range(0, len(HLA_names))}
+        ALLELES_SEQ_LENGTH = {HLA_names[i] : len(HLA_DICTIONARY_byHLA[HLA_names[i]].iat[0, 0]) for i in range(0, len(HLA_names))}
 
-        for i in range(0, len(HLA_names)):
-            print("\nSequence Length of %s" % HLA_names[i])
-            print(ALLELES_SEQ_LENGTH[HLA_names[i]])
-
+        # for i in range(0, len(HLA_names)):
+        #     print("\nSequence Length of %s" % HLA_names[i])
+        #     print(ALLELES_SEQ_LENGTH[HLA_names[i]])
 
 
-    if LOADING_COATED_PED:
 
-        ########## <2. Loading Coated PED(Input PED) file> ##########
+    if LOADING_CHPED:
 
-        print("\n[2] Loading Input PED file.")
+        ########## <2. Loading Cleaned HPED(*.chped) file> ##########
 
-        INPUT_PED = pd.read_table(_p_ped, sep='\t', header=None, index_col=[0, 1, 2, 3, 4, 5], dtype=str)
-        INPUT_PED.columns = pd.Index([name + '_' + str(j + 1) for name in HLA_names for j in range(0, 2)])
+        # print("\n[2] Loading Input CHPED file.")
 
-        print(INPUT_PED.head())
+        INPUT_CHPED = pd.read_table(_p_ped, sep='\t', header=None, index_col=[0, 1, 2, 3, 4, 5], dtype=str)
+        INPUT_CHPED.columns = pd.Index([name + '_' + str(j + 1) for name in HLA_names for j in range(0, 2)])
+
+        # print(INPUT_CHPED.head())
 
 
 
@@ -111,9 +108,9 @@ def HLAtoSequences(_p_ped, _dictionary, _type, _out):
 
         for i in range(0, len(HLA_names)):
 
-            curr_dict = HLA_DICTIONARY_dict[HLA_names[i]]
+            curr_dict = HLA_DICTIONARY_byHLA[HLA_names[i]]
 
-            df_temp = INPUT_PED.filter(regex='_'.join([HLA_names[i], '\d{1}']), axis=1)
+            df_temp = INPUT_CHPED.filter(regex='_'.join([HLA_names[i], '\d{1}']), axis=1)
             # print(df_temp.head())
 
             df_temp = df_temp.applymap(lambda x : BringSequence(x, curr_dict) if x != "0" else x)
@@ -171,7 +168,7 @@ def HLAtoSequences(_p_ped, _dictionary, _type, _out):
         print("\n[4]: Exporting OUTPUT PED file.")
 
         df_OUTPUT = pd.concat(l_FOR_OUTPUT, axis=1)
-        df_OUTPUT.index = INPUT_PED.index
+        df_OUTPUT.index = INPUT_CHPED.index
         df_OUTPUT.columns = pd.Index(range(0, df_OUTPUT.shape[1]))
 
         print(df_OUTPUT.head())
