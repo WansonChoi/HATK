@@ -283,15 +283,24 @@ def encodeVariants(_p_ped, _p_map, _out, __use_pandas=False, __return_as_DataFra
 
         ### Processing line by line to save memory
 
-        process = psutil.Process(os.getpid())
+        # process = psutil.Process(os.getpid())
+        #
+        # mem_start = process.memory_info().rss / 1024**2
+        # t1 = time.clock()
 
-        mem_start = process.memory_info().rss / 1024**2
-        t1 = time.clock()
 
 
-        HARDCODING = 1
+        ########## < Control Flags > ##########
 
-        if not HARDCODING:
+        _1_ALLELE_OVERLAPPING = 1
+        _2_MAKING_NEW_PEDFILE = 1
+        _3_MAKING_NEW_MAPFILE = 1
+        _4_MAKING_ALLELELIST = 1
+
+
+        if _1_ALLELE_OVERLAPPING:
+
+            ########## < [1] Allele overlapping > ##########
 
             # Acquiring column number
             n_loci = 0
@@ -310,17 +319,16 @@ def encodeVariants(_p_ped, _p_map, _out, __use_pandas=False, __return_as_DataFra
                         ped_info = t_line[:6]
                         genomic_info = t_line[6:]
 
-                        n_loci = len(genomic_info)
-                        if n_loci % 2 == 1: print(std_ERROR_MAIN_PROCESS_NAME + "The number of alleles is not even.\n"); sys.exit()
+                        n_loci = int(len(genomic_info)/2) # == len(l_factors)
                         n_col = len(t_line)
 
                         # list containing factors which appear in each locus.
-                        l_factors = [[genomic_info[i]] for i in range(0, int(n_loci/2))] # Initialization
+                        l_factors = [([genomic_info[i]] if genomic_info[i] != "0" else []) for i in range(0, n_loci)] # Initialization
                         # print(l_factors)
 
                     elif n_row > 0:
 
-                        for i in range(0, int(n_loci/2)):
+                        for i in range(0, n_loci):
 
                             idx1 = 2*i + 6 # index for `t_line`
                             idx2 = idx1 + 1
@@ -334,57 +342,53 @@ def encodeVariants(_p_ped, _p_map, _out, __use_pandas=False, __return_as_DataFra
 
                     n_row += 1
 
-                    # if n_row > 5:
-                    #     break
-
 
             # print(l_factors[:10])
-            print("Memory size of overlapped factor info : {}(Mb)".format(sys.getsizeof(l_factors)/1024**2))
+            # print("Memory size of overlapped factor info : {}(Mb)".format(sys.getsizeof(l_factors)/1024**2))
 
             # Sorting elements of each lists.
             for i in range(0, len(l_factors)):
                 l_factors[i].sort()
-
-            # Writing file.
-            g1 = ('\t'.join(l_factors[i])+"\n" for i in range(0, len(l_factors)))
-
-            with open(_out+".temp.alleleset", 'w') as f_alleleset:
-                f_alleleset.writelines(g1)
-
-        else:
-
-            ### (Warning) Temporary Hardcoding
-
-            l_factors = []
-
-            with open(_out+".temp.alleleset", 'r') as f_alleleset:
-                for line in f_alleleset:
-                    t_list = re.split(r'\s+', line.rstrip('\n'))
-                    t_list.sort()
-                    l_factors.append(t_list)
-
-
-            print(l_factors[:20])
 
             ### --- `l_factors` done.
 
 
 
 
-        ##### Making New ped file #####
+        if _2_MAKING_NEW_PEDFILE:
 
-        with open(_out + ".ped", 'w') as f_output:
-            f_output.writelines(stackLines(_p_ped, l_factors))
+            ########## < [2] Making new .ped file > ##########
+
+            with open(_out + ".ped", 'w') as f_NewPed:
+                f_NewPed.writelines(MakeNewPed(_p_ped, l_factors))
+
+
+
+        if _3_MAKING_NEW_MAPFILE:
+
+            ########## < [3] Making new .map file > ##########
+
+            with open(_out + ".map", 'w') as f_NewMap:
+                f_NewMap.writelines(MakeNewMap(_p_map, l_factors))
+
+
+
+        if _4_MAKING_ALLELELIST:
+
+            ########## < [4] Making *.allelelist file > ##########
+
+            with open(_out + ".allelelist", 'w') as f_allelelist:
+                f_allelelist.writelines(MakeAlleleList(_p_map, l_factors))
 
 
 
 
-        mem_end = process.memory_info().rss / 1024**2
-        t2 = time.clock()
-
-        print("\n\nMemory before : {}(Mb)\nMemory after : {}(Mb)".format(mem_start, mem_end))
-        print("Difference(Memory usage) : {}(Mb)".format(mem_end-mem_start))
-        print("Time : {}(sec)".format(t2 - t1))
+        # mem_end = process.memory_info().rss / 1024**2
+        # t2 = time.clock()
+        #
+        # print("\n\nMemory before : {}(Mb)\nMemory after : {}(Mb)".format(mem_start, mem_end))
+        # print("Difference(Memory usage) : {}(Mb)".format(mem_end-mem_start))
+        # print("Time : {}(sec)".format(t2 - t1))
 
 
 
@@ -496,7 +500,7 @@ def divideToBinaryMarkers(_SNP1, _SNP2, _factors):
 
 
 
-def stackLines(_p_ped, _l_factors):
+def MakeNewPed(_p_ped, _l_factors):
 
     count = 0
 
@@ -516,6 +520,73 @@ def stackLines(_p_ped, _l_factors):
             yield '\t'.join([__ped_info__, __genomic_info__, dummy_markers]) + "\n"
 
 
+
+
+def MakeNewMap(_p_map, _l_factors):
+
+    count = 0
+
+    with open(_p_map, 'r') as f_map:
+
+        for l in f_map:
+
+            idx = count # index for `l_factors`
+
+            if len(_l_factors[idx]) > 2:
+
+                t_line = re.split(r'\s+', l.rstrip('\n'))
+
+                for j in range(0, len(_l_factors[idx])):
+                    yield '\t'.join([t_line[0], t_line[1] + '_' + _l_factors[idx][j], t_line[2], t_line[3]]) + "\n"
+
+
+                if len(_l_factors[idx]) > 3:
+
+                    j_end = 1 if len(_l_factors[idx]) == 4 else len(_l_factors[idx])
+
+                    for j in range(0, j_end):
+                        for k in range(j+1, len(_l_factors[idx])):
+                            yield '\t'.join([t_line[0], t_line[1]+ '_' + _l_factors[idx][j]+_l_factors[idx][k], t_line[2], t_line[3]]) + "\n"
+
+
+                    if len(_l_factors[idx]) > 5:
+
+                        j_end = 1 if len(_l_factors[idx]) == 6 else len(_l_factors[idx])
+
+                        for j in range(0, j_end):
+                            for k in range(j+1, len(_l_factors[idx])):
+                                for l in range(k+1, len(_l_factors[idx])):
+                                    yield '\t'.join([t_line[0], t_line[1]+ '_' + _l_factors[idx][j]+_l_factors[idx][k]+_l_factors[idx][l], t_line[2], t_line[3]]) + "\n"
+
+            else:
+                yield l # "\n" is included.
+
+            count += 1
+
+
+        # Adding Dummy Marker
+        yield '\t'.join(["6", "DummyMarker", "0", "33999999"]) + "\n"
+
+
+
+def MakeAlleleList(_p_map, _l_factors):
+
+    count = 0
+
+    with open(_p_map, 'r') as f_map:
+
+        for l in f_map:
+
+            idx = count
+
+            t_line = re.split(r'\s+', l.rstrip('\n'))
+
+            locus_label = t_line[1]
+            alleleset = _l_factors[idx]
+
+            yield '\t'.join([locus_label, str(alleleset)]) + "\n"
+
+            count += 1
 
 
 
@@ -585,6 +656,11 @@ if __name__ == "__main__":
     # args = parser.parse_args(["-ped", "/Users/wansun/Git_Projects/HATK/tests/_0_wholeProcess/20181221/wtccc_filtered_58C_NBS_RA.SNPS.ped",
     #                           "-map", "/Users/wansun/Git_Projects/HATK/tests/_0_wholeProcess/20181221/wtccc_filtered_58C_NBS_RA.SNPS.map",
     #                           "-o", "/Users/wansun/Git_Projects/HATK/tests/_0_wholeProcess/20181221/wtccc_filtered_58C_NBS_RA.SNPS.CODED"])
+
+    # # (2019. 1. 1.) HAPMAP_CEU again.
+    # args = parser.parse_args(["-ped", "/Users/wansun/Git_Projects/HATK/tests/_0_wholeProcess/20190101/wtccc_filtered_58C_NBS_RA.SNPS.ped",
+    #                           "-map", "/Users/wansun/Git_Projects/HATK/tests/_0_wholeProcess/20181221/wtccc_filtered_58C_NBS_RA.SNPS.map",
+    #                           "-o", "/Users/wansun/Git_Projects/HATK/tests/_0_wholeProcess/20190101/wtccc_filtered_58C_NBS_RA.SNPS.CODED"])
 
 
 
