@@ -4,328 +4,455 @@ import argparse, textwrap
 from collections import OrderedDict
 
 
-def encodeHLA(_INPUT_PED, _OUTPUT, _hg = "19"):
+########## < Core Global Variables > ##########
 
+std_MAIN_PROCESS_NAME = "\n[%s]: " % (os.path.basename(__file__))
+std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % (os.path.basename(__file__))
+std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % (os.path.basename(__file__))
 
-    ########## <Core Variables> ##########
+HLA_names = ["A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1"]
 
-    HLA_names = ["A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1"]
+# (2018. 9. 25.) Replaced by lift-over values.
+genepos_hg = {"18": {"A": 30018226, "C": 31344505, "B": 31429628, "DRB1": 32654525, "DQA1": 32713161, "DQB1": 32735219,
+                     "DPA1": 33140324, "DPB1": 33151681},
+              "19": {"A": 29910247, "C": 31236526, "B": 31321649, "DRB1": 32546547, "DQA1": 32605183, "DQB1": 32627241,
+                     "DPA1": 33032346, "DPB1": 33043703},
+              "38": {"A": 29942470, "C": 31268749, "B": 31353872, "DRB1": 32578770, "DQA1": 32637406, "DQB1": 32659464,
+                     "DPA1": 33064569, "DPB1": 33075926}}
 
-    # isREVERSE = {'A': False, 'C': True, 'B': True, 'DRB1': True, 'DQA1': False, 'DQB1': True, 'DPA1': True, 'DPB1': False}
 
-    # (2018. 9. 25.) Replaced by lift-over values.
-    genepos_hg ={"18" : {"A": 30018226, "C": 31344505, "B": 31429628, "DRB1": 32654525, "DQA1": 32713161, "DQB1": 32735219, "DPA1": 33140324, "DPB1": 33151681},
-                 "19" : {"A": 29910247, "C": 31236526, "B": 31321649, "DRB1": 32546547, "DQA1": 32605183, "DQB1": 32627241, "DPA1": 33032346, "DPB1": 33043703},
-                 "38" : {"A": 29942470, "C": 31268749, "B": 31353872, "DRB1": 32578770, "DQA1": 32637406, "DQB1": 32659464, "DPA1": 33064569, "DPB1": 33075926}}
+def encodeHLA(_CHPED, _OUTPUT, _hg="19", __use_pandas=False):
 
-    # Module Name for stdout
-    std_MAIN_PROCESS_NAME = "\n[%s]: " % (os.path.basename(__file__))
-    print(std_MAIN_PROCESS_NAME + "Init.")
 
 
-    # Set of allele names ocurring in each HLA columns of given ped file.
-    ALLELE_TABLES = OrderedDict()
-    ALLELE_TABLES_1field = OrderedDict()
 
-    ALL_ALLELES = []
-    dict_ALL_ALLELES = {}
 
+    if __use_pandas:
 
-    df_OUTPUT_map = pd.DataFrame()
-    df_OUTPUT_ped = pd.DataFrame()
 
+        ########## < Core Variables > ##########
 
+        # Set of allele names ocurring in each HLA columns of given ped file.
+        ALLELE_TABLES = OrderedDict()
+        ALLELE_TABLES_1field = OrderedDict()
 
+        ALL_ALLELES = []
+        dict_ALL_ALLELES = {}
 
-    ########## < Control Flags > ##########
+        df_OUTPUT_map = pd.DataFrame()
+        df_OUTPUT_ped = pd.DataFrame()
 
 
-    LOADING_PEDFILE = 1
-    MAKING_ALLELE_TABLE = 1
-    MAKING_OUTPUT_MAP = 1
-    MAKING_OUTPUT_PED = 1
-    ADDING_DUMMY_MARKER = 1
 
+        ########## < Control Flags > ##########
 
+        LOADING_PEDFILE = 1
+        MAKING_ALLELE_TABLE = 1
+        MAKING_OUTPUT_MAP = 1
+        MAKING_OUTPUT_PED = 1
+        ADDING_DUMMY_MARKER = 1
 
 
 
-    if LOADING_PEDFILE:
 
-        ########## < 1. Loading Input PED file > ##########
 
-        print(std_MAIN_PROCESS_NAME + "[1] Loading Input PED file.\n")
+        if LOADING_PEDFILE:
 
-        INPUT_PED = pd.read_table(_INPUT_PED, sep='\t', header=None, dtype=str,
-                                  names = ['Fam_ID', 'Sample_ID', 'Paternal_ID', 'Maternal_ID', 'Sex', 'Phe'] + [''.join([HLA_names[i], '_', str(j)]) for i in range(0, len(HLA_names)) for j in range(1,3)],
-                                  index_col=[0, 1, 2, 3, 4, 5]
-                                  )
+            ########## < 1. Loading Input PED file > ##########
 
-        print(INPUT_PED.head())
+            print(std_MAIN_PROCESS_NAME + "[1] Loading Input PED file.\n")
 
+            INPUT_PED = pd.read_table(_CHPED, sep='\t', header=None, dtype=str,
+                                      names = ['Fam_ID', 'Sample_ID', 'Paternal_ID', 'Maternal_ID', 'Sex', 'Phe'] + [''.join([HLA_names[i], '_', str(j)]) for i in range(0, len(HLA_names)) for j in range(1,3)],
+                                      index_col=[0, 1, 2, 3, 4, 5]
+                                      )
 
+            print(INPUT_PED.head())
 
-    if MAKING_ALLELE_TABLE:
 
-        ########## < 2. Making Allele Table > ##########
 
-        print(std_MAIN_PROCESS_NAME + "[2] Making Allele Table.\n")
+        if MAKING_ALLELE_TABLE:
 
-        """
-        for i in range(0, len(INPUT_PED.index)):
+            ########## < 2. Making Allele Table > ##########
 
-            line = tuple(INPUT_PED.iloc[i, :])
+            print(std_MAIN_PROCESS_NAME + "[2] Making Allele Table.\n")
 
-            alleles["HLA_A_"+line[6]] = genepos["HLA_A"];       alleles["HLA_A_"+line[7]] = genepos["HLA_A"];
-            alleles["HLA_A_"+line[6][0:2]] = genepos["HLA_A"];  alleles["HLA_A_"+line[7][0:2]] = genepos["HLA_A"];
-
-            alleles["HLA_B_"+line[8]] = genepos["HLA_B"];       alleles["HLA_B_"+line[9]] = genepos["HLA_B"];
-            alleles["HLA_B_"+line[8][0:2]] = genepos["HLA_B"];  alleles["HLA_B_"+line[9][0:2]] = genepos["HLA_B"];
-
-            alleles["HLA_C_"+line[10]] = genepos["HLA_C"];       alleles["HLA_C_"+line[11]] = genepos["HLA_C"];
-            alleles["HLA_C_"+line[10][0:2]] = genepos["HLA_C"];  alleles["HLA_C_"+line[11][0:2]] = genepos["HLA_C"];
-
-            alleles["HLA_DPA1_"+line[12]] = genepos["HLA_DPA1"];       alleles["HLA_DPA1_"+line[13]] = genepos["HLA_DPA1"];
-            alleles["HLA_DPA1_"+line[12][0:2]] = genepos["HLA_DPA1"];  alleles["HLA_DPA1_"+line[13][0:2]] = genepos["HLA_DPA1"];
-
-            alleles["HLA_DPB1_"+line[14]] = genepos["HLA_DPB1"];       alleles["HLA_DPB1_"+line[15]] = genepos["HLA_DPB1"];
-            alleles["HLA_DPB1_"+line[14][0:2]] = genepos["HLA_DPB1"];  alleles["HLA_DPB1_"+line[15][0:2]] = genepos["HLA_DPB1"];
-
-            alleles["HLA_DQA1_"+line[16]] = genepos["HLA_DQA1"];       alleles["HLA_DQA1_"+line[17]] = genepos["HLA_DQA1"];
-            alleles["HLA_DQA1_"+line[16][0:2]] = genepos["HLA_DQA1"];  alleles["HLA_DQA1_"+line[17][0:2]] = genepos["HLA_DQA1"];
-
-            alleles["HLA_DQB1_"+line[18]] = genepos["HLA_DQB1"];       alleles["HLA_DQB1_"+line[19]] = genepos["HLA_DQB1"];
-            alleles["HLA_DQB1_"+line[18][0:2]] = genepos["HLA_DQB1"];  alleles["HLA_DQB1_"+line[19][0:2]] = genepos["HLA_DQB1"];
-
-            alleles["HLA_DRB1_"+line[20]] = genepos["HLA_DRB1"];       alleles["HLA_DRB1_"+line[21]] = genepos["HLA_DRB1"];
-            alleles["HLA_DRB1_"+line[20][0:2]] = genepos["HLA_DRB1"];  alleles["HLA_DRB1_"+line[21][0:2]] = genepos["HLA_DRB1"];
-
-
-        for k,v in alleles.items():
-            print("key : {0} / value : {1}".format(k, v))
-            
-        """
-
-        # In the past, `ALLELE_TABLES` was created based on dictionary data structure, but now it is created by "apply()" function with "set()" function.
-
-        for i in range(0, len(HLA_names)):
-            # for i in range(0, 1):
-
-            temp = INPUT_PED.filter(regex=HLA_names[i]+'_\d', axis=1).apply(set, axis=0).apply(lambda x : x.difference({0, "0"}))
-
-            # print(temp)
-
-            # Column 1 and 2
-            set_al1 = temp.iat[0] # ex)     A_1 := {A*32:01:01, A*23:01:01, A*26:01:01, A*02:01:0...
-            set_al2 = temp.iat[1] # ex)     A_2 := {A*24:02:01:01, A*01:01:01:01, A*02:05:01, A*3...
-
-            # sr_Unioned_Set = pd.Series(list(set_al1.union(set_al2))).sort_values() # sorting
-
-            l_Unioned_Set = list(set_al1.union(set_al2))
-            l_Unioned_Set.sort() # sorting
-
-            # l_Unioned_Set = pd.Series(l_Unioned_Set)
-            print(l_Unioned_Set)
-
-            ALLELE_TABLES[HLA_names[i]] = l_Unioned_Set
-
-
-            ##### Dealing with 1-field #####
-
-            if len(l_Unioned_Set) > 0:
-
-                ### The case where the union of set of each two column has at least 1 element.
-
-                sr_temp_1field = pd.Series(l_Unioned_Set).apply(lambda x : re.match(pattern='\*'.join([HLA_names[i], '\d{2,3}']), string=x).group()).unique() # Going through "unique()" function.
-
-                # print("\nsr_temp_1field\n")
-                # print(sr_temp_1field)
-
-                ALLELE_TABLES_1field[HLA_names[i]] = sr_temp_1field.tolist()
-
-            else:
-                ### 집합 원소의 개수가 0 일때,(아예 input_ped에서 allele_name이 '0'으로 주어져서 없는 경우)
-                ALLELE_TABLES_1field[HLA_names[i]] = l_Unioned_Set
-
-
-        # for k, v in ALLELE_TABLES.items():
-        #
-        #     print("\n===============\n")
-        #     print("{0} : \n{1}".format(k, v))
-
-
-
-    if MAKING_OUTPUT_MAP:
-
-        ########## < 3. Making OUTPUT .map file > ##########
-
-        print(std_MAIN_PROCESS_NAME + "[3] Making OUTPUT .map file.\n")
-
-        """        
-        to_df_OUTPUT_map = []
-
-
-        for name in HLA_names:
-            for k in sorted_keys:
-                temp = k.split('_')
-                al = temp[2]
-
-                if (temp[1] == name) and (al != "NA") and (al != "") and (al != "0") and (al != "0 0"):
-                    # to_df_OUTPUT_map += [ ["6", k, "0", genepos['_'.join([temp[0], temp[1]])]] ]
-                    to_df_OUTPUT_map.extend([("6", k, "0", genepos['_'.join([temp[0], temp[1]])])])
-
-        df_OUTPUT_map = pd.DataFrame(to_df_OUTPUT_map)
-        df_OUTPUT_map.to_csv(_OUTPUT + '.HLA.map', sep='\t', header=False, index=False)
+            """
+            for i in range(0, len(INPUT_PED.index)):
+    
+                line = tuple(INPUT_PED.iloc[i, :])
+    
+                alleles["HLA_A_"+line[6]] = genepos["HLA_A"];       alleles["HLA_A_"+line[7]] = genepos["HLA_A"];
+                alleles["HLA_A_"+line[6][0:2]] = genepos["HLA_A"];  alleles["HLA_A_"+line[7][0:2]] = genepos["HLA_A"];
+    
+                alleles["HLA_B_"+line[8]] = genepos["HLA_B"];       alleles["HLA_B_"+line[9]] = genepos["HLA_B"];
+                alleles["HLA_B_"+line[8][0:2]] = genepos["HLA_B"];  alleles["HLA_B_"+line[9][0:2]] = genepos["HLA_B"];
+    
+                alleles["HLA_C_"+line[10]] = genepos["HLA_C"];       alleles["HLA_C_"+line[11]] = genepos["HLA_C"];
+                alleles["HLA_C_"+line[10][0:2]] = genepos["HLA_C"];  alleles["HLA_C_"+line[11][0:2]] = genepos["HLA_C"];
+    
+                alleles["HLA_DPA1_"+line[12]] = genepos["HLA_DPA1"];       alleles["HLA_DPA1_"+line[13]] = genepos["HLA_DPA1"];
+                alleles["HLA_DPA1_"+line[12][0:2]] = genepos["HLA_DPA1"];  alleles["HLA_DPA1_"+line[13][0:2]] = genepos["HLA_DPA1"];
+    
+                alleles["HLA_DPB1_"+line[14]] = genepos["HLA_DPB1"];       alleles["HLA_DPB1_"+line[15]] = genepos["HLA_DPB1"];
+                alleles["HLA_DPB1_"+line[14][0:2]] = genepos["HLA_DPB1"];  alleles["HLA_DPB1_"+line[15][0:2]] = genepos["HLA_DPB1"];
+    
+                alleles["HLA_DQA1_"+line[16]] = genepos["HLA_DQA1"];       alleles["HLA_DQA1_"+line[17]] = genepos["HLA_DQA1"];
+                alleles["HLA_DQA1_"+line[16][0:2]] = genepos["HLA_DQA1"];  alleles["HLA_DQA1_"+line[17][0:2]] = genepos["HLA_DQA1"];
+    
+                alleles["HLA_DQB1_"+line[18]] = genepos["HLA_DQB1"];       alleles["HLA_DQB1_"+line[19]] = genepos["HLA_DQB1"];
+                alleles["HLA_DQB1_"+line[18][0:2]] = genepos["HLA_DQB1"];  alleles["HLA_DQB1_"+line[19][0:2]] = genepos["HLA_DQB1"];
+    
+                alleles["HLA_DRB1_"+line[20]] = genepos["HLA_DRB1"];       alleles["HLA_DRB1_"+line[21]] = genepos["HLA_DRB1"];
+                alleles["HLA_DRB1_"+line[20][0:2]] = genepos["HLA_DRB1"];  alleles["HLA_DRB1_"+line[21][0:2]] = genepos["HLA_DRB1"];
+    
+    
+            for k,v in alleles.items():
+                print("key : {0} / value : {1}".format(k, v))
                 
-        """
+            """
+
+            # In the past, `ALLELE_TABLES` was created based on dictionary data structure, but now it is created by "apply()" function with "set()" function.
+
+            for i in range(0, len(HLA_names)):
+                # for i in range(0, 1):
+
+                temp = INPUT_PED.filter(regex=HLA_names[i]+'_\d', axis=1).apply(set, axis=0).apply(lambda x : x.difference({0, "0"}))
+
+                # print(temp)
+
+                # Column 1 and 2
+                set_al1 = temp.iat[0] # ex)     A_1 := {A*32:01:01, A*23:01:01, A*26:01:01, A*02:01:0...
+                set_al2 = temp.iat[1] # ex)     A_2 := {A*24:02:01:01, A*01:01:01:01, A*02:05:01, A*3...
+
+                # sr_Unioned_Set = pd.Series(list(set_al1.union(set_al2))).sort_values() # sorting
+
+                l_Unioned_Set = list(set_al1.union(set_al2))
+                l_Unioned_Set.sort() # sorting
+
+                # l_Unioned_Set = pd.Series(l_Unioned_Set)
+                print(l_Unioned_Set)
+
+                ALLELE_TABLES[HLA_names[i]] = l_Unioned_Set
 
 
-        """ 
-        
-        (1) map_LABELS
-        (2) map_CHR
-        (3) map_GENETIC_DISTANCE
-        (4) map_POS
-        
-        """
+                ##### Dealing with 1-field #####
 
-        ##### Making Label for *.map file. #####
+                if len(l_Unioned_Set) > 0:
 
-        # ALL_ALLELES = pd.concat([ALLELE_TABLES[HLA_names[i]].append(ALLELE_TABLES_1field[HLA_names[i]]) for i in range(0, len(HLA_names))]).sort_values()
+                    ### The case where the union of set of each two column has at least 1 element.
 
-        ALL_ALLELES = ALLELE_TABLES[HLA_names[0]]
-        ALL_ALLELES.extend(ALLELE_TABLES_1field[HLA_names[0]])
-        # ALL_ALLELES = [ALLELE_TABLES[HLA_names[i]].append(ALLELE_TABLES_1field[HLA_names[i]]) for i in range(0, len(HLA_names))]
+                    sr_temp_1field = pd.Series(l_Unioned_Set).apply(lambda x : re.match(pattern='\*'.join([HLA_names[i], '\d{2,3}']), string=x).group()).unique() # Going through "unique()" function.
 
-        for i in range(1, len(HLA_names)):
-            ALL_ALLELES.extend(ALLELE_TABLES[HLA_names[i]])
-            ALL_ALLELES.extend(ALLELE_TABLES_1field[HLA_names[i]])
+                    # print("\nsr_temp_1field\n")
+                    # print(sr_temp_1field)
 
-        ALL_ALLELES.sort()
+                    ALLELE_TABLES_1field[HLA_names[i]] = sr_temp_1field.tolist()
 
-        print("\nALL_ALLELES\n")
-        print(ALL_ALLELES)
+                else:
+                    ### 집합 원소의 개수가 0 일때,(아예 input_ped에서 allele_name이 '0'으로 주어져서 없는 경우)
+                    ALLELE_TABLES_1field[HLA_names[i]] = l_Unioned_Set
 
 
-        ### HLA_index(Mining HLA gene name)
-        sr_HLA = pd.Series(ALL_ALLELES).apply(lambda x : re.search(pattern='\w+\*', string=x).group().rstrip('*'))
-        # print(sr_HLA)
-
-        ### map_LABELS & map_POS ###
-        map_LABELS = pd.Series(['HLA_' + ALL_ALLELES[i] for i in range(0, len(ALL_ALLELES))])
-        # print("\n`map_LABELS`\n")
-        # print(map_LABELS)
-
-        map_POS = [genepos_hg[_hg][sr_HLA.iat[i]] for i in range(0, len(sr_HLA))]
-        # print(map_POS)
-
-
-        dict_ALL_ALLELES = {HLA_names[i] : [ALL_ALLELES[j] for j in range(0, len(ALL_ALLELES)) if (HLA_names[i]+'*' in ALL_ALLELES[j])] for i in range(0, len(HLA_names))}
-
-        # print("\nsegmented `ALL_ALLELES`\n")
-        # for k,v in dict_ALL_ALLELES.items():
-        #     print("\n============\n")
-        #     print("{0} : \n{1}".format(k, v))
-
-
-        ##### map_Label을 제외한 나머지 map파일 항목 만들기 #####
-
-        map_CHR = ['6' for i in range(0, len(map_LABELS))]
-        map_GENETIC_DISTANCE = ['0' for i in range(0, len(map_LABELS))]
-
-
-        df_OUTPUT_map = pd.DataFrame.from_dict({"Chr" : map_CHR, "Name" : map_LABELS.tolist(), "GD" : map_GENETIC_DISTANCE, "POS" : map_POS}).loc[:, ["Chr", "Name", "GD", "POS"]]
-        print(std_MAIN_PROCESS_NAME + "Output .map file.\n")
-        print(df_OUTPUT_map.head(50))
-
-        # df_OUTPUT_map.to_csv('.'.join([_OUTPUT,'HLA.map']), sep='\t', header=False, index=False)
+            # for k, v in ALLELE_TABLES.items():
+            #
+            #     print("\n===============\n")
+            #     print("{0} : \n{1}".format(k, v))
 
 
 
-    if MAKING_OUTPUT_PED:
+        if MAKING_OUTPUT_MAP:
 
-        ########## < 4. Making OUTPUT.ped file > ##########
+            ########## < 3. Making OUTPUT .map file > ##########
 
-        print(std_MAIN_PROCESS_NAME + "[4] Making .ped file.\n")
+            print(std_MAIN_PROCESS_NAME + "[3] Making OUTPUT .map file.\n")
 
-
-        """
-        
-                to_df_OUTPUT_ped = []
-        
-                for i in range(0, len(INPUT_PED.index)):
-        
-                    line = tuple(INPUT_PED.iloc[i, :])
-        
-                    to_df_OUTPUT_ped.extend([
-                        line[0:6] +
-                        PrintGenotypes("A", line[6], line[7], sorted_keys) +
-                        PrintGenotypes("C", line[10], line[11], sorted_keys) +
-                        PrintGenotypes("B", line[8], line[9], sorted_keys) +
-                        PrintGenotypes("DRB1", line[20], line[21], sorted_keys) +
-                        PrintGenotypes("DQA1", line[16], line[17], sorted_keys) +
-                        PrintGenotypes("DQB1", line[18], line[19], sorted_keys) +
-                        PrintGenotypes("DPA1", line[12], line[13], sorted_keys) +
-                        PrintGenotypes("DPB1", line[14], line[15], sorted_keys)
-                    ])
-                        
-                df_OUTPUT_ped = pd.DataFrame(to_df_OUTPUT_ped)
-                df_OUTPUT_ped.to_csv(_OUTPUT + '.HLA.ped', sep='\t', header=False, index=False)
+            """        
+            to_df_OUTPUT_map = []
+    
+    
+            for name in HLA_names:
+                for k in sorted_keys:
+                    temp = k.split('_')
+                    al = temp[2]
+    
+                    if (temp[1] == name) and (al != "NA") and (al != "") and (al != "0") and (al != "0 0"):
+                        # to_df_OUTPUT_map += [ ["6", k, "0", genepos['_'.join([temp[0], temp[1]])]] ]
+                        to_df_OUTPUT_map.extend([("6", k, "0", genepos['_'.join([temp[0], temp[1]])])])
+    
+            df_OUTPUT_map = pd.DataFrame(to_df_OUTPUT_map)
+            df_OUTPUT_map.to_csv(_OUTPUT + '.HLA.map', sep='\t', header=False, index=False)
                     
+            """
+
+
+            """ 
+            
+            (1) map_LABELS
+            (2) map_CHR
+            (3) map_GENETIC_DISTANCE
+            (4) map_POS
+            
+            """
+
+            ##### Making Label for *.map file. #####
+
+            # ALL_ALLELES = pd.concat([ALLELE_TABLES[HLA_names[i]].append(ALLELE_TABLES_1field[HLA_names[i]]) for i in range(0, len(HLA_names))]).sort_values()
+
+            ALL_ALLELES = ALLELE_TABLES[HLA_names[0]]
+            ALL_ALLELES.extend(ALLELE_TABLES_1field[HLA_names[0]])
+            # ALL_ALLELES = [ALLELE_TABLES[HLA_names[i]].append(ALLELE_TABLES_1field[HLA_names[i]]) for i in range(0, len(HLA_names))]
+
+            for i in range(1, len(HLA_names)):
+                ALL_ALLELES.extend(ALLELE_TABLES[HLA_names[i]])
+                ALL_ALLELES.extend(ALLELE_TABLES_1field[HLA_names[i]])
+
+            ALL_ALLELES.sort()
+
+            print("\nALL_ALLELES\n")
+            print(ALL_ALLELES)
+
+
+            ### HLA_index(Mining HLA gene name)
+            sr_HLA = pd.Series(ALL_ALLELES).apply(lambda x : re.search(pattern='\w+\*', string=x).group().rstrip('*'))
+            # print(sr_HLA)
+
+            ### map_LABELS & map_POS ###
+            map_LABELS = pd.Series(['HLA_' + ALL_ALLELES[i] for i in range(0, len(ALL_ALLELES))])
+            # print("\n`map_LABELS`\n")
+            # print(map_LABELS)
+
+            map_POS = [genepos_hg[_hg][sr_HLA.iat[i]] for i in range(0, len(sr_HLA))]
+            # print(map_POS)
+
+
+            dict_ALL_ALLELES = {HLA_names[i] : [ALL_ALLELES[j] for j in range(0, len(ALL_ALLELES)) if (HLA_names[i]+'*' in ALL_ALLELES[j])] for i in range(0, len(HLA_names))}
+
+            # print("\nsegmented `ALL_ALLELES`\n")
+            # for k,v in dict_ALL_ALLELES.items():
+            #     print("\n============\n")
+            #     print("{0} : \n{1}".format(k, v))
+
+
+            ##### map_Label을 제외한 나머지 map파일 항목 만들기 #####
+
+            map_CHR = ['6' for i in range(0, len(map_LABELS))]
+            map_GENETIC_DISTANCE = ['0' for i in range(0, len(map_LABELS))]
+
+
+            df_OUTPUT_map = pd.DataFrame.from_dict({"Chr" : map_CHR, "Name" : map_LABELS.tolist(), "GD" : map_GENETIC_DISTANCE, "POS" : map_POS}).loc[:, ["Chr", "Name", "GD", "POS"]]
+            print(std_MAIN_PROCESS_NAME + "Output .map file.\n")
+            print(df_OUTPUT_map.head(50))
+
+            # df_OUTPUT_map.to_csv('.'.join([_OUTPUT,'HLA.map']), sep='\t', header=False, index=False)
+
+
+
+        if MAKING_OUTPUT_PED:
+
+            ########## < 4. Making OUTPUT.ped file > ##########
+
+            print(std_MAIN_PROCESS_NAME + "[4] Making .ped file.\n")
+
+
+            """
+            
+                    to_df_OUTPUT_ped = []
+            
+                    for i in range(0, len(INPUT_PED.index)):
+            
+                        line = tuple(INPUT_PED.iloc[i, :])
+            
+                        to_df_OUTPUT_ped.extend([
+                            line[0:6] +
+                            PrintGenotypes("A", line[6], line[7], sorted_keys) +
+                            PrintGenotypes("C", line[10], line[11], sorted_keys) +
+                            PrintGenotypes("B", line[8], line[9], sorted_keys) +
+                            PrintGenotypes("DRB1", line[20], line[21], sorted_keys) +
+                            PrintGenotypes("DQA1", line[16], line[17], sorted_keys) +
+                            PrintGenotypes("DQB1", line[18], line[19], sorted_keys) +
+                            PrintGenotypes("DPA1", line[12], line[13], sorted_keys) +
+                            PrintGenotypes("DPB1", line[14], line[15], sorted_keys)
+                        ])
+                            
+                    df_OUTPUT_ped = pd.DataFrame(to_df_OUTPUT_ped)
+                    df_OUTPUT_ped.to_csv(_OUTPUT + '.HLA.ped', sep='\t', header=False, index=False)
+                        
+                    """
+
+
+            to_df_OUTPUT_ped = []
+
+            # for i in range(0, 5):
+            for i in range(0, INPUT_PED.shape[0]):
+
+                # print("\n================\n")
+
+                line_INPUT_PED = tuple(INPUT_PED.iloc[i, :])
+                # print(line_INPUT_PED)
+
+
+                t_line_OUTPUT_PED = [PrintGenotypes3(line_INPUT_PED[2*j], line_INPUT_PED[2*j+1], dict_ALL_ALLELES[HLA_names[j]]) for j in range(0, len(HLA_names))]
+                # print(t_line_OUTPUT_PED)
+                # print(pd.Series(dict_ALL_ALLELES["A"]))
+
+                # Flattening
+                line_OUTPUT_PED = [item for eachlist in t_line_OUTPUT_PED for item in eachlist]
+
+                # print("\nFlattened t_line_OUTPUT_PED is \n")
+                # print(line_OUTPUT_PED)
+
+                to_df_OUTPUT_ped.append(line_OUTPUT_PED)
+
+
+            df_OUTPUT_ped = pd.DataFrame(to_df_OUTPUT_ped)
+            df_OUTPUT_ped.index = INPUT_PED.index
+
+            print(df_OUTPUT_ped.head())
+
+
+            # df_OUTPUT_ped.to_csv('.'.join([_OUTPUT, 'HLA.ped']), sep='\t', header=False, index=True)
+
+
+
+
+        if ADDING_DUMMY_MARKER:
+
+            ########## < 5. Adding dummy_marker to ped and map files > ##########
+
+            """
+            for Compatitability with Plink1.07 version.
+            """
+
+            print(std_MAIN_PROCESS_NAME + "[5] Adding dummy_marker to final outputs.\n")
+
+
+            df_OUTPUT_ped, df_OUTPUT_map = addDummyMarker(df_OUTPUT_ped, df_OUTPUT_map)
+
+            df_OUTPUT_map.to_csv('.'.join([_OUTPUT,'HLA.map']), sep='\t', header=False, index=False)
+            df_OUTPUT_ped.to_csv('.'.join([_OUTPUT, 'HLA.ped']), sep='\t', header=False, index=True)
+
+
+    else:
+
+        """
+        File writing version of encodeHLA.py
+        
+        (1) Load *.chped file.
+        (2) Divide 16 columns into each HLA columns(16/2=8)
+        (3) Do set operation to those two columns so that unique allele names of each HLA will be prepared.
+        (4) Collect them into some dictionary
+        (5) To the set containing unique allele names of each HLA, get unique 1-field names and collect them into another dictionary.
+        (6) Make a new map file of HLA alleles. (Include dummy marker)
+        (7) Make a new ped file of HLA alleles. (Include dummy marker)
+    
+        """
+
+        ### Acquiring `HLA_allele_sets_4field`.
+
+        HLA_allele_sets_4field = {HLA_names[i]: [] for i in range(0, len(HLA_names))}
+
+        with open(_CHPED, 'r') as f_chped:
+
+            count = 0
+
+            for l in f_chped:
+
+                """
+                l[:6] := ("FID", "IID", "PID", "MID", "Sex", "Phe")
+                l[6:8] := HLA-A
+                l[8:10] := HLA-B
+                ...
+                l[20:22] := HLA-DRB1
                 """
 
+                t_line = re.split(r'\s+', l.rstrip('\n'))
 
-        to_df_OUTPUT_ped = []
+                for i in range(0, len(HLA_names)):
 
-        # for i in range(0, 5):
-        for i in range(0, INPUT_PED.shape[0]):
+                    idx1 = 2*i + 6
+                    idx2 = idx1 + 1
 
-            # print("\n================\n")
-
-            line_INPUT_PED = tuple(INPUT_PED.iloc[i, :])
-            # print(line_INPUT_PED)
-
-
-            t_line_OUTPUT_PED = [PrintGenotypes3(line_INPUT_PED[2*j], line_INPUT_PED[2*j+1], dict_ALL_ALLELES[HLA_names[j]]) for j in range(0, len(HLA_names))]
-            # print(t_line_OUTPUT_PED)
-            # print(pd.Series(dict_ALL_ALLELES["A"]))
-
-            # Flattening
-            line_OUTPUT_PED = [item for eachlist in t_line_OUTPUT_PED for item in eachlist]
-
-            # print("\nFlattened t_line_OUTPUT_PED is \n")
-            # print(line_OUTPUT_PED)
-
-            to_df_OUTPUT_ped.append(line_OUTPUT_PED)
+                    if t_line[idx1] not in HLA_allele_sets_4field[HLA_names[i]]:
+                        HLA_allele_sets_4field[HLA_names[i]].append(t_line[idx1])
+                    if t_line[idx2] not in HLA_allele_sets_4field[HLA_names[i]]:
+                        HLA_allele_sets_4field[HLA_names[i]].append(t_line[idx2])
 
 
-        df_OUTPUT_ped = pd.DataFrame(to_df_OUTPUT_ped)
-        df_OUTPUT_ped.index = INPUT_PED.index
-
-        print(df_OUTPUT_ped.head())
+                count += 1
+                # if count > 5 : break
 
 
-        # df_OUTPUT_ped.to_csv('.'.join([_OUTPUT, 'HLA.ped']), sep='\t', header=False, index=True)
+        # # Result checking
+        # for k, v in HLA_allele_sets_4field.items():
+        #     print("{}: {}".format(k, v))
 
 
 
+        ### Acquiring `HLA_allele_sets_1field`
 
-    if ADDING_DUMMY_MARKER:
+        p = re.compile(r'(\w+\*\d{2,3})')
+        HLA_allele_sets_1field = {HLA_names[i]: [] for i in range(0, len(HLA_names))}
 
-        ########## < 5. Adding dummy_marker to ped and map files > ##########
+        for i in range(0, len(HLA_names)):
 
-        """
-        for Compatitability with Plink1.07 version.
-        """
+            for al_4field in HLA_allele_sets_4field[HLA_names[i]]:
 
-        print(std_MAIN_PROCESS_NAME + "[5] Adding dummy_marker to final outputs.\n")
+                m = p.match(al_4field)
+
+                if m and (m.group() not in HLA_allele_sets_1field[HLA_names[i]]):
+                    HLA_allele_sets_1field[HLA_names[i]].append(m.group())
+
+        # # Result checking
+        # for k, v in HLA_allele_sets_1field.items():
+        #     print("{}: {}".format(k, v))
 
 
-        df_OUTPUT_ped, df_OUTPUT_map = addDummyMarker(df_OUTPUT_ped, df_OUTPUT_map)
+        ### Merging 1field and 4field alleles
 
-        df_OUTPUT_map.to_csv('.'.join([_OUTPUT,'HLA.map']), sep='\t', header=False, index=False)
-        df_OUTPUT_ped.to_csv('.'.join([_OUTPUT, 'HLA.ped']), sep='\t', header=False, index=True)
 
+        HLA_allele_sets_merged = {}
+
+        for i in range(0, len(HLA_names)):
+            HLA_allele_sets_merged[HLA_names[i]] = HLA_allele_sets_4field[HLA_names[i]]
+            HLA_allele_sets_merged[HLA_names[i]].extend(HLA_allele_sets_1field[HLA_names[i]])
+
+            # sorting
+            HLA_allele_sets_merged[HLA_names[i]].sort()
+
+        # # Result checking
+        # for k, v in HLA_allele_sets_merged.items():
+        #     print("{}: {}".format(k, v))
+
+
+
+        ### Making new *.HLA.map file.
+
+        # Concatening `HLA_allele_sets_merged` into a single list.
+        l_HLA_allele_sets_merged = []
+        l_HLA = []
+
+        for i in range(0, len(HLA_names)):
+            l_HLA_allele_sets_merged.extend(HLA_allele_sets_merged[HLA_names[i]])
+            l_HLA.extend([HLA_names[i] for z in range(0, len(HLA_allele_sets_merged[HLA_names[i]]))])
+
+        # print(l_HLA_allele_sets_merged)
+        # print(l_HLA)
+
+
+        map_LABELS = ["HLA_" + al for al in l_HLA_allele_sets_merged]
+        map_POS = [str(genepos_hg[_hg][_hla]) for _hla in l_HLA]
+
+        with open(_OUTPUT + ".map", 'w') as f_HLA_map:
+            f_HLA_map.writelines(('\t'.join(["6", map_LABELS[i], "0", map_POS[i]]) + "\n" for i in range(0, len(map_LABELS))))
+            f_HLA_map.write('\t'.join(["6", "dummy_marker", "0", "33999999"]) + "\n")
+
+
+
+        ### Making a new *.HLA.ped file.
+
+        with open(_OUTPUT + ".ped", 'w') as f_HLA_ped:
+            f_HLA_ped.writelines(MakeHLAPed(_CHPED, HLA_allele_sets_merged))
 
 
 
@@ -377,6 +504,53 @@ def PrintGenotypes3(_allele1, _allele2, _seg_ALL_ALLELES):
         return l_output
 
 
+# (2019. 1. 3.) Introduced for memory issues.
+def PrintGenotypes4(_allele1, _allele2, _HLA_allele_sets_merged_byHLA, _as_Upper=False, __return_as_List=False):
+
+    l_output = []
+
+    if len(_HLA_allele_sets_merged_byHLA) > 0:
+
+        if ((_allele1 != "0") and (_allele2 != "0")):
+
+            if not _as_Upper:
+                allele1_PAcheck = ["p" if (x in _allele1) else "a" for x in _HLA_allele_sets_merged_byHLA]
+                allele2_PAcheck = ["p" if (x in _allele2) else "a" for x in _HLA_allele_sets_merged_byHLA]
+            else:
+                allele1_PAcheck = ["P" if (x in _allele1) else "A" for x in _HLA_allele_sets_merged_byHLA]
+                allele2_PAcheck = ["P" if (x in _allele2) else "A" for x in _HLA_allele_sets_merged_byHLA]
+
+
+            for i in range(0, len(allele1_PAcheck)):
+                l_output.append(allele1_PAcheck[i])
+                l_output.append(allele2_PAcheck[i])
+
+
+
+            if __return_as_List:
+                return l_output
+            else:
+                return '\t'.join(l_output)
+
+
+        else:
+
+            for i in range(0, len(_HLA_allele_sets_merged_byHLA)):
+                l_output.append("0")
+                l_output.append("0")
+
+
+            if __return_as_List:
+                return l_output
+            else:
+                return '\t'.join(l_output)
+
+
+    else:
+
+        # In cases such as "DPA1" or "DPB1 where any alleles don't appear, Just skip.
+        return l_output
+
 
 
 def addDummyMarker(_df_ped, _df_map):
@@ -403,6 +577,34 @@ def addDummyMarker(_df_ped, _df_map):
 
 
 
+def MakeHLAPed(_CHPED, _HLA_allele_sets_merged):
+
+    with open(_CHPED, 'r') as f_chped:
+
+        count = 0
+
+        for l in f_chped:
+
+            t_line = re.split(r'\s+', l.rstrip('\n'))
+
+            """
+            t_line[:6] := ("FID", "IID", "PID", "MID", "Sex", "Phe")
+            t_line[6:8] := HLA-A
+            t_line[8:10] := HLA-B
+            ...
+            t_line[20:22] := HLA-DRB1
+            """
+
+            __ped_info__ = '\t'.join(t_line[:6])
+            __genomic_info__ = '\t'.join([PrintGenotypes4(t_line[2*i+6], t_line[2*i+7], _HLA_allele_sets_merged[HLA_names[i]]) for i in range(0, len(HLA_names))])
+
+            dummy_markers = '\t'.join(['d', 'D'] if bool(count % 2) else ['D', 'd'])
+
+
+            yield '\t'.join([__ped_info__, __genomic_info__, dummy_markers]) + "\n"
+
+            count += 1
+
 
 
 
@@ -427,7 +629,7 @@ if __name__ == "__main__":
 
     parser.add_argument("-h", "--help", help="\nShow this help message and exit\n\n", action='help')
 
-    parser.add_argument("-ped", help="\nHLA Type Data(Standard 4-field allele \"*.ped\" file).\n\n", required=True)
+    parser.add_argument("-chped", help="\nHLA Type Data(Standard 4-field allele \"*.ped\" file).\n\n", required=True)
     parser.add_argument("-o", help="\nOutput file prefix.\n\n", required=True)
 
     parser.add_argument("-hg", help="\nHuman Genome version(ex. 18, 19, 38)\n\n", choices=["18", "19", "38"], metavar="hg", default="19")
@@ -442,10 +644,14 @@ if __name__ == "__main__":
     # args = parser.parse_args(["./COATING_TEST.coated.txt", "./TEST_0305", "-hg", "19"])
 
     # (2018. 7. 16.)
-
     # args = parser.parse_args(["-ped", "/Users/wansun/Git_Projects/MakeReference_RECODE_v2/makereference_recode_v2/data/MakeReference/HAPMAP_CEU_HLA.4field.ped",
     #                           "-hg", "19",
     #                           "-o", "/Users/wansun/Git_Projects/MakeReference_RECODE_v2/makereference_recode_v2/MODULE_TEST_HAPMAP_CEU_HLA.4field.imgt370"])
+
+    # # (2019. 1. 2.)
+    # args = parser.parse_args(["-chped", "/Users/wansun/Git_Projects/HATK/tests/_0_wholeProcess/20181221/wtccc_filtered_58C_NBS_RA.4field.chped",
+    #                           "-hg", "18",
+    #                           "-o", "/Users/wansun/Git_Projects/HATK/tests/_0_wholeProcess/20181221/wtccc_filtered_58C_NBS_RA.HLA"])
 
 
 
@@ -457,4 +663,4 @@ if __name__ == "__main__":
     print(args)
 
     # Implementing Main Function
-    encodeHLA(args.ped, args.o, args.hg)
+    encodeHLA(args.chped, args.o, args.hg)
