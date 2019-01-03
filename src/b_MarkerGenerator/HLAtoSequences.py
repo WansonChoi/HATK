@@ -208,10 +208,10 @@ def HLAtoSequences(_chped, _dictionary, _type, _out, __use_pandas=False, __retur
         ### When memory limit is tight.
 
 
-        process = psutil.Process(os.getpid())
-
-        mem_start = process.memory_info().rss / 1024**2
-        t1 = time.clock()
+        # process = psutil.Process(os.getpid())
+        #
+        # mem_start = process.memory_info().rss / 1024**2
+        # t1 = time.clock()
 
 
         ##### < [1] Loading HLA Dictionary > #####
@@ -262,12 +262,12 @@ def HLAtoSequences(_chped, _dictionary, _type, _out, __use_pandas=False, __retur
             f_output.writelines(GenerateLines(_chped, HLA_DICTIONARY_byHLA, HLA_SEQ_LENGTH))
 
 
-        mem_end = process.memory_info().rss / 1024**2
-        t2 = time.clock()
-
-        print("\n\nMemory before : {}(Mb)\nMemory after : {}(Mb)".format(mem_start, mem_end))
-        print("Difference(Memory usage) : {}(Mb)".format(mem_end-mem_start))
-        print("Time : {}(sec)".format(t2 - t1))
+        # mem_end = process.memory_info().rss / 1024**2
+        # t2 = time.clock()
+        #
+        # print("\n\nMemory before : {}(Mb)\nMemory after : {}(Mb)".format(mem_start, mem_end))
+        # print("Difference(Memory usage) : {}(Mb)".format(mem_end-mem_start))
+        # print("Time : {}(sec)".format(t2 - t1))
 
 
         return _out + ".{}.ped".format(_type)
