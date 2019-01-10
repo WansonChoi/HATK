@@ -11,7 +11,7 @@ std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % (os.path.basename(__file__))
 std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % (os.path.basename(__file__))
 
 
-def encodeVariants(_ped, _map, _out, __asCapital=True, __addDummyMarker=False):
+def encodeVariants(_ped, _map, _out, __asSmallLetter=True, __addDummyMarker=True):
 
 
     ### Intermediate path.
@@ -87,7 +87,7 @@ def encodeVariants(_ped, _map, _out, __asCapital=True, __addDummyMarker=False):
         ########## < [2] Making new .ped file > ##########
 
         with open(_out + ".ped", 'w') as f_NewPed:
-            f_NewPed.writelines(MakeNewPed(_ped, l_factors, __asCapital, __addDummyMarker))
+            f_NewPed.writelines(MakeNewPed(_ped, l_factors, __asSmallLetter, __addDummyMarker))
 
 
 
@@ -104,16 +104,16 @@ def encodeVariants(_ped, _map, _out, __asCapital=True, __addDummyMarker=False):
 
         ########## < [4] Making *.allelelist file > ##########
 
-        with open(_out + ".multialleles", 'w') as f_allelelist:
+        with open(_out + ".factors", 'w') as f_allelelist:
             f_allelelist.writelines(MakeAlleleList(_map, l_factors))
 
 
 
 
-def divideToBinaryMarkers(_SNP1, _SNP2, _factors, __asCapital=True):
+def divideToBinaryMarkers(_SNP1, _SNP2, _factors, __asSmallLetter=True):
 
-    _present_ = "P" if __asCapital else "p"
-    _absent_ = "A" if __asCapital else "a"
+    _present_ = "p" if __asSmallLetter else "P"
+    _absent_ = "a" if __asSmallLetter else "A"
 
     Seq = []
 
@@ -193,7 +193,7 @@ def divideToBinaryMarkers(_SNP1, _SNP2, _factors, __asCapital=True):
 
 
 
-def MakeNewPed(_p_ped, _l_factors, __asCapital=True, __addDummyMarker=False):
+def MakeNewPed(_p_ped, _l_factors, __asSmallLetter=True, __addDummyMarker=False):
 
     count = 0
 
@@ -203,7 +203,7 @@ def MakeNewPed(_p_ped, _l_factors, __asCapital=True, __addDummyMarker=False):
 
             __ped_info__ = '\t'.join(t_line[:6])
             __genomic_info__ = '\t'.join([
-                divideToBinaryMarkers(t_line[2 * i + 6], t_line[2 * i + 7], _l_factors[i], __asCapital) for i in range(0, len(_l_factors))
+                divideToBinaryMarkers(t_line[2 * i + 6], t_line[2 * i + 7], _l_factors[i], __asSmallLetter) for i in range(0, len(_l_factors))
             ])
 
             __return__ = '\t'.join([__ped_info__, __genomic_info__])
@@ -353,6 +353,5 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     print(args)
-
 
     encodeVariants(args.ped, args.map, args.o)

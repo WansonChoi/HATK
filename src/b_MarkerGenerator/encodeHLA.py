@@ -27,7 +27,7 @@ genepos_hg_previous = {"18": {"A": 30019970, "C": 31346171, "B": 31431272, "DRB1
 
 
 
-def encodeHLA(_CHPED, _OUTPUT, _hg="18", __asSmallLetter=True, __addDummyMarker=False, __previous_version=False):
+def encodeHLA(_CHPED, _OUTPUT, _hg="18", __asSmallLetter=True, __addDummyMarker=True, __previous_version=False):
 
 
 
