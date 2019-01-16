@@ -25,13 +25,13 @@ GLOBAL_p_JAVA = which("java")
 
 
 ### (Logistic Regression)
-def __hla__Logistic_Regression(_bfile, _out,
-                               _covar, _covar_names,
-                               _phe, _phe_name,
-                               _condition, _condition_list,
-                               _ref_allele, # (2018. 8. 6.) Generate default reference_allele file and make it use that file by default.
-                               _from_mb = 29, _to_mb = 34, _hide_covar = True, _ci = 0.95,
-                               _chr = 6, _allow_no_sex = True):
+def Logistic_Regression(_bfile, _out,
+                        _covar, _covar_names,
+                        _phe, _phe_name,
+                        _condition, _condition_list,
+                        _ref_allele,  # (2018. 8. 6.) Generate default reference_allele file and make it use that file by default.
+                        _from_mb = 29, _to_mb = 34, _hide_covar = True, _ci = 0.95,
+                        _chr = 6, _allow_no_sex = True):
 
 
     ### Argument Processing && Generating Command.
@@ -106,7 +106,7 @@ def MakeDefaultReferenceAllele(_bfile):
 
 
 ### (OmnibusTest)
-def __hla__GetPhasedAlleles(_input, _bgl_phased, _out):
+def GetPhasedAlleles(_input, _bgl_phased, _out):
 
 
     FAM = _input + ".fam"
@@ -117,7 +117,7 @@ def __hla__GetPhasedAlleles(_input, _bgl_phased, _out):
     return _out + ".aa"
 
 
-def __hla__Omnibus_Test(_input, _out, _phased, _phe, _phe_name, _covar, _covar_name="NA", _condition="NA"):
+def Omnibus_Test(_input, _out, _phased, _phe, _phe_name, _covar, _covar_name="NA", _condition="NA"):
 
     """
 
@@ -165,7 +165,7 @@ def __hla__Omnibus_Test(_input, _out, _phased, _phe, _phe_name, _covar, _covar_n
 
 
 ### < Meta Analysis >
-def __hla__Meta_Analysis(_out, _rassoc):
+def Meta_Analysis(_out, _rassoc):
 
 
     ### Generating Command
