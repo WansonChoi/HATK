@@ -264,7 +264,7 @@ def MakeNewMap(_p_map, _l_factors, __addDummyMarker=False):
 
         if __addDummyMarker:
             # Adding Dummy Marker
-            yield '\t'.join(["6", "DummyMarker", "0", "33999999"]) + "\n"
+            yield '\t'.join(["6", "dummyMarker", "0", "33999999"]) + "\n"
 
 
 
