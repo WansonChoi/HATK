@@ -14,38 +14,126 @@ std_MAIN_PROCESS_NAME = "\n[%s]: " % (os.path.basename(__file__))
 std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % (os.path.basename(__file__))
 std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % (os.path.basename(__file__))
 
-
-def HATK_NomenCleaner(_p_hped, _ped_descriptor, _p_iat, _out, _field_format, _f_NoCaption=False):
-
-    # _out
-    if not bool(_out):
-        print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("--out"))
-        sys.exit()
+HLA_names = ["A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1"]
 
 
-    # .iat
-    if not bool(_p_iat):
-        print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("-iat"))
-        sys.exit()
-
-    # Redundant usage check
-    if _ped_descriptor == 2 and _ped_descriptor == 5:
-        print(std_ERROR_MAIN_PROCESS_NAME + "Pointless transformation. (Transformation G-group to G-group is meaningless.)")
-        print("Skip this Transformation Request.\n")
-        sys.exit()
-
-    if _ped_descriptor == 3 and _ped_descriptor == 6:
-        print(std_ERROR_MAIN_PROCESS_NAME + "Pointless transformation. (Transformation P-group to P-group is meaningless.)")
-        print("Skip this Transformation Request.\n")
-        sys.exit()
+# def HATK_NomenCleaner(_hped, _hped_descriptor, _iat, _out, _field_format, _f_NoCaption=False):
+def HATK_NomenCleaner(_NomenCleaner):
 
 
-    return NomenCleaner(_p_hped, _ped_descriptor, _p_iat, _out, _field_format, _f_NoCaption=_f_NoCaption)
+    def wrapper_function(*args, **kwargs):
+
+        # print(args)
+        # print(kwargs)
+
+
+        ##### Indespensable arguments checking
+
+        # _out
+        if not kwargs["_out"]:
+            print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" wasn\'t given. Please check it again.\n'.format("--out"))
+            sys.exit()
+
+
+        # .iat
+        if not kwargs["_iat"]:
+            print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" wasn\'t given. Please check it again.\n'.format("-iat"))
+            sys.exit()
+
+
+        # imgt verison info. (2019. 01. 24.)
+        if not kwargs["_imgt"]:
+            print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" wasn\'t given. Please check it again.\n'.format("-imgt"))
+            sys.exit()
 
 
 
 
-def NomenCleaner(_p_hped, _ped_descriptor, _p_iat, _out, _field_format, _f_NoCaption=False):
+        ##### Additional Argument processing
+
+        ## Output Format Flags
+        # FIELD_FORMAT = 1 if args.oneF else 2 if args.twoF else 3 if args.threeF else 4 if args.fourF else 5 if args.G_group else 6 if args.P_group else -1
+
+        _1field = kwargs["_1field"]
+        _2field = kwargs["_2field"]
+        _3field = kwargs["_3field"]
+        _4field = kwargs["_4field"]
+        _Ggroup = kwargs["_Ggroup"]
+        _Pgroup = kwargs["_Pgroup"]
+        _old_format = kwargs["_old_format"]
+
+        if _1field:
+            FIELD_FORMAT = 1
+        elif _2field:
+            FIELD_FORMAT = 2
+        elif _3field:
+            FIELD_FORMAT = 3
+        elif _4field:
+            FIELD_FORMAT = 4
+        elif _Ggroup:
+            FIELD_FORMAT = 5
+        elif _Pgroup:
+            FIELD_FORMAT = 6
+        elif _old_format:
+            FIELD_FORMAT = 7
+        else:
+            print(std_ERROR_MAIN_PROCESS_NAME + "Something wrong with \"_field_format\" argument. Please check it again.")
+            sys.exit()
+
+
+        ## Which type of ped file given?
+        _p_hped = -1
+        _p_hped_descriptor = -1
+
+        if kwargs["_hped"]:
+            # Standard 4-field *.ped file given
+            _p_hped = kwargs["_hped"]
+            _p_hped_descriptor = 1
+
+        elif kwargs["_hped_G"]:
+            # G-group *.ped file given
+            _p_hped = kwargs["_hped_G"]
+            _p_hped_descriptor = 2
+
+        elif kwargs["_hped_P"]:
+            # P-group *.ped file given
+            _p_hped = kwargs["_hped_P"]
+            _p_hped_descriptor = 3
+        else:
+            # Assuming at least three of them given, there won't be the case which comes to here.
+            print(std_ERROR_MAIN_PROCESS_NAME +
+                  "The argument for *.hped file is not appropriate. Please check these(\"{}\", \"{}\", \"{}\") again.\n".format("-hped", "-hped_Ggroup", "-hped_Pgroup"))
+            sys.exit()
+
+        ## If the given *.hped file is in G-group(or P-group), It's pointless to transform them to the same G-group(or to P-group)
+        if (_p_hped_descriptor == 2 and FIELD_FORMAT == 5):
+            print(std_WARNING_MAIN_PROCESS_NAME + "Pointless transformation. (Transformation G-group to G-group is meaningless.)")
+            print("Skip this Transformation Request.\n")
+            sys.exit()
+
+            # (2018. 7. 10.) P to P or G to G 여도 NoDoubleColon인 경우는 할 수 있게 해줘야할듯.
+
+        if (_p_hped_descriptor == 3 and FIELD_FORMAT == 6):
+            print(std_WARNING_MAIN_PROCESS_NAME + "Pointless transformation. (Transformation P-group to P-group is meaningless.)")
+            print("Skip this Transformation Request.\n")
+            sys.exit()
+
+
+
+        # print(_p_hped)
+        # print(_p_hped_descriptor)
+        # print(FIELD_FORMAT)
+
+        # Implementing "NomenCleaner"
+        return _NomenCleaner(_p_hped, _p_hped_descriptor, kwargs["_iat"], kwargs["_out"], kwargs["_imgt"], FIELD_FORMAT,
+                             __NoCaption=kwargs["__NoCaption"])
+
+    return wrapper_function
+
+
+
+@HATK_NomenCleaner
+def NomenCleaner(_hped, _hped_descriptor, _p_iat, _out, _imgt, _field_format, __NoCaption=False):
 
     """
     NomenCleaner.py
@@ -67,34 +155,55 @@ def NomenCleaner(_p_hped, _ped_descriptor, _p_iat, _out, _field_format, _f_NoCap
 
     ### OUTPUT prefix
 
-    # Preparing intermediate paths.
+    ### Intermediate path.
     _out = _out if not _out.endswith('/') else _out.rstrip('/')
-    if bool(os.path.dirname(_out)): os.makedirs(os.path.dirname(_out), exist_ok=True)
+    if bool(os.path.dirname(_out)):
+        INTERMEDIATE_PATH = os.path.dirname(_out)
+        os.makedirs(INTERMEDIATE_PATH, exist_ok=True)
+    else:
+        INTERMEDIATE_PATH = "./"
+
+
+
+    # (2019. 01. 06) Temporary Hard Coding
+    if _field_format == 7:
+
+        # To make old format (ex. A:01:01)
+
+        with open(_out+".imgt{}.old.chped".format(_imgt), 'w') as f_CHPED:
+            f_CHPED.writelines(Main_Transformation2(_hped))
+
+
+        return _out+".imgt{}.old.chped".format(_imgt)
+
+
 
 
     ########## < Loading "*.hped" file > ##########
 
-    hPED = pd.read_table(_p_hped, sep='\t', header=None, dtype=str,
-                        names=header_ped + [item + "_" + str(i) for item in HLA_names for i in range(1, 3)]).set_index((header_ped))
+    hPED = pd.read_table(_hped, sep='\t', header=None, dtype=str,
+                         names=header_ped + [item + "_" + str(i) for item in HLA_names for i in range(1, 3)]).set_index((header_ped))
 
-    print(std_MAIN_PROCESS_NAME + "Loaded \"*.hped\" file.")
-    print(hPED.head())
+    # print(std_MAIN_PROCESS_NAME + "Loaded \"*.hped\" file.")
+    # print(hPED.head())
+
+
 
     ########## < Loading "*.iat" file > ##########
 
     IAT = pd.read_table(_p_iat, sep='\t', header=0, dtype=str)
 
-    print(std_MAIN_PROCESS_NAME + "Loaded \"*.iat\" file.\n")
-    print(IAT.head())
+    # print(std_MAIN_PROCESS_NAME + "Loaded \"*.iat\" file.\n")
+    # print(IAT.head())
 
     IAT = pd.concat([pd.DataFrame(IAT.loc[:, "Allele"].apply(lambda x: x.split('*')).tolist(), columns=["HLA", "Allele"]), IAT.loc[:, ["G_group", "P_group"]]], axis=1).set_index("HLA")
-    print("\nNew IAT\n")
-    print(IAT.head())
+    # print("\nNew IAT\n")
+    # print(IAT.head())
 
     IAT_dict = {HLA_names[i]: IAT.loc[HLA_names[i], :].set_index("Allele") for i in range(0, len(HLA_names))}
 
-    print("\nIAT divided by HLA gene names.\n")
-    print(IAT_dict["C"].head(10))
+    # print("\nIAT divided by HLA gene names.\n")
+    # print(IAT_dict["C"].head(10))
 
     """
     (2018. 7. 2.)
@@ -128,12 +237,12 @@ def NomenCleaner(_p_hped, _ped_descriptor, _p_iat, _out, _field_format, _f_NoCap
         # idx_list = curr_IAT_dict.index.tolist()
 
         l_temp.append(hPED.loc[:, [curr_hla_name + "_1", curr_hla_name + "_2"]].applymap(
-            lambda x: Main_Transformation(x, curr_hla_name, curr_IAT_dict, _ped_descriptor) if x != "0" else "0"))
+            lambda x: Main_Transformation(x, curr_hla_name, curr_IAT_dict, _hped_descriptor) if x != "0" else "0"))
 
     df_TRANSFORMED_4field = pd.concat(l_temp, axis=1)
 
-    print(std_MAIN_PROCESS_NAME + "Transformed hped DataFrame.\n")
-    print(df_TRANSFORMED_4field.head())
+    # print(std_MAIN_PROCESS_NAME + "Transformed hped DataFrame.\n")
+    # print(df_TRANSFORMED_4field.head())
 
 
 
@@ -143,86 +252,86 @@ def NomenCleaner(_p_hped, _ped_descriptor, _p_iat, _out, _field_format, _f_NoCap
 
     if _field_format == 1:
 
-        print(std_MAIN_PROCESS_NAME + "Output as 1-field.\n")
+        # print(std_MAIN_PROCESS_NAME + "Output as 1-field.\n")
 
         p = re.compile("\d{2,3}[A-Z]?")
         df_TRANSFORMED_1field = df_TRANSFORMED_4field.applymap(
             lambda x: p.match(string=x).group() if bool(p.match(string=x)) else x)
 
-        if not _f_NoCaption:
+        if not __NoCaption:
             df_TRANSFORMED_1field = pd.concat([df_TRANSFORMED_1field.iloc[:, [2*i, 2*i+1]].applymap(lambda x : '*'.join([HLA_names[i], x]) if x != "0" else x) for i in range(0, len(HLA_names))], axis=1)
             df_TRANSFORMED_1field.index = df_TRANSFORMED_4field.index
 
-        print(std_MAIN_PROCESS_NAME + "1-field output chped file.\n")
-        print(df_TRANSFORMED_1field.head())
+        # print(std_MAIN_PROCESS_NAME + "1-field output chped file.\n")
+        # print(df_TRANSFORMED_1field.head())
 
-        df_TRANSFORMED_1field.to_csv(_out + ".1field.chped", sep='\t', header=False, index=True)
-        chPED_RETURN = _out + ".1field.chped"
+        chPED_RETURN = _out + ".imgt{}.1field.chped".format(_imgt)
+        df_TRANSFORMED_1field.to_csv(chPED_RETURN, sep='\t', header=False, index=True)
 
 
 
     elif _field_format == 2:
 
-        print(std_MAIN_PROCESS_NAME + "Output as 2-field.\n")
+        # print(std_MAIN_PROCESS_NAME + "Output as 2-field.\n")
 
         p = re.compile("\d{2,3}\:\d{2,3}[A-Z]?")
         df_TRANSFORMED_2field = df_TRANSFORMED_4field.applymap(
             lambda x: p.match(string=x).group() if bool(p.match(string=x)) else x)
 
-        if not _f_NoCaption:
+        if not __NoCaption:
             df_TRANSFORMED_2field = pd.concat([df_TRANSFORMED_2field.iloc[:, [2*i, 2*i+1]].applymap(lambda x : '*'.join([HLA_names[i], x]) if x != "0" else x) for i in range(0, len(HLA_names))], axis=1)
             df_TRANSFORMED_2field.index = df_TRANSFORMED_4field.index
 
-        print(std_MAIN_PROCESS_NAME + "2-field output chped file.\n")
-        print(df_TRANSFORMED_2field.head())
+        # print(std_MAIN_PROCESS_NAME + "2-field output chped file.\n")
+        # print(df_TRANSFORMED_2field.head())
 
-        df_TRANSFORMED_2field.to_csv(_out + ".2field.chped", sep='\t', header=False, index=True)
-        chPED_RETURN = _out + ".2field.chped"
+        chPED_RETURN = _out + ".imgt{}.2field.chped".format(_imgt)
+        df_TRANSFORMED_2field.to_csv(chPED_RETURN, sep='\t', header=False, index=True)
 
 
 
     elif _field_format == 3:
 
-        print(std_MAIN_PROCESS_NAME + "Output as 3-field.\n")
+        # print(std_MAIN_PROCESS_NAME + "Output as 3-field.\n")
 
         p = re.compile("\d{2,3}\:\d{2,3}\:\d{2,3}[A-Z]?")
         df_TRANSFORMED_3field = df_TRANSFORMED_4field.applymap(
             lambda x: p.match(string=x).group() if bool(p.match(string=x)) else x)
 
-        if not _f_NoCaption:
+        if not __NoCaption:
             df_TRANSFORMED_3field = pd.concat([df_TRANSFORMED_3field.iloc[:, [2*i, 2*i+1]].applymap(lambda x : '*'.join([HLA_names[i], x]) if x != "0" else x) for i in range(0, len(HLA_names))], axis=1)
             df_TRANSFORMED_3field.index = df_TRANSFORMED_4field.index
 
-        print(std_MAIN_PROCESS_NAME + "3-field output chped file.\n")
-        print(df_TRANSFORMED_3field.head())
+        # print(std_MAIN_PROCESS_NAME + "3-field output chped file.\n")
+        # print(df_TRANSFORMED_3field.head())
 
-        df_TRANSFORMED_3field.to_csv(_out + ".3field.chped", sep='\t', header=False, index=True)
-        chPED_RETURN = _out + ".3field.chped"
+        chPED_RETURN = _out + ".imgt{}.3field.chped".format(_imgt)
+        df_TRANSFORMED_3field.to_csv(chPED_RETURN, sep='\t', header=False, index=True)
 
 
 
     elif _field_format == 4:
 
-        print(std_MAIN_PROCESS_NAME + "Output as standard 4-field.\n")
+        # print(std_MAIN_PROCESS_NAME + "Output as standard 4-field.\n")
 
-        if not _f_NoCaption:
+        if not __NoCaption:
 
             df_idx = df_TRANSFORMED_4field.index
 
             df_TRANSFORMED_4field = pd.concat([df_TRANSFORMED_4field.iloc[:, [2*i, 2*i+1]].applymap(lambda x : '*'.join([HLA_names[i], x]) if x != "0" else x) for i in range(0, len(HLA_names))], axis=1)
             df_TRANSFORMED_4field.index = df_idx
 
-        print(std_MAIN_PROCESS_NAME + "4-field output chped file.\n")
-        print(df_TRANSFORMED_4field.head())
+        # print(std_MAIN_PROCESS_NAME + "4-field output chped file.\n")
+        # print(df_TRANSFORMED_4field.head())
 
-        df_TRANSFORMED_4field.to_csv(_out + ".4field.chped", sep='\t', header=False, index=True)
-        chPED_RETURN = _out + ".4field.chped"
+        chPED_RETURN = _out + ".imgt{}.4field.chped".format(_imgt)
+        df_TRANSFORMED_4field.to_csv(chPED_RETURN, sep='\t', header=False, index=True)
 
 
 
     elif _field_format == 5:
 
-        print(std_MAIN_PROCESS_NAME + "Output as G-group.\n")
+        # print(std_MAIN_PROCESS_NAME + "Output as G-group.\n")
 
         # for i in range(0, len(HLA_names)):
         #     print(df_TRANSFORMED_4field.loc[:, [HLA_names[i] + "_1", HLA_names[i] + "_2"]].)
@@ -232,36 +341,36 @@ def NomenCleaner(_p_hped, _ped_descriptor, _p_iat, _out, _field_format, _f_NoCap
             lambda x: IAT_dict[HLA_names[i]].loc[x, "G_group"] if str(x) != "0" else x) for i in
                                            range(0, len(HLA_names))], axis=1)
 
-        if not _f_NoCaption:
+        if not __NoCaption:
             df_TRANSFORMED_Ggroup = pd.concat([df_TRANSFORMED_Ggroup.iloc[:, [2*i, 2*i+1]].applymap(lambda x : '*'.join([HLA_names[i], x]) if x != "0" else x) for i in range(0, len(HLA_names))], axis=1)
             df_TRANSFORMED_Ggroup.index = df_TRANSFORMED_4field.index
 
-        print(std_MAIN_PROCESS_NAME + "G-group output chcped file.\n")
-        print(df_TRANSFORMED_Ggroup.head())
+        # print(std_MAIN_PROCESS_NAME + "G-group output chcped file.\n")
+        # print(df_TRANSFORMED_Ggroup.head())
 
-        df_TRANSFORMED_Ggroup.to_csv(_out + ".Ggroup.chped", sep='\t', header=False, index=True)
-        chPED_RETURN = _out + ".Ggroup.chped"
+        chPED_RETURN = _out + ".imgt{}.Ggroup.chped".format(_imgt)
+        df_TRANSFORMED_Ggroup.to_csv(chPED_RETURN, sep='\t', header=False, index=True)
 
 
 
     elif _field_format == 6:
 
-        print(std_MAIN_PROCESS_NAME + "Output as P-group.\n")
+        # print(std_MAIN_PROCESS_NAME + "Output as P-group.\n")
 
         df_TRANSFORMED_Pgroup = pd.concat([df_TRANSFORMED_4field.loc[:,
                                            [HLA_names[i] + "_1", HLA_names[i] + "_2"]].applymap(
             lambda x: IAT_dict[HLA_names[i]].loc[x, "P_group"] if str(x) != "0" else x) for i in
                                            range(0, len(HLA_names))], axis=1)
 
-        if not _f_NoCaption:
+        if not __NoCaption:
             df_TRANSFORMED_Pgroup = pd.concat([df_TRANSFORMED_Pgroup.iloc[:, [2*i, 2*i+1]].applymap(lambda x : '*'.join([HLA_names[i], x]) if x != "0" else x) for i in range(0, len(HLA_names))], axis=1)
             df_TRANSFORMED_Pgroup.index = df_TRANSFORMED_4field.index
 
-        print(std_MAIN_PROCESS_NAME + "P-group output chped file.\n")
-        print(df_TRANSFORMED_Pgroup.head())
+        # print(std_MAIN_PROCESS_NAME + "P-group output chped file.\n")
+        # print(df_TRANSFORMED_Pgroup.head())
 
-        df_TRANSFORMED_Pgroup.to_csv(_out + ".Pgroup.chped", sep='\t', header=False, index=True)
-        chPED_RETURN = _out + ".Pgroup.chped"
+        chPED_RETURN = _out + ".imgt{}.Pgroup.chped".format(_imgt)
+        df_TRANSFORMED_Pgroup.to_csv(chPED_RETURN, sep='\t', header=False, index=True)
 
 
 
@@ -719,6 +828,65 @@ def Main_Transformation(_single_allele, _hla_name, _df_IAT_Allelelist, _ped_desc
 
 
 
+# (2019. 01. 02) Introduced while working with Yang.
+def Main_Transformation2(_hped):
+
+    #### [Warning] Temporary Hard coding. This funciton will be either adopted to the main transformation function or deprecated.
+
+    with open(_hped, 'r') as f_hped:
+
+        count = 0
+
+        for l in f_hped:
+
+            t_line = re.split(r'\s+', l.rstrip('\n'))
+
+            """
+            [0,1,2,3,4,5] := ped file information
+            [6,7] := HLA-A,
+            [8,9] := HLA-B,
+            ...,
+            [20, 21] := HLA-DRB1
+            """
+            __ped_info__ = '\t'.join(t_line[:6])
+            __genomic_info__ = '\t'.join([Old_Transformation(t_line[2*i+6], t_line[2*i+7], HLA_names[i]) for i in range(0, len(HLA_names))])
+
+            yield '\t'.join([__ped_info__, __genomic_info__]) + "\n"
+
+            count += 1
+            # if count > 5: break
+
+
+
+def Old_Transformation(_HLA_allele1, _HLA_allele2, _hla):
+
+
+    if (_HLA_allele1 == "0" and _HLA_allele2 == "0"):
+        return '\t'.join(["0", "0"])
+    else:
+
+        p = re.compile(r'\d{4}[A-Z]?$') # Only 4-digit with or without single suffix is accepted in old transformation.
+        p_1field = re.compile(r'\d{2}') # decided to also process 1-field HLA alleles.
+
+        # Allele1
+        if p.match(_HLA_allele1):
+            _new_al1 = ':'.join([_hla, _HLA_allele1[:2], _HLA_allele1[2:4]])
+        elif p_1field.match(_HLA_allele1):
+            _new_al1 = ':'.join([_hla, _HLA_allele1])
+        else:
+            _new_al1 = "0" if _HLA_allele1 == "0" else "-1"
+
+        # Allele2
+        if p.match(_HLA_allele2):
+            _new_al2 = ':'.join([_hla, _HLA_allele2[:2], _HLA_allele2[2:4]])
+        elif p_1field.match(_HLA_allele2):
+            _new_al2 = ':'.join([_hla, _HLA_allele2])
+        else:
+            _new_al2 = "0" if _HLA_allele2 == "0" else "-1"
+
+
+        return '\t'.join([_new_al1, _new_al2])
+
 
 
 
@@ -728,7 +896,7 @@ if __name__ == '__main__':
                                      description=textwrap.dedent('''\
     #########################################################################################
 
-     NomenCleaner.py
+        NomenCleaner.py
 
 
     #########################################################################################
@@ -741,12 +909,9 @@ if __name__ == '__main__':
 
     # Input (1) : *.ped file
     PED_TYPE = parser.add_mutually_exclusive_group(required=True)
-    PED_TYPE.add_argument("-ped", help="\nHLA Type Data(Standard 4-field allele \"*.ped\" file).\n\n", dest="ped",
-                          default="Not_given")
-    PED_TYPE.add_argument("-ped-Ggroup", help="\nHLA Type Data(G-group allele \"*.ped\" file).\n\n", dest="ped_G",
-                          default="Not_given")
-    PED_TYPE.add_argument("-ped-Pgroup", help="\nHLA Type Data(P-group allele \"*.ped\" file).\n\n", dest="ped_P",
-                          default="Not_given")
+    PED_TYPE.add_argument("-hped", help="\nHLA Type Data(Standard 4-field allele \"*.hped\" file).\n\n", dest="hped")
+    PED_TYPE.add_argument("-hped-Ggroup", help="\nHLA Type Data(G-group allele \"*.hped\" file).\n\n", dest="hped_G")
+    PED_TYPE.add_argument("-hped-Pgroup", help="\nHLA Type Data(P-group allele \"*.hped\" file).\n\n", dest="hped_P")
 
     # Input (2) : *.iat file
     parser.add_argument("-iat", help="\nIntegrated Allele Table file(*.iat).\n\n", required=True)
@@ -770,34 +935,16 @@ if __name__ == '__main__':
     output_digit_selection.add_argument("--P-group", help="\nOutput ped file as 'P-group' format.\n\n",
                                         action="store_true")
 
+    output_digit_selection.add_argument("--old-format", help="\nOutput hped file which is compatible with original MakeReference. (ex. A:01:01)\n\n",
+                                        action="store_true")
+
+
     # Flag to remove HLA gene caption.
     parser.add_argument("--NoCaption", help="\nOutput without HLA gene(ex. \"A*\").\n\n", action='store_true')
 
 
 
     ##### <for Test> #####
-
-    # ==========< Input as standard 4-field allele >==========
-
-    # args = parser.parse_args(["-ped", "/Users/wansun/Git_Projects/MakeReference_RECODE_v2/makereference_recode_v2/data/COATING_PED/HAPMAP_CEU_HLA.5digits.example.ped",
-    #                           "-iat", "/Users/wansun/Git_Projects/MakeReference_RECODE_v2/makereference_recode_v2/data/ClassifyGroups/INTEGRATED_ALLELE_TABLE.imgt3320.iat",
-    #                           "-o", "/Users/wansun/Git_Projects/MakeReference_RECODE_v2/makereference_recode_v2/CCCCOATED_PED_TEST"
-    #                           ])
-
-    # # Standard 4-field ped file(500 sample)
-    # args = parser.parse_args(["-ped", "/Users/wansun/Git_Projects/MakeReference_RECODE_v2/makereference_recode_v2/data/NomenCleaner/DummyPED.standard.500.ped",
-    #                           "-iat", "/Users/wansun/Git_Projects/MakeReference_RECODE_v2/makereference_recode_v2/data/ClassifyGroups/INTEGRATED_ALLELE_TABLE.imgt3320.iat",
-    #                           "-o", "/Users/wansun/Git_Projects/MakeReference_RECODE_v2/makereference_recode_v2/COATING_PED_test_standard.500",
-    #                           "--4field"
-    #                           ])
-
-    # 2-field ped file(500 sample)
-    # args = parser.parse_args(["-ped", "/Users/wansun/Git_Projects/MakeReference_RECODE_v2/makereference_recode_v2/data/NomenCleaner/DummyPED.standard.500.ped",
-    #                           "-iat", "/Users/wansun/Git_Projects/MakeReference_RECODE_v2/makereference_recode_v2/data/ClassifyGroups/INTEGRATED_ALLELE_TABLE.imgt3320.iat",
-    #                           "-o", "/Users/wansun/Git_Projects/MakeReference_RECODE_v2/makereference_recode_v2/COATING_PED_test.500.NC",
-    #                           "--2field",
-    #                           "--NoCaption"
-    #                           ])
 
     # (2018. 7. 9.)
     # args = parser.parse_args(["-ped",
@@ -866,49 +1013,67 @@ if __name__ == '__main__':
     ##### <for Publication> #####
 
     args = parser.parse_args()
+    print(args)
+
 
     ### Additional Argument processing
 
     ## Output Format Flags
-    FILE_FORMAT = 1 if args.oneF else 2 if args.twoF else 3 if args.threeF else 4 if args.fourF else 5 if args.G_group else 6 if args.P_group else -1
+    # FIELD_FORMAT = 1 if args.oneF else 2 if args.twoF else 3 if args.threeF else 4 if args.fourF else 5 if args.G_group else 6 if args.P_group else -1
+    if args.oneF:
+        FIELD_FORMAT = 1
+    elif args.twoF:
+        FIELD_FORMAT = 2
+    elif args.threeF:
+        FIELD_FORMAT = 3
+    elif args.fourF:
+        FIELD_FORMAT = 4
+    elif args.G_group:
+        FIELD_FORMAT = 5
+    elif args.P_group:
+        FIELD_FORMAT = 6
+    elif args.old_format:
+        FIELD_FORMAT = 7
+    else:
+        FIELD_FORMAT = -1
+
 
     ## Which type of ped file given?
-    _p_ped = -1
-    _p_ped_descriptor = -1
+    _p_hped = -1
+    _p_hped_descriptor = -1
 
-    if args.ped != "Not_given":
+    if args.hped:
         # Standard 4-field *.ped file given
-        _p_ped = args.ped
-        _p_ped_descriptor = 1
-    elif args.ped_G != "Not_given":
+        _p_hped = args.hped
+        _p_hped_descriptor = 1
+    elif args.hped_G:
         # G-group *.ped file given
-        _p_ped = args.ped_G
-        _p_ped_descriptor = 2
-    elif args.ped_P != "Not_given":
+        _p_hped = args.hped_G
+        _p_hped_descriptor = 2
+    elif args.hped_P:
         # P-group *.ped file given
-        _p_ped = args.ped_P
-        _p_ped_descriptor = 3
+        _p_hped = args.hped_P
+        _p_hped_descriptor = 3
     else:
         # Assuming at least three of them given, there won't be the case which comes to here.
-        print("\nArgument for input *.ped file has a problem. Please check it again.\n")
+        print(std_ERROR_MAIN_PROCESS_NAME + "Argument for input *.ped file is not appropriate. Please check it again.\n")
         sys.exit()
 
     ## If input ped file is given as G-group(or P-group), then user can't choose output format as same G-group(as same to P-group)
-    if (_p_ped_descriptor == 2 and FILE_FORMAT == 5):
-        print("\nYou just asked pointless transformation(Transformation G-group to G-group is pointless).")
+    if (_p_hped_descriptor == 2 and FIELD_FORMAT == 5):
+        print(std_WARNING_MAIN_PROCESS_NAME + "You just asked pointless transformation(Transformation G-group to G-group is pointless).")
         print("Skip this Transformation Request.\n")
         sys.exit()
 
         # (2018. 7. 10.) P to P or G to G 여도 NoDoubleColon인 경우는 할 수 있게 해줘야할듯.
 
-    if (_p_ped_descriptor == 3 and FILE_FORMAT == 6):
-        print("\nYou just asked pointless transformation(Transformation P-group to P-group is pointless).")
+    if (_p_hped_descriptor == 3 and FIELD_FORMAT == 6):
+        print(std_WARNING_MAIN_PROCESS_NAME + "You just asked pointless transformation(Transformation P-group to P-group is pointless).")
         print("Skip this Transformation Request.\n")
         sys.exit()
 
-    print(args)
 
 
     # Implementing Main Function
-    NomenCleaner(_p_ped, _p_ped_descriptor, args.iat, args.o, FILE_FORMAT, _f_NoCaption=args.NoCaption)
+    NomenCleaner(_p_hped, _p_hped_descriptor, args.iat, args.o, FIELD_FORMAT, __NoCaption=args.NoCaption)
 
