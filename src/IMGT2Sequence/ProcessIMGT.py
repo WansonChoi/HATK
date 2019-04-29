@@ -5,22 +5,24 @@ import pandas as pd
 import argparse, textwrap
 
 
-def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc="Not_given", _gen="Not_given", _prot="Not_given", _no_Indel=False,
-                _save_intermediates=False):
+########## < Core Global Varialbes > ##########
+
+std_MAIN_PROCESS_NAME = "\n[%s]: " % (os.path.basename(__file__))
+std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % (os.path.basename(__file__))
+std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % (os.path.basename(__file__))
+
+HLA_names = ["A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1"]
+isREVERSE = {'A': False, 'C': True, 'B': True, 'DRB1': True, 'DQA1': False, 'DQB1': True, 'DPA1': True, 'DPB1': False}
+
+
+
+
+
+def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc=None, _gen=None, _prot=None, _no_Indel=False, _save_intermediates=False,
+                _no_prime=True):
 
 
     ########## < Core Variables > ##########
-
-
-    std_MAIN_PROCESS_NAME = "\n[%s]: " % (os.path.basename(__file__))
-    std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % (os.path.basename(__file__))
-
-    print(std_MAIN_PROCESS_NAME + "Conducting \"ProcessIMGT\".")
-
-
-    ### General
-    HLA_names = ["A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1"]
-    isREVERSE = {'A': False, 'C': True, 'B': True, 'DRB1': True, 'DQA1': False, 'DQB1': True, 'DPA1': True, 'DPB1': False}
 
     ### Paths
     p_data = "./data/IMGT2Sequence"
@@ -30,22 +32,20 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc="Not_given", _gen="Not_given", _pro
 
     # Preparing intermediate paths.
     _out = _out if not _out.endswith('/') else _out.rstrip('/')
-
-    INTERMEDIATE_PATH = os.path.dirname(_out)
-
-    if not os.path.exists(INTERMEDIATE_PATH):
-        os.system(' '.join(["mkdir", "-p", INTERMEDIATE_PATH]))
+    if bool(os.path.dirname(_out)):
+        INTERMEDIATE_PATH = os.path.dirname(_out)
+        os.makedirs(INTERMEDIATE_PATH, exist_ok=True)
 
 
 
-    if _nuc == "Not_given" or _prot == "Not_given" or _gen == "Not_given":
-
+    # if _nuc == "Not_given" or _prot == "Not_given" or _gen == "Not_given":
+    if not (_nuc and _prot and _gen):
         print(std_ERROR_MAIN_PROCESS_NAME + "{0}_prot.txt, {0}_gen.txt or {0}_nuc.txt files can't be found. Please check it again.\n".format(_hla))
         sys.exit()
 
 
 
-    ### Checking "HLA_INTEGRATED_POSITIONS" file
+    ### "HLA_INTEGRATED_POSITIONS" file
 
     HLA_INTEGRATED_POSITIONS_filename = os.path.join(p_data, "HLA_INTEGRATED_POSITIONS_hg{0}.txt".format(_hg))
 
@@ -53,7 +53,7 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc="Not_given", _gen="Not_given", _pro
         print(std_ERROR_MAIN_PROCESS_NAME + "\"{0}\" not found!".format(HLA_INTEGRATED_POSITIONS_filename))
         sys.exit()
 
-    print(HLA_INTEGRATED_POSITIONS_filename)
+    # print(HLA_INTEGRATED_POSITIONS_filename)
 
 
 
@@ -65,12 +65,12 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc="Not_given", _gen="Not_given", _pro
 
     HLA_INTEGRATED_POS = pd.read_table(HLA_INTEGRATED_POSITIONS_filename, sep='\t', header=None, usecols = [0, 1, 2, 3],
                                        names=['HLA', 'start', 'end', 'Type', "Direction"], index_col=0).loc[_hla, :]
-    print("\nLoaded HLA information table.\n")
-    print(HLA_INTEGRATED_POS.head())
+    # print("\nLoaded HLA information table.\n")
+    # print(HLA_INTEGRATED_POS.head())
 
     sr_temp = HLA_INTEGRATED_POS.loc[:, "Type"]
     exon1_offset = HLA_INTEGRATED_POS.loc[sr_temp == "exon1", "start"].iat[0] # `exon1_offset` will be used in generating SNPS dictionary.
-    print("\nStarting point of genomic position of HLA-{0} is {1}\n".format(_hla, exon1_offset))
+    # print("\nStarting point of genomic position of HLA-{0} is {1}\n".format(_hla, exon1_offset))
 
 
 
@@ -93,21 +93,25 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc="Not_given", _gen="Not_given", _pro
     if _1_LOADING_GEN:
 
 
-        print("\n\n=============<GEN>=============\n")
-        print(std_MAIN_PROCESS_NAME + "Processing gen files for SNPS.\n")
+        # print("\n\n=============<GEN>=============\n")
+        # print(std_MAIN_PROCESS_NAME + "Processing gen files for SNPS.\n")
 
         # Raw Markers
         df_raw_Markers_gen, start_offset_gen = LoadRawSeq2(_gen, _hla, "gen")
         # df_raw_Markers_gen.to_csv(_out+".HLA_{0}.gen.raw.markers.txt".format("A"), sep='\t', header=False, index=True)
-        print(df_raw_Markers_gen.head())
+        # print("1")
+        # print(df_raw_Markers_gen.head())
 
         # Raw Sequences
         df_raw_Seqs_gen = get_DF_rawSeqs(df_raw_Markers_gen)
         # df_raw_Seqs_gen.to_csv(_out+".HLA_{0}.gen.raw.seqs.txt".format(_hla), sep='\t', header=False, index=True)
+        # print("2")
         # print(df_raw_Seqs_gen.head())
 
         # Raw Seqeunces splitted (for Exon checking)
         df_raw_Seqs_splitted_gen = df_raw_Seqs_gen.str.split('\|', expand=True)
+        # print("3")
+        # print(df_raw_Seqs_splitted_gen.head())
 
 
 
@@ -141,15 +145,15 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc="Not_given", _gen="Not_given", _pro
         l_idx_gen.pop()
         l_idx_gen.append("3_prime")
 
-        print("\n{0}\n".format(l_idx_gen))
+        # print("\n{0}\n".format(l_idx_gen))
 
 
         # (2018. 9. 13.) Processing NoIndel dataframe became necessary due to making map file of AA.
         df_Seqs_splited_noIndel_gen.columns = pd.Index(l_idx_gen)
         df_Seqs_splited_noIndel_gen.index.name = "Alleles"
 
-        print("\nSeqs without Indel characters of gen splitted.\n")
-        print(df_Seqs_splited_noIndel_gen.head())
+        # print("\nSeqs without Indel characters of gen splitted.\n")
+        # print(df_Seqs_splited_noIndel_gen.head())
 
 
         # File Writing
@@ -185,7 +189,8 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc="Not_given", _gen="Not_given", _pro
         p = re.compile("(e|E)xon\d?")
 
         df_Markers_onlyExons =  df_Markers_NoIndel_gen.filter(regex=p, axis=1)
-        print(df_Markers_onlyExons.head())
+        # print("Only exons")
+        # print(df_Markers_onlyExons.head())
 
         # df_Markers_onlyExons.to_csv(_out+".HLA_{0}.gen.onlyexons.markers.txt".format(_hla), sep='\t', header=True, index=True)
 
@@ -214,11 +219,31 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc="Not_given", _gen="Not_given", _pro
             if _save_intermediates:
                 df_Seqs_splited_Indel_gen.to_csv(_out+".HLA_{0}.gen.seqs.indel.splitted.txt".format(_hla), sep='\t', header=True, index=True) # **
 
+                """
+                `df_Seqs_splited_Indel_gen`
+                
+                Alleles	        / 5_prime  / exon1    / intron1  / ... / 3_prime
+                A*01:01:01:01   / CAGGA... / ATGGC... / GTGAG... / ... / GACAGCTGCCTT...
+                A*01:01:01:02N  / CAGGA... / ATGGC... / GTGAG... / ... / GACAGCTGCCTT...
+                ...
+                
+                """
+
 
 
         ##### Making final output as markers and seqs.
 
         df_temp = df_Seqs_splited_Indel_gen if not _no_Indel else df_Seqs_splited_noIndel_gen
+
+
+
+        # ### (2019. 01. 21.) Excluding "5-prime" and "3-prime" sequence parts.
+        # p = re.compile(r'exon\d|intron\d')
+        # df_temp = df_temp.filter(regex=p, axis=1)
+        #
+        # print("df_temp")
+        # print(df_temp.head())
+
 
 
         l_genomic_positions = getPositionInfo_SNPS("gen", df_temp, _hla, isREVERSE[_hla], exon1_offset,
@@ -227,11 +252,31 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc="Not_given", _gen="Not_given", _pro
                                                     _has_Indel=(not _no_Indel))
 
 
+        # for i in range(0, df_temp.shape[1]):
+        #     print(len(l_genomic_positions[i]))
+        #     print(len(l_relative_positions[i]))
+        #     print(len(df_temp.iloc[0, i]))
+
         # Final output as markers
         df_Markers_gen = SeqsToMarkers(df_temp, l_genomic_positions, l_relative_positions)
 
         print("\nFinal output as markers\n")
         print(df_Markers_gen.head())
+
+
+
+        if _no_prime:
+            ### (2019. 01. 22.) Excluding prime sequences.
+            p = re.compile(r'exon\d|intron\d')
+            df_Markers_gen = df_Markers_gen.filter(regex=p, axis=1)
+
+            # print("Prime filetered")
+            # print(df_Markers_gen.head())
+
+            if _save_intermediates:
+                df_Markers_gen.to_csv(_out + ".HLA_{0}.gen.markers.filt.indel.txt".format(_hla), sep='\t', header=True, index=True)
+
+
 
 
         # File Writing
@@ -426,7 +471,19 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc="Not_given", _gen="Not_given", _pro
         `SNPS_forMAP` will be made by merging those DataFrames sequentially.
         """
 
-        final_AA_forMAP, final_SNPS_forMAP = coatingPrecursor(precursor_AA_forMAP.astype(str), precursor2_AA_forMAP.astype(str), precursor_SNPS_forMAP.astype(str))
+        # (2019. 01. 22.)
+        if not _no_prime:
+
+            final_AA_forMAP, final_SNPS_forMAP = coatingPrecursor(precursor_AA_forMAP.astype(str), precursor2_AA_forMAP.astype(str), precursor_SNPS_forMAP.astype(str))
+
+        else:
+
+            setPositionOfIndel(precursor2_AA_forMAP)
+            setPositionOfIndel(precursor_SNPS_forMAP)
+
+            final_AA_forMAP = precursor2_AA_forMAP
+            final_SNPS_forMAP = precursor_SNPS_forMAP
+
 
         print("\nFinally created \"forMAP\" of AA.\n")
         print(final_AA_forMAP.head())
@@ -476,7 +533,7 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc="Not_given", _gen="Not_given", _pro
 def LoadRawSeq2(_nuc_filename, _hla,  _type):
 
 
-    print("\nLoading \"{0}\" file".format(_nuc_filename))
+    # print("\nLoading \"{0}\" file".format(_nuc_filename))
 
     ##### < Core Local Variables > #####
 
@@ -507,7 +564,7 @@ def LoadRawSeq2(_nuc_filename, _hla,  _type):
     line_number_marks = line_number_marks.decode('UTF-8').rstrip('\n').split('\n')
     line_number_marks = [int(item.split(':')[0]) - 1 for item in line_number_marks]
 
-    print("\nMarks is {0}".format(line_number_marks))
+    # print("\nMarks is {0}".format(line_number_marks))
 
     # Classification based on file type 2
     if _type == "nuc":
@@ -529,8 +586,8 @@ def LoadRawSeq2(_nuc_filename, _hla,  _type):
 
     NumberOfAlleles = allele_end - (allele_start - 1)
 
-    print("\nallele start and end are {0} and {1}\n".format(allele_start, allele_end))
-    print("# of Alleles is {0}\n".format(NumberOfAlleles))
+    # print("\nallele start and end are {0} and {1}\n".format(allele_start, allele_end))
+    # print("# of Alleles is {0}\n".format(NumberOfAlleles))
 
 
     ##### READING_RAW_SEQUENCES
@@ -557,8 +614,8 @@ def LoadRawSeq2(_nuc_filename, _hla,  _type):
         line_offset = -1
 
 
-    if _type == "nuc" or _type == "gen":
-        print("\nStart Offset is : {0}\n".format(line_offset))
+    # if _type == "nuc" or _type == "gen":
+    #     print("\nStart Offset is : {0}\n".format(line_offset))
 
 
     ##### APPENDING_RAW_SEQUENCES
@@ -981,12 +1038,18 @@ def coatingPrecursor(_df_precursor1_AA, _df_precursor2_AA, _df_precursor1_SNPS):
     ##### (1) Marking "Signal Peptide" (only for `_df_precursor2_AA`)
     flag1 = _df_precursor2_AA.iloc[:, 0].str.match('^-')
 
-    sr_temp = _df_precursor2_AA.loc[flag1, "Type"].apply(lambda x: '_'.join([x, "Signal_Peptide"]))
+    if flag1.any():
 
-    sr_Type = sr_temp.append(_df_precursor2_AA.loc[~flag1, "Type"]).reset_index(drop=True)
-    sr_Type.name = "Type"
+        sr_temp = _df_precursor2_AA.loc[flag1, "Type"].apply(lambda x: '_'.join([x, "Signal_Peptide"]))
 
-    t_df_precursor2_AA = pd.concat([_df_precursor2_AA.iloc[:, [0, 1]], sr_Type], axis=1)
+        sr_Type = sr_temp.append(_df_precursor2_AA.loc[~flag1, "Type"]).reset_index(drop=True)
+        sr_Type.name = "Type"
+
+        t_df_precursor2_AA = pd.concat([_df_precursor2_AA.iloc[:, [0, 1]], sr_Type], axis=1)
+
+    else:
+        t_df_precursor2_AA = _df_precursor2_AA
+
 
 
     ##### (2) Re-labeling indel("i").
@@ -996,16 +1059,22 @@ def coatingPrecursor(_df_precursor1_AA, _df_precursor2_AA, _df_precursor1_SNPS):
     ### <AA>
 
     flag_indel_AA = t_df_precursor2_AA.iloc[:, 0] == 'i'
-    idx_indel_AA = t_df_precursor2_AA.loc[flag_indel_AA, :].index.tolist()
 
-    for i in idx_indel_AA:
-        t_rel_pos = 'x'.join([t_df_precursor2_AA.iat[i - 1, 0], t_df_precursor2_AA.iat[i + 1, 0]])
-        t_gen_pos = round((int(t_df_precursor2_AA.iat[i - 1, 1]) + int(t_df_precursor2_AA.iat[i + 1, 1])) / 2)
+    if flag_indel_AA.any():
 
-        t_df_precursor2_AA.iat[i, 0] = t_rel_pos
-        t_df_precursor2_AA.iat[i, 1] = t_gen_pos
+        idx_indel_AA = t_df_precursor2_AA.loc[flag_indel_AA, :].index.tolist()
+
+        for i in idx_indel_AA:
+            t_rel_pos = 'x'.join([t_df_precursor2_AA.iat[i - 1, 0], t_df_precursor2_AA.iat[i + 1, 0]])
+            t_gen_pos = round((int(t_df_precursor2_AA.iat[i - 1, 1]) + int(t_df_precursor2_AA.iat[i + 1, 1])) / 2)
+
+            t_df_precursor2_AA.iat[i, 0] = t_rel_pos
+            t_df_precursor2_AA.iat[i, 1] = t_gen_pos
+
 
     df_RETURN_AA_forMAP = t_df_precursor2_AA  # (***) "forMAP" file for AA is done.
+
+
 
 
     ### <SNPS>
@@ -1013,14 +1082,17 @@ def coatingPrecursor(_df_precursor1_AA, _df_precursor2_AA, _df_precursor1_SNPS):
     t_df_precursor1_SNPS = _df_precursor1_SNPS.copy()
 
     flag_indel_SNPS = t_df_precursor1_SNPS.iloc[:, 0] == 'i'
-    idx_indel_SNPS = t_df_precursor1_SNPS.loc[flag_indel_SNPS, :].index.tolist()
 
-    for i in idx_indel_SNPS:
-        t_rel_pos = 'x'.join([t_df_precursor1_SNPS.iat[i - 1, 0], t_df_precursor1_SNPS.iat[i + 1, 0]])
-        t_gen_pos = round((int(t_df_precursor1_SNPS.iat[i - 1, 1]) + int(t_df_precursor1_SNPS.iat[i + 1, 1])) / 2)
+    if flag_indel_SNPS.any():
 
-        t_df_precursor1_SNPS.iat[i, 0] = t_rel_pos
-        t_df_precursor1_SNPS.iat[i, 1] = t_gen_pos
+        idx_indel_SNPS = t_df_precursor1_SNPS.loc[flag_indel_SNPS, :].index.tolist()
+
+        for i in idx_indel_SNPS:
+            t_rel_pos = 'x'.join([t_df_precursor1_SNPS.iat[i - 1, 0], t_df_precursor1_SNPS.iat[i + 1, 0]])
+            t_gen_pos = round((int(t_df_precursor1_SNPS.iat[i - 1, 1]) + int(t_df_precursor1_SNPS.iat[i + 1, 1])) / 2)
+
+            t_df_precursor1_SNPS.iat[i, 0] = t_rel_pos
+            t_df_precursor1_SNPS.iat[i, 1] = t_gen_pos
 
 
     ##### (3) Merging
@@ -1100,6 +1172,26 @@ def coatingPrecursor(_df_precursor1_AA, _df_precursor2_AA, _df_precursor1_SNPS):
 
     return [df_RETURN_AA_forMAP, df_RETURN_SNPS_forMAP]
 
+
+
+
+def setPositionOfIndel(_df_precursor):
+
+    """
+
+    """
+
+    for i, value in _df_precursor.iloc[:, 0].iteritems():
+
+        if value == 'i':
+
+            t_rel_pos = 'x'.join([str(_df_precursor.iat[i-1, 0]), str(_df_precursor.iat[i+1, 0])])
+            t_gen_pos = int(round((_df_precursor.iat[i-1, 1] + _df_precursor.iat[i+1, 1]) / 2))
+
+            _df_precursor.iat[i, 0] = t_rel_pos
+            _df_precursor.iat[i, 1] = t_gen_pos
+
+    return 0
 
 
 
@@ -1314,5 +1406,5 @@ if __name__ == "__main__":
 
 
     # main function execution
-    ProcessIMGT(_out=args.o, _hla=args.HLA, _hg=args.hg, _imgt=args.imgt, _nuc=args.nuc, _gen=args.gen,
-                _prot=args.prot, _no_Indel=args.no_Indel)
+    ProcessIMGT(_out=args.o, _hla=args.HLA, _hg=args.hg, _imgt=args.imgt, _nuc=args.nuc, _gen=args.gen, _prot=args.prot,
+                _no_Indel=args.no_Indel)
