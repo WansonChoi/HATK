@@ -6,66 +6,221 @@ import argparse, textwrap
 from glob import glob
 import multiprocessing as mp
 
-########## < Core Global Variables > ##########
 
-### Module name && Std template
+########## < Core Global Varialbes > ##########
+
 std_MAIN_PROCESS_NAME = "\n[%s]: " % (os.path.basename(__file__))
 std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % (os.path.basename(__file__))
+std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % (os.path.basename(__file__))
+
+HLA_names = ["A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1"]
+
+
+class IMGT_Dictionary(object):
+
+    def __init__(self, _imgt, _hg, _out, *args, **kwargs):
+
+        """
+
+        Either (1) generate a new Dictionary files or (2) find existing dictionaries.
+
+        """
+
+        ########## < Assigning arguments > ##########
+
+        self.imgt = _imgt
+        self.hg = _hg
+        self.out = _out
+
+        # Main Outputs
+        self.__dict_AA__ = None
+        self.__dict_SNPS__ = None
+        self.__IAT__ = None
+        self.__d_MapTable__ = None
+
+        # Flags to check
+        self.f__dict_AA__ = False
+        self.f__dict_SNPS__ = False
+        self.f__IAT__ = False
+        self.f__d_MapTable__ = False
+
+        # Optional arguments
+        self.no_indel = kwargs["_no_indel"]
+        self.multiprocess = kwargs["_multiprocess"]
+        self.save_intermediates = kwargs["_save_intermediates"]
+        self.imgt_dir = kwargs["_imgt_dir"]
+
+        # Summary string
+        self.summary_string = ""
+
+
+        dir_path = os.path.dirname(self.out)
+        version_label = "hg{}.imgt{}".format(self.hg, self.imgt)
 
 
 
-def HATK_IMGT2Sequence(_HG, _OUTPUT, _IMGT, _no_Indel=False, _no_MultiP = False,
-                       _save_intermediates = False, _imgt_dir = None):
 
-    """
-
-    The wrapping function in interface with "HATK.py".
-    Necessary argument checking will be conducted here.
-
-    """
-
-
-    ### Argument(HATK.py) checking.
-
-    # "-hg"
-    if not bool(_HG):
-        print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("-hg"))
-        sys.exit()
-
-    # "-imgt"
-    if not bool(_IMGT):
-        print(
-            std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("-imgt"))
-        sys.exit()
-
-
-    RETURN_dict_AA, RETURN_dict_SNPS, RETURN_IAT, RETURN_MAPTABLE = \
-        IMGT2Sequence(_HG=_HG, _OUTPUT=_OUTPUT, _IMGT=_IMGT, _no_Indel=_no_Indel,
-                      _no_MultiP=_no_MultiP, _save_intermediates=_save_intermediates,
-                      _imgt_dir=_imgt_dir)
-
-
-    # # Summary
-    # print(std_MAIN_PROCESS_NAME + "Output from IMGT2Sequence.\n")
-    # print("1. dict_AA : {0}\n".format(RETURN_dict_AA))
-    # print("2. dict_SNPS : {0}\n".format(RETURN_dict_SNPS))
-    # print("3. IAT : {0}\n".format(RETURN_IAT))
-
-    return [RETURN_dict_AA, RETURN_dict_SNPS, RETURN_IAT, RETURN_MAPTABLE]
+        ### Checking results
+        # print(std_MAIN_PROCESS_NAME + "Arguments for HLA Dictionary")
+        # for k, v in self.__dict__.items():
+        #     print("{} : {}".format(k, v))
 
 
 
 
-def IMGT2Sequence(_HG, _OUTPUT, _IMGT, _no_Indel=False, _no_MultiP = False,
-                  _save_intermediates = False, _imgt_dir = None):
+        ########## < Checking existing results > ##########
+
+        # (1) dict_AA
+        dict_AA_txt = os.path.join(dir_path, "HLA_DICTIONARY_AA.{}.txt".format(version_label))
+        dict_AA_map = os.path.join(dir_path, "HLA_DICTIONARY_AA.{}.map".format(version_label))
+
+        if os.path.exists(dict_AA_txt) and os.path.exists(dict_AA_map):
+            self.__dict_AA__ = os.path.join(dir_path, "HLA_DICTIONARY_AA.{}".format(version_label))
+            self.f__dict_AA__ = True
+
+        # (2) dict_SNPS
+        dict_SNPS_txt = os.path.join(dir_path, "HLA_DICTIONARY_SNPS.{}.txt".format(version_label))
+        dict_SNPS_map = os.path.join(dir_path, "HLA_DICTIONARY_SNPS.{}.map".format(version_label))
+
+        if os.path.exists(dict_SNPS_txt) and os.path.exists(dict_SNPS_map):
+            self.__dict_SNPS__ = os.path.join(dir_path, "HLA_DICTIONARY_SNPS.{}".format(version_label))
+            self.f__dict_SNPS__ = True
+
+        # (3) iat
+        iat = os.path.join(dir_path, "HLA_INTEGRATED_ALLELE_TABLE.{}.iat".format(version_label))
+
+        if os.path.exists(iat):
+            self.__IAT__ = iat
+            self.f__IAT__ = True
+
+        # (4) maptables
+        self.__d_MapTable__ = {hla_name: None for hla_name in HLA_names}
+
+        f_temp = True
+
+        for hla_name in HLA_names:
+            t_maptable = os.path.join(dir_path, "HLA_MAPTABLE_{}.{}.txt".format(hla_name, version_label))
+            if os.path.exists(t_maptable):
+                self.__d_MapTable__[hla_name] = t_maptable
+            else:
+                f_temp = False
+
+        self.f__d_MapTable__ = f_temp
+
+
+
+
+        # if (self.f__dict_AA__ and self.f__dict_SNPS__ and self.f__IAT__ and self.f__d_MapTable__):
+        #
+        #     ### All of previously generated dictionary files are available.
+        #
+        #     self.summary_string = \
+        #         ''.join([self.summary_string,
+        #                  "< IMGT2Sequence(Using existing results) >\n" \
+        #                  "- HLA Amino Acids : {}\n" \
+        #                  "- HLA SNPs : {}\n" \
+        #                  "- Integrated Allele Table : {}\n" \
+        #                  "- Maptables for heatmap : \n" \
+        #                  "   A   : {A}\n" \
+        #                  "   B   : {B}\n" \
+        #                  "   C   : {C}\n" \
+        #                  "   DPA1: {DPA1}\n" \
+        #                  "   DPB1: {DPB1}\n" \
+        #                  "   DQA1: {DQA1}\n" \
+        #                  "   DQB1: {DQB1}\n" \
+        #                  "   DRB1: {DRB1}\n".format(self.__dict_AA__, self.__dict_SNPS__, self.__IAT__, **self.__d_MapTable__)
+        #                  ])
+        #
+        # else:
+        #
+        #     ### Not all of previously generated dictionary files are available.
+        #
+        #     self.__dict_AA__, self.__dict_SNPS__, self.__IAT__, self.__d_MapTable__ = \
+        #         IMGT2Sequence(self.imgt, self.hg, self.out,
+        #                       _no_Indel=self.no_indel, _MultiP=self.multiprocess,
+        #                       _save_intermediates=self.save_intermediates, _imgt_dir=self.imgt_dir)
+        #
+        #
+        #     self.f__dict_AA__ = True
+        #     self.f__dict_SNPS__ = True
+        #     self.f__IAT__ = True
+        #     self.f__d_MapTable__ = True
+        #
+        #
+        #     self.summary_string = \
+        #         ''.join([self.summary_string,
+        #                  "< IMGT2Sequence(Newly generated.) >\n" \
+        #                  "- HLA Amino Acids : {}\n" \
+        #                  "- HLA SNPs : {}\n" \
+        #                  "- Integrated Allele Table : {}\n" \
+        #                  "- Maptables for heatmap : \n" \
+        #                  "   A   : {A}\n" \
+        #                  "   B   : {B}\n" \
+        #                  "   C   : {C}\n" \
+        #                  "   DPA1: {DPA1}\n" \
+        #                  "   DPB1: {DPB1}\n" \
+        #                  "   DQA1: {DQA1}\n" \
+        #                  "   DQB1: {DQB1}\n" \
+        #                  "   DRB1: {DRB1}\n".format(self.__dict_AA__, self.__dict_SNPS__, self.__IAT__, **self.__d_MapTable__)
+        #                  ])
+
+
+        # temporary hardcoding ---
+        self.__dict_AA__, self.__dict_SNPS__, self.__IAT__, self.__d_MapTable__ = \
+            IMGT2Sequence(self.imgt, self.hg, self.out,
+                          _no_Indel=self.no_indel, _MultiP=self.multiprocess,
+                          _save_intermediates=self.save_intermediates, _imgt_dir=self.imgt_dir)
+
+
+        self.f__dict_AA__ = True
+        self.f__dict_SNPS__ = True
+        self.f__IAT__ = True
+        self.f__d_MapTable__ = True
+
+
+        self.summary_string = \
+            ''.join([self.summary_string,
+                     "< IMGT2Sequence(Newly generated.) >\n" \
+                     "- HLA Amino Acids : {}\n" \
+                     "- HLA SNPs : {}\n" \
+                     "- Integrated Allele Table : {}\n" \
+                     "- Maptables for heatmap : \n" \
+                     "   A   : {A}\n" \
+                     "   B   : {B}\n" \
+                     "   C   : {C}\n" \
+                     "   DPA1: {DPA1}\n" \
+                     "   DPB1: {DPB1}\n" \
+                     "   DQA1: {DQA1}\n" \
+                     "   DQB1: {DQB1}\n" \
+                     "   DRB1: {DRB1}\n".format(self.__dict_AA__, self.__dict_SNPS__, self.__IAT__, **self.__d_MapTable__)
+                     ])
+        # --Hardcoding#
+
+
+    def __bool__(self):
+        return (self.f__dict_AA__ and self.f__dict_SNPS__ and self.f__IAT__ and self.f__d_MapTable__)
+
+
+    def __str__(self):
+        return self.summary_string
+
+
+    def getDictionaries(self):
+        return [self.__dict_AA__, self.__dict_SNPS__, self.__IAT__, self.__d_MapTable__]
+
+
+
+
+
+
+
+def IMGT2Sequence(_imgt, _hg, _out, _no_Indel=False, _MultiP=False, _save_intermediates=False, _imgt_dir=None,
+                  _no_prime = True):
 
     """
     """
 
     ########## < Core Variables > ##########
-
-
-    print(std_MAIN_PROCESS_NAME + "Conducting IMGT2Sequence.")
 
 
     # (2018. 8. 28.) This order must be kept.
@@ -90,15 +245,15 @@ def IMGT2Sequence(_HG, _OUTPUT, _IMGT, _no_Indel=False, _no_MultiP = False,
     ### OUTPUT prefix
 
     # Preparing intermediate paths.
-    _OUTPUT = _OUTPUT if not _OUTPUT.endswith('/') else _OUTPUT.rstrip('/')
-    if bool(os.path.dirname(_OUTPUT)):
-        INTERMEDIATE_PATH = os.path.dirname(_OUTPUT)
+    _out = _out if not _out.endswith('/') else _out.rstrip('/')
+    if bool(os.path.dirname(_out)):
+        INTERMEDIATE_PATH = os.path.dirname(_out)
         os.makedirs(INTERMEDIATE_PATH, exist_ok=True)
 
 
-    _OUTPUT_AA_RETURN = os.path.join(INTERMEDIATE_PATH, 'HLA_DICTIONARY_AA.hg{0}.imgt{1}'.format(_HG, _IMGT))
-    _OUTPUT_SNPS_RETURN = os.path.join(INTERMEDIATE_PATH, 'HLA_DICTIONARY_SNPS.hg{0}.imgt{1}'.format(_HG, _IMGT))
-    _OUTPUT_IAT_RETURN = os.path.join(INTERMEDIATE_PATH, 'HLA_INTEGRATED_ALLELE_TABLE.hg{0}.imgt{1}'.format(_HG, _IMGT))
+    _OUTPUT_AA_RETURN = os.path.join(INTERMEDIATE_PATH, 'HLA_DICTIONARY_AA.hg{0}.imgt{1}'.format(_hg, _imgt))
+    _OUTPUT_SNPS_RETURN = os.path.join(INTERMEDIATE_PATH, 'HLA_DICTIONARY_SNPS.hg{0}.imgt{1}'.format(_hg, _imgt))
+    _OUTPUT_IAT_RETURN = os.path.join(INTERMEDIATE_PATH, 'HLA_INTEGRATED_ALLELE_TABLE.hg{0}.imgt{1}'.format(_hg, _imgt))
 
 
     ########## < Dependency Checking > ##########
@@ -130,12 +285,13 @@ def IMGT2Sequence(_HG, _OUTPUT, _IMGT, _no_Indel=False, _no_MultiP = False,
 
     ##### < Necessary Static Data files > #####
 
-    IMGTHLA_directory = os.path.join(p_data, "IMGTHLA{0}".format(_IMGT)) if not bool(_imgt_dir) else _imgt_dir
+    IMGTHLA_directory = os.path.join(p_data, "IMGTHLA{0}".format(_imgt)) if not bool(_imgt_dir) else _imgt_dir
+    # If `_imgt_dir` is not given, then use default IMGTHLA data in `p_data`.
 
-    print(IMGTHLA_directory)
+    # print(IMGTHLA_directory)
 
     if not os.path.isdir(IMGTHLA_directory):
-        print(std_ERROR_MAIN_PROCESS_NAME + "\"{0}\" not found!".format(IMGTHLA_directory))
+        print(std_ERROR_MAIN_PROCESS_NAME + "The given IMGT-HLA directory \"{0}\" can't be found!".format(IMGTHLA_directory))
         sys.exit()
 
     # (2018. 10. 26.) Loading `HLA_INTEGRATED_TABLE` file is moved to "ProcessIMGT.py".
@@ -190,9 +346,9 @@ def IMGT2Sequence(_HG, _OUTPUT, _IMGT, _no_Indel=False, _no_MultiP = False,
                 print(std_ERROR_MAIN_PROCESS_NAME + "\"{0}_gen.txt\" file can't be found.".format(HLA_names[i]))
                 sys.exit()
 
-    print("\nTarget prot and gen files : \n")
-    print(TARGET_prot_files)
-    print(TARGET_gen_files)
+    # print("\nTarget prot and gen files : \n")
+    # print(TARGET_prot_files)
+    # print(TARGET_gen_files)
 
 
     ##### < "Allelelist.txt", "hla_nom_g.txt", "hla_nom_p.txt" > #####
@@ -229,7 +385,7 @@ def IMGT2Sequence(_HG, _OUTPUT, _IMGT, _no_Indel=False, _no_MultiP = False,
 
         ########## < 1. Making HLA Dictionary. > ##########
 
-        print(std_MAIN_PROCESS_NAME + "[1] Making HLA dictionary file.")
+        # print(std_MAIN_PROCESS_NAME + "[1] Making HLA dictionary file.")
 
         l_df_Seqs_AA = []
         l_df_forMAP_AA = []
@@ -239,11 +395,11 @@ def IMGT2Sequence(_HG, _OUTPUT, _IMGT, _no_Indel=False, _no_MultiP = False,
 
 
 
-        if not _no_MultiP:
+        if _MultiP:
 
             pool = mp.Pool(processes=8)
 
-            dict_Pool = {HLA_names[i]: pool.apply_async(ProcessIMGT, (_OUTPUT, HLA_names[i], _HG, _IMGT,
+            dict_Pool = {HLA_names[i]: pool.apply_async(ProcessIMGT, (_out, HLA_names[i], _hg, _imgt,
                                                                       TARGET_nuc_files[HLA_names[i]], TARGET_gen_files[HLA_names[i]], TARGET_prot_files[HLA_names[i]],
                                                                       _no_Indel, _save_intermediates))
                          for i in range(0, len(HLA_names))}
@@ -254,15 +410,15 @@ def IMGT2Sequence(_HG, _OUTPUT, _IMGT, _no_Indel=False, _no_MultiP = False,
 
         for i in range(0, len(HLA_names)):
 
-            if not _no_MultiP:
+            if _MultiP:
 
                 t_df_Seqs_SNPS, t_df_Seqs_AA, t_df_forMAP_SNPS, t_df_forMAP_AA, t_MAPTABLE = dict_Pool[HLA_names[i]].get()
 
             else:
                 t_df_Seqs_SNPS, t_df_Seqs_AA, t_df_forMAP_SNPS, t_df_forMAP_AA, t_MAPTABLE \
-                    = ProcessIMGT(_OUTPUT, HLA_names[i], _HG, _IMGT,
-                                  TARGET_nuc_files[HLA_names[i]], TARGET_gen_files[HLA_names[i]], TARGET_prot_files[HLA_names[i]],
-                                  _no_Indel=_no_Indel, _save_intermediates=_save_intermediates)
+                    = ProcessIMGT(_out, HLA_names[i], _hg, _imgt, TARGET_nuc_files[HLA_names[i]],
+                                  TARGET_gen_files[HLA_names[i]], TARGET_prot_files[HLA_names[i]], _no_Indel=_no_Indel,
+                                  _save_intermediates=_save_intermediates)
 
 
 
@@ -301,7 +457,7 @@ def IMGT2Sequence(_HG, _OUTPUT, _IMGT, _no_Indel=False, _no_MultiP = False,
 
         ########## < 2. Making *.iat file. > ##########
 
-        print(std_MAIN_PROCESS_NAME + "[2] Making \"*.iat\" file.")
+        # print(std_MAIN_PROCESS_NAME + "[2] Making \"*.iat\" file.")
 
         t_dict_AA = _OUTPUT_AA_RETURN + ".txt"
         t_dict_SNPS = _OUTPUT_SNPS_RETURN+ ".txt"
@@ -317,8 +473,8 @@ def IMGT2Sequence(_HG, _OUTPUT, _IMGT, _no_Indel=False, _no_MultiP = False,
 
         print(std_MAIN_PROCESS_NAME + "[5] Removing unnecessary files")
 
-    print("\n")
-    print(std_MAIN_PROCESS_NAME + "Making HLA Dictionary is done.\n")
+    # print("\n")
+    # print(std_MAIN_PROCESS_NAME + "Making HLA Dictionary is done.\n")
 
 
     return [_OUTPUT_AA_RETURN, _OUTPUT_SNPS_RETURN, _OUTPUT_IAT_RETURN, d_MapTables]
@@ -330,16 +486,16 @@ def IMGT2Sequence(_HG, _OUTPUT, _IMGT, _no_Indel=False, _no_MultiP = False,
 
 #################### < Core Functions > ####################
 
-def MakeMap(_hla, _type, _df_forMAP):
+def MakeMap(_hla, _type, _df_forMAP, _no_prime=True):
 
     if not (_type == "AA" or _type == "SNPS"):
         return -1
 
-    if _type == "AA" and (_df_forMAP.shape[1] != 3):
-        return -1
-
-    if _type == "SNPS" and (_df_forMAP.shape[1] != 6):
-        return -1
+    # if _type == "AA" and (_df_forMAP.shape[1] != 3):
+    #     return -1
+    #
+    # if _type == "SNPS" and (_df_forMAP.shape[1] != 6):
+    #     return -1
 
     """
     (1) Chr
@@ -348,48 +504,107 @@ def MakeMap(_hla, _type, _df_forMAP):
     (4) Genomic Positions
     """
 
-    _df_forMAP = _df_forMAP.astype(str)
 
-    sr_Chr = pd.Series(["6" for i in range(0, _df_forMAP.shape[0])])
-    l_Label = []
-    sr_GD = pd.Series(["0" for i in range(0, _df_forMAP.shape[0])])
-    sr_GenPos = _df_forMAP.iloc[:, 1]
+    if not _no_prime:
 
-    # Processing `l_Label`.
+        _df_forMAP = _df_forMAP.astype(str)
 
-    p = re.compile('-?\d+x-?\d+')
+        sr_Chr = pd.Series(["6" for i in range(0, _df_forMAP.shape[0])])
+        l_Label = []
+        sr_GD = pd.Series(["0" for i in range(0, _df_forMAP.shape[0])])
+        sr_GenPos = _df_forMAP.iloc[:, 1]
 
-    for i in range(0, _df_forMAP.shape[0]):
+        # Processing `l_Label`.
 
-        t_rel_pos = _df_forMAP.iat[i, 0]
-        t_gen_pos = _df_forMAP.iat[i, 1]
-        t_type = _df_forMAP.iat[i, 2]
+        p = re.compile('-?\d+x-?\d+')
 
-        main_label = '_'.join([("INDEL" if bool(p.match(t_rel_pos)) else "AA" if _type == "AA" else "SNPS"),
-                               _hla, t_rel_pos, t_gen_pos, t_type])
+        for i in range(0, _df_forMAP.shape[0]):
 
-        if _type == "SNPS":
+            t_rel_pos = _df_forMAP.iat[i, 0]
+            t_gen_pos = _df_forMAP.iat[i, 1]
+            t_type = _df_forMAP.iat[i, 2]
 
-            additional_label = ["AA"]
+            main_label = '_'.join([("INDEL" if bool(p.match(t_rel_pos)) else "AA" if _type == "AA" else "SNPS"),
+                                   _hla, t_rel_pos, t_gen_pos, t_type])
 
-            t_AA_rel_pos = _df_forMAP.iat[i, 3]
-            t_AA_gen_pos = _df_forMAP.iat[i, 4]
-            #             t_AA_type = _df_forMAP.iat[i, 5]
+            if _type == "SNPS":
 
-            if t_AA_rel_pos != "nan" and t_AA_rel_pos != "NaN":
-                additional_label.append(t_AA_rel_pos)
+                additional_label = ["AA"]
 
-            if t_AA_gen_pos != "nan" and t_AA_gen_pos != "NaN":
-                additional_label.append(t_AA_gen_pos)
+                t_AA_rel_pos = _df_forMAP.iat[i, 3]
+                t_AA_gen_pos = _df_forMAP.iat[i, 4]
+                #             t_AA_type = _df_forMAP.iat[i, 5]
+
+                if t_AA_rel_pos != "nan" and t_AA_rel_pos != "NaN":
+                    additional_label.append(t_AA_rel_pos)
+
+                if t_AA_gen_pos != "nan" and t_AA_gen_pos != "NaN":
+                    additional_label.append(t_AA_gen_pos)
 
 
-            if len(additional_label) > 1:
-                additional_label = '_'.join(additional_label)
-                main_label = '_'.join([main_label, additional_label])
+                if len(additional_label) > 1:
+                    additional_label = '_'.join(additional_label)
+                    main_label = '_'.join([main_label, additional_label])
 
-        l_Label.append(main_label)
+            l_Label.append(main_label)
 
-    df_MAP = pd.concat([sr_Chr, pd.Series(l_Label), sr_GD, sr_GenPos], axis=1)
+        df_MAP = pd.concat([sr_Chr, pd.Series(l_Label), sr_GD, sr_GenPos], axis=1)
+
+
+
+
+    else:
+
+        sr_Chr = pd.Series(("6" for i in range(0, _df_forMAP.shape[0])))
+        l_Label = []
+        sr_GD = pd.Series(("0" for i in range(0, _df_forMAP.shape[0])))
+        sr_GenPos = _df_forMAP.iloc[:, 1]
+
+
+        p = re.compile('-?\d+x-?\d+') # The pattern for "INDEL"
+
+        for row in _df_forMAP.astype(str).itertuples():
+
+            """
+            row[0] := index
+            
+            row[1] := rel_pos
+            row[2] := gen_pos
+            row[3] := type
+            
+            """
+
+            # t = "INDEL" if bool(p.match(row[1])) else "AA" if _type == "AA" else "SNPS" # (2019. 03. 03.) SNP2HLA README.v2.txt수정하다가, Indel label 때문에 수정하기 전.
+
+            if bool(p.match(row[1])):
+
+                if _type == "AA":
+                    t = "INDEL_AA"
+                elif _type == "SNPS":
+                    t = "INDEL_SNPS"
+
+                main_label = '_'.join([t, _hla, *row[1:-1]])
+
+
+            else:
+
+                if _type == "AA":
+                    t = "AA"
+                elif _type == "SNPS":
+                    t = "SNPS"
+
+                main_label = '_'.join([t, _hla, *row[1:]])
+
+
+
+            l_Label.append(main_label)
+
+        l_Label = pd.Series(l_Label)
+
+        # Output map file.
+        df_MAP = pd.concat([sr_Chr, l_Label, sr_GD, sr_GenPos], axis=1)
+
+
 
 
     return df_MAP
@@ -422,7 +637,7 @@ if __name__ == "__main__":
                         required=True)
 
     parser.add_argument("--no-indel", help="\nExcluding indel in HLA sequence outputs.\n\n", action='store_true')
-    parser.add_argument("--no-multiprocess", help="\nSetting off parallel multiprocessing.\n\n", action='store_true')
+    parser.add_argument("--multiprocess", help="\nSetting off parallel multiprocessing.\n\n", action='store_true')
     parser.add_argument("--save-intermediates", help="\nDon't remove intermediate files.\n\n", action='store_true')
     parser.add_argument("--imgt-dir", help="\nIn case User just want to specify the directory of IMGT data folder.\n\n")
 
@@ -452,6 +667,5 @@ if __name__ == "__main__":
 
 
     ##### < Main function Execution. > #####
-    IMGT2Sequence(_HG=args.hg, _OUTPUT=args.o, _IMGT=args.imgt, _no_Indel=args._no_indel,
-                  _no_MultiP=args.no_mulitprocess, _save_intermediates=args.save_intermediates,
-                  _imgt_dir=args.imgt_dir)
+    IMGT2Sequence(_imgt=args.imgt, _hg=args.hg, _out=args.o, _no_Indel=args._no_indel, _MultiP=args.mulitprocess,
+                  _save_intermediates=args.save_intermediates, _imgt_dir=args.imgt_dir)

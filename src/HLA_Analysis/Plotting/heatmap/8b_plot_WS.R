@@ -133,17 +133,17 @@ print(head(alleleP))
 
 
 
-# (new (by. wanson))
+# # (new (by. wanson))
 
-# White space procesing(To adjust the potision of "HLA-*-..." labels)
-Labels_nchar = sapply(rownames(P), nchar)
-N_WhiteSpace = sapply(Labels_nchar, function(x){max(Labels_nchar)-x})
-Labels_prefix = paste0("HLA-", rownames(P), sapply(N_WhiteSpace, function(x){strrep('  ', x)}))
+# # White space procesing(To adjust the potision of "HLA-*-..." labels)
+# Labels_nchar = sapply(rownames(P), nchar)
+# N_WhiteSpace = sapply(Labels_nchar, function(x){max(Labels_nchar)-x})
+# Labels_prefix = paste0("HLA-", rownames(P), sapply(N_WhiteSpace, function(x){strrep('  ', x)}))
 
-rownames(P) = Labels_prefix
+# rownames(P) = Labels_prefix
 
-# refine.hla.name <- function(x) { paste0("HLA-", x) } # argument[4]
-# rownames(P)=sapply(rownames(P), refine.hla.name)
+refine.hla.name <- function(x) { paste0("HLA-", x) } # argument[4]
+rownames(P)=sapply(rownames(P), refine.hla.name)
 
 refine.aa.name <- function(x) { paste0(args4.HLA_name_, "#", x) }
 colnames(P)=sapply(colnames(P), refine.aa.name)
@@ -176,8 +176,8 @@ colnames(P)[ncol(P)]=""
 
 brew=rev(brewer.pal(11,"Spectral"))
 
-# pdf(paste0(args5.plot.outf_, ".pdf"), width=7, height=5.2, pointsize=8) # argument[5]
-pdf(paste0(args5.plot.outf_, ".pdf"), width=7*2, height=5.2*2, pointsize=8) # argument[5] # (2018. 11. 29.) plot size problem is ongoing.
+pdf(paste0(args5.plot.outf_, ".pdf"), width=7, height=5.2, pointsize=8) # argument[5]
+# pdf(paste0(args5.plot.outf_, ".pdf"), width=7*2, height=5.2*2, pointsize=8) # argument[5] # (2018. 11. 29.) plot size problem is ongoing.
 par(mar=c(5,4,4,3))
 
 mycol=colorRampPalette(brew)(100)
