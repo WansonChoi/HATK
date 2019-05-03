@@ -157,7 +157,8 @@ class Study(object):
         if self.platform and self.rhped:
             from src.HLA2HPED.HLA2HPED import HATK_HLA2HPED
             from src.NomenCleaner.NomenCleaner import HATK_NomenCleaner
-            self.__HLA_type__ = HATK_NomenCleaner(HATK_HLA2HPED(self.rhped, self.out, self.platform), 1, self.iat, self.out, 4)
+            self.__HLA_type__ = HATK_NomenCleaner(HATK_HLA2HPED(self.rhped, self.out, self.platform), 1, self.iat,
+                                                  self.out, 4)
 
             self.summary_string = ''.join([self.summary_string, "- Platform : {}\n".format(self.platform)])
 

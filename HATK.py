@@ -89,8 +89,8 @@ if __name__ == "__main__":
     g_IMGT2Sequence.add_argument("-imgt", help="\nIMGT-HLA data version(ex. 370, 3300)\n\n")
 
     g_IMGT2Sequence.add_argument("--no-indel", help="\nExcluding indel in HLA sequence outputs.\n\n", action='store_true')
-    g_IMGT2Sequence.add_argument("--no-multiprocess", help="\nSetting off parallel multiprocessing.\n\n", action='store_true')
-    g_IMGT2Sequence.add_argument("--save-intermediates", help="\nDon't remove intermediate files.\n\n", action='store_true')
+    g_IMGT2Sequence.add_argument("--multiprocess", help="\nSetting off parallel multiprocessing.\n\n", action='store_true')
+    g_IMGT2Sequence.add_argument("--save-intermediates", help="\nDon't remove intermediate files.\n\n", action='store_true') # It will be shared with 'b:MarkerGenerator'
     g_IMGT2Sequence.add_argument("--imgt-dir", help="\nGiving direct path to the directory of IMGT data folder.\n\n")
 
 
@@ -138,6 +138,9 @@ if __name__ == "__main__":
     format_selection.add_argument("--G-group", help="\nOutput *.chped file as 'G-group' format.\n\n",
                                         action="store_true")
     format_selection.add_argument("--P-group", help="\nOutput *.chped file as 'P-group' format.\n\n",
+                                        action="store_true")
+
+    format_selection.add_argument("--old-format", help="\nOutput hped file which is compatible with original MakeReference. (ex. A:01:01)\n\n",
                                         action="store_true")
 
     # Additional utility flags
@@ -214,7 +217,7 @@ if __name__ == "__main__":
     g_manhattan = parser.add_argument_group(title='(Plotting 2) Manhattan', description='')
     g_manhattan.add_argument("--manhattan", help="\nGenerate Manhattan Plot.\n\n", action="store_true")
 
-    g_manhattan.add_argument("--title", "-pt", help="\nThe title of output plot.\n\n")
+    g_manhattan.add_argument("--title", "-pt", help="\nThe title of output plot.\n\n", default="Manhattan")
     g_manhattan.add_argument("--point-color", "-pc", help="\nPoint color(ex. \"#778899\").\n\n", default="#778899")
     g_manhattan.add_argument("--top-color", "-tc", help="\nTop signal point color(ex. \"#FF0000\").\n\n", default="#FF0000")
 
@@ -252,19 +255,50 @@ if __name__ == "__main__":
 
 
 
+    ### Preprocessing arguments
+
+    # "--input" arguments
+
+    if args.input:
+        """
+        * --input := the common prefix to point out next files
+            (1) *.hped or *.chped
+            (2) normal_SNPs
+            (3) phenotype file(*.phe)
+            (4) covariate file(*.covar)
+            (5) condition (*.condvars)
+            (6) reference allele (*.refallele)
+        """
+        if not args.hped:
+            args.hped = args.input + ".hped" if os.path.exists(args.input + ".hped") else None
+        if not args.chped:
+            args.chped = args.input + ".chped" if os.path.exists(args.input + ".chped") else None
+
+        # `normal_SNPs` => just as prefix.
+        if not args.variants:
+            args.variants = args.input if os.path.exists(args.input + ".bed") and os.path.exists(args.input + ".bim") and os.path.exists(args.input + ".fam") else None
+        if not args.pheno:
+            args.pheno = args.input + ".phe" if os.path.exists(args.input + ".phe") else args.input + ".pheno" if os.path.exists(args.input + ".pheno") else None
+        if not args.covar:
+            args.covar = args.input + ".covar" if os.path.exists(args.input + ".covar") else args.input + ".cov" if os.path.exists(args.input + ".cov") else None
+
+        if not args.condition_list:
+            args.condition_list = args.input + ".condvars" if os.path.isfile(args.input + ".condvars") else None
+        if not args.refallele:
+            args.refallele = args.input + ".refallele" if os.path.isfile(args.input + ".refallele") else args.input + ".ref" if os.path.exists(args.input + ".ref") else None
 
 
-    from src.IMGT2Sequence.IMGT2Seqeunce import HATK_IMGT2Sequence, HLA_Dictionary
-    from src.b_MarkerGenerator.b_MarkerGenerator import HATK_b_MarkerGenerator
-    import src.HLA_Analysis.HLA_Analysis as HLA_Analysis
-    from src.HLA_Analysis.Plotting.heatmap.heatmap import HATK_HEATMAP
-    from src.HLA_Analysis.Plotting.manhattanplot.manhattan import HATK_manhattan
+    # Which module?
+    flag_MODULEs = (args.imgt2sequence or args.bmarkergenerator or args.nomencleaner or
+                    args.logistic or args.omnibus or args.meta_analysis or
+                    args.heatmap or args.manhattan or args.hla2hped)
 
 
 
 
 
-    ########## < All in One Implementation. > ##########
+
+
 
 
     ### Setting Output path
@@ -278,365 +312,147 @@ if __name__ == "__main__":
 
     ### Setting Logger
 
-    file_handler1 = logging.FileHandler(args.out+'.log', mode='w')
+    file_handler1 = logging.FileHandler(args.out+'.hatk.log', mode='w')
     file_handler1.setFormatter(logging.Formatter((std_MAIN_PROCESS_NAME+'%(message)s')))
 
     log_HATK = logging.getLogger("HATK")
     log_HATK.setLevel(logging.INFO)
     log_HATK.addHandler(file_handler1)
+    log_HATK.info(args)
 
 
 
 
-    flag_MODULEs = (args.imgt2sequence or args.bmarkergenerator or args.nomencleaner or
-                    args.logistic or args.omnibus or args.meta_analysis or
-                    args.heatmap or args.manhattan or args.hla2hped)
 
 
+
+
+    from src.IMGT2Sequence.IMGT2Seqeunce import IMGT_Dictionary
+    import src.HLA_Analysis.HLA_Analysis as HLA_Analysis
+
+
+    ########## < Main > ##########
 
     if not flag_MODULEs:
 
-        ### [1] IMGT2Sequence
+        ##### < Whole Implementation > #####
 
-        previous_dictionary = HLA_Dictionary(hg=args.hg, imgt=args.imgt, out=args.out)
+        # ### [1] IMGT2Sequence
+        #
+        # previous_dictionary = IMGT_Dictionary(hg=args.hg, imgt=args.imgt, out=args.out)
+        #
+        # if previous_dictionary:
+        #
+        #     log_HATK.info(previous_dictionary)
+        #
+        #     __dict_AA__, __dict_SNPS__, __IAT__, __d_MapTable__ = previous_dictionary.getDictionaries()
+        #
+        # else:
+        #
+        #
+        #     __dict_AA__, __dict_SNPS__, __IAT__, __d_MapTable__ = HATK_IMGT2Sequence(args.hg, args.out, args.imgt,
+        #                                                                              _imgt_dir=args.imgt_dir,
+        #                                                                              _no_MultiP=args.no_multiprocess)
+        #
+        #     t_string = \
+        #         "< IMGT2Sequence >\n" \
+        #         "- HLA Amino Acids : {}\n" \
+        #         "- HLA SNPs : {}\n" \
+        #         "- Integrated Allele Table : {}\n" \
+        #         "- Maptables for heatmap : \n" \
+        #         "   A   : {A}\n" \
+        #         "   B   : {B}\n" \
+        #         "   C   : {C}\n" \
+        #         "   DPA1: {DPA1}\n" \
+        #         "   DPB1: {DPB1}\n" \
+        #         "   DQA1: {DQA1}\n" \
+        #         "   DQB1: {DQB1}\n" \
+        #         "   DRB1: {DRB1}\n".format(__dict_AA__, __dict_SNPS__, __IAT__, **__d_MapTable__)
+        #
+        #     log_HATK.info(t_string)
+        #
+        #
+        #
+        # ### [2] Summary of Study Information
+        # myHLAstudy = HLA_Analysis.Study(rhped=args.rhped, hped=args.hped, chped=args.chped, platform=args.platform,
+        #                                 variants=args.variants, pheno=args.pheno, pheno_name=args.pheno_name,
+        #                                 covar=args.covar, covar_name=args.covar_name, condition=args.condition, condition_list=args.condition_list,
+        #                                 refallele=args.reference_allele, input=args.input, hg=args.hg, out=args.out,
+        #                                 dict_AA=__dict_AA__, dict_SNPS=__dict_SNPS__, iat=__IAT__, d_MapTable=__d_MapTable__)
 
-        if previous_dictionary:
+        """
+        (2019. 1. 14.)
+        Argument 마지막 부분
+        "   dict_AA=__dict_AA__, dict_SNPS=__dict_SNPS__, iat=__IAT__, d_MapTable=__d_MapTable__)"
 
-            log_HATK.info(previous_dictionary)
+        이 부분을 나중에 그냥 HLA_Dictionary instance하나 만들어서 이 instance를 받는 식으로 바꿀것.
 
-            __dict_AA__, __dict_SNPS__, __IAT__, __d_MapTable__ = previous_dictionary.getDictionaries()
+        """
 
-        else:
-
-
-            __dict_AA__, __dict_SNPS__, __IAT__, __d_MapTable__ = HATK_IMGT2Sequence(args.hg, args.out, args.imgt,
-                                                                                     _imgt_dir=args.imgt_dir,
-                                                                                     _no_MultiP=args.no_multiprocess)
-
-            t_string = \
-                "< IMGT2Sequence >\n" \
-                "- HLA Amino Acids : {}\n" \
-                "- HLA SNPs : {}\n" \
-                "- Integrated Allele Table : {}\n" \
-                "- Maptables for heatmap : \n" \
-                "   A   : {A}\n" \
-                "   B   : {B}\n" \
-                "   C   : {C}\n" \
-                "   DPA1: {DPA1}\n" \
-                "   DPB1: {DPB1}\n" \
-                "   DQA1: {DQA1}\n" \
-                "   DQB1: {DQB1}\n" \
-                "   DRB1: {DRB1}\n".format(__dict_AA__, __dict_SNPS__, __IAT__, **__d_MapTable__)
-
-            log_HATK.info(t_string)
+        # log_HATK.info(myHLAstudy)
 
 
-
-        ### [1.5] Summary of Study Information
-        myHLAstudy = HLA_Analysis.Study(rhped=args.rhped, hped=args.hped, chped=args.chped, platform=args.platform,
-                                        variants=args.variants, pheno=args.pheno, pheno_name=args.pheno_name,
-                                        covar=args.covar, covar_name=args.covar_name, condition_list=args.condition_list,
-                                        refallele=args.reference_allele, input=args.input, hg=args.hg, out=args.out,
-                                        iat=__IAT__)
-
-        log_HATK.info(myHLAstudy)
+        pass
 
 
-        ### [2] b:MarkerGenerator
-
-        __b_MARKER_PANELS__ = HATK_b_MarkerGenerator(myHLAstudy.getCHPED(), args.out, args.hg, __dict_AA__, __dict_SNPS__)
 
 
     else:
-        print()
+        ##### < Single Implementation > #####
+
+        if args.imgt2sequence:
+
+            hla_dictionaries = IMGT_Dictionary(args.imgt, args.hg, args.out,
+                                               _no_indel=args.no_indel, _multiprocess=args.multiprocess,
+                                               _save_intermediates=args.save_intermediates, _imgt_dir=args.imgt_dir)
+            # print(hla_dictionaries)
+
+        elif args.hla2hped:
+            pass
+
+        elif args.nomencleaner:
+
+            from src.NomenCleaner.NomenCleaner import NomenCleaner
+
+            __chped__ = NomenCleaner(_hped=args.hped, _hped_G=args.hped_G, _hped_P=args.hped_P, _iat=args.iat, _out=args.out,
+                                     _1field=args.oneF, _2field=args.twoF, _3field=args.threeF, _4field=args.fourF,
+                                     _Ggroup=args.G_group, _Pgroup=args.P_group, _old_format=args.old_format,
+                                     __NoCaption=args.NoCaption,
+                                     _imgt=args.imgt)
+
+
+        elif args.bmarkergenerator :
+            from src.b_MarkerGenerator.b_MarkerGenerator import b_MarkerGenerator
+
+            __b_Marker__ = b_MarkerGenerator(args.chped, args.out, args.hg, args.dict_AA, args.dict_SNPS, _variants=args.variants,
+                                             __save_intermediates=args.save_intermediates)
+
+
+        elif args.logistic:
+            from src.HLA_Analysis.HLA_Analysis_modules import Logistic_Regression
 
 
 
-    # if not flag_MODULEs:
-    #
-    #     ### All in One process.
-    #
-    #     ########## < [0] : Indispensable Arguments > ##########
-    #
-    #
-    #     ##### (1) Output Prefix
-    #
-    #     if not bool(args.out):
-    #         print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("--out"))
-    #         sys.exit()
-    #
-    #     print(std_MAIN_PROCESS_NAME + "Output prefix :\n\n{0}\n".format(args.out))
-    #
-    #
-    #
-    #
-    #     ##### (2) HLA-type data (raw_hped, *.hped, *.chped)
-    #
-    #     if bool(args.platform):
-    #
-    #         print(std_MAIN_PROCESS_NAME + "HLA type data given as output results of other HLA software.\n".format(args.hped))
-    #
-    #         # -rhped
-    #         if bool(args.rhped):
-    #
-    #             print("<Platform> : {0}\n".format(args.platform))
-    #
-    #             for i in range(0, len(HLA_names)):
-    #                 print("{0} : {1}".format(HLA_names[i], args.rhped[i]))
-    #
-    #
-    #             ### Call "HLA2HPED"
-    #
-    #             __HLA_type__ = HATK_HLA2HPED(args.rhped, args.out, args.platform)
-    #
-    #
-    #             ### Call "NomenCleaner" (with "IMGT2Sequence")
-    #
-    #             if not bool(args.iat):
-    #
-    #                 ### Call IMGT2Sequence
-    #
-    #                 __dict_AA__, __dict_SNPS__, __IAT__, __d_MapTable__ = HATK_IMGT2Sequence(args.hg, args.out, args.imgt, _imgt_dir=args.imgt_dir, _no_MultiP=args.no_multiprocess)
-    #
-    #                 print(std_MAIN_PROCESS_NAME + "(IMGT2Sequence)")
-    #                 print("Newly prepared \"AA_Dictionary\": {0}".format(__dict_AA__))
-    #                 print("Newly prepared \"SNPS_Dictionary\" : {0}".format(__dict_SNPS__))
-    #                 print("Newly prepared \"IAT\" for NomenCleaner : {0}".format(__IAT__))
-    #
-    #
-    #             __HLA_type__ = NomenCleaner(__HLA_type__, 1, __IAT__, args.out, 4)
-    #
-    #             print(std_MAIN_PROCESS_NAME + "(NomenCleaner)")
-    #             print("\n\"Cleaned HPED(*.chped) file\" for b:MarkerGenerator : {0}".format(__HLA_type__))
-    #
-    #
-    #
-    #         else:
-    #             print(std_ERROR_MAIN_PROCESS_NAME + "You specified the argument \"--platform\" to use \"HLA2HPED\", but the argument \"-rhped(--raw-hped)\" wansn't given.\n")
-    #             sys.exit()
-    #
-    #     else:
-    #
-    #         """
-    #         Actually, the arugment "args.hped", "args.chped" and "args.rhped" must not be given simultaneously.
-    #         Checking this condition is undertaken by argparse "mutually_exclusive_group".
-    #         See "HLA_TYPE" argument group.
-    #         """
-    #
-    #         ## .hped
-    #         if bool(args.hped):
-    #
-    #             if os.path.exists(args.hped) and args.hped.endswith(".hped"):
-    #
-    #                 print(std_MAIN_PROCESS_NAME + "HLA type data as \"*.hped\" : {0}".format(args.hped))
-    #
-    #                 __HLA_type__ = args.hped
-    #
-    #
-    #                 ### Call "NomenCleaner" (with "IMGT2Sequence")
-    #
-    #                 if not bool(args.iat):
-    #
-    #                     ### Call IMGT2Sequence
-    #
-    #                     __dict_AA__, __dict_SNPS__, __IAT__, __d_MapTable__ = HATK_IMGT2Sequence(args.hg, args.out, args.imgt, _imgt_dir=args.imgt_dir, _no_MultiP=args.no_multiprocess)
-    #
-    #                     print(std_MAIN_PROCESS_NAME + "(IMGT2Sequence)")
-    #                     print("Newly prepared \"AA_Dictionary\": {0}".format(__dict_AA__))
-    #                     print("Newly prepared \"SNPS_Dictionary\" : {0}".format(__dict_SNPS__))
-    #
-    #                 print("Prepared \"IAT\" for NomenCleaner : {0}".format(__IAT__))
-    #
-    #                 __HLA_type__ = NomenCleaner(__HLA_type__, 1, __IAT__, args.out, 4)
-    #
-    #                 print("\nPrepared \"Cleaned HPED(*.chped) file\" for b:MarkerGenerator : {0}".format(__HLA_type__))
-    #
-    #
-    #             else:
-    #
-    #                 print(std_ERROR_MAIN_PROCESS_NAME + "The file give with the argument \"-hped\" can't be found. Please check it again.\n")
-    #                 sys.exit()
-    #
-    #
-    #         ## .chped
-    #         elif bool(args.chped):
-    #
-    #             if os.path.exists(args.chped) and args.chped.endswith(".chped"):
-    #
-    #                 print(std_MAIN_PROCESS_NAME + "HLA type data given as \"*.chped\" : {0}".format(args.chped))
-    #
-    #                 __HLA_type__ = args.chped
-    #
-    #                 print("\nPrepared \"Cleaned HPED(*.chped) file\" for b:MarkerGenerator : {0}".format(__HLA_type__))
-    #
-    #             else:
-    #
-    #                 print(std_ERROR_MAIN_PROCESS_NAME + "The file give with the argument \"-chped\" can't be found. Please check it again.\n")
-    #                 sys.exit()
-    #
-    #
-    #
-    #         ## --input
-    #         else:
-    #             # Given as prefix with "--input"
-    #
-    #             if os.path.exists(args.input + ".hped") and os.path.exists(args.input + ".chped"):
-    #                 print(std_ERROR_MAIN_PROCESS_NAME + "There are both \"*.hped\" and \"*.chped\". The program can't decide what to use. Please check them again.\n")
-    #                 sys.exit()
-    #
-    #             if os.path.exists(args.input + ".hped"):
-    #                 print(std_MAIN_PROCESS_NAME + "HLA type data(hped) was given as the prefix by \"--input\" argument.\n")
-    #                 print("Given hped file : {0}\n".format(args.input + ".hped"))
-    #
-    #                 __HLA_type__ = args.input + ".hped"
-    #
-    #
-    #                 ### Call "NomenCleaner" (with "IMGT2Sequence")
-    #
-    #                 if not bool(args.iat):
-    #
-    #                     ### Call IMGT2Sequence
-    #
-    #                     __dict_AA__, __dict_SNPS__, __IAT__, __d_MapTable__ = HATK_IMGT2Sequence(args.hg, args.out, args.imgt, _imgt_dir=args.imgt_dir, _no_MultiP=args.no_multiprocess)
-    #
-    #                     print(std_MAIN_PROCESS_NAME + "(IMGT2Sequence)")
-    #                     print("Newly prepared \"AA_Dictionary\": {0}".format(__dict_AA__))
-    #                     print("Newly prepared \"SNPS_Dictionary\" : {0}".format(__dict_SNPS__))
-    #
-    #                 print("Prepared \"IAT\" for NomenCleaner : {0}".format(__IAT__))
-    #
-    #                 __HLA_type__ = NomenCleaner(__HLA_type__, 1, __IAT__, args.out, 4)
-    #
-    #                 print("\nPrepared \"Cleaned HPED(*.chped) file\" for b:MarkerGenerator : {0}".format(__HLA_type__))
-    #
-    #
-    #
-    #
-    #             elif os.path.exists(args.input + ".chped"):
-    #
-    #                 print(std_MAIN_PROCESS_NAME + "HLA type data(chped) was given as the prefix by \"--input\" argument.\n")
-    #                 print("Given hped file : {0}\n".format(args.input + ".chped"))
-    #
-    #                 __HLA_type__ = args.input + ".chped"
-    #
-    #                 print("\nPrepared \"Cleaned HPED(*.chped) file\" for b:MarkerGenerator : {0}".format(__HLA_type__))
-    #
-    #
-    #
-    #             else:
-    #                 print(std_ERROR_MAIN_PROCESS_NAME + "HLA Type data can't be found anyhow. Please read the manual or documentation for HATK first.\n")
-    #                 sys.exit()
-    #
-    #
-    #
-    #
-    #
-    #     ##### (3) Dictionaries
-    #
-    #     # HLA Sequence information(Dictionary)
-    #     if not(bool(__dict_AA__) and bool(__dict_SNPS__)):
-    #
-    #         print(std_WARNING_MAIN_PROCESS_NAME + "Sequence dictionary files are not prepared completely.\n"
-    #                                               "Implementing \"IMGT2Sequence\" forcibly.\n")
-    #
-    #         ### Call IMGT2Sequence
-    #
-    #         __dict_AA__, __dict_SNPS__, __IAT__, __d_MapTable__ = HATK_IMGT2Sequence(args.hg, args.out, args.imgt, _imgt_dir=args.imgt_dir, _no_MultiP=args.no_multiprocess)
-    #
-    #         print(std_MAIN_PROCESS_NAME + "(IMGT2Sequence)")
-    #         print("Newly prepared \"AA_Dictionary\": {0}".format(__dict_AA__))
-    #         print("Newly prepared \"SNPS_Dictionary\" : {0}".format(__dict_SNPS__))
-    #
-    #
-    #
-    #     if bool(__dict_AA__) and not (os.path.exists(__dict_AA__ + ".txt") and os.path.exists(__dict_AA__ + ".map")):
-    #
-    #         print(std_ERROR_MAIN_PROCESS_NAME + "The file give by the argument \"-dict-AA\" doesn't exist. Please check it again.\n")
-    #         sys.exit()
-    #
-    #     if bool(__dict_SNPS__) and not (os.path.exists(__dict_SNPS__ + ".txt") and os.path.exists(__dict_SNPS__ + ".map")):
-    #
-    #         print(std_ERROR_MAIN_PROCESS_NAME + "The file give by the argument \"-dict-SNPS\" doesn't exist. Please check it again.\n")
-    #         sys.exit()
-    #
-    #
-    #
-    #
-    #     print(std_MAIN_PROCESS_NAME + "SUMMARY - HLA Sequence Information(IMGT2Sequence)\n")
-    #     print("< HLA-type Data >")
-    #     print("chped : {0}".format(__HLA_type__))
-    #     print("< AA >")
-    #     print("seq : {0}".format(__dict_AA__+".txt"))
-    #     print("map : {0}".format(__dict_AA__+".map"))
-    #     print("< SNPS >")
-    #     print("seq : {0}".format(__dict_SNPS__+".txt"))
-    #     print("map : {0}".format(__dict_SNPS__+".map"))
-    #     print("< IAT >")
-    #     print("iat : {0}".format(__IAT__))
-    #
-    #     print("< MapTable >")
-    #     for i in range(0, len(HLA_names)):
-    #         print("{0} : {1}".format(HLA_names[i], __d_MapTable__[HLA_names[i]]))
-    #
-    #     print("\n====================================================================================\n")
-    #
-    #
-    #
-    #     ########## < [1] : b:MarkerGenerator > ##########
-    #
-    #
-    #     __b_MARKER_PANELS__ = HATK_b_MarkerGenerator(__HLA_type__, args.out, args.hg, __dict_AA__, __dict_SNPS__)
-    #
-    #     print(std_MAIN_PROCESS_NAME + "(b:MarkerGenerator)")
-    #     print(__b_MARKER_PANELS__)
-    #
-    #
-    #     ########## < [2] : Association Test > ##########
-    #
-    #     # Logistic Regression
-    #
-    #     __Logistic_Result__ = [HLA_Analysis.HATK_ASSOC1_Logistic_Regression(args.input, item, _b_marker_panels=item) for item in __b_MARKER_PANELS__]
-    #     print("\nLogistic_Reuslt : {0}\n".format(__Logistic_Result__))
-    #
-    #
-    #     ########## < [3] : Plotting > ##########
-    #
-    #     # Heatmap
-    #
-    #     __Heatmap_Result__ = []
-    #
-    #     for i in range(0, len(HLA_names)):
-    #
-    #         __Heatmap_Result__.append(HATK_HEATMAP(HLA_names[i], '.'.join([args.out, HLA_names[i]]), __d_MapTable__[HLA_names[i]], __Logistic_Result__[0], __Logistic_Result__[1]))
-    #
-    #
-    #     print(__Heatmap_Result__)
-    #
-    #     # Manhattan
-    #
-    #     __Manhattan_Result__ = []
-    #
-    #     # AA plot
-    #     __Manhattan_Result__.append(HATK_manhattan([__Logistic_Result__[0]], "Amino Acid Manhattan", args.out+".manhattan.AA", args.hg))
-    #
-    #     # HLA plot
-    #     __Manhattan_Result__.append(HATK_manhattan([__Logistic_Result__[1]], "HLA markers", args.out+".manhattan.HLA", args.hg))
-    #
-    #     # Stacked plot
-    #     __Manhattan_Result__.append(HATK_manhattan(__Logistic_Result__[0:3], "AA - HLA - SNPS Manhattan", args.out+".manhattan.ALL", args.hg))
-    #
-    #     # Merged markers plot
-    #     __Manhattan_Result__.append(HATK_manhattan([__Logistic_Result__[3]], "Merged(AA,HLA,SNPS) Manhattan", args.out+".manhattan.MERGED", args.hg))
-    #
-    #     print(__Manhattan_Result__)
-    #
-    #
-    #
-    #
-    #
-    #
-    # else:
-    #
+
+        elif args.manhattan:
+            from src.HLA_Analysis.Plotting.manhattanplot.manhattan import HATK_manhattan
+
+            """
+            HATK_manhattan(_results_assoc, _plot_label, _out, _hg, _pointcol="#778899", _topcol="#FF0000", _min_pos="29.60E6", _max_pos="33.2E6","""
+
+            mamhattan_plot = HATK_manhattan(args.results_assoc, args.title, args.out, args.hg, _pointcol=args.point_color, _topcol=args.top_color)
+
+        else:
+            # print(std_ERROR_MAIN_PROCESS_NAME + "이상해~")
+
+            from src.HLA_Analysis.Plotting.heatmap.heatmap import HATK_HEATMAP
+
+            heatmap_plot = HATK_HEATMAP(args.HLA, args.out, args.maptable, args.result_assoc_AA, args.result_assoc_HLA)
+
+
+
+
+
     #     ### Single Module implementation.
     #
     #

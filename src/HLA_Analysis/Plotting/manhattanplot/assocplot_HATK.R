@@ -41,12 +41,12 @@ make.fancy.locus.plot.bare <- function(chr, title, locus, min.pos, max.pos, yran
 
     points(locus$BP, -locus$LOG10P, pch=23, cex=1.2, lwd=0.2, bg=pointcolor)
 
-    if (hitsnp != "") {
-        hit <- locus[locus$SNP==hitsnp,]
-        points(hit$BP, -hit$LOG10P, pch=23, cex=2.4, lwd=1.5, bg=topcolor)
-        text(x = hit$BP, y = -hit$LOG10P, labels = hitsnp, font = 2, family="sans", adj = c(NA, -2.0), cex = 1.0)
+    # if (hitsnp != "") {
+    #     hit <- locus[locus$SNP==hitsnp,]
+    #     points(hit$BP, -hit$LOG10P, pch=23, cex=2.4, lwd=1.5, bg=topcolor)
+    #     text(x = hit$BP, y = -hit$LOG10P, labels = hitsnp, font = 2, family="sans", adj = c(NA, -2.0), cex = 1.0)
         
-    }
+    # }
     
     if (hitsnpB != "") {
        hit <- locus[locus$SNP==hitsnpB,]
@@ -116,12 +116,14 @@ make.fancy.locus.plot.bottom <- function(chr, min.pos, max.pos, pathToTheGeneBui
     j=1
     for ( i in 1:nrow(genes.in.locus) ) {
         genename = genes.in.locus[i,]$GENE
-        if (genename %in% strsplit("HLA-A HLA-C HLA-B TNF HLA-DRA HLA-DRB1 HLA-DQA1 HLA-DQB1 HLA-DPA1 HLA-DPB1", " ")[[1]]) {
-            ## genecols = strsplit("#00ab34 #c800a0 #7100c8 #0005c8 #0097c8 #c80000 #567200 #ecbd00"," ")[[1]]
-            genecols = strsplit("#BF00EF black #00C418 black black #FF0000 black black black #0033F2"," ")[[1]]
+        # if (genename %in% strsplit("HLA-A HLA-C HLA-B TNF HLA-DRA HLA-DRB1 HLA-DQA1 HLA-DQB1 HLA-DPA1 HLA-DPB1", " ")[[1]]) {
+        if (genename %in% strsplit("HLA-A HLA-C HLA-B HLA-DRA HLA-DRB1 HLA-DQA1 HLA-DQB1 HLA-DPA1 HLA-DPB1", " ")[[1]]) {
+            genecols = strsplit("#00ab34 #c800a0 #7100c8 #0097c8 #c80000 #567200 #ecbd00 #FF0000 #0033F2"," ")[[1]]
+            # genecols = strsplit("#BF00EF black #00C418 black black #FF0000 black black black #0033F2"," ")[[1]]
             ## genecols = rep("black", 8)
             genetextcols = rep("black", 20)
-            genetips = c("upleft", "upleft", "upright", "downleft", "downleft", "upleft", "upright", "downright", "upright", "downright")
+            # genetips = c("upleft", "upleft", "upright", "downleft", "downleft", "upleft", "upright", "downright", "upright", "downright")
+            genetips = c("upleft", "upleft", "upright", "downleft", "upleft", "upright", "downright", "upright", "downright")
             tiplen.y = boxheight / 2
             tiplen.x = (max.pos-min.pos)/75
             pickcol = genecols[j]
