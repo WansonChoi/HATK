@@ -79,7 +79,7 @@ class HLA_Study(object):
 
         # (3) Module Flags
 
-        flag_MODULEs = [_args.imgt2sequence,
+        flag_MODULEs = [_args.imgt2seq,
                         _args.bmarkergenerator,
                         _args.hla2hped,
                         _args.nomencleaner,
@@ -100,7 +100,7 @@ class HLA_Study(object):
 
             ##### Partial Implementation #####
 
-            if _args.imgt2sequence:
+            if _args.imgt2seq:
 
                 ### IMGT2Seq
                 from IMGT2Seq.IMGT2Seq import HATK_IMGT2Seq

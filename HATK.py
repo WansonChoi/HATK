@@ -32,7 +32,7 @@ if __name__ == "__main__":
 
         <SPECIFICATION> 
         
-        [1] IMGT2Sequence
+        [1] IMGT2Seq
         [2] b:MarkerGenerator
         [3] NomenCleaner
         [4] Logistic Regression
@@ -82,9 +82,9 @@ if __name__ == "__main__":
 
     ##### < IMGT2Sequence > #####
 
-    g_IMGT2Sequence = parser.add_argument_group(title='IMGT2Sequence', description='')
+    g_IMGT2Sequence = parser.add_argument_group(title='IMGT2Seq', description='')
 
-    g_IMGT2Sequence.add_argument("--imgt2sequence", help="\nGive this argument to implement \"IMGT2Sequence\" sub-module.\n\n", action='store_true')
+    g_IMGT2Sequence.add_argument("--imgt2seq", help="\nGive this argument to implement \"IMGT2Seq\" sub-module.\n\n", action='store_true')
 
     g_IMGT2Sequence.add_argument("-imgt", help="\nIMGT-HLA data version(ex. 370, 3300)\n\n")
 
