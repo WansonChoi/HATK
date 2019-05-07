@@ -1,0 +1,16 @@
+PLINK v1.90b4 64-bit (20 Mar 2017)
+Options in effect:
+  --meta-analysis data1.HLA.assoc data2.HLA.assoc data3.HLA.assoc data4.HLA.assoc data5.HLA.assoc data6.HLA.assoc
+  --out Meta_SNPS/HLA.assoc
+
+Hostname: choewanseon-ui-MacBook-Pro.local
+Working directory: /Users/wansun/Documents/GarbageCollector/(2018.7.24.)CancerResearch/Ref_data/AssociationResult/assoc
+Start time: Thu Jul 26 00:08:17 2018
+
+Random number seed: 1532531297
+8192 MB RAM detected; reserving 4096 MB for main workspace.
+--meta-analysis: 313 problematic lines; see Meta_SNPS/HLA.assoc.prob .
+--meta-analysis: 89 variants processed; results written to
+Meta_SNPS/HLA.assoc.meta .
+
+End time: Thu Jul 26 00:08:17 2018

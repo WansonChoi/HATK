@@ -1,0 +1,17 @@
+PLINK v1.90b4 64-bit (20 Mar 2017)
+Options in effect:
+  --meta-analysis data1.AA.CODED.assoc.logistic data2.AA.CODED.assoc.logistic data3.AA.CODED.assoc.logistic data4.AA.CODED.assoc.logistic data5.AA.CODED.assoc.logistic data6.AA.CODED.assoc.logistic
+  --out Meta_AA/AA.CODED.assoc.logistic
+
+Hostname: choewanseon-ui-MacBook-Pro.local
+Working directory: /Users/wansun/Documents/GarbageCollector/(2018.7.24.)CancerResearch/Ref_data/AssociationResult/logistic
+Start time: Thu Jul 26 00:13:41 2018
+
+Random number seed: 1532531621
+8192 MB RAM detected; reserving 4096 MB for main workspace.
+--meta-analysis: 2321 problematic lines; see
+Meta_AA/AA.CODED.assoc.logistic.prob .
+--meta-analysis: 863 variants processed; results written to
+Meta_AA/AA.CODED.assoc.logistic.meta .
+
+End time: Thu Jul 26 00:13:41 2018
