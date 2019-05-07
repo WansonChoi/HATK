@@ -68,11 +68,11 @@ if __name__ == "__main__":
     HLA_TYPE = parser.add_mutually_exclusive_group()
 
     # (1) Output results from other HLA software platform. (No specific file extension).
-    HLA_TYPE.add_argument("-rhped", help="\nOutput result(s) from other HLA software to be processed by \'HLA2HPED\'.\n\n", nargs='*')
+    HLA_TYPE.add_argument("--rhped", help="\nOutput result(s) from other HLA software to be processed by \'HLA2HPED\'.\n\n", nargs='*')
     # (2) "*.hped"
-    HLA_TYPE.add_argument("-hped", help="\nHLA Type Data not yet processed by \'NomenCleaner\'.\n\n")
+    HLA_TYPE.add_argument("--hped", help="\nHLA Type Data not yet processed by \'NomenCleaner\'.\n\n")
     # (3) "*.chped"
-    HLA_TYPE.add_argument("-chped", help="\nHLA Type Data processed by \'NomenCleaner\' (*.chped)\n\n")
+    HLA_TYPE.add_argument("--chped", help="\nHLA Type Data processed by \'NomenCleaner\' (*.chped)\n\n")
 
     # (Meta-Analysis or Manhattan Plot)
     parser.add_argument("--results-assoc", "-ra", help="\nResult files conducted by Logistic Regression Tests(ex.\"*.assoc.logistic\").\n\n",
@@ -102,8 +102,8 @@ if __name__ == "__main__":
     g_b_MarkerGenerator.add_argument("--bmarkergenerator", help="\nGive this argument to implement \"b:MarkerGenerator\" sub-module.\n\n",
                                      action='store_true')
 
-    g_b_MarkerGenerator.add_argument("-dict-AA", help="\nPrefix of AA HLA Dictionary file(*.txt, *.map).\n\n")
-    g_b_MarkerGenerator.add_argument("-dict-SNPS", help="\nPrefix of SNP HLA Dictionary file(*.txt, *.map).\n\n")
+    g_b_MarkerGenerator.add_argument("--dict-AA", help="\nPrefix of AA HLA Dictionary file(*.txt, *.map).\n\n")
+    g_b_MarkerGenerator.add_argument("--dict-SNPS", help="\nPrefix of SNP HLA Dictionary file(*.txt, *.map).\n\n")
 
 
 
@@ -117,8 +117,8 @@ if __name__ == "__main__":
     # Additional input ped file type.
     PED_TYPE = g_NomenCleaner.add_mutually_exclusive_group()
     # PED_TYPE.add_argument("-ped", help="\nHLA Type Data.\n\n") # moved to main group.
-    PED_TYPE.add_argument("-hped_Ggroup", help="\nHLA Type Data(G-group allele \"*.hped\" file).\n\n", dest="hped_G")
-    PED_TYPE.add_argument("-hped_Pgroup", help="\nHLA Type Data(P-group allele \"*.hped\" file).\n\n", dest="hped_P")
+    PED_TYPE.add_argument("--hped_Ggroup", help="\nHLA Type Data(G-group allele \"*.hped\" file).\n\n", dest="hped_G")
+    PED_TYPE.add_argument("--hped_Pgroup", help="\nHLA Type Data(P-group allele \"*.hped\" file).\n\n", dest="hped_P")
 
     g_NomenCleaner.add_argument("-iat", help="\nIntegrated Allele Table file(*.iat).\n\n")
 
