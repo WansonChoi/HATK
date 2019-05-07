@@ -16,7 +16,7 @@ std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % (os.path.basename(__file__
 HLA_names = ["A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1"]
 
 
-class IMGT_Dictionary(object):
+class HATK_IMGT2Seq(object):
 
     def __init__(self, _imgt, _hg, _out, *args, **kwargs):
 
@@ -56,14 +56,6 @@ class IMGT_Dictionary(object):
 
         dir_path = os.path.dirname(self.out)
         version_label = "hg{}.imgt{}".format(self.hg, self.imgt)
-
-
-
-
-        ### Checking results
-        # print(std_MAIN_PROCESS_NAME + "Arguments for HLA Dictionary")
-        # for k, v in self.__dict__.items():
-        #     print("{} : {}".format(k, v))
 
 
 
@@ -110,90 +102,98 @@ class IMGT_Dictionary(object):
 
 
 
-        # if (self.f__dict_AA__ and self.f__dict_SNPS__ and self.f__IAT__ and self.f__d_MapTable__):
-        #
-        #     ### All of previously generated dictionary files are available.
-        #
-        #     self.summary_string = \
-        #         ''.join([self.summary_string,
-        #                  "< IMGT2Sequence(Using existing results) >\n" \
-        #                  "- HLA Amino Acids : {}\n" \
-        #                  "- HLA SNPs : {}\n" \
-        #                  "- Integrated Allele Table : {}\n" \
-        #                  "- Maptables for heatmap : \n" \
-        #                  "   A   : {A}\n" \
-        #                  "   B   : {B}\n" \
-        #                  "   C   : {C}\n" \
-        #                  "   DPA1: {DPA1}\n" \
-        #                  "   DPB1: {DPB1}\n" \
-        #                  "   DQA1: {DQA1}\n" \
-        #                  "   DQB1: {DQB1}\n" \
-        #                  "   DRB1: {DRB1}\n".format(self.__dict_AA__, self.__dict_SNPS__, self.__IAT__, **self.__d_MapTable__)
-        #                  ])
-        #
-        # else:
-        #
-        #     ### Not all of previously generated dictionary files are available.
-        #
-        #     self.__dict_AA__, self.__dict_SNPS__, self.__IAT__, self.__d_MapTable__ = \
-        #         IMGT2Sequence(self.imgt, self.hg, self.out,
-        #                       _no_Indel=self.no_indel, _MultiP=self.multiprocess,
-        #                       _save_intermediates=self.save_intermediates, _imgt_dir=self.imgt_dir)
-        #
-        #
-        #     self.f__dict_AA__ = True
-        #     self.f__dict_SNPS__ = True
-        #     self.f__IAT__ = True
-        #     self.f__d_MapTable__ = True
-        #
-        #
-        #     self.summary_string = \
-        #         ''.join([self.summary_string,
-        #                  "< IMGT2Sequence(Newly generated.) >\n" \
-        #                  "- HLA Amino Acids : {}\n" \
-        #                  "- HLA SNPs : {}\n" \
-        #                  "- Integrated Allele Table : {}\n" \
-        #                  "- Maptables for heatmap : \n" \
-        #                  "   A   : {A}\n" \
-        #                  "   B   : {B}\n" \
-        #                  "   C   : {C}\n" \
-        #                  "   DPA1: {DPA1}\n" \
-        #                  "   DPB1: {DPB1}\n" \
-        #                  "   DQA1: {DQA1}\n" \
-        #                  "   DQB1: {DQB1}\n" \
-        #                  "   DRB1: {DRB1}\n".format(self.__dict_AA__, self.__dict_SNPS__, self.__IAT__, **self.__d_MapTable__)
-        #                  ])
+        ### Checking results
+        # print(std_MAIN_PROCESS_NAME + "Arguments for HLA Dictionary")
+        # for k, v in self.__dict__.items():
+        #     print("{} : {}".format(k, v))
 
 
-        # temporary hardcoding ---
-        self.__dict_AA__, self.__dict_SNPS__, self.__IAT__, self.__d_MapTable__ = \
-            IMGT2Seq(self.imgt, self.hg, self.out, _no_Indel=self.no_indel, _MultiP=self.multiprocess,
-                     _save_intermediates=self.save_intermediates, _imgt_dir=self.imgt_dir)
+
+        if (self.f__dict_AA__ and self.f__dict_SNPS__ and self.f__IAT__ and self.f__d_MapTable__):
+
+            ### All of previously generated dictionary files are available.
+
+            self.summary_string = \
+                ''.join([self.summary_string,
+                         "< IMGT2Sequence(Using existing results) >\n" \
+                         "- HLA Amino Acids : {}\n" \
+                         "- HLA SNPs : {}\n" \
+                         "- Integrated Allele Table : {}\n" \
+                         "- Maptables for heatmap : \n" \
+                         "   A   : {A}\n" \
+                         "   B   : {B}\n" \
+                         "   C   : {C}\n" \
+                         "   DPA1: {DPA1}\n" \
+                         "   DPB1: {DPB1}\n" \
+                         "   DQA1: {DQA1}\n" \
+                         "   DQB1: {DQB1}\n" \
+                         "   DRB1: {DRB1}\n".format(self.__dict_AA__, self.__dict_SNPS__, self.__IAT__, **self.__d_MapTable__)
+                         ])
+
+        else:
+
+            ### Not all of previously generated dictionary files are available.
+
+            self.__dict_AA__, self.__dict_SNPS__, self.__IAT__, self.__d_MapTable__ = \
+                IMGT2Seq(self.imgt, self.hg, self.out,
+                         _no_Indel=self.no_indel, _MultiP=self.multiprocess,
+                         _save_intermediates=self.save_intermediates, _imgt_dir=self.imgt_dir,
+                         _p_src="IMGT2Seq/src", _p_data="IMGT2Seq/data")
 
 
-        self.f__dict_AA__ = True
-        self.f__dict_SNPS__ = True
-        self.f__IAT__ = True
-        self.f__d_MapTable__ = True
+            self.f__dict_AA__ = True
+            self.f__dict_SNPS__ = True
+            self.f__IAT__ = True
+            self.f__d_MapTable__ = True
 
 
-        self.summary_string = \
-            ''.join([self.summary_string,
-                     "< IMGT2Sequence(Newly generated.) >\n" \
-                     "- HLA Amino Acids : {}\n" \
-                     "- HLA SNPs : {}\n" \
-                     "- Integrated Allele Table : {}\n" \
-                     "- Maptables for heatmap : \n" \
-                     "   A   : {A}\n" \
-                     "   B   : {B}\n" \
-                     "   C   : {C}\n" \
-                     "   DPA1: {DPA1}\n" \
-                     "   DPB1: {DPB1}\n" \
-                     "   DQA1: {DQA1}\n" \
-                     "   DQB1: {DQB1}\n" \
-                     "   DRB1: {DRB1}\n".format(self.__dict_AA__, self.__dict_SNPS__, self.__IAT__, **self.__d_MapTable__)
-                     ])
-        # --Hardcoding#
+            self.summary_string = \
+                ''.join([self.summary_string,
+                         "< IMGT2Sequence(Newly generated.) >\n" \
+                         "- HLA Amino Acids : {}\n" \
+                         "- HLA SNPs : {}\n" \
+                         "- Integrated Allele Table : {}\n" \
+                         "- Maptables for heatmap : \n" \
+                         "   A   : {A}\n" \
+                         "   B   : {B}\n" \
+                         "   C   : {C}\n" \
+                         "   DPA1: {DPA1}\n" \
+                         "   DPB1: {DPB1}\n" \
+                         "   DQA1: {DQA1}\n" \
+                         "   DQB1: {DQB1}\n" \
+                         "   DRB1: {DRB1}\n".format(self.__dict_AA__, self.__dict_SNPS__, self.__IAT__, **self.__d_MapTable__)
+                         ])
+
+
+        # # temporary hardcoding ---
+        # self.__dict_AA__, self.__dict_SNPS__, self.__IAT__, self.__d_MapTable__ = \
+        #     IMGT2Seq(self.imgt, self.hg, self.out, _no_Indel=self.no_indel, _MultiP=self.multiprocess,
+        #              _save_intermediates=self.save_intermediates, _imgt_dir=self.imgt_dir)
+        #
+        #
+        # self.f__dict_AA__ = True
+        # self.f__dict_SNPS__ = True
+        # self.f__IAT__ = True
+        # self.f__d_MapTable__ = True
+        #
+        #
+        # self.summary_string = \
+        #     ''.join([self.summary_string,
+        #              "< IMGT2Sequence(Newly generated.) >\n" \
+        #              "- HLA Amino Acids : {}\n" \
+        #              "- HLA SNPs : {}\n" \
+        #              "- Integrated Allele Table : {}\n" \
+        #              "- Maptables for heatmap : \n" \
+        #              "   A   : {A}\n" \
+        #              "   B   : {B}\n" \
+        #              "   C   : {C}\n" \
+        #              "   DPA1: {DPA1}\n" \
+        #              "   DPB1: {DPB1}\n" \
+        #              "   DQA1: {DQA1}\n" \
+        #              "   DQB1: {DQB1}\n" \
+        #              "   DRB1: {DRB1}\n".format(self.__dict_AA__, self.__dict_SNPS__, self.__IAT__, **self.__d_MapTable__)
+        #              ])
+        # # --Hardcoding#
 
 
     def __bool__(self):
@@ -204,7 +204,7 @@ class IMGT_Dictionary(object):
         return self.summary_string
 
 
-    def getDictionaries(self):
+    def getResults(self):
         return [self.__dict_AA__, self.__dict_SNPS__, self.__IAT__, self.__d_MapTable__]
 
 
@@ -268,14 +268,22 @@ def IMGT2Seq(_imgt, _hg, _out, _no_Indel=False, _MultiP=False, _save_intermediat
 
     # ProcessIMGT.py
     if os.path.exists(os.path.join(p_src, "ProcessIMGT.py")):
-        from src.ProcessIMGT import ProcessIMGT
+
+        if __name__ == "IMGT2Seq.IMGT2Seq":
+            from IMGT2Seq.src.ProcessIMGT import ProcessIMGT
+        elif __name__ == "__main__":
+            from src.ProcessIMGT import ProcessIMGT
     else:
-        print(std_ERROR_MAIN_PROCESS_NAME + "\"src/ProcessIMGT.py\" doesn't exist!")
+        print(std_ERROR_MAIN_PROCESS_NAME + "\"{}\" doesn't exist!".format(os.path.join(_p_src, "ProcessIMGT.py")))
         sys.exit()
 
     # ClassifyGroups.py
     if os.path.exists(os.path.join(p_src, "ClassifyGroups.py")):
-        from src.ClassifyGroups import ClassifyGroups
+
+        if __name__ == "IMGT2Seq.IMGT2Seq":
+            from IMGT2Seq.src.ClassifyGroups import ClassifyGroups
+        elif __name__ == "__main__":
+            from src.ClassifyGroups import ClassifyGroups
     else:
         print(std_ERROR_MAIN_PROCESS_NAME + "\"src/ClassifyGroups.py\" doesn't exist!")
         sys.exit()

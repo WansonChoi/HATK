@@ -26,7 +26,7 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc, _gen, _prot, _p_data,
 
     ### Paths
     p_data = _p_data
-    print(p_data)
+    # print(p_data)
 
 
     ########## < Argument Checking. > ##########
