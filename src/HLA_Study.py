@@ -60,8 +60,8 @@ class HLA_Study(object):
 
             if not _args.condition_list:
                 _args.condition_list = _args.input + ".condvars" if os.path.isfile(_args.input + ".condvars") else None
-            if not _args.refallele:
-                _args.refallele = _args.input + ".refallele" if os.path.isfile(_args.input + ".refallele") else _args.input + ".ref" if os.path.exists(_args.input + ".ref") else None
+            if not _args.reference_allele:
+                _args.reference_allele = _args.input + ".refallele" if os.path.isfile(_args.input + ".refallele") else _args.input + ".ref" if os.path.exists(_args.input + ".ref") else None
 
 
 
@@ -115,7 +115,13 @@ class HLA_Study(object):
             elif _args.bmarkergenerator:
 
                 ### bMarkerGenerator
-                pass
+                from bMarkerGenerator.bMarkerGenerator import HATK_bMarkerGenertor
+
+                mybMarkers = HATK_bMarkerGenertor(_args.chped, _args.out, _args.hg, _args.dict_AA, _args.dict_SNPS,
+                                                  _variants=_args.variants, __save_intermediates=_args.save_intermediates,
+                                                  _p_src="bMarkerGenerator/src")
+
+                print(std_MAIN_PROCESS_NAME + "bMarkerGenerator result(Prefix) : \n{}".format(mybMarkers.getReuslts()))
 
             elif _args.hla2hped:
 
