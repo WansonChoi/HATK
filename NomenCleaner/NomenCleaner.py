@@ -16,6 +16,97 @@ HLA_names = ["A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1"]
 header_ped = ["FID", "IID", "PID", "MID", "Sex", "Phe"]
 
 
+class HATK_NomenCleaner(object):
+
+    def __init__(self, _iat, _imgt, _out, *args, **kwargs):
+
+        """
+
+        args[0:3] := _args.hped, _args.hped_G, _args.hped_P
+        args[3:10] := _args.oneF, _args.twoF, _args.threeF, _args.fourF, _args.G_group, _args.P_group, _args.old_format
+
+        """
+
+
+        if not _iat:
+            print(std_ERROR_MAIN_PROCESS_NAME + "Please check '-iat' argument again.")
+            sys.exit()
+
+        if not _imgt:
+            print(std_ERROR_MAIN_PROCESS_NAME + "Please check '-imgt' argument again.")
+            sys.exit()
+
+        if not _out:
+            print(std_ERROR_MAIN_PROCESS_NAME + "Please check '--out/-o' argument again.")
+            sys.exit()
+
+
+
+        args_hped = args[0]
+        args_hped_G = args[1]
+        args_hped_P = args[2]
+
+        oneF = args[3]
+        twoF = args[4]
+        threeF = args[5]
+        fourF = args[6]
+        G_group = args[7]
+        P_group = args[8]
+        old_format = args[9]
+
+
+        self.p_hped = -1
+        self.p_hped_descriptor = -1
+        self.FILED_FORMAT = -1
+
+
+        ### Determing which type of hped is given? ('hped', 'hped_G' or 'hped_P')
+        if args_hped:
+            self.p_hped = args_hped
+            self.p_hped_descriptor = 1
+        elif args_hped_G:
+            self.p_hped = args_hped_G
+            self.p_hped_descriptor = 2
+        elif args_hped_P:
+            self.p_hped = args_hped_P
+            self.p_hped_descriptor = 3
+        else:
+            print(std_ERROR_MAIN_PROCESS_NAME + "Please check '--hped', '--hped_Ggroup', and '--hped_Pgroup' again.")
+            sys.exit()
+
+
+        ### Determing which output field format.
+        if oneF:
+            self.FILED_FORMAT = 1
+        elif twoF:
+            self.FILED_FORMAT = 2
+        elif threeF:
+            self.FILED_FORMAT = 3
+        elif fourF:
+            self.FILED_FORMAT = 4
+        elif G_group:
+            self.FILED_FORMAT = 5
+        elif P_group:
+            self.FILED_FORMAT = 6
+        elif old_format:
+            self.FILED_FORMAT = 0
+        else:
+            print(std_ERROR_MAIN_PROCESS_NAME + "Please check '--1field', ..., '--4field', '--G-group', '--P-group', and '--old-format' arguments.")
+            sys.exit()
+
+
+
+        self.chped = NomenCleaner(self.p_hped, self.p_hped_descriptor, _iat, _imgt, _out, self.FILED_FORMAT,
+                                  __f_NoCaption=kwargs["__f_NoCaption"], __leave_NotFound=kwargs["__leave_NotFound"])
+
+
+    def getResults(self):
+        return self.chped
+
+
+
+
+
 def NomenCleaner(_hped, _hped_descriptor, _iat, _imgt, _out, _field_format, __f_NoCaption=False,
                  __leave_NotFound=False):
 
@@ -337,11 +428,12 @@ def NomenCleaner(_hped, _hped_descriptor, _iat, _imgt, _out, _field_format, __f_
 
 
     ### Writing final output(*.chped)
-    __RETURN__.to_csv(_out+".{}.chped".format(MakeSuffixInfo(_imgt, _field_format)), sep='\t', header=False, index=True)
+    __OUT__ = _out+".{}.chped".format(MakeSuffixInfo(_imgt, _field_format))
+    __RETURN__.to_csv(__OUT__, sep='\t', header=False, index=True)
 
 
 
-    return 0
+    return __OUT__
 
 
 
@@ -963,8 +1055,8 @@ if __name__ == '__main__':
     PED_TYPE.add_argument("--hped-Pgroup", help="\nHLA Type Data with raw P-group allele (ex. 0102P).\n\n", dest="hped_P")
 
     # Input (2) : *.iat file
-    parser.add_argument("--iat", help="\nIntegrated Allele Table file(*.iat).\n\n", required=True)
-    parser.add_argument("--imgt", help="\nSpecifying the IMGT-HLA version.\n\n", required=True)
+    parser.add_argument("-iat", help="\nIntegrated Allele Table file(*.iat).\n\n", required=True)
+    parser.add_argument("-imgt", help="\nSpecifying the IMGT-HLA version.\n\n", required=True)
 
     # Ouptut Prefix
     parser.add_argument("--out", "-o", help="\nOutput file prefix.\n\n", required=True)
