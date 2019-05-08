@@ -17,27 +17,25 @@ isREVERSE = {'A': False, 'C': True, 'B': True, 'DRB1': True, 'DQA1': False, 'DQB
 
 
 
+class HATK_HLA2HPED(object):
 
-def HATK_HLA2HPED(_rhped, _out, _platform):
+    def __init__(self, _rhped, _out, _platform):
 
-    if not bool(_platform):
-        print(std_ERROR_MAIN_PROCESS_NAME + "The argument \"--platform\" wans't given. Please check it again.\n")
-        sys.exit()
 
-    if not bool(_rhped):
-        print(std_ERROR_MAIN_PROCESS_NAME + "The argument \"-rhped\" wasn't given. Please check it again.\n")
-        sys.exit()
-    else:
-        if not isinstance(_rhped, list):
-            print(std_ERROR_MAIN_PROCESS_NAME + "The parameter \"_rhped\" to make \"hped\" wans't given as list. Please check the argument \"-rhped\" again.\n")
+        if not _rhped:
+            print(std_ERROR_MAIN_PROCESS_NAME + "Raw hped file(s) wasn't(weren't) given. Please check '--rhped' argument again.")
             sys.exit()
 
-    if not bool(_out):
-        print(std_ERROR_MAIN_PROCESS_NAME + "Output prefix wasn't given properly. Please check the argument \"--out\" again.\n")
+        if not _platform:
+            print(std_ERROR_MAIN_PROCESS_NAME + "Platform(ex. AXIOM, HIBAG, ...) infor wasn't given. Please check '--platform' argument again.")
+            sys.exit()
 
 
+        self.results = HLA2HPED(_rhped, _out, _platform)
 
-    return HLA2HPED(_rhped, _out, _platform)
+
+    def getResults(self):
+        return self.results
 
 
 
