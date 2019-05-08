@@ -12,82 +12,42 @@ std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % (os.path.basename(__file__))
 std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % (os.path.basename(__file__))
 
 
-# def HATK_b_MarkerGenerator(_b_MarkerGenerator):
-#
-#     def wrapper_function(*args, **kwargs):
-#
-#         if __name__ == "__main__":
-#
-#             # ##### Additional Argument processing
-#             #
-#             # t_dict_AA = ""
-#             # t_dict_SNPS = ""
-#             #
-#             # if (args.dict_AA != "Not_given" and args.dict_SNPS != "Not_given"):
-#             #
-#             #     # When all HLA DICTIONARY information is given properly,
-#             #
-#             #     t_dict_AA = args.dict_AA
-#             #     t_dict_SNPS = args.dict_SNPS
-#             #
-#             #
-#             # elif (args.dict_AA == "Not_given" and args.dict_SNPS == "Not_given"):
-#             #
-#             #     # No values are given to HLA DICTIONARY related options.
-#             #
-#             #     # Abort
-#             #     print("\n[Error]: None of HLA DICTIONARY files are given. Please check them all again.")
-#             #     print('{"-dict-AA", "-dict-SNPS"}\n')
-#             #     sys.exit()
-#             #
-#             #
-#             #
-#             # else:
-#             #     # Abort
-#             #     print("\n[Error]: Not all of HLA DICTIONARY files are given. Please check them all again.")
-#             #     print('{"-dict-AA", "-dict-SNPS"}\n')
-#             #     sys.exit()
-#             pass
-#
-#         else:
-#
-#             print(args)
-#             print(kwargs)
-#
-#             _CHPED = args[0]
-#             _OUT = args[1]
-#             _HG = args[2]
-#             _dict_AA = args[3]
-#             _dict_SNPS = args[4]
-#             _variants = kwargs["_variants"]
-#
-#
-#             if not bool(_CHPED):
-#                 print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("-hped"))
-#                 sys.exit()
-#             else:
-#                 # Checking whether it went through "NomenCleaner.py".
-#                 if not _CHPED.endswith(".chped"):
-#                     print(std_ERROR_MAIN_PROCESS_NAME + 'Given ped file should be processed by "NomenCleaner.py"\n')
-#                     sys.exit()
-#
-#
-#             if not bool(_HG):
-#                 print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("-hg"))
-#                 sys.exit()
-#
-#
-#             if not (bool(_dict_AA) and bool(_dict_SNPS)):
-#                 print(std_ERROR_MAIN_PROCESS_NAME + 'One of "-dict-AA" or "-dict-SNPS" options(or Both) are not given. Please check them again.\n')
-#                 sys.exit()
-#
-#         return _b_MarkerGenerator(*args, **kwargs)
-#
-#     return wrapper_function
+class HATK_bMarkerGenertor(object):
+
+    def __init__(self, _CHPED, _OUT, _hg, _dictionary_AA, _dictionary_SNPS, *args, **kwargs):
+
+        """
+
+        """
+
+        if not _CHPED:
+            print(std_ERROR_MAIN_PROCESS_NAME + "Given CHPED doesn't exist. Please Check it again.")
+            sys.exit()
+
+        if not _hg:
+            print(std_ERROR_MAIN_PROCESS_NAME + "HG(Human Genome) version info wasn't given. Please check '-hg' argument again.")
+            sys.exit()
+
+        if not _dictionary_AA:
+            print(std_ERROR_MAIN_PROCESS_NAME + "Dictionary file for Amino Acid wasn't given. Please check '--dict-AA' argument again.")
+            sys.exit()
+
+        if not _dictionary_SNPS:
+            print(std_ERROR_MAIN_PROCESS_NAME + "Dictionary file for HLA SNPs wasn't given. Please check '--dict-SNPS' argument again.")
+            sys.exit()
+
+
+        self.bMarkers = bMarkerGenerator(_CHPED, _OUT, _hg, _dictionary_AA, _dictionary_SNPS,
+                                         _variants=kwargs["_variants"], __save_intermediates=kwargs["__save_intermediates"],
+                                         _p_src=kwargs["_p_src"])
+
+
+    def getReuslts(self):
+        return self.bMarkers
 
 
 
-# @HATK_b_MarkerGenerator
+
 def bMarkerGenerator(_CHPED, _OUT, _hg, _dictionary_AA, _dictionary_SNPS, _variants=None,
                      _p_src="src/", _p_dependency="dependency/", __save_intermediates=False):
 
@@ -172,19 +132,28 @@ def bMarkerGenerator(_CHPED, _OUT, _hg, _dictionary_AA, _dictionary_SNPS, _varia
         print(std_MAIN_PROCESS_NAME + "Error. 'HLAtoSequences.py' not found in '{0}'".format(p_src))
         sys.exit()
     else:
-        from src.HLAtoSequences import HLAtoSequences
+        if __name__ == "__main__":
+            from src.HLAtoSequences import HLAtoSequences
+        else:
+            from bMarkerGenerator.src.HLAtoSequences import HLAtoSequences
 
     if not os.path.exists(os.path.join(p_src, "encodeVariants.py")):
         print(std_MAIN_PROCESS_NAME + "Error. 'encodeVariants.py' not found in '{0}'".format(p_src))
         sys.exit()
     else:
-        from src.encodeVariants import encodeVariants
+        if __name__ == "__main__":
+            from src.encodeVariants import encodeVariants
+        else:
+            from bMarkerGenerator.src.encodeVariants import encodeVariants
 
     if not os.path.exists(os.path.join(p_src, "encodeHLA.py")):
         print(std_MAIN_PROCESS_NAME + "Error. 'encodeHLA.py' not found in '{0}'".format(p_src))
         sys.exit()
     else:
-        from src.encodeHLA import encodeHLA
+        if __name__ == "__main__":
+            from src.encodeHLA import encodeHLA
+        else:
+            from bMarkerGenerator.src.encodeHLA import encodeHLA
 
 
 
