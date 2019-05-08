@@ -145,6 +145,7 @@ if __name__ == "__main__":
 
     # Additional utility flags
     g_NomenCleaner.add_argument("--NoCaption", help="\nOutput without HLA gene(ex. \"A*01:01\" -> \"01:01\").\n\n", action='store_true')
+    g_NomenCleaner.add_argument("--leave-NotFound", help="\nLeaving HLA alleles which can't be found in given *.iat file(Novel or Erroneous allele) intact.\n\n", action='store_true')
 
 
 

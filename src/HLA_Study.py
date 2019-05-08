@@ -135,7 +135,16 @@ class HLA_Study(object):
             elif _args.nomencleaner:
 
                 ### NomenCleaner
-                pass
+                from NomenCleaner.NomenCleaner import HATK_NomenCleaner
+
+                myNomenCleaner = HATK_NomenCleaner(_args.iat, _args.imgt, _args.out,
+                                                   _args.hped, _args.hped_G, _args.hped_P,
+                                                   _args.oneF, _args.twoF, _args.threeF, _args.fourF,
+                                                   _args.G_group, _args.P_group, _args.old_format,
+                                                   __f_NoCaption=_args.NoCaption, __leave_NotFound=_args.leave_NotFound)
+
+                print(std_MAIN_PROCESS_NAME + "NomenCleaner result : \n{}".format(myNomenCleaner.getResults()))
+
             elif _args.logistic:
 
                 ### Logistic Regression
