@@ -126,7 +126,11 @@ class HLA_Study(object):
             elif _args.hla2hped:
 
                 ### HLA2HPED
-                pass
+                from HLA2HPED.HLA2HPED import HATK_HLA2HPED
+
+                myHLA2HPED = HATK_HLA2HPED(_args.rhped, _args.out, _args.platform)
+
+                print(std_MAIN_PROCESS_NAME + "HLA2HPED result : \n{}".format(myHLA2HPED.getResults()))
 
             elif _args.nomencleaner:
 
