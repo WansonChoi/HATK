@@ -160,7 +160,14 @@ class HLA_Study(object):
             elif _args.heatmap:
 
                 ### HLA Heatmap
-                pass
+                from HLA_Heatmap.heatmap import HATK_Heatmap
+
+                myHeatmap = HATK_Heatmap(_args.HLA, _args.out, _args.maptable, _args.assoc_result,
+                                         __as4field=_args.as4field, __save_intermediates=_args.save_intermediates,
+                                         _p_src="HLA_Heatmap/src", _p_data="HLA_Heatmap/data")
+
+                print(std_MAIN_PROCESS_NAME + "Heatmap results : \n{}".format(myHeatmap.getResults()))
+
             elif _args.manhattan:
 
                 ### HLA Manhattan
