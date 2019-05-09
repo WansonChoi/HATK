@@ -165,7 +165,12 @@ class HLA_Study(object):
             elif _args.meta_analysis:
 
                 ### Meta Analysis
-                pass
+                from HLA_Analysis.HLA_Analysis import HATK_MetaAnalysis
+
+                myMetaAnalysis = HATK_MetaAnalysis(_args.out, _args.assoc_result)
+
+                print(std_MAIN_PROCESS_NAME + "Meta-Analysis result : \n{}".format(myMetaAnalysis.getResults()))
+
             elif _args.heatmap:
 
                 ### HLA Heatmap

@@ -77,7 +77,7 @@ if __name__ == "__main__":
     # (Meta-Analysis or Manhattan Plot)
     # parser.add_argument("--results-assoc", "-ra", help="\nResult files conducted by Logistic Regression Tests(ex.\"*.assoc.logistic\").\n\n",
     #                     nargs='+')
-    parser.add_argument("--assoc-result", "-ar", help="\nAssociation test result file(ex. *.assoc.logistic).\n\n", nargs='+')
+    parser.add_argument("--assoc-result", "-ar", help="\nAssociation test result file(s)(ex. *.assoc.logistic).\n\n", nargs='+')
 
 
     ##### < IMGT2Sequence > #####
