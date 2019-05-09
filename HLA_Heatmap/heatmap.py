@@ -600,7 +600,12 @@ def HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_result, __as4field=False, __s
 
 
 
-    return _out + ".pdf"
+    __RESULTS__ = _out + ".pdf"
+
+    if os.path.exists(__RESULTS__):
+        return _out + ".pdf"
+    else:
+        return -1
 
 
 if __name__ == "__main__" :
