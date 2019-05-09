@@ -171,8 +171,14 @@ class HLA_Study(object):
             elif _args.manhattan:
 
                 ### HLA Manhattan
-                pass
+                from HLA_Manhattan.manhattan import HATK_Manhattan
 
+                myManhattan = HATK_Manhattan(_args.assoc_result, _args.out, _args.hg,
+                                             _point_col=_args.point_color, _top_color=_args.top_color,
+                                             _point_size=_args.point_size, _yaxis_unit=_args.yaxis_unit,
+                                             _p_src="HLA_Manhattan/src", _p_data="HLA_Manhattan/data")
+
+                print(std_MAIN_PROCESS_NAME + "Manhattan results : \n{}".format(myManhattan.getResults()))
 
 
         elif f_sum > 1:
