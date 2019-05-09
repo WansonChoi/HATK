@@ -21,6 +21,37 @@ std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % (os.path.basename(__file__))
 std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % (os.path.basename(__file__))
 
 
+class HATK_Heatmap(object):
+
+    def __init__(self, _hla_name, _out, _p_maptable, _p_assoc_result, *args, **kwargs):
+
+
+        if not _hla_name:
+            print(std_ERROR_MAIN_PROCESS_NAME + "Please check '--HLA' argument again.")
+            sys.exit()
+
+        if not _out:
+            print(std_ERROR_MAIN_PROCESS_NAME + "Please check '--out' argument again.")
+            sys.exit()
+
+        if not _p_maptable:
+            print(std_ERROR_MAIN_PROCESS_NAME + "Please check '--maptable' argument again.")
+            sys.exit()
+
+        if not _p_assoc_result:
+            print(std_ERROR_MAIN_PROCESS_NAME + "Please check '--assoc-result/-ar' argument again.")
+            sys.exit()
+
+
+        self.results = HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_result,
+                               __as4field=kwargs["__as4field"], __save_intermediates=kwargs["__save_intermediates"],
+                               _p_src=kwargs["_p_src"], _p_data=kwargs["_p_data"])
+
+
+    def getResults(self):
+        return self.results
+
+
 
 def HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_result, __as4field=False, __save_intermediates=False,
             _p_Rscript=p_Rscript, _p_src="./src", _p_data="./data"):
@@ -559,7 +590,7 @@ def HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_result, __as4field=False, __s
 
     if not __save_intermediates:
 
-        l_remove = [".map.txt", ".__alleleP__.txt", ".assoc.txt"]
+        l_remove = [".map.txt", ".alleleP.txt", ".assoc.txt"]
 
         for item in l_remove:
 
