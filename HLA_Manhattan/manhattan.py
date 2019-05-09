@@ -17,41 +17,70 @@ std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % (os.path.basename(__file__))
 std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % (os.path.basename(__file__))
 
 
-def HATK_manhattan(_results_assoc, _plot_label, _out, _hg, _pointcol="#778899", _topcol="#FF0000", _min_pos="29.60E6", _max_pos="33.2E6",
-                   _p_Rscript=which("Rscript")):
+class HATK_Manhattan():
+
+    def __init__(self, _assoc_result, _out, _hg, *args, **kwargs):
 
 
-    if not isinstance(_results_assoc, list):
-        print(std_ERROR_MAIN_PROCESS_NAME + "The argument \"--logistic-result(-lr)\" wansn't given as list. Please check it again.\n")
-    else:
-
-        for item in _results_assoc:
+        for item in _assoc_result:
             if not os.path.exists(item):
-                print(std_ERROR_MAIN_PROCESS_NAME + "The given association result file({0}) doesn't exist. Please check it again.\n".format(item))
+                print(std_ERROR_MAIN_PROCESS_NAME + "One of the given association result file({}) doesn't exist. Please check it again.\n".format(item))
                 sys.exit()
 
 
-    if not bool(_out):
-        print(std_ERROR_MAIN_PROCESS_NAME + "The argument \"--out\" wasn't given. Please check it again.\n")
-        sys.exit()
+        if not bool(_out):
+            print(std_ERROR_MAIN_PROCESS_NAME + "Please check '--out' argument again.\n")
+            sys.exit()
 
-    if not bool(_hg):
-        print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("-hg"))
-        sys.exit()
-
-    if not bool(_plot_label):
-        _plot_label = " "
+        if not bool(_hg):
+            print(std_ERROR_MAIN_PROCESS_NAME + "Please check '-hg' argument again.\n")
+            sys.exit()
 
 
-    return manhattan(_results_assoc, _plot_label, _out, _hg, _pointcol="#778899", _topcol="#FF0000", _min_pos="29.60E6",
-                     _max_pos="33.2E6", _p_Rscript=which("Rscript"))
-
+        self.results = Manhattan(_assoc_result, _out, _hg,
+                                 _pointcol=kwargs['_point_col'], _topcol=kwargs['_top_color'],
+                                 _pointsize=kwargs['_point_size'], _yaxis_unit=kwargs['_yaxis_unit'],
+                                 _p_src=kwargs['_p_src'], _p_data=kwargs['_p_data'])
 
 
 
-def manhattan(_assoc_result, _out, _hg, _plot_label = "",
-              _pointcol="#778899", _topcol="#FF0000", _min_pos="29.60E6", _max_pos="33.2E6",
-              _pontsize="15", _yaxis_unit = "10", _p_Rscript=which("Rscript")):
+    def getResults(self):
+        return self.results
+
+# def HATK_manhattan(_results_assoc, _plot_label, _out, _hg, _pointcol="#778899", _topcol="#FF0000", _min_pos="29.60E6", _max_pos="33.2E6",
+#                    _p_Rscript=which("Rscript")):
+#
+#
+#     if not isinstance(_results_assoc, list):
+#         print(std_ERROR_MAIN_PROCESS_NAME + "The argument \"--logistic-result(-lr)\" wansn't given as list. Please check it again.\n")
+#     else:
+#
+#         for item in _results_assoc:
+#             if not os.path.exists(item):
+#                 print(std_ERROR_MAIN_PROCESS_NAME + "The given association result file({0}) doesn't exist. Please check it again.\n".format(item))
+#                 sys.exit()
+#
+#
+#     if not bool(_out):
+#         print(std_ERROR_MAIN_PROCESS_NAME + "The argument \"--out\" wasn't given. Please check it again.\n")
+#         sys.exit()
+#
+#     if not bool(_hg):
+#         print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("-hg"))
+#         sys.exit()
+#
+#     if not bool(_plot_label):
+#         _plot_label = " "
+#
+#
+#     return manhattan(_results_assoc, _plot_label, _out, _hg, _pointcol="#778899", _topcol="#FF0000", _min_pos="29.60E6",
+#                      _max_pos="33.2E6", _p_Rscript=which("Rscript"))
+
+
+
+
+def Manhattan(_assoc_result, _out, _hg, _pointcol="#778899", _topcol="#FF0000", _min_pos="29.60E6", _max_pos="33.2E6",
+              _pointsize="15", _yaxis_unit="10", _p_Rscript=which("Rscript"), _p_src='./src', _p_data='./data'):
 
 
 
@@ -67,8 +96,8 @@ def manhattan(_assoc_result, _out, _hg, _plot_label = "",
 
 
     # Paths
-    p_src = "./src"
-    p_data = "./data"
+    p_src = _p_src
+    p_data = _p_data
 
 
 
@@ -141,7 +170,7 @@ def manhattan(_assoc_result, _out, _hg, _plot_label = "",
 
     command = [_p_Rscript, os.path.join(p_src, "manhattan_HLA_HATK.R"),
                export_ar, _out,
-               _pointcol, _pontsize, _topcol,
+               _pointcol, _pointsize, _topcol,
                _min_pos, _max_pos, export_TOP_LABEL, export_yaxis, _yaxis_unit,
                _knownGene, p_src]
 
@@ -152,7 +181,13 @@ def manhattan(_assoc_result, _out, _hg, _plot_label = "",
 
 
 
-    return _out + ".pdf"
+    __RESULTS__ = _out + ".pdf"
+
+
+    if os.path.exists(__RESULTS__):
+        return _out + ".pdf"
+    else:
+        return -1
 
 
 
@@ -197,7 +232,7 @@ if __name__ == "__main__":
     parser.add_argument("-h", "--help", help="\nShow this help message and exit\n\n", action='help')
 
     parser.add_argument("--assoc-result", "-ar", help="\nAssociation test result file(ex. *.assoc.logistic).\n\n", nargs='+', required=True)
-    parser.add_argument("--plot-label", "-pl", help="\nPlot Label\n\n", default="")
+    # parser.add_argument("--plot-label", "-pl", help="\nPlot Label\n\n", default="")
     parser.add_argument("--out", "-o", help="\nOuput file prefix\n\n", required=True)
 
     parser.add_argument("-hg", help="\nHuman Genome version(18, 19 or 38)\n\n", choices=["18", "19", "38"], metavar="hg", required=True)
@@ -206,7 +241,7 @@ if __name__ == "__main__":
     parser.add_argument("--top-color", "-tc", help="\nTop signal point color(ex. \"#FF0000\").\n\n", default="#FF0000")
 
     parser.add_argument("--point-size", "-ps", help="\nGeneral point size (default: 15).\n\n", default="15")
-    parser.add_argument("--yaxis-unit", "-yau", help="\nY axis value(-log10(x)) unit (default : 10).\n\n", default="10")
+    parser.add_argument("--yaxis-unit", "-yau", help="\nY-axis value(-log10(x)) unit (default : 10).\n\n", default="10")
 
 
 
@@ -219,5 +254,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
     print(args)
 
-    manhattan(args.assoc_result, args.out, args.hg, _plot_label=args.plot_label, _pointcol=args.point_color, _topcol=args.top_color,
-              _pontsize=args.point_size, _yaxis_unit=args.yaxis_unit)
+    Manhattan(args.assoc_result, args.out, args.hg, _pointcol=args.point_color, _topcol=args.top_color,
+              _pointsize=args.point_size, _yaxis_unit=args.yaxis_unit)
