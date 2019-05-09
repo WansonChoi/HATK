@@ -155,17 +155,17 @@ if __name__ == "__main__":
 
     g_ASSOC = parser.add_argument_group(title='(Association Test) Common arguments for Association Tests', description='')
 
-    g_ASSOC.add_argument("--covar", help="\nSpecify .covar file (Plink v1.07).\n\n")
-    g_ASSOC.add_argument("--covar-name", help="\nSpecify the column name(s) in .covar file which you will use. (Plink v1.07)\n\n")
+    g_ASSOC.add_argument("--covar", help="\nSpecify .covar file (Plink v1.9).\n\n")
+    g_ASSOC.add_argument("--covar-name", help="\nSpecify the column name(s) in .covar file which you will use. (Plink v1.9)\n\n")
 
-    g_ASSOC.add_argument("--pheno", help="\nSpecify phenotype information file (Plink v1.07).\n\n")
-    g_ASSOC.add_argument("--pheno-name", help="\nSpecify the column name in phenotype file which you will use. (Plink v1.07)\n\n")
+    g_ASSOC.add_argument("--pheno", help="\nSpecify phenotype information file (Plink v1.9).\n\n")
+    g_ASSOC.add_argument("--pheno-name", help="\nSpecify the column name in phenotype file which you will use. (Plink v1.9)\n\n")
 
     CondVars = g_ASSOC.add_mutually_exclusive_group()
-    CondVars.add_argument("--condition", help="\nSpecify Marker name(s) to condition as comma-separated(\",\"). (Plink v1.07)\n\n")
-    CondVars.add_argument("--condition-list", help="\nSpecify the Marker name(s) to condition as a file. (Plink v1.07)\n\n")
+    CondVars.add_argument("--condition", help="\nSpecify a single variant ID to condition(i.e. To set it as covariate). (Plink v1.9)\n\n")
+    CondVars.add_argument("--condition-list", help="\nSpecify a tsv file of multiple variant IDs to condition(i.e. To set it as covariates). (Plink v1.9)\n\n")
 
-    g_ASSOC.add_argument("--reference-allele", help="\nSpecify the Reference Allele file. (Plink v1.07)\n\n")
+    g_ASSOC.add_argument("--reference-allele", help="\nSpecify the Reference Allele file('--a1-allele'). (Plink v1.9)\n\n")
 
 
 

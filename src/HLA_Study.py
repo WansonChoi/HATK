@@ -148,7 +148,16 @@ class HLA_Study(object):
             elif _args.logistic:
 
                 ### Logistic Regression
-                pass
+                from HLA_Analysis.HLA_Analysis import HATK_LogisticRegression
+
+                myLogistcRegression = HATK_LogisticRegression(_args.variants, _args.out,
+                                                              _phe=_args.pheno, _phe_name=_args.pheno_name,
+                                                              _covar=_args.covar, _covar_name=_args.covar_name,
+                                                              _condition=_args.condition, _condition_list=_args.condition_list,
+                                                              _ref_allele=_args.reference_allele)
+
+                print(std_MAIN_PROCESS_NAME + "Logistic Regression result : \n{}".format(myLogistcRegression.getResults()))
+
             elif _args.omnibus:
 
                 ### Omnibus Test
