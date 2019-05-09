@@ -152,6 +152,28 @@ class HATK_LogisticRegression():
         return self.results
 
 
+
+
+
+class HATK_MetaAnalysis():
+
+    def __init__(self, _out, _assoc_result):
+
+
+        if not isinstance(_assoc_result, list):
+            print(std_ERROR_MAIN_PROCESS_NAME + "Please check '--assoc-result' argument again.")
+            sys.exit()
+
+        self.results = Meta_Analysis(_out, _assoc_result)
+
+
+    def getResults(self):
+        return self.results
+
+
+
+
+
 ########## < Association Test > ##########
 
 
@@ -303,58 +325,30 @@ def Omnibus_Test(_input, _out, _phased, _phe, _phe_name, _covar, _covar_name="NA
 
 
 ### < Meta Analysis >
-def Meta_Analysis(_out, _rassoc):
+def Meta_Analysis(_out, _assoc_result):
 
 
     ### Generating Command
 
-    command = [GLOBAL_p_plink, "--noweb", "--out {0}".format(_out), "--meta-analysis", *_rassoc]
+    command = [GLOBAL_p_plink, "--noweb", "--out {0}".format(_out), "--meta-analysis", *_assoc_result]
     command = ' '.join(command)
 
 
-    # Conducting Meta-Analysis by Plink(v1.07)
+    # Conducting Meta-Analysis by Plink(v1.9)
 
     print(command)
 
     if not os.system(command):
-        return (_out + ".meta")
+
+        if os.path.exists(_out + ".meta"):
+            return (_out + ".meta")
+        else:
+            return -1
+
     else:
-        print(std_ERROR_MAIN_PROCESS_NAME + "Meta-Analysis failed.\n")
-        sys.exit()
+        print(std_ERROR_MAIN_PROCESS_NAME + "Meta-Analysis failed.")
+        return -1
 
 
 
 
-
-
-
-
-if __name__ == "__main__":
-
-    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,
-                                     description=textwrap.dedent('''\
-    ###############################################################################
-           
-        HLA_Analysis_modules.py
-        
-        A lot of sub-modules used in "HLA_Analysis.py" conduct a bash execution.
-        (ex. Rscript, plink, ...)
-        
-        Those sub-modules are prepared in this script so that bash execution doesn't
-        need to be considered anymore. 
-
-        This script is just a collection of those modules.
-                
-    ###############################################################################
-                                             '''),
-                                     add_help=False)
-
-    parser._optionals.title = "OPTIONS"
-
-    parser.add_argument("-h", "--help", help="\nShow this help message and exit\n\n", action='help')
-
-
-    ### Test
-
-    # Logistic_Regression('data/example/LogisticRegression/20190327_WTCCC.AA.CODED', 'tests/20190503_LogisticR',
-    #                     _phe='/Users/wansun/Git_Projects/HLA_Analysis/data/example/LogisticRegression/wtccc_filtered_58C_NBS_RA_T1D.phe', _phe_name='RA')
