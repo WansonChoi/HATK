@@ -21,17 +21,147 @@ GLOBAL_p_JAVA = which("java")
 
 
 
+class HATK_LogisticRegression():
+
+    def __init__(self, _bfile, _out, *args, **kwargs):
+
+        """
+        (Checklist)
+        1. _pheno or _fam (Phenotype Info)
+        2. _covar_name : whether it is single value or multiple value(as csv)
+        3. _condition : whether it is single value or multiple value(as csv)
+        3.5. _condition_list : it must be a file.(don't need to its inner contents.)
+        4. _ref_allele : whether it is given(exists) or not.
+        """
+
+        if not kwargs['_phe']:
+
+            kwargs['_phe_name'] = None  # Remove unnecessarily given phenotype column name just in case.
+
+            PheInFam = pd.read_csv(_bfile+'.fam', sep='\s+', header=None, usecols=[5]) # 6th column of *.ped file is phenotype information.
+
+            hasPhenotypeInfo = ~((PheInFam == -9).all())    # If not all of them are -9, then it has phenotype information.
+            hasPhenotypeInfo = hasPhenotypeInfo.iat[0]
+
+            if not hasPhenotypeInfo:
+                print(std_ERROR_MAIN_PROCESS_NAME + "To perform association test, Phenotype information must be given.\n"
+                                                    "Please check '--pheno' and '--pheno-name' arguments again, or\n"
+                                                    "Please check the 6th column of '{}.fam' again.".format(_bfile))
+                sys.exit()
+
+        else:
+
+            if not os.path.exists(kwargs['_phe']):
+                print(std_ERROR_MAIN_PROCESS_NAME + "Given phenotype file('{}') doesn't exist.\n"
+                                                    "Please check '--pheno' argument again.".format(kwargs['_phe']))
+                sys.exit()
+
+
+            # Check whether given pheno-name is in phenotype file.
+            Phe = open(kwargs['_phe'])
+
+            header =  Phe.readline().rstrip('\n')
+            header_items = re.split(r'\s+', header)
+
+            if len(header_items) < 3:
+                # Less than 3 columns
+                print(std_ERROR_MAIN_PROCESS_NAME + "Given phenotype file must have more than 2 columns.\n"
+                                                    "Please check '--pheno' argument again.")
+                sys.exit()
+
+            elif len(header_items) == 3:
+
+                # Setting only one column as phenotype information.
+                kwargs['_phe_name'] = header_items[-1]
+
+            else:
+                # More than 3 columns
+                if not kwargs['_phe_name'] in header_items:
+                    print(std_ERROR_MAIN_PROCESS_NAME + "Given phenotype name('{}') can't be found in the columns of the given phenotype file.\n"
+                                                        "Please check '--pheno' and '--pheno-name' arguments again.".format(kwargs['_phe_name']))
+                    sys.exit()
+
+            Phe.close()
+
+
+        if not kwargs['_covar']:
+
+            # Covariate file not given.
+
+            kwargs['_covar_name'] = None  # Remove unnecessarily given covariate column name(s) just in case.
+
+
+        else:
+
+            # Covariate file given.
+
+            if not os.path.exists(kwargs['_covar']):
+                print(std_ERROR_MAIN_PROCESS_NAME + "Given covariate file('{}') doesn't exist.\n"
+                                                    "Please check '--covar' argument again.".format(kwargs['_covar']))
+                sys.exit()
+
+
+            # Checking covariate columns names
+
+            # p_sep = re.compile(r',\s*')
+            #
+            # header_covar = re.split(pattern=r'\s+', string=open(kwargs['_covar'], 'r').readline().rstrip('\n'))
+            # items_covar = p_sep.split(string=kwargs['_covar_name'])
+
+
+
+        if kwargs['_condition_list']:
+
+            if not os.path.isfile(kwargs['_condition_list']):
+                print(std_ERROR_MAIN_PROCESS_NAME + "Given condition list('{}') is not a file.\n"
+                                                    "Please check '--condition-list' argument again.".format(kwargs['_condition_list']))
+                sys.exit()
+
+            """
+            (2019.05.09.)
+            In Plink1.9, It seems '--condition' argument takes only one variant ID. i.e. multiple variants ID can't be
+            passed as csv. 
+            
+            For example, 
+            => "--condition AA_A_-15_29910359_exon1,AA_A_-11_29910371_exon1,AA_A_9_29910558_exon2_F"
+            
+            This kind of usage is no longer possible.
+            
+            If user wants to pass multiple variants as covariate, there is no choice but to give tsv file of those IDs 
+            with '--condition-list'.
+              
+            """
+
+
+
+        if not kwargs['_ref_allele']:
+
+            kwargs['_ref_allele'] = MakeDefaultReferenceAllele(_bfile, _out)
+
+
+        ################################################################################################################
+
+
+        self.results = Logistic_Regression(_bfile, _out, _phe=kwargs['_phe'], _phe_name=kwargs['_phe_name'],
+                                           _covar=kwargs['_covar'], _covar_name=kwargs['_covar_name'],
+                                           _condition=kwargs['_condition'], _condition_list=kwargs['_condition_list'],
+                                           _ref_allele=kwargs['_ref_allele'])
+
+
+    def getResults(self):
+        return self.results
+
+
 ########## < Association Test > ##########
 
 
 ### (Logistic Regression)
 def Logistic_Regression(_bfile, _out,
                         _phe=None, _phe_name=None,
-                        _covar=None, _covar_names=None,
+                        _covar=None, _covar_name=None,
                         _condition=None, _condition_list=None,
-                        _ref_allele=None,  # (2018. 8. 6.) Generate default reference_allele file and make it use that file by default.
-                        _from_mb = 29, _to_mb = 34, _hide_covar = True, _ci = 0.95,
-                        _chr = 6, _allow_no_sex = True):
+                        _ref_allele=None, _from_mb=29, _to_mb=34, _hide_covar=True, _ci=0.95,
+                        _chr=6, _allow_no_sex=True):
 
 
     ### Argument Processing && Generating Command.
@@ -43,8 +173,8 @@ def Logistic_Regression(_bfile, _out,
 
     if bool(_covar):
         command.append("--covar " + _covar)
-    if bool(_covar_names):
-        command.append("--covar-name " + _covar_names)
+    if bool(_covar_name):
+        command.append("--covar-name " + _covar_name)
     if bool(_phe):
         command.append("--pheno " + _phe)
     if bool(_phe_name):
@@ -56,8 +186,8 @@ def Logistic_Regression(_bfile, _out,
         command.append("--condition-list " + _condition_list)
 
     if bool(_ref_allele):
-        # command.append("--reference-allele " + _ref_allele)
-        command.append("--a1-allele " + _ref_allele)
+        # command.append("--reference-allele " + _ref_allele) # Plink v1.07
+        command.append("--a1-allele " + _ref_allele) # Plink v1.9
 
     if not (bool(_from_mb) != bool(_to_mb)): # Exclusive-NOR
         command.append("--from-mb {0} --to-mb {1}".format(_from_mb, _to_mb))
@@ -81,13 +211,18 @@ def Logistic_Regression(_bfile, _out,
     os.system(command)
 
 
-    return (_out + ".assoc.logistic")
+    __RETURN__ = _out + ".assoc.logistic"
+
+    if os.path.exists(__RETURN__):
+        return __RETURN__
+    else:
+        return -1
 
 
-def MakeDefaultReferenceAllele(_bfile):
+def MakeDefaultReferenceAllele(_bfile, _out):
 
     # step1. Load ".bim" file
-    bim = pd.read_table(_bfile+".bim", sep='\t', header=None, usecols=[1,4,5], names=["Label", "Al1", "Al2"])
+    bim = pd.read_csv(_bfile+".bim", sep='\t', header=None, usecols=[1,4,5], names=["Label", "Al1", "Al2"])
 
     l_Al1 = bim.iloc[:, 1].tolist()
     l_Al2 = bim.iloc[:, 2].tolist()
@@ -99,10 +234,12 @@ def MakeDefaultReferenceAllele(_bfile):
 
     # Making the reference allele DataFrame.
 
-    df_Ref_Allele = pd.concat([bim.iloc[:, 0], pd.Series(l_Al1)], axis=1)
-    df_Ref_Allele.to_csv(_bfile+".refallele", sep='\t', header=False, index=False)
+    _out2 = os.path.join(os.path.dirname(_out), os.path.basename(_bfile)+'.refallele')
 
-    return (_bfile+".refallele")
+    df_Ref_Allele = pd.concat([bim.iloc[:, 0], pd.Series(l_Al1)], axis=1)
+    df_Ref_Allele.to_csv(_out2, sep='\t', header=False, index=False)
+
+    return _out2
 
 
 
