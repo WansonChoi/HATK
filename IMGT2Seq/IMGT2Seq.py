@@ -26,6 +26,28 @@ class HATK_IMGT2Seq(object):
 
         """
 
+
+        if not _imgt:
+            print(std_ERROR_MAIN_PROCESS_NAME + "IMGT version information wasn't given.\n"
+                                                "Please check '-imgt' argument again.")
+            sys.exit()
+
+        if not _hg:
+            print(std_ERROR_MAIN_PROCESS_NAME + "HG(Human Genome) version information wasn't given.\n"
+                                                "Please check '-hg' argument again.")
+            sys.exit()
+
+        if not kwargs['_imgt_dir']:
+            print(std_ERROR_MAIN_PROCESS_NAME + "Path to IMGT/HLA raw data directory wasn't given.\n"
+                                                "Please check '--imgt-dir' argument again.")
+            sys.exit()
+        else:
+            if not os.path.isdir(kwargs['_imgt_dir']):
+                print(std_ERROR_MAIN_PROCESS_NAME + "Given directory('{}') for IMGT-HLA raw data is not a directory.\n"
+                                                    "Please check '--imgt-dir' argument again.".format(kwargs['_imgt_dir']))
+                sys.exit()
+
+
         ########## < Assigning arguments > ##########
 
         self.imgt = _imgt
@@ -298,7 +320,7 @@ def IMGT2Seq(_imgt, _hg, _out, _no_Indel=False, _MultiP=False, _save_intermediat
     # print(IMGTHLA_directory)
 
     if not os.path.isdir(IMGTHLA_directory):
-        print(std_ERROR_MAIN_PROCESS_NAME + "The given IMGT-HLA directory \"{0}\" can't be found!".format(IMGTHLA_directory))
+        print(std_ERROR_MAIN_PROCESS_NAME + "Given IMGT-HLA directory \"{0}\" can't be found!".format(IMGTHLA_directory))
         sys.exit()
 
     # (2018. 10. 26.) Loading `HLA_INTEGRATED_TABLE` file is moved to "ProcessIMGT.py".
