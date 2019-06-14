@@ -256,7 +256,7 @@ def MakeDefaultReferenceAllele(_bfile, _out):
 
     # Making the reference allele DataFrame.
 
-    _out2 = os.path.join(os.path.dirname(_out), os.path.basename(_bfile)+'.refallele')
+    _out2 = os.path.join(os.path.dirname(_out), os.path.basename(_bfile)+'.ref')
 
     df_Ref_Allele = pd.concat([bim.iloc[:, 0], pd.Series(l_Al1)], axis=1)
     df_Ref_Allele.to_csv(_out2, sep='\t', header=False, index=False)

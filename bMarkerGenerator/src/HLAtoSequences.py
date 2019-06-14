@@ -33,7 +33,7 @@ def HLAtoSequences(_chped, _dictionary, _type, _out, __previous_version=False, _
 
     # (1) ped file existence
     if not os.path.isfile(_chped):
-        print(std_MAIN_PROCESS_NAME + "Given ped file doen't exist. Please check it again.\n")
+        print(std_MAIN_PROCESS_NAME + "Given chped file doen't exist. Please check it again.\n")
         sys.exit()
 
     # (2) HLA DICTIONARY file

@@ -21,19 +21,28 @@ class HATK_bMarkerGenertor(object):
         """
 
         if not _CHPED:
-            print(std_ERROR_MAIN_PROCESS_NAME + "Given CHPED doesn't exist. Please Check it again.")
+            print(std_ERROR_MAIN_PROCESS_NAME + "CHPED not given.\n"
+                                                "Please check '--hped', '--rhped' and '--chped' arguments again.")
             sys.exit()
+        else:
+
+            if not os.path.isfile(_CHPED):
+                print(std_ERROR_MAIN_PROCESS_NAME + "Given CHPED doesn't exist.\n"
+                                                    "Please check '--chped' argument again.")
 
         if not _hg:
-            print(std_ERROR_MAIN_PROCESS_NAME + "HG(Human Genome) version info wasn't given. Please check '-hg' argument again.")
+            print(std_ERROR_MAIN_PROCESS_NAME + "HG(Human Genome) version info wasn't given.\n"
+                                                "Please check '-hg' argument again.")
             sys.exit()
 
         if not _dictionary_AA:
-            print(std_ERROR_MAIN_PROCESS_NAME + "Dictionary file for Amino Acid wasn't given. Please check '--dict-AA' argument again.")
+            print(std_ERROR_MAIN_PROCESS_NAME + "Dictionary file for Amino Acid wasn't given.\n"
+                                                "Please check '--dict-AA' argument again.")
             sys.exit()
 
         if not _dictionary_SNPS:
-            print(std_ERROR_MAIN_PROCESS_NAME + "Dictionary file for HLA SNPs wasn't given. Please check '--dict-SNPS' argument again.")
+            print(std_ERROR_MAIN_PROCESS_NAME + "Dictionary file for HLA SNPs wasn't given.\n"
+                                                "Please check '--dict-SNPS' argument again.")
             sys.exit()
 
 

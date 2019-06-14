@@ -38,12 +38,28 @@ class HATK_Heatmap(object):
             print(std_ERROR_MAIN_PROCESS_NAME + "Please check '--maptable' argument again.")
             sys.exit()
 
+
+        t_single_assoc_result = None
+
         if not _p_assoc_result:
             print(std_ERROR_MAIN_PROCESS_NAME + "Please check '--assoc-result/-ar' argument again.")
             sys.exit()
+        else:
+            # Supposed to be a list with only one element
+            if isinstance(_p_assoc_result, list):
+
+                if len(_p_assoc_result) > 1:
+                    print(std_WARNING_MAIN_PROCESS_NAME + "More than 1 association test result was given.\n"
+                                                          "Only 1st item will be used to plot HLA Heatmap.")
+
+                t_single_assoc_result = _p_assoc_result[0]
+
+            elif isinstance(_p_assoc_result, str):
+
+                t_single_assoc_result = _p_assoc_result
 
 
-        self.results = HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_result,
+        self.results = HEATMAP(_hla_name, _out, _p_maptable, t_single_assoc_result,
                                __as4field=kwargs["__as4field"], __save_intermediates=kwargs["__save_intermediates"],
                                _p_src=kwargs["_p_src"], _p_data=kwargs["_p_data"])
 
