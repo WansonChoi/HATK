@@ -1,0 +1,16 @@
+PLINK v1.90b4 64-bit (20 Mar 2017)
+Options in effect:
+  --meta-analysis data1.SNPS.CODED.assoc data2.SNPS.CODED.assoc data3.SNPS.CODED.assoc data4.SNPS.CODED.assoc data5.SNPS.CODED.assoc data6.SNPS.CODED.assoc
+  --out Meta_SNPS/SNPS.CODED.assoc
+
+Hostname: choewanseon-ui-MacBook-Pro.local
+Working directory: /Users/wansun/Documents/GarbageCollector/(2018.7.24.)CancerResearch/Ref_data/AssociationResult/assoc
+Start time: Thu Jul 26 00:07:49 2018
+
+Random number seed: 1532531269
+8192 MB RAM detected; reserving 4096 MB for main workspace.
+--meta-analysis: 42064 problematic lines; see Meta_SNPS/SNPS.CODED.assoc.prob .
+--meta-analysis: 1488 variants processed; results written to
+Meta_SNPS/SNPS.CODED.assoc.meta .
+
+End time: Thu Jul 26 00:07:49 2018
