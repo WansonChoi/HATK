@@ -1,7 +1,7 @@
 #-*- coding: utf-8 -*-
 
 import os, sys, re
-import logging
+# import logging
 import argparse, textwrap
 
 
@@ -246,7 +246,7 @@ if __name__ == "__main__":
 
     ##### < for Testing > #####
 
-    # args = parser.parse_args(["--imgt2sequence", "-imgt", "370", "-o", "TEST/TEST", "-hg", "18"])
+    # args = parser.parse_args('--omnibus --out /Users/wansun/Git_Projects/HATK/tests/_4_HLA_Analysis/Omnibus/merged/20190618_merged_covar --input /Users/wansun/Dropbox/_Sync_MyLaptop/Projects/HATK/data/HLA_Analysis/sample/Merged/merged --covar-name GWAS --pheno-name All_UC'.split(' '))
 
 
 
@@ -258,122 +258,3 @@ if __name__ == "__main__":
 
     from src.HLA_Study import HLA_Study
     myStudy = HLA_Study(args)
-
-
-    # ########## < Main > ##########
-    #
-    # if not flag_MODULEs:
-    #
-    #     ##### < Whole Implementation > #####
-    #
-    #     # ### [1] IMGT2Sequence
-    #     #
-    #     # previous_dictionary = IMGT_Dictionary(hg=args.hg, imgt=args.imgt, out=args.out)
-    #     #
-    #     # if previous_dictionary:
-    #     #
-    #     #     log_HATK.info(previous_dictionary)
-    #     #
-    #     #     __dict_AA__, __dict_SNPS__, __IAT__, __d_MapTable__ = previous_dictionary.getDictionaries()
-    #     #
-    #     # else:
-    #     #
-    #     #
-    #     #     __dict_AA__, __dict_SNPS__, __IAT__, __d_MapTable__ = HATK_IMGT2Sequence(args.hg, args.out, args.imgt,
-    #     #                                                                              _imgt_dir=args.imgt_dir,
-    #     #                                                                              _no_MultiP=args.no_multiprocess)
-    #     #
-    #     #     t_string = \
-    #     #         "< IMGT2Sequence >\n" \
-    #     #         "- HLA Amino Acids : {}\n" \
-    #     #         "- HLA SNPs : {}\n" \
-    #     #         "- Integrated Allele Table : {}\n" \
-    #     #         "- Maptables for heatmap : \n" \
-    #     #         "   A   : {A}\n" \
-    #     #         "   B   : {B}\n" \
-    #     #         "   C   : {C}\n" \
-    #     #         "   DPA1: {DPA1}\n" \
-    #     #         "   DPB1: {DPB1}\n" \
-    #     #         "   DQA1: {DQA1}\n" \
-    #     #         "   DQB1: {DQB1}\n" \
-    #     #         "   DRB1: {DRB1}\n".format(__dict_AA__, __dict_SNPS__, __IAT__, **__d_MapTable__)
-    #     #
-    #     #     log_HATK.info(t_string)
-    #     #
-    #     #
-    #     #
-    #     # ### [2] Summary of Study Information
-    #     # myHLAstudy = HLA_Analysis.Study(rhped=args.rhped, hped=args.hped, chped=args.chped, platform=args.platform,
-    #     #                                 variants=args.variants, pheno=args.pheno, pheno_name=args.pheno_name,
-    #     #                                 covar=args.covar, covar_name=args.covar_name, condition=args.condition, condition_list=args.condition_list,
-    #     #                                 refallele=args.reference_allele, input=args.input, hg=args.hg, out=args.out,
-    #     #                                 dict_AA=__dict_AA__, dict_SNPS=__dict_SNPS__, iat=__IAT__, d_MapTable=__d_MapTable__)
-    #
-    #     """
-    #     (2019. 1. 14.)
-    #     Argument 마지막 부분
-    #     "   dict_AA=__dict_AA__, dict_SNPS=__dict_SNPS__, iat=__IAT__, d_MapTable=__d_MapTable__)"
-    #
-    #     이 부분을 나중에 그냥 HLA_Dictionary instance하나 만들어서 이 instance를 받는 식으로 바꿀것.
-    #
-    #     """
-    #
-    #     # log_HATK.info(myHLAstudy)
-    #
-    #
-    #     pass
-    #
-    #
-    #
-    #
-    # else:
-    #     ##### < Single Implementation > #####
-    #
-    #     if args.imgt2sequence:
-    #
-    #         hla_dictionaries = IMGT_Dictionary(args.imgt, args.hg, args.out,
-    #                                            _no_indel=args.no_indel, _multiprocess=args.multiprocess,
-    #                                            _save_intermediates=args.save_intermediates, _imgt_dir=args.imgt_dir)
-    #         # print(hla_dictionaries)
-    #
-    #     elif args.hla2hped:
-    #         pass
-    #
-    #     elif args.nomencleaner:
-    #
-    #         from src.NomenCleaner.NomenCleaner import NomenCleaner
-    #
-    #         __chped__ = NomenCleaner(_hped=args.hped, _hped_G=args.hped_G, _hped_P=args.hped_P, _iat=args.iat, _out=args.out,
-    #                                  _1field=args.oneF, _2field=args.twoF, _3field=args.threeF, _4field=args.fourF,
-    #                                  _Ggroup=args.G_group, _Pgroup=args.P_group, _old_format=args.old_format,
-    #                                  __NoCaption=args.NoCaption,
-    #                                  _imgt=args.imgt)
-    #
-    #
-    #     elif args.bmarkergenerator :
-    #         from src.b_MarkerGenerator.b_MarkerGenerator import b_MarkerGenerator
-    #
-    #         __b_Marker__ = b_MarkerGenerator(args.chped, args.out, args.hg, args.dict_AA, args.dict_SNPS, _variants=args.variants,
-    #                                          __save_intermediates=args.save_intermediates)
-    #
-    #
-    #     elif args.logistic:
-    #         from src.HLA_Analysis.HLA_Analysis_modules import Logistic_Regression
-    #
-    #
-    #
-    #
-    #     elif args.manhattan:
-    #         from src.HLA_Analysis.Plotting.manhattanplot.manhattan import HATK_manhattan
-    #
-    #         """
-    #         HATK_manhattan(_results_assoc, _plot_label, _out, _hg, _pointcol="#778899", _topcol="#FF0000", _min_pos="29.60E6", _max_pos="33.2E6","""
-    #
-    #         mamhattan_plot = HATK_manhattan(args.results_assoc, args.title, args.out, args.hg, _pointcol=args.point_color, _topcol=args.top_color)
-    #
-    #     else:
-    #         # print(std_ERROR_MAIN_PROCESS_NAME + "이상해~")
-    #
-    #         from src.HLA_Analysis.Plotting.heatmap.heatmap import HATK_HEATMAP
-    #
-    #         heatmap_plot = HATK_HEATMAP(args.HLA, args.out, args.maptable, args.result_assoc_AA, args.result_assoc_HLA)

@@ -2,8 +2,6 @@
 
 import os, sys, re
 from shutil import which
-import argparse, textwrap
-# import inspect
 import pandas as pd
 
 
@@ -252,10 +250,34 @@ class HATK_OmibusTest():
 
         ## _covar and _covar_name => skip (It will be dealt within 'OmnibusTest.R'' file.)
         if not kwargs['_covar']:
+            # No covariate file and No covariate name(s).
             kwargs['_covar'] = 'NA'
-
-        if not kwargs['_covar_name']:
             kwargs['_covar_name'] = 'NA'
+
+        else:
+            if not kwargs['_covar_name']:
+                # Covariate and no covariate name(s). => All covariate columns are to be used.
+                kwargs['_covar_name'] = 'NA'
+            else:
+                t_cov_names = kwargs['_covar_name'].split(',')
+
+                f_cov = open(kwargs['_covar'], 'r')
+                f_cov_header = re.split(pattern=r'\s+', string=f_cov.readline().rstrip('\n'))
+                f_cov_header = f_cov_header[2:] # Excluding 'FID' and 'IID'
+                # print(f_cov_header)
+
+                b_cov_names = [(name in f_cov_header) for name in t_cov_names]
+
+
+                t_cov_names2 = []
+                for i in range(0, len(b_cov_names)):
+                    if not b_cov_names[i]:
+                        print(std_WARNING_MAIN_PROCESS_NAME + "Covariate column name '{}' is not in the given covariate file('{}').\n"
+                                                              "The column with this name WON'T BE USED in OmnibusTest.".format(t_cov_names[i], kwargs['_covar']))
+                    else:
+                        t_cov_names2.append(t_cov_names[i])
+
+                kwargs['_covar_name'] = ','.join(t_cov_names2)
 
 
         ## Conditions (or Condition list)

@@ -82,21 +82,15 @@ if (file.exists(covfile)) {
     ### covar_name processing (2018. 11. 2.)
     if (data.covar.name !="NA"){
       
-      covar_header = 1:(dim(covar)[2])
-      names(covar_header) = colnames(covar)
-      
       covar_target = strsplit(data.covar.name, ",(\\s+)?")[[1]]
       
-      for (item in colnames(covar)) {
-        covar_target = sub(item, covar_header[item], covar_target)
-      }
       
-      tryCatch({
-        covar_target<-unlist(sapply(sub('-', ':', covar_target), function(x){eval(parse(text = x))}), use.names = F)
-        }, error = function(e){stop(simpleError("[OmnibusTest::ERROR] The argument 'covar_name' is wrong. Some of covariate names can't be found in given *.covar file. Please check it again."))})
+      # tryCatch({
+      #   covar_target<-unlist(sapply(sub('-', ':', covar_target), function(x){eval(parse(text = x))}), use.names = F)
+      #   }, error = function(e){stop(simpleError("[OmnibusTest::ERROR] The argument 'covar_name' is wrong. Some of covariate names can't be found in given *.covar file. Please check it again."))})
       
       # Subsetting columns
-      covar = covar[,covar_target]
+      covar = as.matrix(covar[,covar_target])
     }
     
     ### Duplicating for .bgl.phased format
@@ -195,10 +189,11 @@ for (i in 1:length(testvariants)) {
         hap.cond.f=NULL
     }
     newaa.f=newaa[is.live]
+    covar.f=as.matrix(covar[is.live,])  # as.matrix() is introduced in case only one covariate name is given(To prevent automatically converting to vector not matrix.)
 
-    if(!is.na(covar)){
-      covar.f=covar[is.live,]
-    }
+    # if(!is.na(covar)){
+    #   covar.f=covar[is.live,]
+    # }
 
     ## DEFINE NEW HAPLOTYPES
   	residues <- unique(newaa.f)
