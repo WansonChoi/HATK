@@ -26,7 +26,7 @@ class HLA_Study(object):
 
 
         """
-        Preprocessing arguments
+        Preprocessing major arguments
         (1) _args.input
         (2) _args.out
         (3) _args.imgt2sequence, ..., etc. (Module flags)
@@ -60,6 +60,14 @@ class HLA_Study(object):
                 print(std_ERROR_MAIN_PROCESS_NAME + "None of files related to '--variants', '--pheno', '--covar', '--reference-allele' arguments were overriden.\n"
                                                     "Please check '--input' argument again.")
                 sys.exit()
+
+
+            # *.aa and *.bgl.phased (related to Ominibus Test.)
+            if not _args.aa and os.path.exists(_args.input+'.aa'):
+                _args.aa = _args.input+'.aa'
+
+            if not _args.phased and os.path.exists(_args.input+'.bgl.phased'):
+                _args.phased = _args.input+'.bgl.phased'
 
 
         # (2) _args.out
@@ -344,7 +352,14 @@ class HLA_Study(object):
             elif _args.omnibus:
 
                 ### Omnibus Test
-                pass
+                from HLA_Analysis.HLA_Analysis import HATK_OmibusTest
+
+                myOminubus = HATK_OmibusTest(_args.out, _args.variants + '.fam',
+                                             _phe=_args.pheno, _phe_name=_args.pheno_name,
+                                             _covar=_args.covar, _covar_name=_args.covar_name,
+                                             _condition=_args.condition, _condition_list=_args.condition_list,
+                                             _bgl_phased=_args.phased, _aa=_args.aa)
+
             elif _args.meta_analysis:
 
                 ### Meta Analysis

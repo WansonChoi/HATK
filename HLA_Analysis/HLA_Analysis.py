@@ -153,6 +153,136 @@ class HATK_LogisticRegression():
 
 
 
+class HATK_OmibusTest():
+
+    def __init__(self, _out, _fam, **kwargs):
+
+        """
+        (Checklist)
+        1. *.fam (Proprocessing AA markers in *.bgl.phased file.)
+        2. Phenotype info.(*.phe file and phenotype column name.)
+        3. Covariate info. (*.covar file and covariate column name(s) to use.)
+        4. Condition(s)
+
+        """
+
+        __aa__ = None
+
+        print(_out)
+        print(_fam)
+        print(kwargs)
+
+
+        ## _fam
+        if not _fam:
+            print(std_ERROR_MAIN_PROCESS_NAME + "Given *.fam file('{}') doesn't exist.\n"
+                                                "Please check '--input' argument again.".format(_fam))
+            sys.exit()
+
+
+        ## _aa, _bgl_phased
+        if kwargs['_aa'] and os.path.exists(kwargs['_aa']):
+
+            # *.aa file given
+            # No more need *.bgl.phased file. (+ No need to call 'GetPhasedAACalls()')
+
+            __aa__ = kwargs['_aa']
+
+        else:
+
+            if kwargs['_bgl_phased'] and os.path.exists(kwargs['_bgl_phased']):
+
+                # *.bgl.phased instead of *.aa.
+                __aa__ = GetPhasedAACalls(_fam, kwargs['_bgl_phased'], _out)
+
+            else:
+
+                print(std_ERROR_MAIN_PROCESS_NAME + "To perform Omnibus test, At least either '*.bgl.phased' or '*.aa' file must be given.\n"
+                                                    "Given '*.bgl.phased' file('{}') doesn't exist.\nPlease check '--phased' or '-ph' argument again.\n"
+                                                    "Given '*.aa' file('{}') doesn't exist.\nPlease check '--aa' argument again.".format(kwargs['_bgl_phased'], kwargs['_aa']))
+                sys.exit()
+
+
+        ## _phe and _phe_name
+        if kwargs['_phe'] and os.path.exists(kwargs['_phe']):
+
+            # Phenotype information given.
+
+            if not kwargs['_phe_name']:
+
+                # '_phe' given but '_phe_name' not given.
+
+                Phe = open(kwargs['_phe'])
+
+                header = Phe.readline().rstrip('\n')
+                header_items = re.split(r'\s+', header)
+
+                if len(header_items) < 3:
+                    # Less than 3 columns
+                    print(std_ERROR_MAIN_PROCESS_NAME + "Given phenotype file must have more than 2 columns.\n"
+                                                        "Please check '--pheno' argument again.")
+                    sys.exit()
+
+                elif len(header_items) == 3:
+
+                    # Setting only one column as phenotype information.
+                    kwargs['_phe_name'] = header_items[-1]
+
+                else:
+                    # More than 3 columns
+                    if not kwargs['_phe_name'] in header_items:
+                        print(
+                            std_ERROR_MAIN_PROCESS_NAME + "Given phenotype name('{}') can't be found in the columns of the given phenotype file.\n"
+                                                          "Please check '--pheno' and '--pheno-name' arguments again.".format(
+                                kwargs['_phe_name']))
+                        sys.exit()
+
+                Phe.close()
+
+
+        else:
+
+            print(std_ERROR_MAIN_PROCESS_NAME + "To perform Omibus test, phenotype information must be given.\n"
+                                                "Given phenotype information('{}') doesn't exist.\n"
+                                                "Please check '--pheno' argument again please.".format(kwargs['_phe']))
+            sys.exit()
+
+
+
+
+        ## _covar and _covar_name => skip (It will be dealt within 'OmnibusTest.R'' file.)
+        if not kwargs['_covar']:
+            kwargs['_covar'] = 'NA'
+
+        if not kwargs['_covar_name']:
+            kwargs['_covar_name'] = 'NA'
+
+
+        ## Conditions (or Condition list)
+        if not kwargs['_condition']:
+
+            if kwargs['_condition_list'] and os.path.exists(kwargs['_condition_list']):
+                # Processing '_condition_list' file to '_condition'
+
+                f_condvars = open(kwargs['_condition_list'], 'r')
+                kwargs['_condition']  = ','.join([line.rstrip('\n') for line in f_condvars])
+
+
+            else:
+                kwargs['_condition'] = 'NA'
+
+
+
+
+        ## Call OmnibusTest
+        self.OminbusResult = \
+            Omnibus_Test(_fam, _out, __aa__, kwargs['_phe'], kwargs['_phe_name'], kwargs['_covar'], kwargs['_covar_name'], kwargs['_condition'])
+
+
+
+
+
+
 
 
 class HATK_MetaAnalysis():
@@ -266,18 +396,18 @@ def MakeDefaultReferenceAllele(_bfile, _out):
 
 
 ### (OmnibusTest)
-def GetPhasedAlleles(_input, _bgl_phased, _out):
+def GetPhasedAACalls(_fam, _bgl_phased, _out):
 
 
-    FAM = _input + ".fam"
+    FAM = _fam
 
-    command = ' '.join([GLOBAL_p_Rscript, "src/HLA_Analysis/AssociationTest/AllCC_Get_Phased_AA_Calls.R", _bgl_phased, FAM, _out])
+    command = ' '.join([GLOBAL_p_Rscript, "HLA_Analysis/src/OmnibusTest/AllCC_Get_Phased_AA_Calls.R", _bgl_phased, FAM, _out])
     os.system(command)
 
     return _out + ".aa"
 
 
-def Omnibus_Test(_input, _out, _phased, _phe, _phe_name, _covar, _covar_name="NA", _condition="NA"):
+def Omnibus_Test(_fam, _out, _aa, _phe, _phe_name, _covar, _covar_name="NA", _condition="NA"):
 
     """
 
@@ -294,8 +424,8 @@ def Omnibus_Test(_input, _out, _phased, _phe, _phe_name, _covar, _covar_name="NA
 
     ### Argument Processing && Generating Command.
 
-    command = [GLOBAL_p_Rscript, "src/HLA_Analysis/AssociationTest/OmnibusTest_BHv5.R",
-               _out, _input + ".fam", _phased, _phe, _phe_name, _covar, _covar_name]
+    command = [GLOBAL_p_Rscript, "HLA_Analysis/src/OmnibusTest/OmnibusTest_BHv5.R",
+               _out, _fam, _aa, _phe, _phe_name, _covar, _covar_name]
 
     if bool(_condition):
         command.append(_condition)
