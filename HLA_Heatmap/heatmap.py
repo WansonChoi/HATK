@@ -5,7 +5,7 @@ import os, sys, re
 import argparse, textwrap
 import pandas as pd
 import numpy as np
-from mpmath import log10
+from math import log10
 from shutil import which
 
 
