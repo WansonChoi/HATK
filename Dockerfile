@@ -23,7 +23,7 @@ RUN mkdir /HATK
 # ADD HLA_Manhattan /HATK/HLA_Manhattan
 # ADD HLA_Heatmap /HATK/HLA_Heatmap
 # ADD src /HATK/src
-ADD dependency /HATK/dependency
+ADD dependency /dependency
 
 # RUN git clone https://github.com/WansonChoi/HATK.git
 
