@@ -45,10 +45,23 @@ class HATK_bMarkerGenertor(object):
                                                 "Please check '--dict-SNPS' argument again.")
             sys.exit()
 
+        # dependency folder check
+        if os.path.isdir('./dependency'):
+            # Normal python usage
+            print(std_MAIN_PROCESS_NAME + "Using dependent software in './dependency'")
+            p_dependency = './dependency'
+        elif os.path.isdir('../dependency'):
+            # Docker usage
+            print(std_MAIN_PROCESS_NAME + "Using dependent software in '../dependency'")
+            p_dependency = '../dependency'
+        else:
+            print(std_ERROR_MAIN_PROCESS_NAME + "'dependency' folder can't be found. Please check it again.")
+            sys.exit()
+
 
         self.bMarkers = bMarkerGenerator(_CHPED, _OUT, _hg, _dictionary_AA, _dictionary_SNPS,
                                          _variants=kwargs["_variants"], __save_intermediates=kwargs["__save_intermediates"],
-                                         _p_src=kwargs["_p_src"])
+                                         _p_src=kwargs["_p_src"], _p_dependency=p_dependency)
 
 
     def getReuslts(self):
