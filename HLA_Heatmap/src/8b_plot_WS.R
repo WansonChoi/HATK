@@ -53,13 +53,13 @@ args5.plot.outf_ = args[5]
 ########## < Loading Data > ##########
 
 maptable=as.matrix(read.table(args1.disease.map_, check.names = F)) # argument[1]
-print(head(maptable))
+# print(head(maptable))
 
 P=as.matrix(read.table(args2.disease.assoc_, check.names = F)) # argument[2]
-print(head(P))
+# print(head(P))
 
 alleleP=as.matrix(read.table(args3.disease.alleleP_, check.names = F)) # argument[3]
-print(head(alleleP))
+# print(head(alleleP))
 
 
 
