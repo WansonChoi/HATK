@@ -4,7 +4,7 @@ import os, sys, re
 import argparse, textwrap
 import pandas as pd
 from shutil import which
-from mpmath import log10
+from math import log10
 
 
 p_RSCRIPT = which("Rscript")

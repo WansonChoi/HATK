@@ -4,8 +4,7 @@
 import os, sys, re
 import argparse, textwrap
 import pandas as pd
-import numpy as np
-from mpmath import log10
+from math import log10
 from shutil import which
 
 
@@ -125,12 +124,12 @@ def HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_result, __as4field=False, __s
 
         ########## < [1] Loading HLA_MAPTABLE file > ##########
 
-        print(std_MAIN_PROCESS_NAME + "[1] Loading HLA_MARKERS_DICTIONARY(\"maptable\") file\n")
+        print(std_MAIN_PROCESS_NAME + "[0-1] Loading 'Maptable' file. ({})\n".format(_p_maptable))
 
         H_MARKERS = pd.read_table(_p_maptable, sep='\s+', header=[0, 1, 2], index_col=0).filter(regex=_hla_name + "\*", axis=0)
         # filter() due to the case of "DRB2", "DRB3", etc.
 
-        print(H_MARKERS.head())
+        # print(H_MARKERS.head())
         # (2018. 6. 12) Anyway, `H_MARKERS` corresponds to "maptable" in Professor Han's pipeline.
 
 
@@ -139,9 +138,9 @@ def HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_result, __as4field=False, __s
 
         ########## < [2] Loading association test result file(ex. *.assoc.logistic). > ##########
 
-        print(std_MAIN_PROCESS_NAME + "[2] Loading '*.assoc.logistc' files of AA and HLA markers.\n")
+        print(std_MAIN_PROCESS_NAME + "[0-2] Loading 'Association Test Result' file of AA and HLA markers. (Dropping 'NA')\n")
 
-        __ASSOC_RESULT__ = pd.read_table(_p_assoc_result, header=0, sep='\s+', usecols=["SNP", "A1", "OR", "P"])
+        __ASSOC_RESULT__ = pd.read_table(_p_assoc_result, header=0, sep='\s+', usecols=["SNP", "A1", "OR", "P"]).dropna() # dropna() introduced (2019. 07. 02.)
         # print(__ASSOC_RESULT__.head())
 
         p_AA = re.compile(r"^AA_{0}_".format(_hla_name))
@@ -154,8 +153,9 @@ def HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_result, __as4field=False, __s
         __ASSOC_RESULT_AA__ = __ASSOC_RESULT__.loc[f_AA, :]
         __ASSOC_RESULT_HLA__ = __ASSOC_RESULT__.loc[f_HLA, :]
 
-        # print(__ASSOC_RESULT_AA__.head())
-        # print(__ASSOC_RESULT_HLA__.head())
+        print("AA : \n{}".format(__ASSOC_RESULT_AA__.head()))
+        print()
+        print("HLA : \n{}".format(__ASSOC_RESULT_HLA__.head()))
 
 
         # Checking subsetted logistic regression result.
@@ -175,7 +175,7 @@ def HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_result, __as4field=False, __s
 
         ########## < [3] Preprocessing MAPTABLE. > ##########
 
-        print(std_MAIN_PROCESS_NAME + "[3] Preprocessing MAPTABLE.")
+        print(std_MAIN_PROCESS_NAME + "[1] Preprocessing MAPTABLE. ('*.map.txt')")
 
         """
         Maptable info && Association test result.
@@ -252,7 +252,7 @@ def HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_result, __as4field=False, __s
 
         ########## < [4] Making new *.assoc file for AA markers. > ##########
 
-        print(std_MAIN_PROCESS_NAME + "Making new *.assoc file for AA markers.")
+        print(std_MAIN_PROCESS_NAME + "[2] Making new *.assoc file for AA markers. ('*.assoc.txt')\n")
 
         """
         Above preprocessed `__MAPTABLE__` will be the main content of Heatmap plot.
@@ -310,16 +310,16 @@ def HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_result, __as4field=False, __s
         for i in range(0, __MAPTABLE__.shape[1]):
         # for i in range(0, 10):
 
-            print("=================================%d iteration=================================" % i, end='\r')
+            # print("=================================%d iteration=================================" % i, end='\r')
 
             # t_col_maptable := `AAname` (variable in R)
             t_col_maptable = COLNAMES[i] # ex) ('-27', '32634368', 'exon1')
-            print("\nAAname : {}".format(t_col_maptable))
+            # print("\nAAname : {}".format(t_col_maptable))
 
 
             ### Bringing markers in each relative position to `df_BroughtMarkers`.
             df_BroughtMarkers = __ASSOC_RESULT_AA__.loc[[t_col_maptable[0]]]
-            print("\ndf_BroughtMarkers : \n{}".format(df_BroughtMarkers))
+            # print("\ndf_BroughtMarkers : \n{}".format(df_BroughtMarkers))
 
 
 
@@ -436,6 +436,7 @@ def HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_result, __as4field=False, __s
 
 
         __NEW_ASSOC__ = pd.concat(for_new_assoc, axis=1)
+        print(__NEW_ASSOC__.head())
         # __NEW_ASSOC__.to_csv(_out+".assoc2.{}.txt".format(_hla_name), sep='\t', header=True, index=True)
 
 
@@ -444,10 +445,10 @@ def HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_result, __as4field=False, __s
 
         ########## < [5] Making Assoc_P file. > ##########
 
-        print(std_MAIN_PROCESS_NAME + "Making Assoc_P file.\n\n")
+        print(std_MAIN_PROCESS_NAME + "[3] Making Assoc_P file. ('*.alleleP.txt')\n")
 
         """
-        Obtaining p-values of HLA alleles in association test result. 
+        Obtaining 'p-values of HLA alleles' in association test result. 
         These p-value will be used to represent the color of HLA allele (Right part of Heatmap).
         
         1-field HLA allele names should be filtered out.
@@ -458,17 +459,17 @@ def HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_result, __as4field=False, __s
 
         t_HLA_alleles_in_assoc = __ASSOC_RESULT_HLA__.loc[:, ["SNP", "P", "OR"]]
 
-        print("\nHLA alleles in Association Test result: ")
-        print(t_HLA_alleles_in_assoc)
+        # print("\nHLA alleles in Association Test result: ")
+        # print(t_HLA_alleles_in_assoc)
 
         t_HLA_alleles_in_MAPTABLE = __MAPTABLE__.index.to_frame().apply(lambda x : "HLA_"+x).reset_index(drop=False)
         t_HLA_alleles_in_MAPTABLE.columns = pd.Index(["HLA1", "HLA2"])
-        print("\nHLA alleles in `__MAPTABLE__`: ")
-        print(t_HLA_alleles_in_MAPTABLE)
+        # print("\nHLA alleles in `__MAPTABLE__`: ")
+        # print(t_HLA_alleles_in_MAPTABLE)
 
 
         df_No1Field = t_HLA_alleles_in_MAPTABLE.merge(t_HLA_alleles_in_assoc, left_on="HLA2", right_on="SNP", how="left").loc[:, ["HLA1", "OR", "P"]]
-        print(df_No1Field)
+        # print(df_No1Field)
 
         sr_log10P = df_No1Field.loc[:, "P"].apply(lambda x : -log10(x))
         # print("\nsr_log10P : \n{}\n".format(sr_log10P))
@@ -480,7 +481,7 @@ def HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_result, __as4field=False, __s
         __alleleP__ = sr_log10P*sr_OR
         __alleleP__.index = df_No1Field.loc[:, "HLA1"]
 
-        print("\nsr_alleleP : \n{}\n".format(__alleleP__))
+        print(__alleleP__)
 
 
         """
@@ -503,7 +504,7 @@ def HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_result, __as4field=False, __s
 
         ########## < [6] Exporting output files. > ##########
 
-        print(std_MAIN_PROCESS_NAME + "[6] Exporting output files.")
+        print(std_MAIN_PROCESS_NAME + "[4] Exporting output files. (Forwarding them to Rscript.)")
 
         """
         Files to export.
@@ -535,7 +536,7 @@ def HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_result, __as4field=False, __s
         ##### Processing AA markers.
         t_aa_markers = __MAPTABLE__.columns.to_frame().loc[:, "AA_rel_pos"]
 
-        print("\nt_hla_markers :\n{0}\nt_aa_markers :\n{1}\n".format(t_hla_markers, t_aa_markers))
+        # print("\nt_hla_markers :\n{0}\nt_aa_markers :\n{1}\n".format(t_hla_markers, t_aa_markers))
 
         ##### Assigning processed indexes.
 
@@ -611,7 +612,7 @@ def HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_result, __as4field=False, __s
         for item in l_remove:
 
             command = ' '.join(["rm", _out+item])
-            print(command)
+            # print(command)
             os.system(command)
 
 
@@ -621,6 +622,7 @@ def HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_result, __as4field=False, __s
     if os.path.exists(__RESULTS__):
         return _out + ".pdf"
     else:
+        print(std_WARNING_MAIN_PROCESS_NAME + "Heatmap failed. ('{}')".format(_out+'.pdf'))
         return -1
 
 
@@ -681,6 +683,14 @@ if __name__ == "__main__" :
     #                       "-ar", "/Users/wansun/Git_Projects/HLA_Heatmap/data/example/20190327_WTCCC_RA.assoc.logistic",
     #                       "--save-intermediates"
     #                       ])
+
+    # args = parser.parse_args(["--HLA", "A",
+    #                           "-mt", "/Users/wansun/Git_Projects/HATK/tests/_0_wholeProcess/d20190701/HLA_MAPTABLE_A.hg19.imgt3320.txt",
+    #                           "-o", "/Users/wansun/Git_Projects/HATK/tests/_0_wholeProcess/d20190701/Heatmap_Test_A",
+    #                           "-ar", "/Users/wansun/Git_Projects/HATK/tests/_0_wholeProcess/d20190701/20190701_wtccc_filtered_58C_RA.hatk.58C_RA.300+300.assoc.logistic",
+    #                           "--save-intermediates"
+    #                           ])
+
 
 
     ##### < for Publish > #####
