@@ -3,8 +3,7 @@
 
 ## (1) What is HATK?
 
-Fine mapping of human leukocyte antigen (HLA) genes driving diseases through their alleles or amino acid residues has been challenging. Using HLA information from HLA typing, imputation, or inference, HATK expands HLA alleles to amino acid sequences using the most recent IMGT/HLA database and prepares a dataset suitable for fine-mapping analysis. Our software also provides useful functionalities such as various association tests, visualization tools, and nomenclature conversion.
-
+HATK is ...(under construction)
 <br>
 <br>
 
@@ -49,15 +48,15 @@ We strongly recommend using either 'Anaconda(or Miniconda)' or 'Docker' to set u
     mkdir dependency
     ```
 
-    And download each dependent software to this directory.
+    And download below software to this directory.
 
-    - beagle.jar
-    - beagle4.jar
-    - beagle2vcf.jar
-    - beagle2linkage.jar
-    - linkage2beagle.jar
-    - vcf2beagle.jar
-    - plink(v1.9)
+    - beagle.jar(http://faculty.washington.edu/browning/beagle/b3.html - 'Old version; **Choose the version "3.0.4"**')
+    <!-- - beagle4.jar (https://faculty.washington.edu/browning/beagle/b4_1.html#download) -->
+    - beagle2vcf.jar (https://faculty.washington.edu/browning/beagle_utilities/utilities.html  - 'File conversion utilities')
+    - beagle2linkage.jar (https://faculty.washington.edu/browning/beagle_utilities/utilities.html  - 'File conversion utilities')
+    - linkage2beagle.jar (https://faculty.washington.edu/browning/beagle_utilities/utilities.html  - 'File conversion utilities')
+    - vcf2beagle.jar (https://faculty.washington.edu/browning/beagle_utilities/utilities.html  - 'File conversion utilities')
+    - plink(v1.9) - (https://www.cog-genomics.org/plink2)
 
     The copyright of 1 ~ 6 belongs to B. Browning (https://faculty.washington.edu/browning/beagle/b4_1.html) and 7 belongs to Purcell's laboratory (https://www.cog-genomics.org/plink/1.9/general_usage#cite)
 
@@ -65,7 +64,7 @@ We strongly recommend using either 'Anaconda(or Miniconda)' or 'Docker' to set u
 <br>
 
 
-## (3) Usage
+## (3) Usage example
 
 **(3-1) Docker** 
 
