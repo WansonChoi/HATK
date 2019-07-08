@@ -4,27 +4,18 @@
 ## (1) What is HATK?
 
 HATK is ...(under construction)
+
+1. What is HATK
+2. What output does it generates?
+3. What input is required to generate the output.
 <br>
 <br>
 
 
 ## (2) Installation
 
-We strongly recommend using either 'Anaconda(or Miniconda)' or 'Docker' to set up HATK.
+We strongly recommend using 'Anaconda(or Miniconda)' to set up HATK. HATK supports OS X and Linux environment(ex. Ubuntu) and currently dosen't support Windows.
 
-**(2-1) Docker**
-
-1. Install Docker(https://docs.docker.com/)
-
-    Note that different steps are followed to install Docker depending on your Operating System and sudo privilege is required.
-
-2. Pull the pre-built HATK docker image file from Docker Hub. (https://hub.docker.com/r/wschoibhlab/hatk)
-    ```
-    docker pull wschoibhlab/hatk
-    ```
-<br>
-
-**(2-2) Anaconda(or Miniconda)**
 
 
 1. install Anaconda or Miniconda
@@ -50,7 +41,7 @@ We strongly recommend using either 'Anaconda(or Miniconda)' or 'Docker' to set u
 
     And download below software to this directory.
 
-    - beagle.jar(http://faculty.washington.edu/browning/beagle/b3.html - 'Old version; **Choose the version "3.0.4"**')
+    - beagle.jar(http://faculty.washington.edu/browning/beagle/b3.html - 'Old version'; **Choose the version "3.0.4"**)
     <!-- - beagle4.jar (https://faculty.washington.edu/browning/beagle/b4_1.html#download) -->
     - beagle2vcf.jar (https://faculty.washington.edu/browning/beagle_utilities/utilities.html  - 'File conversion utilities')
     - beagle2linkage.jar (https://faculty.washington.edu/browning/beagle_utilities/utilities.html  - 'File conversion utilities')
@@ -58,38 +49,20 @@ We strongly recommend using either 'Anaconda(or Miniconda)' or 'Docker' to set u
     - vcf2beagle.jar (https://faculty.washington.edu/browning/beagle_utilities/utilities.html  - 'File conversion utilities')
     - plink(v1.9) - (https://www.cog-genomics.org/plink2)
 
-    The copyright of 1 ~ 6 belongs to B. Browning (https://faculty.washington.edu/browning/beagle/b4_1.html) and 7 belongs to Purcell's laboratory (https://www.cog-genomics.org/plink/1.9/general_usage#cite)
+    The copyright of 1 ~ 5 belongs to B. Browning (https://faculty.washington.edu/browning/beagle/b4_1.html) and 6 belongs to Purcell's laboratory (https://www.cog-genomics.org/plink/1.9/general_usage#cite).
+
+4. Install R language(https://www.r-project.org/) and below R packages.
+
+    - gplots
+    - RColorBrewer
+    - shape
+
 
 <br>
 <br>
 
 
 ## (3) Usage example
-
-**(3-1) Docker** 
-
-run that pulled image (in the project directory.)
-
-
-```
-docker run -v `pwd`:/HATK wschoibhlab/hatk \
-    python3 HATK.py \
-    --variants example/wtccc_filtered_58C_RA.hatk.58C_RA.300+300 \
-    --hped example/wtccc_filtered_58C_RA.hatk.58C_RA.300+300.hped \
-    --pheno example/wtccc_filtered_58C_RA.hatk.58C_RA.300+300.phe \
-    --pheno-name RA \
-    --out MyHLAStudy/MyHLAStudy_wtccc_filtered_58C_RA.hatk.58C_RA.300+300 \
-    -imgt 3320 \
-    -hg 19 \
-    --imgt-dir example/IMGTHLA3320 \
-    --multiprocess
-```
-
-Note that, in case of using docker, output directory must be created inside of the project folder.
-
-<br>
-
-**(3-2) Anaconda**
 
 run below command
 
