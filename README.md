@@ -1,4 +1,4 @@
-# HATK
+# HATK (HLA Analysis Toolkit)
 
 
 ## (1) What is HATK?
@@ -53,9 +53,9 @@ We strongly recommend using 'Anaconda(or Miniconda)' to set up HATK. HATK suppor
 
 4. Install R language(https://www.r-project.org/) and below R packages.
 
-    - gplots
-    - RColorBrewer
-    - shape
+    - gplots(https://cran.r-project.org/web/packages/gplots/index.html)
+    - RColorBrewer(https://cran.r-project.org/web/packages/RColorBrewer/index.html)
+    - shape(https://cran.r-project.org/web/packages/shape/index.html)
 
 
 <br>
