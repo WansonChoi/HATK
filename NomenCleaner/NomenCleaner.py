@@ -150,7 +150,7 @@ def NomenCleaner(_hped, _hped_descriptor, _iat, _imgt, _out, _field_format, __f_
 
     ########## < [1] Loading "*.(h)ped" file > ##########
 
-    __HPED__ = pd.read_table(_hped, sep='\t', header=None, dtype=str,
+    __HPED__ = pd.read_csv(_hped, sep='\t', header=None, dtype=str,
                         names=header_ped + [item + "_" + str(i) for item in HLA_names for i in range(1, 3)]).set_index((header_ped))
 
     # print(std_MAIN_PROCESS_NAME + "Loaded \"*.ped\" file.")
@@ -161,7 +161,7 @@ def NomenCleaner(_hped, _hped_descriptor, _iat, _imgt, _out, _field_format, __f_
 
     ########## < [2] Loading "*.iat" file > ##########
 
-    __IAT__ = pd.read_table(_iat, sep='\t', header=0, dtype=str)
+    __IAT__ = pd.read_csv(_iat, sep='\t', header=0, dtype=str)
     # print(std_MAIN_PROCESS_NAME + "Loaded \"*.iat\" file.\n")
     # print(__IAT__.head())
 
