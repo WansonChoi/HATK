@@ -161,8 +161,8 @@ def ClassifyGroups(_p_allelelist, _p_Ggroup, _p_Pgroup, _p_dict_AA, _p_dict_SNPS
 
         ########## < 4. Loading "HLA_DICTIONARY_{AA,SNPS}.txt" > ##########
 
-        HLA_DICT_AA = pd.read_table(_p_dict_AA, sep='\t', header=None, names=["Allele", "Seqs"])
-        HLA_DICT_SNPS = pd.read_table(_p_dict_SNPS, sep='\t', header=None, names=["Allele", "Seqs"])
+        HLA_DICT_AA = pd.read_csv(_p_dict_AA, sep='\t', header=None, names=["Allele", "Seqs"])
+        HLA_DICT_SNPS = pd.read_csv(_p_dict_SNPS, sep='\t', header=None, names=["Allele", "Seqs"])
 
         print("\nset_al_HLA_DICT_AA\n")
         print(HLA_DICT_AA.head())

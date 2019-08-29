@@ -64,7 +64,7 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc, _gen, _prot, _p_data,
 
     # (2018/1/17) Preparing HLA position information(exon, intron, etc.)
 
-    HLA_INTEGRATED_POS = pd.read_table(HLA_INTEGRATED_POSITIONS_filename, sep='\t', header=None, usecols = [0, 1, 2, 3],
+    HLA_INTEGRATED_POS = pd.read_csv(HLA_INTEGRATED_POSITIONS_filename, sep='\t', header=None, usecols = [0, 1, 2, 3],
                                        names=['HLA', 'start', 'end', 'Type', "Direction"], index_col=0).loc[_hla, :]
     # print("\nLoaded HLA information table.\n")
     # print(HLA_INTEGRATED_POS.head())
