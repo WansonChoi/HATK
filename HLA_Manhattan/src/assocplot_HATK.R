@@ -8,7 +8,7 @@
 
 
 make.fancy.locus.plot.bare <- function(chr, title, locus, min.pos, max.pos, yrange, hitsnp, r.data, yax, 
-                                        p.color.Variant = "#999999", p.color.AA = "#DE7A22", p.color.HLA = "#F4CC70", p.color.SNP = "#6AB187",
+                                        p.color.Variant = "#999999", p.color.AA = "#CF3721", p.color.HLA = "#F5BE41", p.color.SNP = "#626262",
                                         topcolor = "#FF0000", arrowsnp="", hitsnpB="", hitsnpC="") {
 
     locus <- locus[order(-locus$LOG10P),]

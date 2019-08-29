@@ -55,7 +55,7 @@ for (i in 1:NumberofLogistic) {
 
   locus <- TRIM_LOGISTIC.ASSOC(p_assoc.logsitic_[i])
   # manhattan plot
-  make.fancy.locus.plot.bare("6", (if(i == 1) "" else ""), locus, min.pos_, max.pos_, max.yaxis_[i], topsignal_[i], NULL, seq(0,max.yaxis_[i],by=yaxis_unit_), topcolor=topcol_, p.color.AA = "#CF3721", p.color.HLA = "#F5BE41", p.color.SNP = "#626262") #
+  make.fancy.locus.plot.bare("6", (if(i == 1) "" else ""), locus, min.pos_, max.pos_, max.yaxis_[i], topsignal_[i], NULL, seq(0,max.yaxis_[i],by=yaxis_unit_), topcolor=topcol_) #
   
 }
 # genomic position belt.
