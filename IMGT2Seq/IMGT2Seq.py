@@ -237,7 +237,7 @@ class HATK_IMGT2Seq(object):
 
 
 def IMGT2Seq(_imgt, _hg, _out, _imgt_dir, _no_Indel=False, _MultiP=False, _save_intermediates=False,
-             _no_prime = True, _p_data='./data'):
+             _no_prime = True, _p_data='./data', __f_2field_framework=True):
 
 
     ### Dictionaries for Raw files.
@@ -262,7 +262,7 @@ def IMGT2Seq(_imgt, _hg, _out, _imgt_dir, _no_Indel=False, _MultiP=False, _save_
 
     _OUTPUT_AA_RETURN = os.path.join(INTERMEDIATE_PATH, 'HLA_DICTIONARY_AA.hg{0}.imgt{1}'.format(_hg, _imgt))
     _OUTPUT_SNPS_RETURN = os.path.join(INTERMEDIATE_PATH, 'HLA_DICTIONARY_SNPS.hg{0}.imgt{1}'.format(_hg, _imgt))
-    _OUTPUT_HAT_RETURN = os.path.join(INTERMEDIATE_PATH, 'HLA_ALLELE_TABLE')
+    _OUTPUT_HAT = os.path.join(INTERMEDIATE_PATH, 'HLA_ALLELE_TABLE')
 
 
 
@@ -412,12 +412,22 @@ def IMGT2Seq(_imgt, _hg, _out, _imgt_dir, _no_Indel=False, _MultiP=False, _save_
             d_MapTables[HLA_names[i]] = t_MAPTABLE
 
 
+        # Amino acid sequence dictionaries
         HLA_DICTIONARY_AA = pd.concat(l_df_Seqs_AA, axis=0)
         HLA_DICTIONARY_AA_map = pd.concat(l_df_forMAP_AA, axis=0)
 
+        # DNA sequence dictionaries
         HLA_DICTIONARY_SNPS = pd.concat(l_df_Seqs_SNPS, axis=0)
         HLA_DICTIONARY_SNPS_map = pd.concat(l_df_forMAP_SNPS, axis=0)
 
+
+        ### Finalizing all output.
+
+        if __f_2field_framework:
+            # DNA sequence dictionaries
+            # AA sequence dictionaries
+            # maptables
+            pass
 
         # Exporting AA dictionary.
         HLA_DICTIONARY_AA.to_csv(_OUTPUT_AA_RETURN + ".txt", sep='\t', header=False, index=True)
@@ -432,7 +442,7 @@ def IMGT2Seq(_imgt, _hg, _out, _imgt_dir, _no_Indel=False, _MultiP=False, _save_
 
         ########## < 2. Making *.iat file. > ##########
 
-        _OUTPUT_HAT_RETURN = GenerateHAT(t_allelelist_2009, t_allelelist, t_p_Group, t_p_Proup, _imgt, _OUTPUT_HAT_RETURN)
+        _OUTPUT_HAT = GenerateHAT(t_allelelist_2009, t_allelelist, t_p_Group, t_p_Proup, _imgt, _OUTPUT_HAT)
 
 
 
@@ -442,7 +452,7 @@ def IMGT2Seq(_imgt, _hg, _out, _imgt_dir, _no_Indel=False, _MultiP=False, _save_
         pass
 
 
-    return [_OUTPUT_AA_RETURN, _OUTPUT_SNPS_RETURN, _OUTPUT_HAT_RETURN, d_MapTables]
+    return [_OUTPUT_AA_RETURN, _OUTPUT_SNPS_RETURN, _OUTPUT_HAT, d_MapTables]
 
 
 
@@ -614,19 +624,23 @@ if __name__ == "__main__":
     # out = '/home/wanson/Git_Projects/HATK/tests/IMGT3370_test/TEST.20190923'
     # imgt_dir = '/home/wanson/Git_Projects/IMGTHLA3370'
 
+    ## in OS X
+    out = '/Users/wansun/Git_Projects/HATK/tests/_1_IMGT2Sequence/20190924/test'
+    imgt_dir = '/Users/wansun/Dropbox/_Sync_MyLaptop/Projects/IMGTHLA/IMGTHLA3320'
+
     # hg18 / imgt3370
-    # args = parser.parse_args(["-hg", "18",
-    #                           "-o", out,
-    #                           "-imgt", "3370",
-    #                           "--imgt-dir", imgt_dir,
-    #                           "--multiprocess"])
+    args = parser.parse_args(["-hg", "18",
+                              "-o", out,
+                              "-imgt", "3370",
+                              "--imgt-dir", imgt_dir,
+                              "--multiprocess"])
 
 
 
 
     ##### < for Publish > #####
 
-    args = parser.parse_args()
+    # args = parser.parse_args()
     print(args)
 
 
