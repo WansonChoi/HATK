@@ -10,12 +10,12 @@ Human leukocyte antigen (HLA) genes encode the major histocompatibility complex 
 * HLA Finemapping을 하는데 있어 맞닥드리게 될 문제점들.
 * 그리고 HATK가 제공하는 이에 대한 Solution들.
 
-## (1.5) Technical chanllenges
+## (1.5) Why do we need HATK? (Current Technical challenges)
 #### [No standard file format for HLA information]
 
 - HLA information을 담을 수 있는 파일 포맷이 standard가 없어서 되게 번거로움
  
-There is no officially consented file format for patients' HLA allele information. Indeed, Various HLA related software use their own file format. Here, we introduce a new file format, HPED(HLA PED), which is similar to Plink ped file but consists of 22(6 + 8*2) columns. Left 6 columns are exactly same as Plink ped file ('Family_ID', 'Individual_ID', 'Paternal_ID', 'Maternal_ID', 'Sex', 'Phenotype') and other 16 columns are Individual's HLA diploid (unphased) genotypes(2 HLA alleles for each HLA gene) of 8 HLA genes(A, B, C, DPA1, DPB1, DQA1, DQB1, DRB1; in this order). We hope those files in respective format can be converted to HPED format so that HLA allele information can be dealt with and stored in more uniform and systematic way.
+There is no officially consented file format for patients' HLA allele information. Indeed, Various HLA related software use their own file format. Here, we introduce a new file format, HPED(HLA PED), which is similar to Plink ped file but consists of 22(6 + 8*2) columns. Left 6 columns are exactly the same as Plink ped file ('Family_ID', 'Individual_ID', 'Paternal_ID', 'Maternal_ID', 'Sex', 'Phenotype') and other 16 columns are Individual's HLA diploid (unphased) genotypes(2 HLA alleles for each HLA gene) of 8 HLA genes(A, B, C, DPA1, DPB1, DQA1, DQB1, DRB1; in this order). Those files in respective format can be converted to HPED format so that HLA allele information can be dealt with and stored in more uniform and systematic way.
 
 
 #### [Too many HLA alleles and Evolving Nomenclature for them]
@@ -26,7 +26,7 @@ There is no officially consented file format for patients' HLA allele informatio
 
 - 1년동안에도 두어번씩 업데이트되면서 계속 새로운 HLA allele들이 추가되기도 하고 기존의 allele들이 사라지기도 함.
 
-Genes in HLA region are well known for their extreme polymorphism. For example, More than 6 thousands of alleles have been found in HLA-B gene so far based on the statistics of IPD-IMGT/HLA(https://www.ebi.ac.uk/ipd/imgt/hla/stats.html). To handle those many alleles, nomenclature of 4-digit form without separator (ex. A*3301) was introduced for the first time in 1987. However, as more and more new HLA alleles were found, that nomenclature became not enough to embrace all alleles, which is called 'rollover' problem. So, around 2010, 'The WHO Nomenclature Committee for Factors of the HLA System' met and updated the old nomenclature(http://hla.alleles.org/nomenclature/naming_2010.html). The important matter for researcher is that both old and updated nomeclatures are used in HLA research area. Researches may need to check which HLA allele name in updated nomenclature is for the one in the old HLA nomenclature.
+Genes in HLA region are well known for their extreme polymorphism. For example, More than 6 thousands of alleles have been found in HLA-B gene so far based on the statistics of the IPD-IMGT/HLA(https://www.ebi.ac.uk/ipd/imgt/hla/stats.html). To handle those many alleles, nomenclature of 4-digit form without separator (ex. A*3301) was introduced for the first time in 1987. However, as more and more new HLA alleles were found, that nomenclature became not enough to embrace all alleles, which is called 'rollover' problem. So, around 2010, 'The WHO Nomenclature Committee for Factors of the HLA System' met and updated the old nomenclature(http://hla.alleles.org/nomenclature/naming_2010.html). The practical matter for researcher is that both old and updated nomeclature are used in HLA research area. Researches may confront a situation where HLA allele information is given in either the old or updated nomenclature. Also, they might need to convert a given HLA allele name within the old nomenclature to the one in the updated nomenclature, or vice versa.
 
 
 
@@ -35,14 +35,14 @@ Genes in HLA region are well known for their extreme polymorphism. For example, 
 - HLA allele nomenclature과 더불어 Amino acid/DNA sequence들도 계속 조금씩 변함.
 - 필요한 버전에 맞게 가져다 쓸 수 있게 하고 싶었음. (ex. 최신버전 반영)
 
-As mentioned above, new HLA alleles are being found continuously. Some HLA alleles are excluded in the database because some alleles are found to be the same one. Some alleles are assigned extra fields. To include all those changes, the database is continously updated. Even, the update happens in a short interval relative to that of human genome build versions(ex. hg18, hg19, hg38). Researchers may want to choose the specific or latest version of IPD-IMGT/HLA database.
+As mentioned above, new HLA alleles are being found continuously. Some HLA alleles are excluded in the database because some alleles are found to be the same one. Some alleles are assigned extra fields. To include all those changes, the database is continously updated. Furthermore, the update happens in a short period relative to that of human genome build versions(ex. hg18, hg19, hg38). Researchers may want to choose the specific or latest version of IPD-IMGT/HLA database.
 
 
-#### [Generating panel for Association Test]
+#### [Laborious work in data preparation for Association Test]
 
 - Association Test를 하기 위해서는 Marker panel이 필요함. 필연적으로 redundant한 text processing이 수반되는데 이걸 HATK가 해결해줌. 이렇게 준비된 Marker panel로 가장 많이 활용되는 plink로 logistic regression으로 association test result를 구해줌. plink logistic regression이 아닌 statistical method를 활용하고 싶다면 해당 marker panel로 원하는데로 활용하면 됨.
 
-Though researchers acquired information of HLA alleles, sequence, etc., they need to make marker panel using those information to perform HLA fine-mapping, which will be laborious and redundant work. Furthermore, they will need effective visualization tools to analyze the result of Fine-mapping.
+Though researchers acquired HLA information such as sequences or alleles, they must prepare marker panel using those information so as to perform HLA fine-mapping, which is obviously laborious and redundant work. Furthermore, they need proper statistical methods for HLA fine-mapping and effective visualization tools to analyze the result of the test.
 
 <!-- HATK is ...(under construction)
 
@@ -145,6 +145,10 @@ python3 HATK.py \
     --imgt-dir example/IMGTHLA3320 \
     --multiprocess
 ```
+
+This command will implement (1) IMGT2Seq, (2) NomenCleaner, (3) bMarkerGenerator, (4) HLA_Analyzer(Association Test - logistic regression), (5) Manhattan Plot and (6) Heatmap, which are the minimal components to be doen for HLA fine-mapping.
+
+On the other hand, as mentioned above, each module of HATK can be implemented repectively. The README files of each of those modules are prepared in 'docs/' folder. Those files include more detailed explanation and respective usage examples.
 
 ## (4) Citation
 
