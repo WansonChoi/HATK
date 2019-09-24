@@ -32,7 +32,7 @@ Researchers would better distinguish between 'indels(dots) in the official refer
 
 
 
-## Usage example
+## (3) Usage example
 
 ```
 python3 HATK.py \
