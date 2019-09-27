@@ -6,6 +6,7 @@ import argparse, textwrap
 from glob import glob
 import multiprocessing as mp
 
+from IMGT2Seq.src.NfieldDictionary import NfieldDictionary
 
 ########## < Core Global Varialbes > ##########
 
@@ -161,9 +162,9 @@ class HATK_IMGT2Seq(object):
             ### Not all of previously generated dictionary files are available.
 
             self.__dict_AA__, self.__dict_SNPS__, self.__IAT__, self.__d_MapTable__ = \
-                IMGT2Seq(self.imgt, self.hg, self.out,
-                         _no_Indel=self.no_indel, _MultiP=self.multiprocess,
-                         _save_intermediates=self.save_intermediates, _imgt_dir=self.imgt_dir, _p_data="IMGT2Seq/data")
+                IMGT2Seq(self.imgt, self.hg, self.out, _imgt_dir=self.imgt_dir, _no_Indel=self.no_indel,
+                         _MultiP=self.multiprocess, _save_intermediates=self.save_intermediates,
+                         _p_data="IMGT2Seq/data")
 
 
             self.f__dict_AA__ = True
@@ -236,8 +237,8 @@ class HATK_IMGT2Seq(object):
 
 
 
-def IMGT2Seq(_imgt, _hg, _out, _imgt_dir, _no_Indel=False, _MultiP=False, _save_intermediates=False,
-             _no_prime = True, _p_data='./data', __f_2field_framework=True):
+def IMGT2Seq(_imgt, _hg, _out, _imgt_dir, _no_Indel=False, _MultiP=False, _save_intermediates=False, _no_prime=True,
+             _p_data='./data', __Nfield_OUTPUT_FORMAT=-1):
 
 
     ### Dictionaries for Raw files.
@@ -423,12 +424,6 @@ def IMGT2Seq(_imgt, _hg, _out, _imgt_dir, _no_Indel=False, _MultiP=False, _save_
 
         ### Finalizing all output.
 
-        if __f_2field_framework:
-            # DNA sequence dictionaries
-            # AA sequence dictionaries
-            # maptables
-            pass
-
         # Exporting AA dictionary.
         HLA_DICTIONARY_AA.to_csv(_OUTPUT_AA_RETURN + ".txt", sep='\t', header=False, index=True)
         HLA_DICTIONARY_AA_map.to_csv(_OUTPUT_AA_RETURN + ".map", sep='\t', header=False, index=False)
@@ -436,6 +431,13 @@ def IMGT2Seq(_imgt, _hg, _out, _imgt_dir, _no_Indel=False, _MultiP=False, _save_
         # Exporting SNPS dictionary.
         HLA_DICTIONARY_SNPS.to_csv(_OUTPUT_SNPS_RETURN+".txt", sep='\t', header=False, index=True)
         HLA_DICTIONARY_SNPS_map.to_csv(_OUTPUT_SNPS_RETURN+".map", sep='\t', header=False, index=False)
+
+
+
+        if 0 < __Nfield_OUTPUT_FORMAT < 4:
+
+            NfieldDictionary(_OUTPUT_AA_RETURN + ".txt", _OUTPUT_SNPS_RETURN+".txt", d_MapTables, __Nfield_OUTPUT_FORMAT)
+
 
 
     if _2_GENERATE_HAT:
@@ -649,5 +651,5 @@ if __name__ == "__main__":
     from src.GenerateHAT import GenerateHAT
     from src.ProcessIMGT import ProcessIMGT
 
-    IMGT2Seq(_imgt=args.imgt, _hg=args.hg, _out=args.o, _no_Indel=args.no_indel, _MultiP=args.multiprocess,
-             _save_intermediates=args.save_intermediates, _imgt_dir=args.imgt_dir)
+    IMGT2Seq(_imgt=args.imgt, _hg=args.hg, _out=args.o, _imgt_dir=args.imgt_dir, _no_Indel=args.no_indel,
+             _MultiP=args.multiprocess, _save_intermediates=args.save_intermediates)
