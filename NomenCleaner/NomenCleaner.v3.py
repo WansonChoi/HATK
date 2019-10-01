@@ -880,10 +880,6 @@ if __name__ == '__main__':
     # Input (1) : *.ped file
     PED_TYPE = parser.add_mutually_exclusive_group(required=True)
     PED_TYPE.add_argument("--hped", help="\nHLA Type Data with raw HLA allele(ex. 0101).\n\n", dest="hped")
-    # PED_TYPE.add_argument("--hped-Ggroup", help="\nHLA Type Data with raw G-group allele(ex. 020601G).\n\n",
-    #                       dest="hped_G")
-    # PED_TYPE.add_argument("--hped-Pgroup", help="\nHLA Type Data with raw P-group allele (ex. 0102P).\n\n",
-    #                       dest="hped_P")
 
     # Input (2) : *.iat file
     parser.add_argument("-hat", help="\nHLA Allele Table file(*.hat).\n\n", required=True)
@@ -892,7 +888,7 @@ if __name__ == '__main__':
     # Ouptut Prefix
     parser.add_argument("--out", "-o", help="\nOutput file prefix.\n\n", required=True)
     parser.add_argument("--leave-NotFound",
-                        help="\nLeaving HLA alleles which can't be found in given *.iat file(Novel or Erroneous allele) intact.\n\n",
+                        help="\nLeaving HLA alleles which can't be found in given *.hat file(Novel or Erroneous allele) intact.\n\n",
                         action='store_true')
 
     # Output format
@@ -911,7 +907,7 @@ if __name__ == '__main__':
                                         action="store_true")
 
     # Flag to remove HLA gene caption.
-    parser.add_argument("--NoCaption", help="\nConverted HLA alleles NOT to have HLA gene prefix(ex. \"A*\").\n\n", action='store_true')
+    parser.add_argument("--NoCaption", help="\nMake converted HLA alleles NOT have HLA gene prefix(ex. \"A*\").\n\n", action='store_true')
 
 
 
