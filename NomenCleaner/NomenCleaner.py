@@ -56,6 +56,9 @@ class HATK_NomenCleaner(object):
                                   __f_NoCaption=kwargs["__f_NoCaption"], __leave_NotFound=kwargs["__leave_NotFound"])
 
 
+    def getResult(self):
+        return self.chped
+
 
 
 def NomenCleaner(_hped, _hat, _imgt, _out, __f_NoCaption=False, __leave_NotFound=False, **kwargs):
@@ -108,7 +111,7 @@ def NomenCleaner(_hped, _hat, _imgt, _out, __f_NoCaption=False, __leave_NotFound
 
     for eachRow in __HPED__.itertuples():
 
-        print(eachRow)
+        # print(eachRow)
 
         [t_FID, t_IID] = eachRow[1:3]
 
@@ -131,8 +134,8 @@ def NomenCleaner(_hped, _hat, _imgt, _out, __f_NoCaption=False, __leave_NotFound
 
                 [t_converted_allele1, LOG_MESSAGE1] = getConvertedAllele2(HLA_names[i], t_alleles[idx1], d__HAT__[HLA_names[i]], OUTPUT_FORMAT, __leave_NotFound)
 
-                print("Converted Alleles : {}".format(t_converted_allele1))
-                print("LOG_MESSAGE :{}\n".format(LOG_MESSAGE1))
+                # print("Converted Alleles : {}".format(t_converted_allele1))
+                # print("LOG_MESSAGE :{}\n".format(LOG_MESSAGE1))
 
             else:
 
@@ -147,8 +150,8 @@ def NomenCleaner(_hped, _hat, _imgt, _out, __f_NoCaption=False, __leave_NotFound
 
                 [t_converted_allele2, LOG_MESSAGE2] = getConvertedAllele2(HLA_names[i], t_alleles[idx2], d__HAT__[HLA_names[i]], OUTPUT_FORMAT, __leave_NotFound)
 
-                print("Converted Alleles : {}".format(t_converted_allele2))
-                print("LOG_MESSAGE :{}\n".format(LOG_MESSAGE2))
+                # print("Converted Alleles : {}".format(t_converted_allele2))
+                # print("LOG_MESSAGE :{}\n".format(LOG_MESSAGE2))
 
             else:
                 t_converted_allele2 = t_alleles[idx2]

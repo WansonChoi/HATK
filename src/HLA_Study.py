@@ -332,7 +332,7 @@ class HLA_Study(object):
                                                    _args.oneF, _args.twoF, _args.threeF, _args.fourF, _args.Ggroup, _args.Pgroup,
                                                    __f_NoCaption=_args.NoCaption, __leave_NotFound=_args.leave_NotFound)
 
-                print(std_MAIN_PROCESS_NAME + "NomenCleaner result : \n{}".format(myNomenCleaner.chped))
+                print(std_MAIN_PROCESS_NAME + "NomenCleaner result : \n{}".format(myNomenCleaner.getResult()))
 
             elif _args.logistic:
 
