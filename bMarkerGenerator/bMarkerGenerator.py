@@ -267,7 +267,7 @@ def bMarkerGenerator(_CHPED, _OUT, _hg, _dictionary_AA, _dictionary_SNPS, _varia
         print("[{}] Encoding Amino acids positions.".format(index))
 
         ### (2) pre-CODED File ( *.AA.CODED.{ped,map},  *.AA.CODED.factors ) ###
-        encodeVariants(OUTPUT + '.AA.ped', OUTPUT + '.AA.map', OUTPUT + '.AA.CODED', __addDummyMarker=False)  # previously "enCODED".
+        encodeVariants(OUTPUT + '.AA.ped', OUTPUT + '.AA.map', OUTPUT + '.AA.CODED')  # previously "enCODED".
 
         index += 1
 
@@ -337,7 +337,7 @@ def bMarkerGenerator(_CHPED, _OUT, _hg, _dictionary_AA, _dictionary_SNPS, _varia
         print("[{}] Encoding HLA alleles.".format(index))
 
         ### (1) Encoded HLA ( *.HLA.{ped,map} ) ###
-        encodeHLA(HLA_DATA, OUTPUT + ".HLA", _hg, __addDummyMarker=False)
+        encodeHLA(HLA_DATA, OUTPUT + ".HLA", _hg)
 
         ### (2) Final Encoded Outputs ( *.HLA.{bed,bim,fam,nosex,log} ) ###
         command = ' '.join([plink, "--file", OUTPUT + '.HLA', "--make-bed", "--out", OUTPUT + '.HLA'])
@@ -382,7 +382,7 @@ def bMarkerGenerator(_CHPED, _OUT, _hg, _dictionary_AA, _dictionary_SNPS, _varia
         print("[{}] Encoding SNP positions.".format(index))
 
         ### (2) pre-CODED File ( *.SNPS.CODED.{ped,map} )
-        encodeVariants(OUTPUT + '.SNPS.ped', OUTPUT + '.SNPS.map', OUTPUT + '.SNPS.CODED', __addDummyMarker=False)
+        encodeVariants(OUTPUT + '.SNPS.ped', OUTPUT + '.SNPS.map', OUTPUT + '.SNPS.CODED')
 
         index += 1
 
