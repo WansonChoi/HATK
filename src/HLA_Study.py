@@ -315,13 +315,14 @@ class HLA_Study(object):
             elif _args.nomencleaner:
 
                 ### NomenCleaner
-                from NomenCleaner.NomenCleaner import HATK_NomenCleaner
+                from NomenCleaner.NomenCleaner import NomenCleaner
 
-                myNomenCleaner = HATK_NomenCleaner(_args.hped, _args.hat, _args.imgt, _args.out,
-                                                   _args.oneF, _args.twoF, _args.threeF, _args.fourF, _args.Ggroup, _args.Pgroup,
-                                                   __f_NoCaption=_args.NoCaption, __leave_NotFound=_args.leave_NotFound)
+                myNomenCleaner = NomenCleaner(_args.hped, _args.hat, _args.imgt, _args.out,
+                                              __oneF=_args.oneF, __twoF=_args.twoF, __threeF=_args.threeF, __fourF=_args.fourF,
+                                              __Ggroup=_args.Ggroup, __Pgroup=_args.Pgroup,
+                                              __f_NoCaption=_args.NoCaption, __leave_NotFound=_args.leave_NotFound)
 
-                print(std_MAIN_PROCESS_NAME + "NomenCleaner result : \n{}".format(myNomenCleaner.getResult()))
+                print(std_MAIN_PROCESS_NAME + "NomenCleaner result : \n{}".format(myNomenCleaner))
 
             elif _args.logistic:
 

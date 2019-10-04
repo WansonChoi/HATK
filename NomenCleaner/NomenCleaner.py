@@ -50,6 +50,9 @@ class HATK_NomenCleaner(object):
         Ggroup = args[4]
         Pgroup = args[5]
 
+        if not (oneF or twoF or threeF or fourF or Ggroup or Pgroup):
+            fourF = True
+
 
         self.chped = NomenCleaner(_hped, _hat, _imgt, _out,
                                   __oneF=oneF, __twoF=twoF, __threeF=threeF, __fourF=fourF, __Ggroup=Ggroup, __Pgroup=Pgroup,
@@ -66,23 +69,33 @@ def NomenCleaner(_hped, _hat, _imgt, _out, __f_NoCaption=False, __leave_NotFound
 
     ##### < Output Format > #####
 
+    FIELD = ''
+
     if kwargs['__oneF']:
         OUTPUT_FORMAT = 1
+        FIELD = 'Maximum 1 field'
     elif kwargs['__twoF']:
         OUTPUT_FORMAT = 2
+        FIELD = 'Maximum 2 fields'
     elif kwargs['__threeF']:
         OUTPUT_FORMAT = 3
+        FIELD = 'Maximum 3 fields'
     elif kwargs['__fourF']:
         OUTPUT_FORMAT = 4
+        FIELD = 'Maximum 4 fields'
     elif kwargs['__Ggroup']:
         OUTPUT_FORMAT = 5
+        FIELD = 'G code'
     elif kwargs['__Pgroup']:
         OUTPUT_FORMAT = 6
+        FIELD = 'P code'
     else:
         # Default mode
         OUTPUT_FORMAT = 0
 
 
+    if OUTPUT_FORMAT != 0:
+        print(std_MAIN_PROCESS_NAME + "Generating CHPED with {} HLA alleles.".format(FIELD))
 
 
     ##### < Loading Data > #####
