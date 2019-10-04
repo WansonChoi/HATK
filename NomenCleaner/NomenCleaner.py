@@ -23,7 +23,7 @@ p_Prefix = re.compile(r'^\w+\*')
 
 class HATK_NomenCleaner(object):
 
-    def __init__(self, _hat, _imgt, _out, _hped, *args, **kwargs):
+    def __init__(self, _hped, _hat, _imgt, _out, *args, **kwargs):
 
         """
 

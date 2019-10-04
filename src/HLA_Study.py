@@ -114,6 +114,7 @@ class HLA_Study(object):
             ########## < [0] IMGT2Seq > ##########
 
             myIMGT2Seq = HATK_IMGT2Seq(_args.imgt, _args.hg, _args.out,
+                                       _args.oneF, _args.twoF, _args.threeF, _args.fourF, _args.Ggroup, _args.Pgroup,
                                        _no_indel=_args.no_indel, _multiprocess=_args.multiprocess,
                                        _save_intermediates=_args.save_intermediates,
                                        _imgt_dir=_args.imgt_dir)
@@ -121,7 +122,7 @@ class HLA_Study(object):
             if myIMGT2Seq:
                 print(std_MAIN_PROCESS_NAME + "IMGT2Seq results : \n{}".format(myIMGT2Seq))
 
-                _args.dict_AA, _args.dict_SNPS, _args.iat, _args.maptable = myIMGT2Seq.getResults()
+                _args.dict_AA, _args.dict_SNPS, _args.hat, _args.maptable = myIMGT2Seq.getResults()
 
             else:
                 print(std_ERROR_MAIN_PROCESS_NAME + "Failed to preprocess HLA sequence information.")
@@ -133,30 +134,19 @@ class HLA_Study(object):
 
             ########## < [1] Checking HLA Typing information > ##########
 
-            _args.oneF = False
-            _args.twoF = False
-            _args.threeF = False
-            _args.fourF = True  # In whole implementation, Nothing but only 4-field format is needed.
-            _args.G_group = False
-            _args.P_group = False
-            _args.old_format = False
-
-
             if _args.chped:
                 pass
 
 
-            elif _args.hped or _args.hped_G or _args.hped_P:
+            elif _args.hped:
 
                 print(std_MAIN_PROCESS_NAME + "Given HPED file('{}') is to be processed by NomenCleaner.".format(_args.hped))
 
-                myNomenCleaner = HATK_NomenCleaner(_args.iat, _args.imgt, _args.out,
-                                                   _args.hped, _args.hped_G, _args.hped_P,
-                                                   _args.oneF, _args.twoF, _args.threeF, _args.fourF,
-                                                   _args.G_group, _args.P_group, _args.old_format,
+                myNomenCleaner = HATK_NomenCleaner(_args.hped, _args.hat, _args.imgt, _args.out,
+                                                   _args.oneF, _args.twoF, _args.threeF, _args.fourF, _args.Ggroup, _args.Pgroup,
                                                    __f_NoCaption=_args.NoCaption, __leave_NotFound=_args.leave_NotFound)
 
-                _args.chped = myNomenCleaner.getResults()
+                _args.chped = myNomenCleaner.getResult()
 
                 if _args.chped == -1:
                     print(std_ERROR_MAIN_PROCESS_NAME + "Failed to process HPED file('{}') by NomenCleaner.".format(_args.hped))
@@ -180,13 +170,11 @@ class HLA_Study(object):
                 ### Step 2 : hped to chped (NomenCleaner)
                 print(std_MAIN_PROCESS_NAME + "Generated HPED file('{}') is to be processed by NomenCleaner.".format(_args.hped))
 
-                myNomenCleaner = HATK_NomenCleaner(_args.iat, _args.imgt, _args.out,
-                                                   _args.hped, _args.hped_G, _args.hped_P,
-                                                   _args.oneF, _args.twoF, _args.threeF, _args.fourF,
-                                                   _args.G_group, _args.P_group, _args.old_format,
+                myNomenCleaner = HATK_NomenCleaner(_args.hped, _args.hat, _args.imgt, _args.out,
+                                                   _args.oneF, _args.twoF, _args.threeF, _args.fourF, _args.Ggroup, _args.Pgroup,
                                                    __f_NoCaption=_args.NoCaption, __leave_NotFound=_args.leave_NotFound)
 
-                _args.chped = myNomenCleaner.getResults()
+                _args.chped = myNomenCleaner.getResult()
 
 
                 if _args.chped == -1:
@@ -297,6 +285,7 @@ class HLA_Study(object):
                 from IMGT2Seq.IMGT2Seq import HATK_IMGT2Seq
 
                 myIMGT2Seq = HATK_IMGT2Seq(_args.imgt, _args.hg, _args.out,
+                                           _args.oneF, _args.twoF, _args.threeF, _args.fourF, _args.Ggroup, _args.Pgroup,
                                            _no_indel=_args.no_indel, _multiprocess=_args.multiprocess,
                                            _save_intermediates=_args.save_intermediates,
                                            _imgt_dir=_args.imgt_dir)
@@ -328,7 +317,7 @@ class HLA_Study(object):
                 ### NomenCleaner
                 from NomenCleaner.NomenCleaner import HATK_NomenCleaner
 
-                myNomenCleaner = HATK_NomenCleaner(_args.hat, _args.imgt, _args.out, _args.hped,
+                myNomenCleaner = HATK_NomenCleaner(_args.hped, _args.hat, _args.imgt, _args.out,
                                                    _args.oneF, _args.twoF, _args.threeF, _args.fourF, _args.Ggroup, _args.Pgroup,
                                                    __f_NoCaption=_args.NoCaption, __leave_NotFound=_args.leave_NotFound)
 
