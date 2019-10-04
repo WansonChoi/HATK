@@ -198,13 +198,13 @@ class HLA_Study(object):
                                               _variants=_args.variants, __save_intermediates=_args.save_intermediates,
                                               _p_src="bMarkerGenerator/src")
 
-            _args.variants = mybMarkers.getReuslts()
+            _args.variants = mybMarkers.getReuslt()
 
             if _args.variants == -1:
                 print(std_ERROR_MAIN_PROCESS_NAME + "Failed to generate Binary Markers for '{}'".format(_args.chped))
                 sys.exit()
             else:
-                print(std_MAIN_PROCESS_NAME + "bMarkerGenerator result(Prefix) : \n{}".format(mybMarkers.getReuslts()))
+                print(std_MAIN_PROCESS_NAME + "bMarkerGenerator result(Prefix) : \n{}".format(mybMarkers.getReuslt()))
 
 
 
@@ -301,7 +301,7 @@ class HLA_Study(object):
                                                   _variants=_args.variants, __save_intermediates=_args.save_intermediates,
                                                   _p_src="bMarkerGenerator/src")
 
-                print(std_MAIN_PROCESS_NAME + "bMarkerGenerator result(Prefix) : \n{}".format(mybMarkers.getReuslts()))
+                print(std_MAIN_PROCESS_NAME + "bMarkerGenerator result(Prefix) : \n{}".format(mybMarkers.getReuslt()))
 
             elif _args.hla2hped:
 
