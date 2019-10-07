@@ -348,11 +348,11 @@ class HATK_MetaAnalysis():
             print(std_ERROR_MAIN_PROCESS_NAME + "Please check '--assoc-result' argument again.")
             sys.exit()
 
-        self.results = Meta_Analysis(_out, _assoc_result)
+        self.result = Meta_Analysis(_out, _assoc_result)
 
 
-    def getResults(self):
-        return self.results
+    def getResult(self):
+        return self.result
 
 
 

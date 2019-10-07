@@ -31,11 +31,11 @@ class HATK_HLA2HPED(object):
             sys.exit()
 
 
-        self.results = HLA2HPED(_rhped, _out, _platform)
+        self.result = HLA2HPED(_rhped, _out, _platform)
 
 
-    def getResults(self):
-        return self.results
+    def getResult(self):
+        return self.result
 
 
 

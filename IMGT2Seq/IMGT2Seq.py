@@ -222,7 +222,7 @@ class HATK_IMGT2Seq(object):
         return self.summary_string
 
 
-    def getResults(self):
+    def getResult(self):
         return [self.__dict_AA__, self.__dict_SNPS__, self.__HAT__, self.__d_MapTable__]
 
 

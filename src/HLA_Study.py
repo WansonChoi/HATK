@@ -120,13 +120,13 @@ class HLA_Study(object):
                                        _imgt_dir=_args.imgt_dir)
 
             if myIMGT2Seq:
-                print(std_MAIN_PROCESS_NAME + "IMGT2Seq results : \n{}".format(myIMGT2Seq))
+                print(std_MAIN_PROCESS_NAME + "IMGT2Seq result : \n{}".format(myIMGT2Seq))
 
-                _args.dict_AA, _args.dict_SNPS, _args.hat, _args.maptable = myIMGT2Seq.getResults()
+                _args.dict_AA, _args.dict_SNPS, _args.hat, _args.maptable = myIMGT2Seq.getResult()
 
             else:
                 print(std_ERROR_MAIN_PROCESS_NAME + "Failed to preprocess HLA sequence information.")
-                print(std_MAIN_PROCESS_NAME + "IMGT2Seq results : \n{}".format(myIMGT2Seq))
+                print(std_MAIN_PROCESS_NAME + "IMGT2Seq result : \n{}".format(myIMGT2Seq))
                 sys.exit()
 
 
@@ -160,7 +160,7 @@ class HLA_Study(object):
 
                 myHLA2HPED = HATK_HLA2HPED(_args.rhped, _args.out, _args.platform)
 
-                _args.hped = myHLA2HPED.getResults()
+                _args.hped = myHLA2HPED.getResult()
 
                 if _args.hped == -1:
                     print(std_ERROR_MAIN_PROCESS_NAME + "Failed to process raw HPED file('{}') by HLA2HPED.")
@@ -242,7 +242,7 @@ class HLA_Study(object):
             if myManhattan.getResult() == -1:
                 print(std_WARNING_MAIN_PROCESS_NAME + "Failed to plot HLA Manhattan plot.")
             else:
-                print(std_MAIN_PROCESS_NAME + "Manhattan results : \n{}".format(myManhattan.getResult()))
+                print(std_MAIN_PROCESS_NAME + "Manhattan result : \n{}".format(myManhattan.getResult()))
 
 
 
@@ -262,12 +262,12 @@ class HLA_Study(object):
                                          __save_intermediates=_args.save_intermediates,
                                          _p_src="HLA_Heatmap/src", _p_data="HLA_Heatmap/data")
 
-                if myHeatmap.getResults() == -1:
+                if myHeatmap.getResult() == -1:
                     print(std_WARNING_MAIN_PROCESS_NAME + "Failed to plot Heatmap of HLA {} gene.".format(t_HLA))
                 else:
-                    Heatmap_status[t_HLA] = myHeatmap.getResults()
+                    Heatmap_status[t_HLA] = myHeatmap.getResult()
 
-            print(std_MAIN_PROCESS_NAME + "Heatmap results : ")
+            print(std_MAIN_PROCESS_NAME + "Heatmap result : ")
             for i in range(0, len(HLA_names)):
                 print(" {} : {}".format(HLA_names[i], Heatmap_status[HLA_names[i]]))
 
@@ -290,7 +290,7 @@ class HLA_Study(object):
                                            _save_intermediates=_args.save_intermediates,
                                            _imgt_dir=_args.imgt_dir)
 
-                print(std_MAIN_PROCESS_NAME + "IMGT2Seq results : \n{}".format(myIMGT2Seq))
+                print(std_MAIN_PROCESS_NAME + "IMGT2Seq result : \n{}".format(myIMGT2Seq))
 
             elif _args.bmarkergenerator:
 
@@ -310,7 +310,7 @@ class HLA_Study(object):
 
                 myHLA2HPED = HATK_HLA2HPED(_args.rhped, _args.out, _args.platform)
 
-                print(std_MAIN_PROCESS_NAME + "HLA2HPED result : \n{}".format(myHLA2HPED.getResults()))
+                print(std_MAIN_PROCESS_NAME + "HLA2HPED result : \n{}".format(myHLA2HPED.getResult()))
 
             elif _args.nomencleaner:
 
@@ -355,7 +355,7 @@ class HLA_Study(object):
 
                 myMetaAnalysis = HATK_MetaAnalysis(_args.out, _args.assoc_result)
 
-                print(std_MAIN_PROCESS_NAME + "Meta-Analysis result : \n{}".format(myMetaAnalysis.getResults()))
+                print(std_MAIN_PROCESS_NAME + "Meta-Analysis result : \n{}".format(myMetaAnalysis.getResult()))
 
             elif _args.heatmap:
 
@@ -366,7 +366,7 @@ class HLA_Study(object):
                                          __save_intermediates=_args.save_intermediates,
                                          _p_src="HLA_Heatmap/src", _p_data="HLA_Heatmap/data")
 
-                print(std_MAIN_PROCESS_NAME + "Heatmap results : \n{}".format(myHeatmap.getResults()))
+                print(std_MAIN_PROCESS_NAME + "Heatmap result : \n{}".format(myHeatmap.getResult()))
 
             elif _args.manhattan:
 
@@ -381,7 +381,7 @@ class HLA_Study(object):
                 if myManhattan.getResult() == -1:
                     print(std_WARNING_MAIN_PROCESS_NAME + "Failed to plot HLA Manhattan plot.")
                 else:
-                    print(std_MAIN_PROCESS_NAME + "Manhattan results : \n{}".format(myManhattan.getResult()))
+                    print(std_MAIN_PROCESS_NAME + "Manhattan result : \n{}".format(myManhattan.getResult()))
 
 
         elif f_sum > 1:

@@ -58,9 +58,9 @@ class HATK_Heatmap(object):
                 t_single_assoc_result = _p_assoc_result
 
 
-        self.results = HEATMAP(_hla_name, _out, _p_maptable, t_single_assoc_result,
-                               __save_intermediates=kwargs["__save_intermediates"], _p_src=kwargs["_p_src"],
-                               _p_data=kwargs["_p_data"])
+        self.result = HEATMAP(_hla_name, _out, _p_maptable, t_single_assoc_result,
+                              __save_intermediates=kwargs["__save_intermediates"], _p_src=kwargs["_p_src"],
+                              _p_data=kwargs["_p_data"])
 
 
         self.removeIntermediates(_out)
@@ -68,8 +68,8 @@ class HATK_Heatmap(object):
 
 
 
-    def getResults(self):
-        return self.results
+    def getResult(self):
+        return self.result
 
 
     def removeIntermediates(self, _out):
