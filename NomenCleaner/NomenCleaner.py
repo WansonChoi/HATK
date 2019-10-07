@@ -30,7 +30,7 @@ class HATK_NomenCleaner(object):
         """
 
 
-        if not _hat:
+        if not _hat or not os.path.exists(_hat):
             print(std_ERROR_MAIN_PROCESS_NAME + "Please check '-hat' argument again.")
             sys.exit()
 
@@ -466,111 +466,6 @@ def getConvertedAllele2(_hla, _allele, _d__HAT__, _OUTPUT_FORMAT, __leave_NotFou
     return [__RETURN__, LOG_MESSAGE]
 
 
-
-
-# def get1stAllele(_hped_allele, _df, _from, _OUTPUT_FORMAT, __leave_NotFound=False):
-#
-#     """
-#     Only for STANDARD nomenclature;
-#     """
-#
-#     ### OUTPUT field format
-#     _to = 1 if _OUTPUT_FORMAT <= 4 else 3 if _OUTPUT_FORMAT == 5 else 4 if _OUTPUT_FORMAT == 6 else -1
-#
-#
-#     __1st_Allele__ = None
-#     LOG_MESSAGE = None
-#
-#
-#     sr_from = _df.loc[:, _from]
-#
-#
-#     ### Matching job.
-#
-#     ## Exact match
-#     Flag_exact_match = sr_from.str.match(_hped_allele+'$')
-#     f_exact = False
-#
-#     if Flag_exact_match.any():
-#
-#         # (ex. '03:28' -> '03:28')
-#
-#         df_candidate = _df.loc[Flag_exact_match, :]
-#         __1st_Allele__ = df_candidate.iat[0, _to]
-#
-#         f_exact = True
-#
-#     else:
-#
-#         ## Just match
-#         Flag_match = sr_from.str.match(_hped_allele)
-#
-#         if Flag_match.any():
-#
-#             # (ex. '03:28' -> '03:280')
-#
-#             df_candidate = _df.loc[Flag_match, :]
-#             __1st_Allele__ = df_candidate.iat[0, _to]
-#
-#         else:
-#
-#             __1st_Allele__ = _hped_allele if __leave_NotFound else '0'
-#
-#             if __leave_NotFound:
-#                 LOG_MESSAGE = '[Leave Not Found] {} -> {}'.format(_hped_allele, _hped_allele)
-#             else:
-#                 LOG_MESSAGE = "[Not Found] {} -> 0".format(_hped_allele)
-#
-#             return [__1st_Allele__, LOG_MESSAGE]
-#
-#
-#
-#     ### Log message
-#     if _from == 'OLD':
-#
-#         if _to == 1:
-#             # to Standard
-#             LOG_MESSAGE = "[{}] {} -> {}(OLD) -> {}".format(
-#                 'Exact match' if f_exact else 'Approximated', _hped_allele, df_candidate.iat[0, 2], __1st_Allele__)
-#
-#
-#
-#             if not f_exact:
-#                 LOG_MESSAGE = ' '.join([LOG_MESSAGE, "(Possible candidates: {})".format(
-#                     df_candidate.iloc[:, [2, 1]].apply(' -> '.join, axis=1).tolist())])
-#
-#         elif _to == 3 or _to == 4:
-#             # to Ggroup
-#             LOG_MESSAGE = "[{}] {} -> {}(OLD) -> {} -> {}".format(
-#                 'Exact match' if f_exact else 'Approximated', _hped_allele, df_candidate.iat[0, 2], df_candidate.iat[0, 1], __1st_Allele__)
-#
-#             if not f_exact:
-#                 LOG_MESSAGE = ' '.join([LOG_MESSAGE, "(Possible candidates: {})".format(
-#                     df_candidate.iloc[:, [2, 1, _to]].apply(' -> '.join, axis=1).tolist())])
-#
-#
-#     else:
-#
-#         if _to == 1:
-#             # to Standard
-#             LOG_MESSAGE = "[{}] {} -> {}".format(
-#                 'Exact match' if f_exact else 'Approximated', _hped_allele, __1st_Allele__)
-#
-#             if not f_exact:
-#                 LOG_MESSAGE = ' '.join([LOG_MESSAGE, "(Possible candidates: {})".format(df_candidate.iloc[:, 1].tolist())])
-#
-#         elif _to == 3 or _to == 4:
-#             # to Ggroup
-#             LOG_MESSAGE = "[{}] {} -> {} -> {}".format(
-#                 'Exact match' if f_exact else 'Approximated', _hped_allele, df_candidate.iat[0, 1], __1st_Allele__)
-#
-#             if not f_exact:
-#                 LOG_MESSAGE = ' '.join([LOG_MESSAGE, "(Possible candidates: {})".format(
-#                     df_candidate.iloc[:, [1, _to]].apply(' -> '.join, axis=1).tolist())])
-#
-#
-#
-#     return [__1st_Allele__, LOG_MESSAGE]
 
 
 def get1stAllele2(_allele, _df, _from, _OUTPUT_FORMAT, __leave_NotFound=False, _allele0=None):
