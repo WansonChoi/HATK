@@ -259,7 +259,7 @@ class HLA_Study(object):
                 t_maptable = _args.maptable[t_HLA]
 
                 myHeatmap = HATK_Heatmap(t_HLA, _args.out+".HLA_{}.heatmap".format(t_HLA), t_maptable, _args.assoc_result[0],
-                                         __as4field=_args.as4field, __save_intermediates=_args.save_intermediates,
+                                         __save_intermediates=_args.save_intermediates,
                                          _p_src="HLA_Heatmap/src", _p_data="HLA_Heatmap/data")
 
                 if myHeatmap.getResults() == -1:
@@ -363,7 +363,7 @@ class HLA_Study(object):
                 from HLA_Heatmap.heatmap import HATK_Heatmap
 
                 myHeatmap = HATK_Heatmap(_args.HLA, _args.out, _args.maptable, _args.assoc_result,
-                                         __as4field=_args.as4field, __save_intermediates=_args.save_intermediates,
+                                         __save_intermediates=_args.save_intermediates,
                                          _p_src="HLA_Heatmap/src", _p_data="HLA_Heatmap/data")
 
                 print(std_MAIN_PROCESS_NAME + "Heatmap results : \n{}".format(myHeatmap.getResults()))

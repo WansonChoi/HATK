@@ -59,17 +59,30 @@ class HATK_Heatmap(object):
 
 
         self.results = HEATMAP(_hla_name, _out, _p_maptable, t_single_assoc_result,
-                               __as4field=kwargs["__as4field"], __save_intermediates=kwargs["__save_intermediates"],
-                               _p_src=kwargs["_p_src"], _p_data=kwargs["_p_data"])
+                               __save_intermediates=kwargs["__save_intermediates"], _p_src=kwargs["_p_src"],
+                               _p_data=kwargs["_p_data"])
+
+
+        self.removeIntermediates(_out)
+
+
 
 
     def getResults(self):
         return self.results
 
 
+    def removeIntermediates(self, _out):
 
-def HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_result, __as4field=False, __save_intermediates=False,
-            _p_Rscript=p_Rscript, _p_src="./src", _p_data="./data"):
+        # *.log
+        if os.path.exists(_out+'.log'):
+            os.system("rm {}".format(_out+'.log'))
+
+
+
+
+def HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_result, __save_intermediates=False, _p_Rscript=p_Rscript,
+            _p_src="./src", _p_data="./data"):
 
     """
 
@@ -124,9 +137,9 @@ def HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_result, __as4field=False, __s
 
         ########## < [1] Loading HLA_MAPTABLE file > ##########
 
-        print(std_MAIN_PROCESS_NAME + "[0-1] Loading 'Maptable' file. ({})\n".format(_p_maptable))
+        # print(std_MAIN_PROCESS_NAME + "[0-1] Loading 'Maptable' file. ({})\n".format(_p_maptable))
 
-        H_MARKERS = pd.read_table(_p_maptable, sep='\s+', header=[0, 1, 2], index_col=0).filter(regex=_hla_name + "\*", axis=0)
+        H_MARKERS = pd.read_csv(_p_maptable, sep='\s+', header=[0, 1, 2], index_col=0).filter(regex=_hla_name + "\*", axis=0)
         # filter() due to the case of "DRB2", "DRB3", etc.
 
         # print(H_MARKERS.head())
@@ -138,9 +151,9 @@ def HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_result, __as4field=False, __s
 
         ########## < [2] Loading association test result file(ex. *.assoc.logistic). > ##########
 
-        print(std_MAIN_PROCESS_NAME + "[0-2] Loading 'Association Test Result' file of AA and HLA markers. (Dropping 'NA')\n")
+        # print(std_MAIN_PROCESS_NAME + "[0-2] Loading 'Association Test Result' file of AA and HLA markers. (Dropping 'NA')\n")
 
-        __ASSOC_RESULT__ = pd.read_table(_p_assoc_result, header=0, sep='\s+', usecols=["SNP", "A1", "OR", "P"]).dropna() # dropna() introduced (2019. 07. 02.)
+        __ASSOC_RESULT__ = pd.read_csv(_p_assoc_result, header=0, sep='\s+', usecols=["SNP", "A1", "OR", "P"]).dropna() # dropna() introduced (2019. 07. 02.)
         # print(__ASSOC_RESULT__.head())
 
         p_AA = re.compile(r"^AA_{0}_".format(_hla_name))
@@ -153,9 +166,8 @@ def HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_result, __as4field=False, __s
         __ASSOC_RESULT_AA__ = __ASSOC_RESULT__.loc[f_AA, :]
         __ASSOC_RESULT_HLA__ = __ASSOC_RESULT__.loc[f_HLA, :]
 
-        print("AA : \n{}".format(__ASSOC_RESULT_AA__.head()))
-        print()
-        print("HLA : \n{}".format(__ASSOC_RESULT_HLA__.head()))
+        # print("AA : \n{}\n".format(__ASSOC_RESULT_AA__.head()))
+        # print("HLA : \n{}\n".format(__ASSOC_RESULT_HLA__.head()))
 
 
         # Checking subsetted logistic regression result.
@@ -175,7 +187,7 @@ def HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_result, __as4field=False, __s
 
         ########## < [3] Preprocessing MAPTABLE. > ##########
 
-        print(std_MAIN_PROCESS_NAME + "[1] Preprocessing MAPTABLE. ('*.map.txt')")
+        # print(std_MAIN_PROCESS_NAME + "[1] Preprocessing MAPTABLE. ('*.map.txt')")
 
         """
         Maptable info && Association test result.
@@ -226,8 +238,8 @@ def HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_result, __as4field=False, __s
 
         __MAPTABLE__ = __MAPTABLE__.loc[:, flag_valid_relPOS]
 
-        print("\nPreprocessed MAPTABLE.\n")
-        print(__MAPTABLE__.head())
+        # print("\nPreprocessed MAPTABLE.\n")
+        # print(__MAPTABLE__.head())
 
         # __MAPTABLE__.to_csv(_out+".maptable.{}.txt".format(_hla_name), sep='\t', header=True, index=True)
 
@@ -252,7 +264,7 @@ def HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_result, __as4field=False, __s
 
         ########## < [4] Making new *.assoc file for AA markers. > ##########
 
-        print(std_MAIN_PROCESS_NAME + "[2] Making new *.assoc file for AA markers. ('*.assoc.txt')\n")
+        # print(std_MAIN_PROCESS_NAME + "[2] Making new *.assoc file for AA markers. ('*.assoc.txt')\n")
 
         """
         Above preprocessed `__MAPTABLE__` will be the main content of Heatmap plot.
@@ -436,7 +448,7 @@ def HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_result, __as4field=False, __s
 
 
         __NEW_ASSOC__ = pd.concat(for_new_assoc, axis=1)
-        print(__NEW_ASSOC__.head())
+        # print(__NEW_ASSOC__.head())
         # __NEW_ASSOC__.to_csv(_out+".assoc2.{}.txt".format(_hla_name), sep='\t', header=True, index=True)
 
 
@@ -445,7 +457,7 @@ def HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_result, __as4field=False, __s
 
         ########## < [5] Making Assoc_P file. > ##########
 
-        print(std_MAIN_PROCESS_NAME + "[3] Making Assoc_P file. ('*.alleleP.txt')\n")
+        # print(std_MAIN_PROCESS_NAME + "[3] Making Assoc_P file. ('*.alleleP.txt')\n")
 
         """
         Obtaining 'p-values of HLA alleles' in association test result. 
@@ -481,7 +493,7 @@ def HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_result, __as4field=False, __s
         __alleleP__ = sr_log10P*sr_OR
         __alleleP__.index = df_No1Field.loc[:, "HLA1"]
 
-        print(__alleleP__)
+        # print(__alleleP__)
 
 
         """
@@ -504,7 +516,7 @@ def HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_result, __as4field=False, __s
 
         ########## < [6] Exporting output files. > ##########
 
-        print(std_MAIN_PROCESS_NAME + "[4] Exporting output files. (Forwarding them to Rscript.)")
+        # print(std_MAIN_PROCESS_NAME + "[4] Exporting output files. (Forwarding them to Rscript.)")
 
         """
         Files to export.
@@ -526,11 +538,13 @@ def HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_result, __as4field=False, __s
 
         ##### Processing HLA markers.
 
-        if not __as4field:
-            p_HLA = re.compile(r"^(%s\*\d{2,3}:\d{2,3}[A-Z]?).*" % (_hla_name))
-            t_hla_markers = __MAPTABLE__.index.to_series().str.extract(p_HLA, expand=False)
-        else:
-            t_hla_markers = __MAPTABLE__.index
+        # if not __as4field:
+        #     p_HLA = re.compile(r"^(%s\*\d{2,3}:\d{2,3}[A-Z]?).*" % (_hla_name))
+        #     t_hla_markers = __MAPTABLE__.index.to_series().str.extract(p_HLA, expand=False)
+        # else:
+        #     t_hla_markers = __MAPTABLE__.index
+
+        t_hla_markers = __MAPTABLE__.index
 
 
         ##### Processing AA markers.
@@ -555,14 +569,14 @@ def HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_result, __as4field=False, __s
 
 
 
-        print("\n(1) __MAPTABLE__\n")
-        print(__MAPTABLE__.head())
-
-        print("\n(2) __alleleP__\n")
-        print(__alleleP__.head())
-
-        print("\n(3) __NEW_ASSOC__\n")
-        print(__NEW_ASSOC__.head())
+        # print("\n(1) __MAPTABLE__\n")
+        # print(__MAPTABLE__.head())
+        #
+        # print("\n(2) __alleleP__\n")
+        # print(__alleleP__.head())
+        #
+        # print("\n(3) __NEW_ASSOC__\n")
+        # print(__NEW_ASSOC__.head())
 
 
 
@@ -578,7 +592,7 @@ def HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_result, __as4field=False, __s
 
         ########## < [7] Plotting heatmap. > ##########
 
-        print(std_MAIN_PROCESS_NAME + "[7] Plotting heatmap.")
+        # print(std_MAIN_PROCESS_NAME + "[7] Plotting heatmap.")
 
         """
         (Argument Example for "8b_plot_WS.R")
@@ -598,10 +612,10 @@ def HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_result, __as4field=False, __s
                             _out+".assoc.txt",
                             _out+".alleleP.txt",
                             _hla_name,
-                            _out])
+                            _out,
+                            '1>{LOG} 2>{LOG}'.format(LOG=(_out+'.log'))])
 
-        print(command)
-
+        # print(command)
         os.system(command)
 
 
@@ -654,7 +668,6 @@ if __name__ == "__main__" :
     parser.add_argument("--assoc-result", "-ar", help="\nAssociation test result file(ex. *.assoc.logistic).\n\n", required=True)
 
     parser.add_argument("--save-intermediates", help="\nSave intermediate files.\n\n", action='store_true')
-    parser.add_argument("--as4field", help="\nShow HLA allele names in 4-field format\n\n", action='store_true')
 
 
 
@@ -703,4 +716,4 @@ if __name__ == "__main__" :
 
     # main function execution.
     HEATMAP(_hla_name=args.HLA, _out=args.o, _p_maptable=args.maptable, _p_assoc_result=args.assoc_result,
-            __save_intermediates=args.save_intermediates, __as4field=args.as4field)
+            __save_intermediates=args.save_intermediates)
