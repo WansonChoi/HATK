@@ -221,13 +221,13 @@ class HLA_Study(object):
                                                           _condition_list=_args.condition_list,
                                                           _ref_allele=_args.reference_allele)
 
-            _args.assoc_result = [myLogistcRegression.getResults()] # `_args.assoc_result` is supposed to be a list.
+            _args.assoc_result = [myLogistcRegression.getResult()] # `_args.assoc_result` is supposed to be a list.
 
             if _args.assoc_result[0] == -1:
                 print(std_ERROR_MAIN_PROCESS_NAME + "Failed to perform logistic regression test on the Binary Markers('{}').".format(_args.variants))
                 sys.exit()
             else:
-                print(std_MAIN_PROCESS_NAME + "Logistic Regression result : \n{}".format(myLogistcRegression.getResults()))
+                print(std_MAIN_PROCESS_NAME + "Logistic Regression result : \n{}".format(myLogistcRegression.getResult()))
 
 
 
@@ -335,7 +335,7 @@ class HLA_Study(object):
                                                               _condition=_args.condition, _condition_list=_args.condition_list,
                                                               _ref_allele=_args.reference_allele)
 
-                print(std_MAIN_PROCESS_NAME + "Logistic Regression result : \n{}".format(myLogistcRegression.getResults()))
+                print(std_MAIN_PROCESS_NAME + "Logistic Regression result : \n{}".format(myLogistcRegression.getResult()))
 
             elif _args.omnibus:
 

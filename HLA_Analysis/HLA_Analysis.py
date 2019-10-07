@@ -149,14 +149,37 @@ class HATK_LogisticRegression():
         ################################################################################################################
 
 
-        self.results = Logistic_Regression(_bfile, _out, _phe=kwargs['_phe'], _phe_name=kwargs['_phe_name'],
-                                           _covar=kwargs['_covar'], _covar_name=kwargs['_covar_name'],
-                                           _condition=kwargs['_condition'], _condition_list=kwargs['_condition_list'],
-                                           _ref_allele=kwargs['_ref_allele'])
+        self.result = Logistic_Regression(_bfile, _out, _phe=kwargs['_phe'], _phe_name=kwargs['_phe_name'],
+                                          _covar=kwargs['_covar'], _covar_name=kwargs['_covar_name'],
+                                          _condition=kwargs['_condition'], _condition_list=kwargs['_condition_list'],
+                                          _ref_allele=kwargs['_ref_allele'])
+
+        self.removeIntermediates(_out) # Remove unnecessary files.
 
 
-    def getResults(self):
-        return self.results
+
+
+
+    def getResult(self):
+        return self.result
+
+
+
+    def removeIntermediates(self, _out):
+
+        # (1) *.log
+        if os.path.exists(_out+'.log'):
+            os.system("rm {}".format(_out+'.log'))
+
+        # (2) *.ref
+        if os.path.exists(_out+'.nosex'):
+            os.system("rm {}".format(_out + '.nosex'))
+
+        # (3) *.nosex
+        if os.path.exists(_out+'.ref'):
+            os.system("rm {}".format(_out+'.ref'))
+
+        return 0
 
 
 
