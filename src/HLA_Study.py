@@ -239,10 +239,10 @@ class HLA_Study(object):
                                          _point_size=_args.point_size, _yaxis_unit=_args.yaxis_unit,
                                          _p_src="HLA_Manhattan/src", _p_data="HLA_Manhattan/data")
 
-            if myManhattan.getResults() == -1:
+            if myManhattan.getResult() == -1:
                 print(std_WARNING_MAIN_PROCESS_NAME + "Failed to plot HLA Manhattan plot.")
             else:
-                print(std_MAIN_PROCESS_NAME + "Manhattan results : \n{}".format(myManhattan.getResults()))
+                print(std_MAIN_PROCESS_NAME + "Manhattan results : \n{}".format(myManhattan.getResult()))
 
 
 
@@ -378,7 +378,10 @@ class HLA_Study(object):
                                              _point_size=_args.point_size, _yaxis_unit=_args.yaxis_unit,
                                              _p_src="HLA_Manhattan/src", _p_data="HLA_Manhattan/data")
 
-                print(std_MAIN_PROCESS_NAME + "Manhattan results : \n{}".format(myManhattan.getResults()))
+                if myManhattan.getResult() == -1:
+                    print(std_WARNING_MAIN_PROCESS_NAME + "Failed to plot HLA Manhattan plot.")
+                else:
+                    print(std_MAIN_PROCESS_NAME + "Manhattan results : \n{}".format(myManhattan.getResult()))
 
 
         elif f_sum > 1:
