@@ -76,21 +76,20 @@ fam=rep(fam, each=2) ## make x2 for haploids
 covarexp=""
 if (file.exists(covfile)) {
   
-    covar <- as.matrix(read.table(covfile, header=T))[,-(1:2)]
+    # covar <- as.matrix(read.table(covfile, header=T))[,-(1:2)]
+    covar <- read.table(covfile, header=T)
 
     
     ### covar_name processing (2018. 11. 2.)
     if (data.covar.name !="NA"){
       
       covar_target = strsplit(data.covar.name, ",(\\s+)?")[[1]]
-      
-      
-      # tryCatch({
-      #   covar_target<-unlist(sapply(sub('-', ':', covar_target), function(x){eval(parse(text = x))}), use.names = F)
-      #   }, error = function(e){stop(simpleError("[OmnibusTest::ERROR] The argument 'covar_name' is wrong. Some of covariate names can't be found in given *.covar file. Please check it again."))})
-      
+
       # Subsetting columns
-      covar = as.matrix(covar[,covar_target])
+      covar = as.data.frame(covar[,covar_target])
+    }
+    else{
+        covar = as.data.frame(covar[,-(1:2)])
     }
     
     ### Duplicating for .bgl.phased format
@@ -107,7 +106,6 @@ if (file.exists(covfile)) {
     print(dim(covar))
 
 } else {
-    # 없는 경우는 그냥 NA집어 넣어 놓음.
     covar=NA
 }
 
@@ -119,7 +117,7 @@ pheno=rep(pheno, each=2) ## make x2 for haploids
 is.live.phen=(pheno > -1) ## who is alive for analysis
 
 # (4) phased
-phased.in <- as.matrix(read.table(phasedfile)) # 얘가 phased된 데이터파일이라 로드하는데 시간이 꽤 김
+phased.in <- as.matrix(read.table(phasedfile))
 variants=phased.in[-(1:5),2]
 phased=t(phased.in[-(1:5),-(1:2)]) ## transpose: rows are individuals, cols are markers
 colnames(phased)=variants
@@ -129,8 +127,7 @@ colnames(phased)=variants
 ########## <(Optional) Condvar> ##########
 
 ## 2. DEFINE HAPLOTYPES TO BE CONDITIONED ON
-# (2018.4.18) 일단 NA인 경우는 여기 안간다 치자.
-is.live.cond=rep(TRUE, length(pheno)) # who is alive for analysis / (2017.04.18) pheno의 길이만큼 전부 true로 채워져 있음.
+is.live.cond=rep(TRUE, length(pheno)) # who is alive for analysis
 condexp=""
 hap.cond=NULL
 if (length(condvars)>0) {
@@ -182,18 +179,16 @@ for (i in 1:length(testvariants)) {
     ## KEEP ALIVE PEOPLE
     pheno.f=pheno[is.live]
     if (!is.null(hap.cond)) {
-        # NULL이 아닌 경우 <=> conditional argument가 주어져서 condvars처리하는 부분 거치고 온 경우.
         hap.cond.f=hap.cond[is.live]
     } else {
-        # NULL인 경우 <=> conditional이 안 주어진 경우
         hap.cond.f=NULL
     }
     newaa.f=newaa[is.live]
-    covar.f=as.matrix(covar[is.live,])  # as.matrix() is introduced in case only one covariate name is given(To prevent automatically converting to vector not matrix.)
+    # covar.f=as.matrix(covar[is.live,])  # as.matrix() is introduced in case only one covariate name is given(To prevent automatically converting to vector not matrix.)
 
-    # if(!is.na(covar)){
-    #   covar.f=covar[is.live,]
-    # }
+    if(!is.na(covar)){
+      covar.f=as.matrix(covar[is.live,])
+    }
 
     ## DEFINE NEW HAPLOTYPES
   	residues <- unique(newaa.f)
@@ -227,14 +222,11 @@ for (i in 1:length(testvariants)) {
     	dfdiff <- altdf - nulldf
     	log10pvalue <- pchisq(deviancediff, df=dfdiff, lower.tail=FALSE, log.p=TRUE)/log(10)
 
-
-        ### (2018.4.19) 개인미팅 정리
-        # 결국 deviance라는 통계 변량으로 Likelihood Raio test를 하고싶은거. deviance를 차를 구함으로써 LR test를 수행하는 방법이 있음. 저 qchisq라는 것 또한 결국 LR test를 하는 문맥.
-        # log(10)으로 나눠주는건 가끔씩 너무 significant한 p-value가 나오면 너무 작은 값이라 처리를 못함. 이거를 log(10)으로 나눠서 캐치해내는거.
-
     	results[i,] <- c(variant, deviancediff, dfdiff, n.is.live, log10pvalue, paste0(residues,collapse=','))
   	}
 }
+
+results = as.data.frame(results)
 
 outfilename = paste(outfile, data.phe.name, paste0(condvar,collapse='+'), "omnibus", sep='.', collapse='.')
 write.table(results, outfilename, quote=F,sep='\t',row.names=F,col.names=c("Variant","deltaDeviance","deltaDF","N","P","Residues"))
