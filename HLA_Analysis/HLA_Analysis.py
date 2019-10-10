@@ -198,9 +198,65 @@ class HATK_OmibusTest():
 
         __aa__ = None
 
-        print(_out)
-        print(_fam)
-        print(kwargs)
+        # print(_out)
+        # print(_fam)
+        # print(kwargs)
+
+
+
+
+        ## _phe and _phe_name
+        if kwargs['_phe'] and os.path.exists(kwargs['_phe']):
+
+            # Phenotype information given.
+
+            if not kwargs['_phe_name']:
+
+                print(std_WARNING_MAIN_PROCESS_NAME + "No phenotype name was given.")
+
+                # '_phe' given but '_phe_name' not given.
+
+                Phe = open(kwargs['_phe'])
+
+                header = Phe.readline().rstrip('\n')
+                header_items = re.split(r'\s+', header)
+
+                if len(header_items) < 3:
+                    # Less than 3 columns
+                    print(std_ERROR_MAIN_PROCESS_NAME + "Given phenotype file must have more than 2 columns.\n"
+                                                        "Please check '--pheno' argument again.")
+                    sys.exit()
+
+                elif len(header_items) == 3:
+
+                    # Setting only one column as phenotype information.
+                    kwargs['_phe_name'] = header_items[-1]
+
+                else:
+                    # More than 3 columns
+                    if not kwargs['_phe_name'] in header_items:
+                        print(
+                            std_ERROR_MAIN_PROCESS_NAME + "No any phenotype name can be found in the columns of the given phenotype file.\n"
+                                                          "Please check '--pheno' and '--pheno-name' arguments again.")
+                        sys.exit()
+
+                Phe.close()
+
+
+        else:
+
+            print(std_ERROR_MAIN_PROCESS_NAME + "To perform Omibus test, phenotype information must be given.")
+
+            if not bool(kwargs['_phe']):
+                print("No phenotype information was given.\n"
+                      "Please check '--pheno' argument again please.")
+                sys.exit()
+            else:
+                print("Given phenotype information('{}') doesn't exist.\n"
+                      "Please check '--pheno' argument again please.".format(kwargs['_phe']))
+                sys.exit()
+
+
 
 
         ## _fam
@@ -231,51 +287,6 @@ class HATK_OmibusTest():
                                                     "Given '*.bgl.phased' file('{}') doesn't exist.\nPlease check '--phased' or '-ph' argument again.\n"
                                                     "Given '*.aa' file('{}') doesn't exist.\nPlease check '--aa' argument again.".format(kwargs['_bgl_phased'], kwargs['_aa']))
                 sys.exit()
-
-
-        ## _phe and _phe_name
-        if kwargs['_phe'] and os.path.exists(kwargs['_phe']):
-
-            # Phenotype information given.
-
-            if not kwargs['_phe_name']:
-
-                # '_phe' given but '_phe_name' not given.
-
-                Phe = open(kwargs['_phe'])
-
-                header = Phe.readline().rstrip('\n')
-                header_items = re.split(r'\s+', header)
-
-                if len(header_items) < 3:
-                    # Less than 3 columns
-                    print(std_ERROR_MAIN_PROCESS_NAME + "Given phenotype file must have more than 2 columns.\n"
-                                                        "Please check '--pheno' argument again.")
-                    sys.exit()
-
-                elif len(header_items) == 3:
-
-                    # Setting only one column as phenotype information.
-                    kwargs['_phe_name'] = header_items[-1]
-
-                else:
-                    # More than 3 columns
-                    if not kwargs['_phe_name'] in header_items:
-                        print(
-                            std_ERROR_MAIN_PROCESS_NAME + "Given phenotype name('{}') can't be found in the columns of the given phenotype file.\n"
-                                                          "Please check '--pheno' and '--pheno-name' arguments again.".format(
-                                kwargs['_phe_name']))
-                        sys.exit()
-
-                Phe.close()
-
-
-        else:
-
-            print(std_ERROR_MAIN_PROCESS_NAME + "To perform Omibus test, phenotype information must be given.\n"
-                                                "Given phenotype information('{}') doesn't exist.\n"
-                                                "Please check '--pheno' argument again please.".format(kwargs['_phe']))
-            sys.exit()
 
 
 
@@ -487,7 +498,7 @@ def Omnibus_Test(_fam, _out, _aa, _phe, _phe_name, _covar, _covar_name="NA", _co
         command.append("NA")
 
     command = ' '.join(command)
-    print(command)
+    # print(command)
 
 
     if not os.system(command):
