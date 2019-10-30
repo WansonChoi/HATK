@@ -383,7 +383,7 @@ def Logistic_Regression(_bfile, _out,
 
     ### Argument Processing && Generating Command.
 
-    command = [GLOBAL_p_plink, "--noweb", "--logistic", "--out {0}".format(_out)]
+    command = [GLOBAL_p_plink, "--logistic hide-covar", "--out {0}".format(_out)]
 
     if bool(_bfile):
         command.append("--bfile {0}".format(_bfile))
@@ -409,8 +409,8 @@ def Logistic_Regression(_bfile, _out,
     if not (bool(_from_mb) != bool(_to_mb)): # Exclusive-NOR
         command.append("--from-mb {0} --to-mb {1}".format(_from_mb, _to_mb))
 
-    if bool(_hide_covar):
-        command.append("--hide-covar")
+    # if bool(_hide_covar):
+    #     command.append("--hide-covar")
     if bool(_allow_no_sex):
         command.append("--allow-no-sex")
 
@@ -419,12 +419,16 @@ def Logistic_Regression(_bfile, _out,
     if bool(_chr):
         command.append("--chr {0}".format(_chr))
 
+
+    # Stdout result to log file
+    command.append('1>{LOG} 2>{LOG}'.format(LOG=(_out+'.assoc.logistic.log')))
+
     command = ' '.join(command)
 
 
     ### Conducting Logistic Regression by Plink(v1.9b).
 
-    print(command)
+    # print(command)
     os.system(command)
 
 
