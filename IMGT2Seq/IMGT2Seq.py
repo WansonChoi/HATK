@@ -158,59 +158,61 @@ class HATK_IMGT2Seq(object):
         #     print("{} : {}".format(k, v))
 
 
-        if (self.f__dict_AA__ and self.f__dict_SNPS__ and self.f__HAT__ and self.f__d_MapTable__):
-
-            ### All of previously generated dictionary files are available.
-
-            self.summary_string = \
-                ''.join([self.summary_string,
-                         "< IMGT2Sequence(Using existing results) >\n" \
-                         "- HLA Amino Acids : {}\n" \
-                         "- HLA SNPs : {}\n" \
-                         "- HLA Allele Table : {}\n" \
-                         "- Maptables for heatmap : \n" \
-                         "   A   : {A}\n" \
-                         "   B   : {B}\n" \
-                         "   C   : {C}\n" \
-                         "   DPA1: {DPA1}\n" \
-                         "   DPB1: {DPB1}\n" \
-                         "   DQA1: {DQA1}\n" \
-                         "   DQB1: {DQB1}\n" \
-                         "   DRB1: {DRB1}\n".format(self.__dict_AA__, self.__dict_SNPS__, self.__HAT__, **self.__d_MapTable__)
-                         ])
-
-        else:
-
-            ### Not all of previously generated dictionary files are available.
-
-            self.__dict_AA__, self.__dict_SNPS__, self.__HAT__, self.__d_MapTable__ = \
-                IMGT2Seq(self.imgt, self.hg, self.out, _imgt_dir=self.imgt_dir, _no_Indel=self.no_indel,
-                         _MultiP=self.multiprocess, _save_intermediates=self.save_intermediates,
-                         _p_data="IMGT2Seq/data", __Nfield_OUTPUT_FORMAT=Nfield_OUTPUT_FORMAT)
+        # if (self.f__dict_AA__ and self.f__dict_SNPS__ and self.f__HAT__ and self.f__d_MapTable__):
+        #
+        #     ### All of previously generated dictionary files are available.
+        #
+        #     self.summary_string = \
+        #         ''.join([self.summary_string,
+        #                  "< IMGT2Sequence(Using existing results) >\n" \
+        #                  "- HLA Amino Acids : {}\n" \
+        #                  "- HLA SNPs : {}\n" \
+        #                  "- HLA Allele Table : {}\n" \
+        #                  "- Maptables for heatmap : \n" \
+        #                  "   A   : {A}\n" \
+        #                  "   B   : {B}\n" \
+        #                  "   C   : {C}\n" \
+        #                  "   DPA1: {DPA1}\n" \
+        #                  "   DPB1: {DPB1}\n" \
+        #                  "   DQA1: {DQA1}\n" \
+        #                  "   DQB1: {DQB1}\n" \
+        #                  "   DRB1: {DRB1}\n".format(self.__dict_AA__, self.__dict_SNPS__, self.__HAT__, **self.__d_MapTable__)
+        #                  ])
+        #
+        # else:
+        #
+        #     ### Not all of previously generated dictionary files are available.
 
 
-            self.f__dict_AA__ = True
-            self.f__dict_SNPS__ = True
-            self.f__HAT__ = True
-            self.f__d_MapTable__ = True
+        ### No more using existing result.
+        self.__dict_AA__, self.__dict_SNPS__, self.__HAT__, self.__d_MapTable__ = \
+            IMGT2Seq(self.imgt, self.hg, self.out, _imgt_dir=self.imgt_dir, _no_Indel=self.no_indel,
+                     _MultiP=self.multiprocess, _save_intermediates=self.save_intermediates,
+                     _p_data="IMGT2Seq/data", __Nfield_OUTPUT_FORMAT=Nfield_OUTPUT_FORMAT)
 
 
-            self.summary_string = \
-                ''.join([self.summary_string,
-                         "< IMGT2Sequence(Newly generated.) >\n" \
-                         "- HLA Amino Acids : {}\n" \
-                         "- HLA SNPs : {}\n" \
-                         "- HLA Allele Table : {}\n" \
-                         "- Maptables for heatmap : \n" \
-                         "   A   : {A}\n" \
-                         "   B   : {B}\n" \
-                         "   C   : {C}\n" \
-                         "   DPA1: {DPA1}\n" \
-                         "   DPB1: {DPB1}\n" \
-                         "   DQA1: {DQA1}\n" \
-                         "   DQB1: {DQB1}\n" \
-                         "   DRB1: {DRB1}\n".format(self.__dict_AA__, self.__dict_SNPS__, self.__HAT__, **self.__d_MapTable__)
-                         ])
+        self.f__dict_AA__ = True
+        self.f__dict_SNPS__ = True
+        self.f__HAT__ = True
+        self.f__d_MapTable__ = True
+
+
+        self.summary_string = \
+            ''.join([self.summary_string,
+                     "< IMGT2Sequence(Newly generated.) >\n" \
+                     "- HLA Amino Acids : {}\n" \
+                     "- HLA SNPs : {}\n" \
+                     "- HLA Allele Table : {}\n" \
+                     "- Maptables for heatmap : \n" \
+                     "   A   : {A}\n" \
+                     "   B   : {B}\n" \
+                     "   C   : {C}\n" \
+                     "   DPA1: {DPA1}\n" \
+                     "   DPB1: {DPB1}\n" \
+                     "   DQA1: {DQA1}\n" \
+                     "   DQB1: {DQB1}\n" \
+                     "   DRB1: {DRB1}\n".format(self.__dict_AA__, self.__dict_SNPS__, self.__HAT__, **self.__d_MapTable__)
+                     ])
 
 
 
@@ -493,7 +495,7 @@ def MakeMap(_hla, _type, _df_forMAP, _no_prime=True):
             t_gen_pos = _df_forMAP.iat[i, 1]
             t_type = _df_forMAP.iat[i, 2]
 
-            main_label = '_'.join([("INDEL" if bool(p.match(t_rel_pos)) else "AA" if _type == "AA" else "SNPS"),
+            main_label = '_'.join([("INS" if bool(p.match(t_rel_pos)) else "AA" if _type == "AA" else "SNPS"),
                                    _hla, t_rel_pos, t_gen_pos, t_type])
 
             if _type == "SNPS":
@@ -548,9 +550,9 @@ def MakeMap(_hla, _type, _df_forMAP, _no_prime=True):
             if bool(p.match(row[1])):
 
                 if _type == "AA":
-                    t = "INDEL_AA"
+                    t = "INS_AA"
                 elif _type == "SNPS":
-                    t = "INDEL_SNPS"
+                    t = "INS_SNPS"
 
                 main_label = '_'.join([t, _hla, *row[1:-1]])
 
