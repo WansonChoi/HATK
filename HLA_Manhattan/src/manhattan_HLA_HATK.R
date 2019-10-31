@@ -31,6 +31,7 @@ p_src_ = args[12]
 # print(max.yaxis_)
 # print(length(max.yaxis_))
 
+cat("<Given argument from HATK_manhattn.>\n")
 print(args)
 
 ########## <Loading Necessary Scripts(Modules)> ##########
@@ -48,7 +49,8 @@ layout(matrix(1:(NumberofLogistic+1), (NumberofLogistic+1),1, byrow=TRUE), heigh
 # (2018. 8. 10.) No more `r.data` for colorRamp().
 
 for (i in 1:NumberofLogistic) {
-  
+
+  cat('\n(', i, ')\n')
   print(p_assoc.logsitic_[i])
   print(topsignal_[i])
   print(max.yaxis_[i])
@@ -63,4 +65,4 @@ make.fancy.locus.plot.bottom("6", min.pos_, max.pos_, pathToTheGeneBuild=p_GeneB
 
 dev.off()
 
-print("Manhattan Plotting done.")
+cat("<Manhattan Plotting done.>\n")

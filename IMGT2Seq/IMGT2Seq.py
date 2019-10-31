@@ -6,6 +6,10 @@ import argparse, textwrap
 from glob import glob
 import multiprocessing as mp
 
+from IMGT2Seq.src.NfieldDictionary import NfieldDictionary
+from IMGT2Seq.src.GenerateHAT import GenerateHAT
+from IMGT2Seq.src.ProcessIMGT import ProcessIMGT
+
 
 ########## < Core Global Varialbes > ##########
 
@@ -14,11 +18,13 @@ std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % (os.path.basename(__file__))
 std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % (os.path.basename(__file__))
 
 HLA_names = ["A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1"]
+raw_HLA_names = ["A", "B", "C", "DPA", "DPB", "DQA", "DQB", "DRB"]
 
 
 class HATK_IMGT2Seq(object):
 
     def __init__(self, _imgt, _hg, _out, *args, **kwargs):
+
 
         """
 
@@ -57,13 +63,13 @@ class HATK_IMGT2Seq(object):
         # Main Outputs
         self.__dict_AA__ = None
         self.__dict_SNPS__ = None
-        self.__IAT__ = None
+        self.__HAT__ = None
         self.__d_MapTable__ = None
 
         # Flags to check
         self.f__dict_AA__ = False
         self.f__dict_SNPS__ = False
-        self.f__IAT__ = False
+        self.f__HAT__ = False
         self.f__d_MapTable__ = False
 
         # Optional arguments
@@ -100,12 +106,12 @@ class HATK_IMGT2Seq(object):
             self.__dict_SNPS__ = os.path.join(dir_path, "HLA_DICTIONARY_SNPS.{}".format(version_label))
             self.f__dict_SNPS__ = True
 
-        # (3) iat
-        iat = os.path.join(dir_path, "HLA_INTEGRATED_ALLELE_TABLE.{}.iat".format(version_label))
+        # (3) hat
+        hat = os.path.join(dir_path, "HLA_ALLELE_TABLE.imgt{}.hat".format(self.imgt))
 
-        if os.path.exists(iat):
-            self.__IAT__ = iat
-            self.f__IAT__ = True
+        if os.path.exists(hat):
+            self.__HAT__ = hat
+            self.f__HAT__ = True
 
         # (4) maptables
         self.__d_MapTable__ = {hla_name: None for hla_name in HLA_names}
@@ -123,6 +129,28 @@ class HATK_IMGT2Seq(object):
 
 
 
+        # Output Field format
+        oneF = args[0]
+        twoF = args[1]
+        threeF = args[2]
+        fourF = args[3]
+        Ggroup = args[4]
+        Pgroup = args[5]
+
+        Nfield_OUTPUT_FORMAT = 1 if oneF else 2 if twoF else 3 if threeF else 4
+
+        if oneF:
+            Nfield_OUTPUT_FORMAT = 1
+        elif twoF:
+            Nfield_OUTPUT_FORMAT = 2
+        elif threeF:
+            Nfield_OUTPUT_FORMAT = 3
+        else:
+            Nfield_OUTPUT_FORMAT = 4
+
+            if Ggroup or Pgroup:
+                print(std_WARNING_MAIN_PROCESS_NAME + "Given '--{}' argument will be overridden to '--4field'.".format('Ggroup' if Ggroup else 'Pgroup'))
+
 
         ### Checking results
         # print(std_MAIN_PROCESS_NAME + "Arguments for HLA Dictionary")
@@ -130,123 +158,81 @@ class HATK_IMGT2Seq(object):
         #     print("{} : {}".format(k, v))
 
 
-
-        if (self.f__dict_AA__ and self.f__dict_SNPS__ and self.f__IAT__ and self.f__d_MapTable__):
-
-            ### All of previously generated dictionary files are available.
-
-            self.summary_string = \
-                ''.join([self.summary_string,
-                         "< IMGT2Sequence(Using existing results) >\n" \
-                         "- HLA Amino Acids : {}\n" \
-                         "- HLA SNPs : {}\n" \
-                         "- Integrated Allele Table : {}\n" \
-                         "- Maptables for heatmap : \n" \
-                         "   A   : {A}\n" \
-                         "   B   : {B}\n" \
-                         "   C   : {C}\n" \
-                         "   DPA1: {DPA1}\n" \
-                         "   DPB1: {DPB1}\n" \
-                         "   DQA1: {DQA1}\n" \
-                         "   DQB1: {DQB1}\n" \
-                         "   DRB1: {DRB1}\n".format(self.__dict_AA__, self.__dict_SNPS__, self.__IAT__, **self.__d_MapTable__)
-                         ])
-
-        else:
-
-            ### Not all of previously generated dictionary files are available.
-
-            self.__dict_AA__, self.__dict_SNPS__, self.__IAT__, self.__d_MapTable__ = \
-                IMGT2Seq(self.imgt, self.hg, self.out,
-                         _no_Indel=self.no_indel, _MultiP=self.multiprocess,
-                         _save_intermediates=self.save_intermediates, _imgt_dir=self.imgt_dir,
-                         _p_src="IMGT2Seq/src", _p_data="IMGT2Seq/data")
-
-
-            self.f__dict_AA__ = True
-            self.f__dict_SNPS__ = True
-            self.f__IAT__ = True
-            self.f__d_MapTable__ = True
-
-
-            self.summary_string = \
-                ''.join([self.summary_string,
-                         "< IMGT2Sequence(Newly generated.) >\n" \
-                         "- HLA Amino Acids : {}\n" \
-                         "- HLA SNPs : {}\n" \
-                         "- Integrated Allele Table : {}\n" \
-                         "- Maptables for heatmap : \n" \
-                         "   A   : {A}\n" \
-                         "   B   : {B}\n" \
-                         "   C   : {C}\n" \
-                         "   DPA1: {DPA1}\n" \
-                         "   DPB1: {DPB1}\n" \
-                         "   DQA1: {DQA1}\n" \
-                         "   DQB1: {DQB1}\n" \
-                         "   DRB1: {DRB1}\n".format(self.__dict_AA__, self.__dict_SNPS__, self.__IAT__, **self.__d_MapTable__)
-                         ])
-
-
-        # # temporary hardcoding ---
-        # self.__dict_AA__, self.__dict_SNPS__, self.__IAT__, self.__d_MapTable__ = \
-        #     IMGT2Seq(self.imgt, self.hg, self.out, _no_Indel=self.no_indel, _MultiP=self.multiprocess,
-        #              _save_intermediates=self.save_intermediates, _imgt_dir=self.imgt_dir)
+        # if (self.f__dict_AA__ and self.f__dict_SNPS__ and self.f__HAT__ and self.f__d_MapTable__):
         #
+        #     ### All of previously generated dictionary files are available.
         #
-        # self.f__dict_AA__ = True
-        # self.f__dict_SNPS__ = True
-        # self.f__IAT__ = True
-        # self.f__d_MapTable__ = True
+        #     self.summary_string = \
+        #         ''.join([self.summary_string,
+        #                  "< IMGT2Sequence(Using existing results) >\n" \
+        #                  "- HLA Amino Acids : {}\n" \
+        #                  "- HLA SNPs : {}\n" \
+        #                  "- HLA Allele Table : {}\n" \
+        #                  "- Maptables for heatmap : \n" \
+        #                  "   A   : {A}\n" \
+        #                  "   B   : {B}\n" \
+        #                  "   C   : {C}\n" \
+        #                  "   DPA1: {DPA1}\n" \
+        #                  "   DPB1: {DPB1}\n" \
+        #                  "   DQA1: {DQA1}\n" \
+        #                  "   DQB1: {DQB1}\n" \
+        #                  "   DRB1: {DRB1}\n".format(self.__dict_AA__, self.__dict_SNPS__, self.__HAT__, **self.__d_MapTable__)
+        #                  ])
         #
+        # else:
         #
-        # self.summary_string = \
-        #     ''.join([self.summary_string,
-        #              "< IMGT2Sequence(Newly generated.) >\n" \
-        #              "- HLA Amino Acids : {}\n" \
-        #              "- HLA SNPs : {}\n" \
-        #              "- Integrated Allele Table : {}\n" \
-        #              "- Maptables for heatmap : \n" \
-        #              "   A   : {A}\n" \
-        #              "   B   : {B}\n" \
-        #              "   C   : {C}\n" \
-        #              "   DPA1: {DPA1}\n" \
-        #              "   DPB1: {DPB1}\n" \
-        #              "   DQA1: {DQA1}\n" \
-        #              "   DQB1: {DQB1}\n" \
-        #              "   DRB1: {DRB1}\n".format(self.__dict_AA__, self.__dict_SNPS__, self.__IAT__, **self.__d_MapTable__)
-        #              ])
-        # # --Hardcoding#
+        #     ### Not all of previously generated dictionary files are available.
+
+
+        ### No more using existing result.
+        self.__dict_AA__, self.__dict_SNPS__, self.__HAT__, self.__d_MapTable__ = \
+            IMGT2Seq(self.imgt, self.hg, self.out, _imgt_dir=self.imgt_dir, _no_Indel=self.no_indel,
+                     _MultiP=self.multiprocess, _save_intermediates=self.save_intermediates,
+                     _p_data="IMGT2Seq/data", __Nfield_OUTPUT_FORMAT=Nfield_OUTPUT_FORMAT)
+
+
+        self.f__dict_AA__ = True
+        self.f__dict_SNPS__ = True
+        self.f__HAT__ = True
+        self.f__d_MapTable__ = True
+
+
+        self.summary_string = \
+            ''.join([self.summary_string,
+                     "< IMGT2Sequence(Newly generated.) >\n" \
+                     "- HLA Amino Acids : {}\n" \
+                     "- HLA SNPs : {}\n" \
+                     "- HLA Allele Table : {}\n" \
+                     "- Maptables for heatmap : \n" \
+                     "   A   : {A}\n" \
+                     "   B   : {B}\n" \
+                     "   C   : {C}\n" \
+                     "   DPA1: {DPA1}\n" \
+                     "   DPB1: {DPB1}\n" \
+                     "   DQA1: {DQA1}\n" \
+                     "   DQB1: {DQB1}\n" \
+                     "   DRB1: {DRB1}\n".format(self.__dict_AA__, self.__dict_SNPS__, self.__HAT__, **self.__d_MapTable__)
+                     ])
+
 
 
     def __bool__(self):
-        return (self.f__dict_AA__ and self.f__dict_SNPS__ and self.f__IAT__ and self.f__d_MapTable__)
+        return (self.f__dict_AA__ and self.f__dict_SNPS__ and self.f__HAT__ and self.f__d_MapTable__)
 
 
     def __str__(self):
         return self.summary_string
 
 
-    def getResults(self):
-        return [self.__dict_AA__, self.__dict_SNPS__, self.__IAT__, self.__d_MapTable__]
+    def getResult(self):
+        return [self.__dict_AA__, self.__dict_SNPS__, self.__HAT__, self.__d_MapTable__]
 
 
 
 
 
-
-
-def IMGT2Seq(_imgt, _hg, _out, _no_Indel=False, _MultiP=False, _save_intermediates=False, _imgt_dir=None,
-             _no_prime = True, _p_data="./data", _p_src="./src"):
-
-    """
-    """
-
-    ########## < Core Variables > ##########
-
-
-    # (2018. 8. 28.) This order must be kept.
-    raw_HLA_names = ["A", "B", "C", "DPA", "DPB", "DQA", "DQB", "DRB"]
-    HLA_names = ["A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1"]
+def IMGT2Seq(_imgt, _hg, _out, _imgt_dir, _no_Indel=False, _MultiP=False, _save_intermediates=False, _no_prime=True,
+             _p_data='./data', __Nfield_OUTPUT_FORMAT=4):
 
 
     ### Dictionaries for Raw files.
@@ -255,16 +241,13 @@ def IMGT2Seq(_imgt, _hg, _out, _no_Indel=False, _MultiP=False, _save_intermediat
     TARGET_gen_files = {}
 
 
-    ### Variables for Paths.
-    p_data = _p_data
-    p_src = _p_src
-
 
     ### raw MapTables
     d_MapTables = {}
 
-    ### OUTPUT prefix
 
+
+    ### OUTPUT prefix
     # Preparing intermediate paths.
     _out = _out if not _out.endswith('/') else _out.rstrip('/')
     if bool(os.path.dirname(_out)):
@@ -274,56 +257,18 @@ def IMGT2Seq(_imgt, _hg, _out, _no_Indel=False, _MultiP=False, _save_intermediat
 
     _OUTPUT_AA_RETURN = os.path.join(INTERMEDIATE_PATH, 'HLA_DICTIONARY_AA.hg{0}.imgt{1}'.format(_hg, _imgt))
     _OUTPUT_SNPS_RETURN = os.path.join(INTERMEDIATE_PATH, 'HLA_DICTIONARY_SNPS.hg{0}.imgt{1}'.format(_hg, _imgt))
-    _OUTPUT_IAT_RETURN = os.path.join(INTERMEDIATE_PATH, 'HLA_INTEGRATED_ALLELE_TABLE.hg{0}.imgt{1}'.format(_hg, _imgt))
+    _OUTPUT_HAT = os.path.join(INTERMEDIATE_PATH, 'HLA_ALLELE_TABLE')
+
 
 
     ########## < Dependency Checking > ##########
 
-    """
-    1. Necessary Python source files.
-    2. Necessary Static Data files
-    3. Checking each files of "*_nuc.txt", "*_prot.txt", "*_gen.txt".
-    """
-
-
-    ##### < Necessary Python source files > #####
-
-    # ProcessIMGT.py
-    if os.path.exists(os.path.join(p_src, "ProcessIMGT.py")):
-
-        if __name__ == "IMGT2Seq.IMGT2Seq":
-            from IMGT2Seq.src.ProcessIMGT import ProcessIMGT
-        elif __name__ == "__main__":
-            from src.ProcessIMGT import ProcessIMGT
-    else:
-        print(std_ERROR_MAIN_PROCESS_NAME + "\"{}\" doesn't exist!".format(os.path.join(_p_src, "ProcessIMGT.py")))
-        sys.exit()
-
-    # ClassifyGroups.py
-    if os.path.exists(os.path.join(p_src, "ClassifyGroups.py")):
-
-        if __name__ == "IMGT2Seq.IMGT2Seq":
-            from IMGT2Seq.src.ClassifyGroups import ClassifyGroups
-        elif __name__ == "__main__":
-            from src.ClassifyGroups import ClassifyGroups
-    else:
-        print(std_ERROR_MAIN_PROCESS_NAME + "\"src/ClassifyGroups.py\" doesn't exist!")
-        sys.exit()
-
-
-
-    ##### < Necessary Static Data files > #####
-
-    IMGTHLA_directory = os.path.join(p_data, "IMGTHLA{0}".format(_imgt)) if not bool(_imgt_dir) else _imgt_dir
-    # If `_imgt_dir` is not given, then use default IMGTHLA data in `p_data`.
-
-    # print(IMGTHLA_directory)
+    # IMGTHLA directory
+    IMGTHLA_directory = _imgt_dir
 
     if not os.path.isdir(IMGTHLA_directory):
         print(std_ERROR_MAIN_PROCESS_NAME + "Given IMGT-HLA directory \"{0}\" can't be found!".format(IMGTHLA_directory))
         sys.exit()
-
-    # (2018. 10. 26.) Loading `HLA_INTEGRATED_TABLE` file is moved to "ProcessIMGT.py".
 
 
 
@@ -375,38 +320,37 @@ def IMGT2Seq(_imgt, _hg, _out, _no_Indel=False, _MultiP=False, _save_intermediat
                 print(std_ERROR_MAIN_PROCESS_NAME + "\"{0}_gen.txt\" file can't be found.".format(HLA_names[i]))
                 sys.exit()
 
-    # print("\nTarget prot and gen files : \n")
-    # print(TARGET_prot_files)
-    # print(TARGET_gen_files)
 
 
     ##### < "Allelelist.txt", "hla_nom_g.txt", "hla_nom_p.txt" > #####
 
-    # (2018. 10. 12.)
-
+    t_allelelist_2009 = os.path.join(IMGTHLA_directory, "Nomenclature_2009.txt")
     t_allelelist = os.path.join(IMGTHLA_directory, "Allelelist.txt")
     t_p_Group = os.path.join(IMGTHLA_directory, "wmda/hla_nom_g.txt")
     t_p_Proup = os.path.join(IMGTHLA_directory, "wmda/hla_nom_p.txt")
 
+
+    if not os.path.exists(t_allelelist_2009):
+        print(std_ERROR_MAIN_PROCESS_NAME + "'Nomenclature_2009.txt' file can't be found.\n")
+        sys.exit()
+
     if not os.path.exists(t_allelelist):
-        print(std_ERROR_MAIN_PROCESS_NAME + "\"Allelelist.txt\" file can't be found.\n")
+        print(std_ERROR_MAIN_PROCESS_NAME + "'Allelelist.txt' file can't be found.\n")
         sys.exit()
 
     if not os.path.exists(t_p_Group):
-        print(std_ERROR_MAIN_PROCESS_NAME + "\"hla_nom_g.txt\" file can't be found.\n")
+        print(std_ERROR_MAIN_PROCESS_NAME + "'wmda/hla_nom_g.txt' file can't be found.\n")
         sys.exit()
 
     if not os.path.exists(t_p_Proup):
-        print(std_ERROR_MAIN_PROCESS_NAME + "\"hla_nom_p.txt\" file can't be found.\n")
+        print(std_ERROR_MAIN_PROCESS_NAME + "'wmda/hla_nom_p.txt' file can't be found.\n")
         sys.exit()
 
 
 
 
-    ########## < Control Flags > ##########
-
     _1_MAKING_DICTIONARY = 1
-    _2_CLASSIFY_GROUP = 1
+    _2_GENERATE_HAT = 1
     CLEAN_UP = 0
 
 
@@ -426,11 +370,13 @@ def IMGT2Seq(_imgt, _hg, _out, _no_Indel=False, _MultiP=False, _save_intermediat
 
         if _MultiP > 1:
 
+            print(std_MAIN_PROCESS_NAME + "Multiprocessing.")
+
             pool = mp.Pool(processes=_MultiP)
 
             dict_Pool = {HLA_names[i]: pool.apply_async(ProcessIMGT, (_out, HLA_names[i], _hg, _imgt,
                                                                       TARGET_nuc_files[HLA_names[i]], TARGET_gen_files[HLA_names[i]], TARGET_prot_files[HLA_names[i]],
-                                                                      p_data, _no_Indel, _save_intermediates))
+                                                                      _p_data, _no_Indel, _save_intermediates))
                          for i in range(0, len(HLA_names))}
 
             pool.close()
@@ -447,7 +393,7 @@ def IMGT2Seq(_imgt, _hg, _out, _no_Indel=False, _MultiP=False, _save_intermediat
                 t_df_Seqs_SNPS, t_df_Seqs_AA, t_df_forMAP_SNPS, t_df_forMAP_AA, t_MAPTABLE \
                     = ProcessIMGT(_out, HLA_names[i], _hg, _imgt,
                                   TARGET_nuc_files[HLA_names[i]], TARGET_gen_files[HLA_names[i]], TARGET_prot_files[HLA_names[i]],
-                                  p_data, _no_Indel=_no_Indel, _save_intermediates=_save_intermediates)
+                                  _p_data, _no_Indel=_no_Indel, _save_intermediates=_save_intermediates)
 
 
 
@@ -463,52 +409,48 @@ def IMGT2Seq(_imgt, _hg, _out, _no_Indel=False, _MultiP=False, _save_intermediat
             d_MapTables[HLA_names[i]] = t_MAPTABLE
 
 
+        # Amino acid sequence dictionaries
         HLA_DICTIONARY_AA = pd.concat(l_df_Seqs_AA, axis=0)
         HLA_DICTIONARY_AA_map = pd.concat(l_df_forMAP_AA, axis=0)
 
+        # DNA sequence dictionaries
         HLA_DICTIONARY_SNPS = pd.concat(l_df_Seqs_SNPS, axis=0)
         HLA_DICTIONARY_SNPS_map = pd.concat(l_df_forMAP_SNPS, axis=0)
 
 
+        ### Finalizing all output.
+
         # Exporting AA dictionary.
         HLA_DICTIONARY_AA.to_csv(_OUTPUT_AA_RETURN + ".txt", sep='\t', header=False, index=True)
-
         HLA_DICTIONARY_AA_map.to_csv(_OUTPUT_AA_RETURN + ".map", sep='\t', header=False, index=False)
 
         # Exporting SNPS dictionary.
         HLA_DICTIONARY_SNPS.to_csv(_OUTPUT_SNPS_RETURN+".txt", sep='\t', header=False, index=True)
-
         HLA_DICTIONARY_SNPS_map.to_csv(_OUTPUT_SNPS_RETURN+".map", sep='\t', header=False, index=False)
 
 
-    if _2_CLASSIFY_GROUP:
+
+        if 0 < __Nfield_OUTPUT_FORMAT < 4:
+
+            NfieldDictionary(_OUTPUT_AA_RETURN + ".txt", _OUTPUT_SNPS_RETURN+".txt", d_MapTables, __Nfield_OUTPUT_FORMAT)
 
 
-        ########## < 2. Making *.iat file. > ##########
 
-        # print(std_MAIN_PROCESS_NAME + "[2] Making \"*.iat\" file.")
+    if _2_GENERATE_HAT:
 
-        t_dict_AA = _OUTPUT_AA_RETURN + ".txt"
-        t_dict_SNPS = _OUTPUT_SNPS_RETURN+ ".txt"
+        ########## < 2. Making *.hat file. > ##########
 
-        _OUTPUT_IAT_RETURN = ClassifyGroups(t_allelelist, t_p_Group, t_p_Proup, t_dict_AA, t_dict_SNPS, _OUTPUT_IAT_RETURN)
-
+        _OUTPUT_HAT = GenerateHAT(t_allelelist_2009, t_allelelist, t_p_Group, t_p_Proup, _imgt, _OUTPUT_HAT)
 
 
 
     if CLEAN_UP:
 
         ########## < 5. Removing unnecessary files. > ##########
-
-        print(std_MAIN_PROCESS_NAME + "[5] Removing unnecessary files")
-
-    # print("\n")
-    # print(std_MAIN_PROCESS_NAME + "Making HLA Dictionary is done.\n")
+        pass
 
 
-    return [_OUTPUT_AA_RETURN, _OUTPUT_SNPS_RETURN, _OUTPUT_IAT_RETURN, d_MapTables]
-
-
+    return [_OUTPUT_AA_RETURN, _OUTPUT_SNPS_RETURN, _OUTPUT_HAT, d_MapTables]
 
 
 
@@ -553,7 +495,7 @@ def MakeMap(_hla, _type, _df_forMAP, _no_prime=True):
             t_gen_pos = _df_forMAP.iat[i, 1]
             t_type = _df_forMAP.iat[i, 2]
 
-            main_label = '_'.join([("INDEL" if bool(p.match(t_rel_pos)) else "AA" if _type == "AA" else "SNPS"),
+            main_label = '_'.join([("INS" if bool(p.match(t_rel_pos)) else "AA" if _type == "AA" else "SNPS"),
                                    _hla, t_rel_pos, t_gen_pos, t_type])
 
             if _type == "SNPS":
@@ -608,9 +550,9 @@ def MakeMap(_hla, _type, _df_forMAP, _no_prime=True):
             if bool(p.match(row[1])):
 
                 if _type == "AA":
-                    t = "INDEL_AA"
+                    t = "INS_AA"
                 elif _type == "SNPS":
-                    t = "INDEL_SNPS"
+                    t = "INS_SNPS"
 
                 main_label = '_'.join([t, _hla, *row[1:-1]])
 
@@ -642,6 +584,7 @@ def MakeMap(_hla, _type, _df_forMAP, _no_prime=True):
 
 
 if __name__ == "__main__":
+
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,
                                      description=textwrap.dedent('''\
     ###########################################################################################
@@ -668,33 +611,41 @@ if __name__ == "__main__":
     parser.add_argument("--no-indel", help="\nExcluding indel in HLA sequence outputs.\n\n", action='store_true')
     parser.add_argument("--multiprocess", help="\nSetting off parallel multiprocessing.\n\n", type=int, choices=[2,3,4,5,6,7,8], nargs='?', default=1, const=8)
     parser.add_argument("--save-intermediates", help="\nDon't remove intermediate files.\n\n", action='store_true')
-    parser.add_argument("--imgt-dir", help="\nIn case User just want to specify the directory of IMGT data folder.\n\n")
+    parser.add_argument("--imgt-dir", help="\nIn case User just want to specify the directory of IMGT data folder.\n\n", required=True)
 
 
 
 
     ##### < for Test > #####
 
-    # (2018. 9. 17.)
+    ## in Ubuntu
+    # out = '/home/wanson/Git_Projects/HATK/tests/IMGT3370_test/TEST.20190923'
+    # imgt_dir = '/home/wanson/Git_Projects/IMGTHLA3370'
 
-    # Dictionary / hg18 / imgt370
-    # args = parser.parse_args(["-hg", "18", "-o", "MAKEDICTIONARY_v2_hg18_imgt370/makedictionary.hg18.imgt370", "-imgt", "370"])
+    ## in OS X
+    out = '/Users/wansun/Git_Projects/HATK/tests/_1_IMGT2Sequence/20190924/test'
+    imgt_dir = '/Users/wansun/Dropbox/_Sync_MyLaptop/Projects/IMGTHLA/IMGTHLA3320'
 
-    # Dictionary / hg18 / imgt3320
-    # args = parser.parse_args(["-hg", "18", "-o", "MAKEDICTIONARY_v2_hg18_imgt3320/makedictionary.hg18.imgt3320", "-imgt", "3320"])
-
-    # Dictionary / hg19 / imgt3320
-    # args = parser.parse_args(["-hg", "19", "-o", "MAKEDICTIONARY_v2_hg19_imgt3320/makedictionary.hg19.imgt3320", "-imgt", "3320"])
+    # hg18 / imgt3370
+    args = parser.parse_args(["-hg", "18",
+                              "-o", out,
+                              "-imgt", "3370",
+                              "--imgt-dir", imgt_dir,
+                              "--multiprocess"])
 
 
 
 
     ##### < for Publish > #####
 
-    args = parser.parse_args()
+    # args = parser.parse_args()
     print(args)
 
 
     ##### < Main function Execution. > #####
-    IMGT2Seq(_imgt=args.imgt, _hg=args.hg, _out=args.o, _no_Indel=args.no_indel, _MultiP=args.multiprocess,
-             _save_intermediates=args.save_intermediates, _imgt_dir=args.imgt_dir)
+
+    from src.GenerateHAT import GenerateHAT
+    from src.ProcessIMGT import ProcessIMGT
+
+    IMGT2Seq(_imgt=args.imgt, _hg=args.hg, _out=args.o, _imgt_dir=args.imgt_dir, _no_Indel=args.no_indel,
+             _MultiP=args.multiprocess, _save_intermediates=args.save_intermediates)

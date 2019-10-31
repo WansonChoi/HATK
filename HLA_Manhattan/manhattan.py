@@ -37,44 +37,26 @@ class HATK_Manhattan():
             sys.exit()
 
 
-        self.results = Manhattan(_assoc_result, _out, _hg,
-                                 _pointcol=kwargs['_point_col'], _topcol=kwargs['_top_color'],
-                                 _pointsize=kwargs['_point_size'], _yaxis_unit=kwargs['_yaxis_unit'],
-                                 _p_src=kwargs['_p_src'], _p_data=kwargs['_p_data'])
+        self.result = Manhattan(_assoc_result, _out, _hg,
+                                _pointcol=kwargs['_point_col'], _topcol=kwargs['_top_color'],
+                                _pointsize=kwargs['_point_size'], _yaxis_unit=kwargs['_yaxis_unit'],
+                                _p_src=kwargs['_p_src'], _p_data=kwargs['_p_data'])
+
+
+        self.removeIntermediates(_out)
 
 
 
-    def getResults(self):
-        return self.results
 
-# def HATK_manhattan(_results_assoc, _plot_label, _out, _hg, _pointcol="#778899", _topcol="#FF0000", _min_pos="29.60E6", _max_pos="33.2E6",
-#                    _p_Rscript=which("Rscript")):
-#
-#
-#     if not isinstance(_results_assoc, list):
-#         print(std_ERROR_MAIN_PROCESS_NAME + "The argument \"--logistic-result(-lr)\" wansn't given as list. Please check it again.\n")
-#     else:
-#
-#         for item in _results_assoc:
-#             if not os.path.exists(item):
-#                 print(std_ERROR_MAIN_PROCESS_NAME + "The given association result file({0}) doesn't exist. Please check it again.\n".format(item))
-#                 sys.exit()
-#
-#
-#     if not bool(_out):
-#         print(std_ERROR_MAIN_PROCESS_NAME + "The argument \"--out\" wasn't given. Please check it again.\n")
-#         sys.exit()
-#
-#     if not bool(_hg):
-#         print(std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("-hg"))
-#         sys.exit()
-#
-#     if not bool(_plot_label):
-#         _plot_label = " "
-#
-#
-#     return manhattan(_results_assoc, _plot_label, _out, _hg, _pointcol="#778899", _topcol="#FF0000", _min_pos="29.60E6",
-#                      _max_pos="33.2E6", _p_Rscript=which("Rscript"))
+    def getResult(self):
+        return self.result
+
+    def removeIntermediates(self, _out):
+
+        # *.log
+        if os.path.exists(_out+'.log'):
+            os.system("rm {}".format(_out+'.log'))
+
 
 
 
@@ -108,8 +90,8 @@ def Manhattan(_assoc_result, _out, _hg, _pointcol="#778899", _topcol="#FF0000", 
         sys.exit()
 
     # Logistic Regression
-    print(std_MAIN_PROCESS_NAME + "Loading \".assoc.logistic\".\n")
-    print("{0} logistic regression results are given.\n".format(len(_assoc_result)))
+    # print(std_MAIN_PROCESS_NAME + "Loading \".assoc.logistic\".\n")
+    # print("{0} logistic regression results are given.\n".format(len(_assoc_result)))
 
 
     l_TOP_LABEL = []
@@ -117,19 +99,19 @@ def Manhattan(_assoc_result, _out, _hg, _pointcol="#778899", _topcol="#FF0000", 
 
     for i in range(0, len(_assoc_result)):
 
-        print("\n[{0}] : {1}\n".format(i, _assoc_result[i]))
+        # print("\n[{0}] : {1}\n".format(i, _assoc_result[i]))
 
-        t_lr = pd.read_table(_assoc_result[i], sep='\s+', header=0, usecols=["SNP", "P"]).dropna().sort_values("P")
+        t_lr = pd.read_csv(_assoc_result[i], sep='\s+', header=0, usecols=["SNP", "P"]).dropna().sort_values("P")
 
         # MARKER_set = t_lr.iloc[:, 0].tolist()
         # print(std_MAIN_PROCESS_NAME + "Marker Labels are \n{0}".format(MARKER_set))
 
-        print(t_lr.head())
+        # print(t_lr.head())
 
         TOP_LABEL = t_lr.iat[0, 0]
         TOP_LABEL_value = t_lr.iat[0, 1]
 
-        print("\nTop signal is \"{0}(P-value : {1})\"".format(TOP_LABEL, TOP_LABEL_value))
+        # print("\nTop signal is \"{0}(P-value : {1})\"".format(TOP_LABEL, TOP_LABEL_value))
 
 
         temp = -log10(TOP_LABEL_value)
@@ -144,7 +126,7 @@ def Manhattan(_assoc_result, _out, _hg, _pointcol="#778899", _topcol="#FF0000", 
                 _yaxis = (int(temp/5) + 1)*5
 
 
-        print("maximum y-axis is {0}".format(_yaxis))
+        # print("maximum y-axis is {0}".format(_yaxis))
 
         l_TOP_LABEL.append(TOP_LABEL)
         l_yaxis.append(str(_yaxis))
@@ -158,25 +140,24 @@ def Manhattan(_assoc_result, _out, _hg, _pointcol="#778899", _topcol="#FF0000", 
 
 
     # hg (Human Genome)
-    _knownGene = os.path.join(p_data, 'known_genes/known_genes_soumya_chr6.hg{0}.txt'.format(_hg))
+    _knownGene = os.path.join(p_data, 'known_genes/known_genes_chr6.hg{0}.txt'.format(_hg))
 
 
-    print("\n")
+    # print("\n")
 
 
     ########## < Plotting Manhattan > ##########
 
-    print(std_MAIN_PROCESS_NAME + "Plotting Manhattan.\n")
+    # print(std_MAIN_PROCESS_NAME + "Plotting Manhattan.\n")
 
     command = [_p_Rscript, os.path.join(p_src, "manhattan_HLA_HATK.R"),
                export_ar, _out,
                _pointcol, _pointsize, _topcol,
                _min_pos, _max_pos, export_TOP_LABEL, export_yaxis, _yaxis_unit,
-               _knownGene, p_src]
+               _knownGene, p_src, '> {}'.format(_out+'.log')]
 
     command = ' '.join(command)
-    print(command)
-
+    # print(command)
     os.system(command)
 
 

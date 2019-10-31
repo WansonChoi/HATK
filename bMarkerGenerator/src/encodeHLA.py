@@ -25,9 +25,12 @@ genepos_hg = {"18": {"A": 30018226, "C": 31344505, "B": 31429628, "DRB1": 326545
 genepos_hg_previous = {"18": {"A": 30019970, "C": 31346171, "B": 31431272, "DRB1": 32660042, "DQA1": 32716284, "DQB1": 32739039,
                               "DPA1": 33145064, "DPB1": 33157346}}
 
+# Patterns
+p_1field = re.compile(r'\w+\*\d{2,3}')
 
 
-def encodeHLA(_CHPED, _OUTPUT, _hg="18", __asSmallLetter=True, __addDummyMarker=True, __previous_version=False):
+def encodeHLA(_CHPED, _OUTPUT, _hg="18", __asSmallLetter=True, __addDummyMarker=False, __previous_version=False,
+              __get_1field=False):
 
 
 
@@ -143,7 +146,6 @@ def encodeHLA(_CHPED, _OUTPUT, _hg="18", __asSmallLetter=True, __addDummyMarker=
 
         HLA_allele_sets = {HLA_names[i]: [] for i in range(0, len(HLA_names))}
 
-        p_1field = re.compile(r'\w+\*\d{2,3}')
 
         with open(_CHPED, 'r') as f_chped:
 
@@ -177,14 +179,17 @@ def encodeHLA(_CHPED, _OUTPUT, _hg="18", __asSmallLetter=True, __addDummyMarker=
                         if al1 not in HLA_allele_sets[HLA_names[i]]:
                             HLA_allele_sets[HLA_names[i]].append(al1)
 
-                        m = p_1field.match(al1)
 
-                        if m:
+                        if __get_1field:
 
-                            al1_1field = m.group()
+                            m = p_1field.match(al1)
 
-                            if al1_1field not in HLA_allele_sets[HLA_names[i]]:
-                                HLA_allele_sets[HLA_names[i]].append(al1_1field)
+                            if m:
+
+                                al1_1field = m.group()
+
+                                if al1_1field not in HLA_allele_sets[HLA_names[i]]:
+                                    HLA_allele_sets[HLA_names[i]].append(al1_1field)
 
 
                     # Allele 2
@@ -193,14 +198,17 @@ def encodeHLA(_CHPED, _OUTPUT, _hg="18", __asSmallLetter=True, __addDummyMarker=
                         if al2 not in HLA_allele_sets[HLA_names[i]]:
                             HLA_allele_sets[HLA_names[i]].append(al2)
 
-                        m = p_1field.match(al2)
 
-                        if m:
+                        if __get_1field:
 
-                            al2_1field = m.group()
+                            m = p_1field.match(al2)
 
-                            if al2_1field not in HLA_allele_sets[HLA_names[i]]:
-                                HLA_allele_sets[HLA_names[i]].append(al2_1field)
+                            if m:
+
+                                al2_1field = m.group()
+
+                                if al2_1field not in HLA_allele_sets[HLA_names[i]]:
+                                    HLA_allele_sets[HLA_names[i]].append(al2_1field)
 
 
                 count += 1

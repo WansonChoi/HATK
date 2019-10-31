@@ -149,14 +149,37 @@ class HATK_LogisticRegression():
         ################################################################################################################
 
 
-        self.results = Logistic_Regression(_bfile, _out, _phe=kwargs['_phe'], _phe_name=kwargs['_phe_name'],
-                                           _covar=kwargs['_covar'], _covar_name=kwargs['_covar_name'],
-                                           _condition=kwargs['_condition'], _condition_list=kwargs['_condition_list'],
-                                           _ref_allele=kwargs['_ref_allele'])
+        self.result = Logistic_Regression(_bfile, _out, _phe=kwargs['_phe'], _phe_name=kwargs['_phe_name'],
+                                          _covar=kwargs['_covar'], _covar_name=kwargs['_covar_name'],
+                                          _condition=kwargs['_condition'], _condition_list=kwargs['_condition_list'],
+                                          _ref_allele=kwargs['_ref_allele'])
+
+        self.removeIntermediates(_out) # Remove unnecessary files.
 
 
-    def getResults(self):
-        return self.results
+
+
+
+    def getResult(self):
+        return self.result
+
+
+
+    def removeIntermediates(self, _out):
+
+        # (1) *.log
+        if os.path.exists(_out+'.log'):
+            os.system("rm {}".format(_out+'.log'))
+
+        # (2) *.ref
+        if os.path.exists(_out+'.nosex'):
+            os.system("rm {}".format(_out + '.nosex'))
+
+        # (3) *.nosex
+        if os.path.exists(_out+'.ref'):
+            os.system("rm {}".format(_out+'.ref'))
+
+        return 0
 
 
 
@@ -175,9 +198,65 @@ class HATK_OmibusTest():
 
         __aa__ = None
 
-        print(_out)
-        print(_fam)
-        print(kwargs)
+        # print(_out)
+        # print(_fam)
+        # print(kwargs)
+
+
+
+
+        ## _phe and _phe_name
+        if kwargs['_phe'] and os.path.exists(kwargs['_phe']):
+
+            # Phenotype information given.
+
+            if not kwargs['_phe_name']:
+
+                print(std_WARNING_MAIN_PROCESS_NAME + "No phenotype name was given.")
+
+                # '_phe' given but '_phe_name' not given.
+
+                Phe = open(kwargs['_phe'])
+
+                header = Phe.readline().rstrip('\n')
+                header_items = re.split(r'\s+', header)
+
+                if len(header_items) < 3:
+                    # Less than 3 columns
+                    print(std_ERROR_MAIN_PROCESS_NAME + "Given phenotype file must have more than 2 columns.\n"
+                                                        "Please check '--pheno' argument again.")
+                    sys.exit()
+
+                elif len(header_items) == 3:
+
+                    # Setting only one column as phenotype information.
+                    kwargs['_phe_name'] = header_items[-1]
+
+                else:
+                    # More than 3 columns
+                    if not kwargs['_phe_name'] in header_items:
+                        print(
+                            std_ERROR_MAIN_PROCESS_NAME + "No any phenotype name can be found in the columns of the given phenotype file.\n"
+                                                          "Please check '--pheno' and '--pheno-name' arguments again.")
+                        sys.exit()
+
+                Phe.close()
+
+
+        else:
+
+            print(std_ERROR_MAIN_PROCESS_NAME + "To perform Omibus test, phenotype information must be given.")
+
+            if not bool(kwargs['_phe']):
+                print("No phenotype information was given.\n"
+                      "Please check '--pheno' argument again please.")
+                sys.exit()
+            else:
+                print("Given phenotype information('{}') doesn't exist.\n"
+                      "Please check '--pheno' argument again please.".format(kwargs['_phe']))
+                sys.exit()
+
+
 
 
         ## _fam
@@ -208,51 +287,6 @@ class HATK_OmibusTest():
                                                     "Given '*.bgl.phased' file('{}') doesn't exist.\nPlease check '--phased' or '-ph' argument again.\n"
                                                     "Given '*.aa' file('{}') doesn't exist.\nPlease check '--aa' argument again.".format(kwargs['_bgl_phased'], kwargs['_aa']))
                 sys.exit()
-
-
-        ## _phe and _phe_name
-        if kwargs['_phe'] and os.path.exists(kwargs['_phe']):
-
-            # Phenotype information given.
-
-            if not kwargs['_phe_name']:
-
-                # '_phe' given but '_phe_name' not given.
-
-                Phe = open(kwargs['_phe'])
-
-                header = Phe.readline().rstrip('\n')
-                header_items = re.split(r'\s+', header)
-
-                if len(header_items) < 3:
-                    # Less than 3 columns
-                    print(std_ERROR_MAIN_PROCESS_NAME + "Given phenotype file must have more than 2 columns.\n"
-                                                        "Please check '--pheno' argument again.")
-                    sys.exit()
-
-                elif len(header_items) == 3:
-
-                    # Setting only one column as phenotype information.
-                    kwargs['_phe_name'] = header_items[-1]
-
-                else:
-                    # More than 3 columns
-                    if not kwargs['_phe_name'] in header_items:
-                        print(
-                            std_ERROR_MAIN_PROCESS_NAME + "Given phenotype name('{}') can't be found in the columns of the given phenotype file.\n"
-                                                          "Please check '--pheno' and '--pheno-name' arguments again.".format(
-                                kwargs['_phe_name']))
-                        sys.exit()
-
-                Phe.close()
-
-
-        else:
-
-            print(std_ERROR_MAIN_PROCESS_NAME + "To perform Omibus test, phenotype information must be given.\n"
-                                                "Given phenotype information('{}') doesn't exist.\n"
-                                                "Please check '--pheno' argument again please.".format(kwargs['_phe']))
-            sys.exit()
 
 
 
@@ -325,11 +359,11 @@ class HATK_MetaAnalysis():
             print(std_ERROR_MAIN_PROCESS_NAME + "Please check '--assoc-result' argument again.")
             sys.exit()
 
-        self.results = Meta_Analysis(_out, _assoc_result)
+        self.result = Meta_Analysis(_out, _assoc_result)
 
 
-    def getResults(self):
-        return self.results
+    def getResult(self):
+        return self.result
 
 
 
@@ -349,7 +383,7 @@ def Logistic_Regression(_bfile, _out,
 
     ### Argument Processing && Generating Command.
 
-    command = [GLOBAL_p_plink, "--noweb", "--logistic", "--out {0}".format(_out)]
+    command = [GLOBAL_p_plink, "--logistic hide-covar", "--out {0}".format(_out)]
 
     if bool(_bfile):
         command.append("--bfile {0}".format(_bfile))
@@ -375,8 +409,8 @@ def Logistic_Regression(_bfile, _out,
     if not (bool(_from_mb) != bool(_to_mb)): # Exclusive-NOR
         command.append("--from-mb {0} --to-mb {1}".format(_from_mb, _to_mb))
 
-    if bool(_hide_covar):
-        command.append("--hide-covar")
+    # if bool(_hide_covar):
+    #     command.append("--hide-covar")
     if bool(_allow_no_sex):
         command.append("--allow-no-sex")
 
@@ -385,12 +419,16 @@ def Logistic_Regression(_bfile, _out,
     if bool(_chr):
         command.append("--chr {0}".format(_chr))
 
+
+    # Stdout result to log file
+    command.append('1>{LOG} 2>{LOG}'.format(LOG=(_out+'.assoc.logistic.log')))
+
     command = ' '.join(command)
 
 
     ### Conducting Logistic Regression by Plink(v1.9b).
 
-    print(command)
+    # print(command)
     os.system(command)
 
 
@@ -464,7 +502,7 @@ def Omnibus_Test(_fam, _out, _aa, _phe, _phe_name, _covar, _covar_name="NA", _co
         command.append("NA")
 
     command = ' '.join(command)
-    print(command)
+    # print(command)
 
 
     if not os.system(command):

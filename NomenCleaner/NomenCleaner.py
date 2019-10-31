@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 
-
 import os, sys, re
 import argparse, textwrap
 import pandas as pd
-from collections import OrderedDict
+
 
 ########## < Core Global Variables > ##########
 
@@ -12,24 +11,27 @@ std_MAIN_PROCESS_NAME = "\n[%s]: " % (os.path.basename(__file__))
 std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % (os.path.basename(__file__))
 std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % (os.path.basename(__file__))
 
+
 HLA_names = ["A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1"]
 header_ped = ["FID", "IID", "PID", "MID", "Sex", "Phe"]
+
+# Patterns
+p_Suffix = re.compile(r'.+[A-Z]$')
+p_Prefix = re.compile(r'^\w+\*')
+
 
 
 class HATK_NomenCleaner(object):
 
-    def __init__(self, _iat, _imgt, _out, *args, **kwargs):
+    def __init__(self, _hped, _hat, _imgt, _out, *args, **kwargs):
 
         """
-
-        args[0:3] := _args.hped, _args.hped_G, _args.hped_P
-        args[3:10] := _args.oneF, _args.twoF, _args.threeF, _args.fourF, _args.G_group, _args.P_group, _args.old_format
 
         """
 
 
-        if not _iat:
-            print(std_ERROR_MAIN_PROCESS_NAME + "Please check '-iat' argument again.")
+        if not _hat or not os.path.exists(_hat):
+            print(std_ERROR_MAIN_PROCESS_NAME + "Please check '-hat' argument again.")
             sys.exit()
 
         if not _imgt:
@@ -41,988 +43,760 @@ class HATK_NomenCleaner(object):
             sys.exit()
 
 
+        oneF = args[0]
+        twoF = args[1]
+        threeF = args[2]
+        fourF = args[3]
+        Ggroup = args[4]
+        Pgroup = args[5]
 
-        args_hped = args[0]
-        args_hped_G = args[1]
-        args_hped_P = args[2]
-
-        oneF = args[3]
-        twoF = args[4]
-        threeF = args[5]
-        fourF = args[6]
-        G_group = args[7]
-        P_group = args[8]
-        old_format = args[9]
+        if not (oneF or twoF or threeF or fourF or Ggroup or Pgroup):
+            fourF = True
 
 
-        self.p_hped = -1
-        self.p_hped_descriptor = -1
-        self.FILED_FORMAT = -1
-
-
-        ### Determing which type of hped is given? ('hped', 'hped_G' or 'hped_P')
-        if args_hped:
-            self.p_hped = args_hped
-            self.p_hped_descriptor = 1
-        elif args_hped_G:
-            self.p_hped = args_hped_G
-            self.p_hped_descriptor = 2
-        elif args_hped_P:
-            self.p_hped = args_hped_P
-            self.p_hped_descriptor = 3
-        else:
-            print(std_ERROR_MAIN_PROCESS_NAME + "Please check '--hped', '--hped_Ggroup', and '--hped_Pgroup' again.")
-            sys.exit()
-
-
-        ### Determing which output field format.
-        if oneF:
-            self.FILED_FORMAT = 1
-        elif twoF:
-            self.FILED_FORMAT = 2
-        elif threeF:
-            self.FILED_FORMAT = 3
-        elif fourF:
-            self.FILED_FORMAT = 4
-        elif G_group:
-            self.FILED_FORMAT = 5
-        elif P_group:
-            self.FILED_FORMAT = 6
-        elif old_format:
-            self.FILED_FORMAT = 0
-        else:
-            print(std_ERROR_MAIN_PROCESS_NAME + "Please check '--1field', ..., '--4field', '--G-group', '--P-group', and '--old-format' arguments.")
-            sys.exit()
-
-
-
-        self.chped = NomenCleaner(self.p_hped, self.p_hped_descriptor, _iat, _imgt, _out, self.FILED_FORMAT,
+        self.chped = NomenCleaner(_hped, _hat, _imgt, _out,
+                                  __oneF=oneF, __twoF=twoF, __threeF=threeF, __fourF=fourF, __Ggroup=Ggroup, __Pgroup=Pgroup,
                                   __f_NoCaption=kwargs["__f_NoCaption"], __leave_NotFound=kwargs["__leave_NotFound"])
 
 
-    def getResults(self):
+    def getResult(self):
         return self.chped
 
 
 
+def NomenCleaner(_hped, _hat, _imgt, _out, __f_NoCaption=False, __leave_NotFound=False, **kwargs):
 
 
-def NomenCleaner(_hped, _hped_descriptor, _iat, _imgt, _out, _field_format, __f_NoCaption=False,
-                 __leave_NotFound=False):
+    ##### < Output Format > #####
 
-    """
-    """
+    FIELD = ''
 
-    """
-    [Input]
-    `_hped_descriptor` := 1 (standard 4-field allele),
-                          2 (G-group allele),
-                          3 (P-group allele)
-                          
-    [Output]
-    `_field_format` := 
-        1 (1-field)
-        2 (2-field)
-        3 (3-field)
-        4 (4-field)
-        5 (G-group)
-    
-    """
-
-
-
-    ########## < Core Variables > ##########
-
-    __HPED__ = None
-    __IAT__ = None
-
-    ### Intermediate path.
-    _out = _out if not _out.endswith('/') else _out.rstrip('/')
-
-    if bool(os.path.dirname(_out)):
-        INTERMEDIATE_PATH = os.path.dirname(_out)
-        os.makedirs(INTERMEDIATE_PATH, exist_ok=True)
+    if kwargs['__oneF']:
+        OUTPUT_FORMAT = 1
+        FIELD = 'Maximum 1 field'
+    elif kwargs['__twoF']:
+        OUTPUT_FORMAT = 2
+        FIELD = 'Maximum 2 fields'
+    elif kwargs['__threeF']:
+        OUTPUT_FORMAT = 3
+        FIELD = 'Maximum 3 fields'
+    elif kwargs['__fourF']:
+        OUTPUT_FORMAT = 4
+        FIELD = 'Maximum 4 fields'
+    elif kwargs['__Ggroup']:
+        OUTPUT_FORMAT = 5
+        FIELD = 'G code'
+    elif kwargs['__Pgroup']:
+        OUTPUT_FORMAT = 6
+        FIELD = 'P code'
     else:
-        INTERMEDIATE_PATH = "./"
+        # Default mode
+        OUTPUT_FORMAT = 0
 
 
+    if OUTPUT_FORMAT != 0:
+        print(std_MAIN_PROCESS_NAME + "Generating CHPED with {} HLA alleles.".format(FIELD))
 
 
-    ########## < [1] Loading "*.(h)ped" file > ##########
+    ##### < Loading Data > #####
 
-    __HPED__ = pd.read_csv(_hped, sep='\t', header=None, dtype=str,
-                        names=header_ped + [item + "_" + str(i) for item in HLA_names for i in range(1, 3)]).set_index((header_ped))
+    # *.hped
+    __HPED__ = pd.read_csv(_hped, sep='\s+', header=None, dtype=str)
+    # print("__HPED__ :\n{}\n".format(__HPED__.head()))
 
-    # print(std_MAIN_PROCESS_NAME + "Loaded \"*.ped\" file.")
-    # print(__HPED__.head())
+    # *.hat
+    __HAT__ = pd.read_csv(_hat, sep='\s+', header=0, dtype=str, index_col=0)
+    # print("__HAT__ :\n{}\n".format(__HAT__.head()))
 
+    d__HAT__ = {HLA_names[i]: __HAT__.loc[HLA_names[i], :] for i in range(len(HLA_names))}
 
+    # for k,v in d__HAT__.items():
+    #     print("HLA : {}\n{}\n".format(k, v.head()))
 
 
-    ########## < [2] Loading "*.iat" file > ##########
 
-    __IAT__ = pd.read_csv(_iat, sep='\t', header=0, dtype=str)
-    # print(std_MAIN_PROCESS_NAME + "Loaded \"*.iat\" file.\n")
-    # print(__IAT__.head())
+    ##### < Main iteration > #####
 
-
-    ## Dividing `__IAT__` by HLA
-
-    df_AllelebyHLA = __IAT__.loc[:, "Allele"].str.split(r'\*', expand=True)
-    df_AllelebyHLA.columns = ["HLA", "Allele"]
-
-    __IAT__ = pd.concat([df_AllelebyHLA, __IAT__.loc[:, ["G_group", "P_group"]]], axis=1).set_index('HLA')
-    # print(__IAT__.head())
-
-
-    __IAT_dict__ = {HLA_names[i]: __IAT__.loc[HLA_names[i], :] for i in range(0, len(HLA_names))}
-
-    # print("\nIAT divided by HLA gene names.\n")
-    # print(__IAT_dict__["C"].head(10))
-
-
-
-
-    ########## < [3] Searching given HLA alleles in *.iat file. > ##########
-
-
-    count = 0
-    l_rows_Searched = []
-    l_rows_Check = []
-
-    for t_row in __HPED__.itertuples():
-
-        """
-        t_row[0] := index (ex. ('WTCCC125636', 'WTCCC125636', '0', '0', '0', '-9'))
-        t_row[1] := A_1 (ex. '0101');   t_row[2] := A_2 (ex. '0101');
-        t_row[3] := B_1 (ex. '4402');   t_row[4] := B_1 (ex. '5701')        
-        ...
-        
-        """
-        # print(t_row)
-
-        l_t_HLAs = []
-        l_t_Check = []
-
-        for j in range(0, len(HLA_names)):
-
-            t_al1 = t_row[2*j+1]
-            t_al2 = t_row[2*j+2]
-
-            ### Searching given alleles in *.iat file.
-
-            # print("{} and {}".format(t_al1, t_al2))
-
-            ## al1
-            if t_al1 != '0':
-                t_new_allele1 = SearchIAT(t_al1, HLA_names[j], __IAT_dict__[HLA_names[j]], _hped_descriptor)
-            else:
-                t_new_allele1 = t_al1   # Just let it be.
-
-
-            ## al2
-            if t_al2 != '0':
-                t_new_allele2 = SearchIAT(t_al2, HLA_names[j], __IAT_dict__[HLA_names[j]], _hped_descriptor)
-            else:
-                t_new_allele2 = t_al2
-
-
-            ### Searched HLA alleles
-            l_t_HLAs.append(t_new_allele1)
-            l_t_HLAs.append(t_new_allele2)
-
-
-            ### Check whether Searched or not.
-
-            ## al1
-            if t_new_allele1 == "-1":
-                # Not found in *.iat file
-                l_t_Check.append(t_al1)
-            else:
-                l_t_Check.append('F') # 'F'ound in *.iat
-
-            ## al2
-            if t_new_allele2 == "-1":
-                # Not found in *.iat file
-                l_t_Check.append(t_al2)
-            else:
-                l_t_Check.append('F') # 'F'ound in *.iat
-
-
-        # print(l_t_HLAs)
-        l_rows_Searched.append(l_t_HLAs)
-        l_rows_Check.append(l_t_Check)
-
-        count += 1
-        # if count > 5 : break
-
-
-    ### DataFrame of Searched alleles.
-    df_IAT_Searched = pd.DataFrame(l_rows_Searched)
-    # print(df_IAT_Searched.head())
-    # df_IAT_Searched.to_csv(_out+'.justSearched.chped', sep='\t', header=False, index=False)
-
-
-    ### DataFrame of marks of searched alleles.
-    df_Check_Searched = pd.DataFrame(l_rows_Check)
-    # print(df_Check_Searched.head())
-
-
-
-    ########## < [4] Main Transformation > ##########
-
-    ### Preparing Hashtable of mapping rule
-
-    __IAT_dict2__ = {}
-
-    col_from = -1
-    col_to = -1
-
-    if _hped_descriptor == 1:
-
-        ## Input hped : Standard 4-field
-        col_from = 0
-
-        if _field_format <= 4:
-            # to 4-field
-            pass   # No need to do transformation (4-field to 4-field)
-        elif _field_format == 5:
-            # to G-group
-            col_to = 1
-        elif _field_format == 6:
-            # to P-group
-            col_to = 2
-
-
-    elif _hped_descriptor == 2:
-
-        ## Input hped : G-group
-        col_from = 1
-
-        if _field_format <= 4:
-            col_to = 0
-        elif _field_format == 5:
-            # to G-group
-            pass   # No need to do transformation (G-group to G-group)
-        elif _field_format == 6:
-            # to P-group
-            col_to = 2
-
-
-    elif _hped_descriptor == 3:
-
-        ## Input hped : P-group
-        col_from = 2
-
-        if _field_format <= 4:
-            col_to = 0
-        elif _field_format == 5:
-            # to G-group
-            col_to = 1
-        elif _field_format == 6:
-            # to P-group
-            pass   # No need to do transformation (P-group to P-group)
-
-
-    if col_from != -1 and col_to != -1:
-
-        for i in range(0, len(HLA_names)):
-
-            from_which = "Allele" if _hped_descriptor == 1 else "G_group" if _hped_descriptor == 2 else "P_group"
-
-            df_temp = __IAT_dict__[HLA_names[i]].drop_duplicates(from_which)
-            # print(df_temp.head())
-
-            sr_from = df_temp.iloc[:, col_from]
-            sr_to = df_temp.iloc[:, col_to]
-
-            sr_to.index = sr_from
-
-            __IAT_dict2__[HLA_names[i]] = sr_to.to_dict()
-
-    # print("__IAT_dict2__")
-    # print(__IAT_dict2__)
-
-
-    ### Transforming HLA alleles searched in "*.iat" (`df_IAT_Searched`) to (1) standard 4-field, (2) G-group, or (2) P-group allele.
-
-    df_Transformed = Main_Transformation(df_IAT_Searched, __IAT_dict2__, _f_NoCaption=__f_NoCaption)
-    df_Transformed.index = __HPED__.index
-    # print("Completely Transformed dataframe.")
-    # print(df_Transformed.head())
-
-
-
-    ########## < [5] Final Trimming > ##########
-
-    ### Trimming out `df_Transformed`(standard 4-field) (1-field, 2-field, 3-field, or old-format(MakeReference)).
-
-    if _field_format < 4:
-
-        if _field_format == 0:
-            ## Old-format (for compatibility with original version of MakeReference(by S. Jia))
-            p_old_format = re.compile(r'^(\w+\*)?(\d{2,3}:){0,1}\d{2,3}[A-Z]?')
-
-            df_Transformed = df_Transformed.applymap(lambda x: p_old_format.match(x).group() if bool(p_old_format.match(x)) else x).applymap(lambda x : re.sub(pattern=r'\*', string=x, repl=':'))
-
-
-        elif _field_format == 1:
-            ## 1-field
-            p_1field = re.compile(r'^(\w+\*)?\d{2,3}')
-
-            df_Transformed = df_Transformed.applymap(lambda x: p_1field.match(x).group() if bool(p_1field.match(x)) else x)
-
-
-        elif _field_format == 2:
-            ## 2-field
-            p_2field = re.compile(r'^(\w+\*)?(\d{2,3}:){0,1}\d{2,3}[A-Z]?')
-
-            df_Transformed = df_Transformed.applymap(lambda x : p_2field.match(x).group() if bool(p_2field.match(x)) else x)
-
-
-        elif _field_format == 3:
-            ## 3-field
-            p_3field = re.compile(r'^(\w+\*)?(\d{2,3}:){0,2}\d{2,3}[A-Z]?')
-
-            df_Transformed = df_Transformed.applymap(lambda x : p_3field.match(x).group() if bool(p_3field.match(x)) else x)
-
-
-        # print(df_Transformed.head())
-        # df_Transformed.to_csv(_out+".tEst.{}.chped".format(MakeSuffixInfo(_imgt, _field_format)), sep='\t', header=False, index=True)
-
-
-
-
-    ### Integrating Not found allele(novel allele) ... Yang requested.
+    f_chped = open(_out+'.chped', 'w')
+    f_chped_log = open(_out+'.chped.log', 'w')
 
     count = 0
 
-    l_rows_merged = []
+    for eachRow in __HPED__.itertuples():
 
-    for row in df_Check_Searched.itertuples():
+        # print(eachRow)
 
-        l_row = []
+        [t_FID, t_IID] = eachRow[1:3]
 
-        for j in range(0, df_Transformed.shape[1]):
+        t_alleles = eachRow[7:]
+        t_alleles = list(map(lambda x : p_Prefix.sub(string=x, repl=''), t_alleles)) # Ripping off gene prefix
+        # print(t_alleles)
 
-            idx = j + 1
+        ### [1] Allele conversion
 
-            t_allele = None
+        l_alleles_row = []
 
-            if row[idx] == 'F':
-                t_allele = df_Transformed.iat[count, j]
-            else:
-                if __leave_NotFound:
-                    t_allele = row[idx]
-                else:
-                    t_allele = "0"
-
-            l_row.append(t_allele)
-
-        l_rows_merged.append(l_row)
-
-        count += 1
-
-    __RETURN__ = pd.DataFrame(l_rows_merged, index=__HPED__.index)
-    # print(__RETURN__.head())
-
-
-    ### Writing final output(*.chped)
-    __OUT__ = _out+".{}.chped".format(MakeSuffixInfo(_imgt, _field_format))
-    __RETURN__.to_csv(__OUT__, sep='\t', header=False, index=True)
-
-
-
-    return __OUT__
-
-
-
-def CHECK_DIGITS(_hla_name, _the_allele, _IAT_Allelelist):
-
-    """
-
-    Perform this function assuming given `_the_allele` neither is captioned or has double-colon.
-
-    (2018. 6. 29.)
-    More classification conditions are added.
-
-    (2018. 7. 23.)
-    I found the way to deal with a Tag has not been introduced yet.
-    Now it is introduced.
-
-    """
-
-    ### Step1. Checking suffix character (some single character tagged along with the given allele).
-    p_tag = re.compile(r'.+[A-Z]$')
-    hasTag = p_tag.match(_the_allele)
-
-    if hasTag:
-        t_name = _the_allele[:-1]
-        t_name_tag = _the_allele[-1]
-    else:
-        t_name = _the_allele
-        t_name_tag = -1
-
-
-
-    ### Step2. main digit checking part.
-
-    if len(t_name) == 2:
-        # 1-field / 2-digits
-        return t_name[0:2] + (t_name_tag if t_name_tag != -1 else "")
-
-    elif len(t_name) == 3:
-        # 1-field / 3-digits
-        return t_name[0:3] + (t_name_tag if t_name_tag != -1 else "")
-
-    elif len(t_name) == 4:
-        # 2 + 2 (+C) = 4
-        return ':'.join([t_name[0:2], t_name[2:4]]) + (t_name_tag if t_name_tag != -1 else "")
-
-    elif len(t_name) == 5:
-        # (1) 2 + 3 (+C) = 5
-        # (2) 3 + 2 = 5
-
-        p = re.compile('\:'.join([t_name[0:2], t_name[2:5]]) + (t_name_tag if t_name_tag != -1 else ""))
-        Found_Any = _IAT_Allelelist.str.match(p).any()
-
-        return (':'.join([t_name[0:2], t_name[2:5]]) + (t_name_tag if t_name_tag != -1 else "")) if Found_Any else \
-            (':'.join([t_name[0:3], t_name[3:5]]) + (t_name_tag if t_name_tag != -1 else ""))
-
-    elif len(t_name) == 6:
-        # (1) 2 + 2 + 2 (+C)
-        # (2) 3 + 3 (+C)
-
-        p = re.compile('\:'.join([t_name[0:2], t_name[2:4], t_name[4:6]]) + (t_name_tag if t_name_tag != -1 else ""))
-        Found_Any = _IAT_Allelelist.str.match(p).any()
-
-        return (':'.join([t_name[0:2], t_name[2:4], t_name[4:6]]) + (
-            t_name_tag if t_name_tag != -1 else "")) if Found_Any else \
-            (':'.join([t_name[0:3], t_name[3:6]]) + (t_name_tag if t_name_tag != -1 else ""))
-
-    elif len(t_name) == 7:
-        # (1) 2 + 3 + 2 (+C) = 7
-        # (2) 2 + 2 + 3 (+C) = 7
-        # (3) 3 + 2 + 2 (+C) = 7
-
-        p1 = re.compile('\:'.join([t_name[0:2], t_name[2:5], t_name[5:7]]) + (t_name_tag if t_name_tag != -1 else ""))
-        Found_Any1 = _IAT_Allelelist.str.match(p1).any()
-
-        if not Found_Any1:
-            # Not the case of "(1) 2 + 3 + 2 = 7"
-            p2 = re.compile(
-                '\:'.join([t_name[0:2], t_name[2:4], t_name[4:7]]) + (t_name_tag if t_name_tag != -1 else ""))
-            Found_Any2 = _IAT_Allelelist.str.match(p2).any()
-
-            if not Found_Any2:
-                # Not the case of "(2) 2 + 2 + 3 = 7"
-                p3 = re.compile(
-                    '\:'.join([t_name[0:3], t_name[3:5], t_name[5:7]]) + (t_name_tag if t_name_tag != -1 else ""))
-                Found_Any3 = _IAT_Allelelist.str.match(p3).any()
-
-                if not Found_Any3:
-                    # Not the case of "(3) 3 + 2 + 2 = 7"
-                    # Not Found
-                    return "-1"
-                else:
-                    # The case of "(3) 3 + 2 + 2 = 7"
-                    return ':'.join([t_name[0:3], t_name[3:5], t_name[5:7]]) + (t_name_tag if t_name_tag != -1 else "")
-            else:
-                # The case of "(2) 2 + 2 + 3 = 7"
-                return ':'.join([t_name[0:2], t_name[2:4], t_name[4:7]]) + (t_name_tag if t_name_tag != -1 else "")
-        else:
-            # The case of "(1) 2 + 3 + 2 = 7"
-            return ':'.join([t_name[0:2], t_name[2:5], t_name[5:7]]) + (t_name_tag if t_name_tag != -1 else "")
-
-        # return ':'.join([t_name[0:2], t_name[2:5], t_name[5:7]]) if Found_Any else \
-        #     ':'.join([t_name[0:3], t_name[3:5], t_name[5:7]])
-
-    elif len(t_name) == 8:
-        # (1) 2 + 2 + 2 + 2
-        # (2) 3 + 2 + 3
-        # (3) 3 + 3 + 2
-
-        p1 = re.compile(
-            '\:'.join([t_name[0:2], t_name[2:4], t_name[4:6], t_name[6:8]]) + (t_name_tag if t_name_tag != -1 else ""))
-        Found_Any1 = _IAT_Allelelist.str.match(p1).any()
-
-        if not Found_Any1:
-            # Not the case of "(1) 2 + 2 + 2 + 2"
-            p2 = re.compile(
-                '\:'.join([t_name[0:3], t_name[3:5], t_name[5:8]]) + (t_name_tag if t_name_tag != -1 else ""))
-            Found_Any2 = _IAT_Allelelist.str.match(p2).any()
-
-            if not Found_Any2:
-                # Not the case of "(2) 3 + 2 + 3"
-                p3 = re.compile(
-                    '\:'.join([t_name[0:3], t_name[3:5], t_name[5:8]]) + (t_name_tag if t_name_tag != -1 else ""))
-                Found_Any3 = _IAT_Allelelist.str.match(p3).any()
-
-                if not Found_Any3:
-                    return str(-1)
-
-                else:
-                    return ':'.join([t_name[0:3], t_name[3:5], t_name[5:8]]) + (t_name_tag if t_name_tag != -1 else "")
-            else:
-                return ':'.join([t_name[0:3], t_name[3:5], t_name[5:8]]) + (t_name_tag if t_name_tag != -1 else "")
-        else:
-            return ':'.join([t_name[0:2], t_name[2:4], t_name[4:6], t_name[6:8]]) + (
-                t_name_tag if t_name_tag != -1 else "")
-
-    elif len(t_name) == 9:
-        # (1) 2 + 3 + 2 + 2
-        # (2) 3 + 2 + 2 + 2
-
-        p = re.compile(
-            '\:'.join([t_name[0:2], t_name[2:5], t_name[5:7], t_name[7:9]]) + (t_name_tag if t_name_tag != -1 else ""))
-        Found_Any = _IAT_Allelelist.str.match(p).any()
-
-        return (':'.join([t_name[0:2], t_name[2:5], t_name[5:7], t_name[7:9]]) + (
-            t_name_tag if t_name_tag != -1 else "")) if Found_Any else \
-            (':'.join([t_name[0:3], t_name[3:5], t_name[5:7], t_name[7:9]]) + (t_name_tag if t_name_tag != -1 else ""))
-
-    elif len(t_name) == 10:
-        # (1) 3 + 3 + 2 + 2
-
-        return ':'.join([t_name[0:3], t_name[3:6], t_name[6:8], t_name[8:10]]) + (
-            t_name_tag if t_name_tag != -1 else "")
-
-
-def CHECK_DIGITS_PorGgroup(_hla_name, _the_allele, _IAT_Allelelist, _ped_descriptor):
-    """
-
-    ### < G-group > ###
-
-    # 2 + 2 (+C) = 4
-    - 46:51Q
-
-    # 2 + 3 (+C) = 5
-    - 08:124, 07:534
-    - 01:247N, 01:250N
-
-    # 3 + 2 = 5
-    - 255:01, 527:01, 632:01, 137:01, 338:01
-
-    # 2 + 2 + 2 (+C) = 6
-    - 01:01:02
-    - 01:01:01G
-
-    # 2 + 3 + 2 = 7
-    - 01:146:01
-    - 06:127:01G
-
-    # 2 + 2 + 3 = 7
-    - 02:01:100, 02:01:101
-
-    # 3 + 2 + 2 = 7
-    - 155:01:01
-
-
-    ### < P-group > ###
-
-    # 2 + 2 = 4
-    - 10:24, 11:04
-    - 01:01P, 02:01P
-
-    # 2 + 3 = 5
-    - 14:110, 14:139
-    - 01:146P, 02:101P, 02:610P
-
-    # 3 + 2 = 5
-    - 100:01, 119:01
-    - 155:01P, 279:01P
-
-    # 2 + 2 + 2 = 6
-    - 30:12:01 (2018. 7. 5) I found this case lol!
-
-
-    """
-
-
-    # check whether some single character is tagged along with the given allele.
-    p_tag = re.compile(r'.+[A-Z]$')
-
-    hasTag = p_tag.match(_the_allele)
-
-    if hasTag:
-        t_name = _the_allele[:-1]
-        t_name_tag = _the_allele[-1]
-    else:
-        t_name = _the_allele
-        t_name_tag = -1
-
-    # print("\n[CHECK_DIGITS_PorG] : {0} and {1}".format(t_name, t_name_tag))
-
-    ### In case of "G-group"
-    if _ped_descriptor == 2:
-
-        # Main matching job
-
-        if len(t_name) == 4:
-            # (1) 2 + 2 (+C) = 4
-            return ':'.join([t_name[0:2], t_name[2:4]]) + (t_name_tag if t_name_tag != -1 else "")
-
-        elif len(t_name) == 5:
-            # (1) 2 + 3 (+C) = 5
-            # (2) 3 + 2 = 5
-
-            p = re.compile('\:'.join([t_name[0:2], t_name[2:5]]) + (t_name_tag if t_name_tag != -1 else ""))
-            Found_Any = _IAT_Allelelist.str.match(p).any()
-
-            return (':'.join([t_name[0:2], t_name[2:5]]) + (t_name_tag if t_name_tag != -1 else "")) if Found_Any else \
-                (':'.join([t_name[0:3], t_name[3:5]]) + (t_name_tag if t_name_tag != -1 else ""))
-
-        elif len(t_name) == 6:
-            # (1) 2 + 2 + 2 (+C) = 6
-
-            return ':'.join([t_name[0:2], t_name[2:4], t_name[4:6]]) + (t_name_tag if t_name_tag != -1 else "")
-
-        elif len(t_name) == 7:
-            # (1) 2 + 3 + 2 = 7
-            # (2) 2 + 2 + 3 = 7
-            # (3) 3 + 2 + 2 = 7
-
-            p1 = re.compile(
-                '\:'.join([t_name[0:2], t_name[2:5], t_name[5:7]]) + (t_name_tag if t_name_tag != -1 else ""))
-            Found_Any1 = _IAT_Allelelist.str.match(p1).any()
-
-            if not Found_Any1:
-                # Not the case of "(1) 2 + 3 + 2 = 7"
-                p2 = re.compile(
-                    '\:'.join([t_name[0:2], t_name[2:4], t_name[4:7]]) + (t_name_tag if t_name_tag != -1 else ""))
-                Found_Any2 = _IAT_Allelelist.str.match(p2).any()
-
-                if not Found_Any2:
-                    # Not the case of "(2) 2 + 2 + 3 = 7"
-                    p3 = re.compile(
-                        '\:'.join([t_name[0:3], t_name[3:5], t_name[5:7]]) + (t_name_tag if t_name_tag != -1 else ""))
-                    Found_Any3 = _IAT_Allelelist.str.match(p3).any()
-
-                    if not Found_Any3:
-                        return "-1"
-
-                    else:
-                        return ':'.join([t_name[0:3], t_name[3:5], t_name[5:7]]) + (
-                            t_name_tag if t_name_tag != -1 else "")
-                else:
-                    return ':'.join([t_name[0:2], t_name[2:4], t_name[4:7]]) + (t_name_tag if t_name_tag != -1 else "")
-            else:
-                return ':'.join([t_name[0:2], t_name[2:5], t_name[5:7]]) + (t_name_tag if t_name_tag != -1 else "")
-
-        else:
-            # print("\nNo match for G_group.\n")
-            return "-1"
-
-
-    ### In case of "P-group"
-    elif _ped_descriptor == 3:
-
-        # Main Matching Job
-
-        if len(t_name) == 4:
-            # 2 + 2 = 4
-            return ':'.join([t_name[0:2], t_name[2:4]]) + (t_name_tag if t_name_tag != -1 else "")
-
-        elif len(t_name) == 5:
-            # 2 + 3 = 5
-            # 3 + 2 = 5
-
-            p = re.compile('\:'.join([t_name[0:2], t_name[2:5]]) + (t_name_tag if t_name_tag != -1 else ""))
-            Found_Any = _IAT_Allelelist.str.match(p).any()
-
-            return (':'.join([t_name[0:2], t_name[2:5]]) + (t_name_tag if t_name_tag != -1 else "")) if Found_Any else (
-                    ':'.join([t_name[0:3], t_name[3:5]]) + (t_name_tag if t_name_tag != -1 else ""))
-
-        elif len(t_name) == 6:
-            # 2 + 2 + 2
-            # 3 + 3 ... Not Found.
-
-            return ':'.join([t_name[0:2], t_name[2:4], t_name[4:6]]) + (t_name_tag if t_name_tag != -1 else "")
-
-
-        else:
-            # print("\nNo match for P_group.\n")
-            return "-1"
-
-
-def Find_1st_Allele(_the_allele, _IAT_Allelelist):
-
-    """
-    In case where given allele has double-colon(implying its digits are determined) but not in a form of complete allele name in "Allelelist.txt" file,
-    then i will classify this allele as "Non-deterministic 4-field allele".
-
-    So, that incomplete allele("Non-deterministic 4-field allele") will be matched by "re.match" function and return 1st element.
-    """
-
-
-    if 2 <= len(_the_allele) <= 5:
-
-        """
-        (2018. 7. 23.)
-        This classification block was introduced as I found some unproper exceptions.
-        For example, When the allele "B*1501" is given, the transformed result is "15:170" not "B*15:17:01:01".
-        It means digit information isn't fully considered in this function, i.e. this part which makes regular expression pattern.
-
-        As a solution, I decided to add more classification related to `len(_the_allele)`.
-        """
-
-        Flag_Found = _IAT_Allelelist.str.match(str(_the_allele) + ":")
-
-        if Flag_Found.any():
-            return _IAT_Allelelist.loc[Flag_Found].iat[0]
-        else:
-            # One more time
-            Flag_Found = _IAT_Allelelist.str.match(str(_the_allele))
-
-            if Flag_Found.any():
-                return _IAT_Allelelist.loc[Flag_Found].iat[0]
-            else:
-                return 0
-
-
-    else:
-        p = re.compile(str(_the_allele))
-        # Flag_Found = _IAT_Allelelist.apply(lambda x: bool(p.match(string=x)))
-        Flag_Found = _IAT_Allelelist.str.match(str(_the_allele))
-
-        if Flag_Found.any():
-            return _IAT_Allelelist.loc[Flag_Found].iat[0]
-        else:
-            return 0
-
-
-def Find_1st_Allele_PorGgroup(_the_allele, _IAT_Allelelist, _ped_descriptor):
-
-
-    # in case the allele is not found in the table, return its original value
-    Flag_Found = _IAT_Allelelist.str.match(_the_allele)
-
-    if Flag_Found.any():
-        return _IAT_Allelelist.loc[Flag_Found].iat[0]
-    else:
-        return 0
-
-    # # (2018. 7. 4.) Found result `Found_df` could be 'str' object. So, you shouldn't use ".iat" function.
-    #
-    # # return str(Found_df.iat[0]) if len(Found_df) > 0 else "0"
-    #
-    # if isinstance(Found_df, pd.Series):
-    #     # ex. "01:01:01G" => ["01:01:01:01", "01:01:01:02N", "01:01:01:03", ..., "01:253"]
-    #     # Multiple results retured as "Series" object.
-    #     return str(Found_df.iat[0])
-    # elif isinstance(Found_df, str):
-    #     return Found_df
-    # else:
-    #     return "0"
-
-
-# def Main_Transformation(_single_allele, _hla_name, _df_IAT_Allelelist, _ped_descriptor):
-#     """
-#     Main Processes which were located in main for loop. They are now moved to this function.
-#     From now on, those main processes will be preformed to single allele.
-#     """
-#
-#     _IAT_Allelelist = _df_IAT_Allelelist.index.tolist()
-#
-#     ### [1] Checking whether given allele is captioned or not.
-#
-#     _al_filetered1 = isCaptioned(_single_allele, _hla_name)
-#
-#     ### [2] Checking whether given allele has double-colon or not.
-#
-#     _al_filetered2 = ""
-#
-#     if _ped_descriptor == 1:
-#         # When given ped file is standard 4-field allele(where `_ped_descriptor` == 1).
-#         _al_filetered2 = CHECK_DIGITS(_hla_name, _al_filetered1, _IAT_Allelelist) if not hasDoubleColon(
-#             _al_filetered1) else _al_filetered1
-#
-#     elif _ped_descriptor == 2:
-#         # When given ped file is P or G-group allele(where `_ped_descriptor` == 2 or 3).
-#         _al_filetered2 = CHECK_DIGITS_PorGgroup(_hla_name, _al_filetered1, _df_IAT_Allelelist.loc[:, "G_group"],
-#                                                 _ped_descriptor) if not hasDoubleColon(
-#             _al_filetered1) else _al_filetered1
-#
-#     elif _ped_descriptor == 3:
-#         _al_filetered2 = CHECK_DIGITS_PorGgroup(_hla_name, _al_filetered1, _df_IAT_Allelelist.loc[:, "P_group"],
-#                                                 _ped_descriptor) if not hasDoubleColon(
-#             _al_filetered1) else _al_filetered1
-#
-#     ### [3] Digit-Checking to determine proper number of digits per field.
-#
-#     _al_filetered3 = ""
-#
-#     if _ped_descriptor < 2:
-#         _al_filetered3 = Find_1st_Allele(_al_filetered2, _IAT_Allelelist)
-#     elif _ped_descriptor >= 2:
-#         _al_filetered3 = Find_1st_Allele_PorGgroup(_al_filetered2, _df_IAT_Allelelist, _ped_descriptor)
-#
-#     return str(_al_filetered3)
-
-
-
-def SearchIAT(_single_allele, _hla, _IAT, _hped_descriptor):
-
-    t_allele = _single_allele
-
-    ### step 1. Removing HLA gene caption part (ex. "A*", "DRB1*")
-
-    p_GeneCaption = re.compile(r'^\w+\*')
-
-    if p_GeneCaption.match(t_allele):
-        t_allele = p_GeneCaption.sub(string=t_allele, repl='')
-
-
-
-    ### step 2. Check Digits
-
-    if not bool(re.search(r':', t_allele)):
-
-        if _hped_descriptor == 1:
-            t_allele = CHECK_DIGITS(_hla, t_allele, _IAT.loc[:, "Allele"])
-        elif _hped_descriptor == 2:
-            t_allele = CHECK_DIGITS_PorGgroup(_hla, t_allele, _IAT.loc[:, "G_group"], _hped_descriptor)
-        elif _hped_descriptor == 3:
-            t_allele = CHECK_DIGITS_PorGgroup(_hla, t_allele, _IAT.loc[:, "P_group"], _hped_descriptor)
-
-    # print("Digit checked allele : {}".format(t_allele))
-
-
-    ### step 3. Search IAT (Main job).
-
-    __RETURN_allele__ = ""
-
-    if _hped_descriptor == 1:
-        __RETURN_allele__ = Find_1st_Allele(t_allele, _IAT.loc[:, "Allele"])
-    elif _hped_descriptor == 2:
-        __RETURN_allele__ = Find_1st_Allele_PorGgroup(t_allele, _IAT.loc[:, "G_group"], _hped_descriptor)
-    elif _hped_descriptor == 3:
-        __RETURN_allele__ = Find_1st_Allele_PorGgroup(t_allele, _IAT.loc[:, "P_group"], _hped_descriptor)
-
-
-
-    ### Return
-
-    if __RETURN_allele__ == 0:
-        # Nothing found in *.iat file. (maybe novel HLA allele.)
-        # Then, just return original value (requested by Yang.)
-        return "-1"
-    else:
-        return __RETURN_allele__
-
-
-
-def Main_Transformation(_df_IAT_Searched, _IAT_dict2, _f_NoCaption=False):
-
-
-    _df_Transformed = None
-
-    if bool(_IAT_dict2):
-
-        l_temp = []
-
-        for i in range(0, len(HLA_names)):
+        for i in range(len(HLA_names)):
 
             idx1 = 2*i
-            idx2 = idx1 + 1
+            idx2 = 2*i + 1
 
-            t_df_IAT_Searched = \
-                _df_IAT_Searched.iloc[:, [idx1, idx2]].applymap(lambda x : _IAT_dict2[HLA_names[i]][x] if (x != '-1' and x != '0') else x)
 
-            l_temp.append(t_df_IAT_Searched)
-            # print(t_df_IAT_Searched)
+            # chromosome 1
+            if t_alleles[idx1] != '0':
 
-        _df_Transformed = pd.concat(l_temp, axis=1)
+                [t_converted_allele1, LOG_MESSAGE1] = getConvertedAllele2(HLA_names[i], t_alleles[idx1], d__HAT__[HLA_names[i]], OUTPUT_FORMAT, __leave_NotFound)
+
+                # print("Converted Alleles : {}".format(t_converted_allele1))
+                # print("LOG_MESSAGE :{}\n".format(LOG_MESSAGE1))
+
+            else:
+
+                t_converted_allele1 = t_alleles[idx1]
+                LOG_MESSAGE1 = 'No conversion ({})'.format(t_alleles[idx1])
+
+
+
+
+            # chromosome 2
+            if t_alleles[idx2] != '0':
+
+                [t_converted_allele2, LOG_MESSAGE2] = getConvertedAllele2(HLA_names[i], t_alleles[idx2], d__HAT__[HLA_names[i]], OUTPUT_FORMAT, __leave_NotFound)
+
+                # print("Converted Alleles : {}".format(t_converted_allele2))
+                # print("LOG_MESSAGE :{}\n".format(LOG_MESSAGE2))
+
+            else:
+                t_converted_allele2 = t_alleles[idx2]
+                LOG_MESSAGE2 = 'No conversion ({})'.format(t_alleles[idx2])
+
+
+
+
+            l_alleles_row.append(('%s*'%(HLA_names[i]) if (not __f_NoCaption and t_converted_allele1 != '0') else '') + t_converted_allele1)
+            l_alleles_row.append(('%s*'%(HLA_names[i]) if (not __f_NoCaption and t_converted_allele2 != '0') else '') + t_converted_allele2)
+
+            ### [2] logging the result
+            f_chped_log.write('\t'.join([t_FID, t_IID, HLA_names[i]+'_1', LOG_MESSAGE1])+'\n')
+            f_chped_log.write('\t'.join([t_FID, t_IID, HLA_names[i]+'_2', LOG_MESSAGE2])+'\n')
+
+
+
+        ### Generating chped
+        f_chped.write('\t'.join(list(eachRow[1:7]) + l_alleles_row) + '\n')
+
+
+        count += 1
+        # if count > 1 : break
+
+
+    f_chped.close()
+    f_chped_log.close()
+
+    return _out+'.chped'
+
+
+
+
+
+def getConvertedAllele2(_hla, _allele, _d__HAT__, _OUTPUT_FORMAT, __leave_NotFound):
+
+
+    __RETURN__ = None # Converted allele
+    LOG_MESSAGE = None
+
+
+    ### < Setting `_from` > ###
+
+    # `_from` := 'STANDARD', 'OLD', 'Ggroup' or 'Pgroup' column in HAT file.
+
+    if _allele.endswith('G'):
+        _from = 'Ggroup'
+    elif _allele.endswith('P'):
+        _from = 'Pgroup'
+    else:
+        if ':' in _allele:
+            _from = 'STANDARD'
+        else:
+            _from = 'OLD'
+
+
+
+
+    if ':' in _allele:
+
+        [__RETURN__, LOG_MESSAGE] = get1stAllele2(_allele, _d__HAT__, _from, _OUTPUT_FORMAT, __leave_NotFound, _allele0=_allele)
+
 
     else:
-        _df_Transformed = _df_IAT_Searched
 
+        if len(_allele) <= 3:
 
-    ### Check gene caption.
-    if not _f_NoCaption:
-        _df_Transformed = pd.concat([_df_Transformed.iloc[:, [2*i, 2*i+1]].applymap(lambda x : '*'.join([HLA_names[i], x]) if (x != '-1' and x != '0') else x) for i in range(0, len(HLA_names))], axis=1)
+            # Exception handling for 1field allele (ex. DPB1*03 -> 0302(-> 102:01; OLD) / 03:01:01:01(STANDARD))
+            # G-group and P-group alleles can't be here naturally. (ex. 0101P(01:01P) ... at least 5 characters.)
 
+            flag_matched_STANDARD = _d__HAT__.loc[:, 'STANDARD'].str.match(_allele)
+            # Check both first.
 
-    return _df_Transformed
+            if flag_matched_STANDARD.any():
 
+                # Give priority to 'STANDARD' over 'OLD'.
 
+                [__RETURN__, LOG_MESSAGE] = get1stAllele2(_allele, _d__HAT__, 'STANDARD', _OUTPUT_FORMAT, __leave_NotFound, _allele0=_allele)
 
-# def Main_Transformation2(_hped):
-#     #### [Warning] Temporary Hard coding. This funciton will be either adopted to the main transformation function or deprecated.
-#
-#     with open(_hped, 'r') as f_hped:
-#         count = 0
-#
-#         for l in f_hped:
-#             t_line = re.split(r'\s+', l.rstrip('\n'))
-#
-#             """
-#             [0,1,2,3,4,5] := ped file information
-#             [6,7] := HLA-A,
-#             [8,9] := HLA-B,
-#             ...,
-#             [20, 21] := HLA-DRB1
-#             """
-#             __ped_info__ = '\t'.join(t_line[:6])
-#             __genomic_info__ = '\t'.join(
-#                 [Old_Transformation(t_line[2 * i + 6], t_line[2 * i + 7], HLA_names[i]) for i in
-#                  range(0, len(HLA_names))])
-#
-#             yield '\t'.join([__ped_info__, __genomic_info__]) + "\n"
-#
-#             count += 1
-#             # if count > 5: break
+            else:
 
-
-# def Old_Transformation(_HLA_allele1, _HLA_allele2, _hla):
-#     if (_HLA_allele1 == "0" and _HLA_allele2 == "0"):
-#         return '\t'.join(["0", "0"])
-#     else:
-#
-#         p = re.compile(r'\d{4}[A-Z]?$')  # Only 4-digit with or without single suffix is accepted in old transformation.
-#         p_1field = re.compile(r'\d{2}')  # decided to also process 1-field HLA alleles.
-#
-#         # Allele1
-#         if p.match(_HLA_allele1):
-#             _new_al1 = ':'.join([_hla, _HLA_allele1[:2], _HLA_allele1[2:4]])
-#         elif p_1field.match(_HLA_allele1):
-#             _new_al1 = ':'.join([_hla, _HLA_allele1])
-#         else:
-#             _new_al1 = "0" if _HLA_allele1 == "0" else "-1"
-#
-#         # Allele2
-#         if p.match(_HLA_allele2):
-#             _new_al2 = ':'.join([_hla, _HLA_allele2[:2], _HLA_allele2[2:4]])
-#         elif p_1field.match(_HLA_allele2):
-#             _new_al2 = ':'.join([_hla, _HLA_allele2])
-#         else:
-#             _new_al2 = "0" if _HLA_allele2 == "0" else "-1"
-#
-#         return '\t'.join([_new_al1, _new_al2])
+                [__RETURN__, LOG_MESSAGE] = get1stAllele2(_allele, _d__HAT__, 'OLD', _OUTPUT_FORMAT, __leave_NotFound, _allele0=_allele)
 
 
 
-def MakeSuffixInfo(_imgt, _field_format):
 
-    s_field = ""
+        else:
 
-    if _field_format == 1:
-        s_field = "1field"
-    elif _field_format == 2:
-        s_field = "2field"
-    elif _field_format == 3:
-        s_field = "3field"
-    elif _field_format == 4:
-        s_field = "4field"
-    elif _field_format == 5:
-        s_field = "Ggroup"
-    elif _field_format == 6:
-        s_field = "Pgroup"
-    elif _field_format == 0:
-        s_field = "OLD"
+            ### Possibly OLD nomenclature
+
+            flag_matched_OLD = _d__HAT__.loc[:, _from].str.match(_allele)
+
+            if flag_matched_OLD.any():
+
+                [__RETURN__, LOG_MESSAGE] = get1stAllele2(_allele, _d__HAT__, _from, _OUTPUT_FORMAT, __leave_NotFound, _allele0=_allele)
 
 
-    return "imgt{}.{}".format(_imgt, s_field)
+
+
+            else:
+
+                if _from == 'OLD':
+                    _from = 'STANDARD' # because nothing found in the above block(`_from` == 'OLD')
+
+                ## Checking Suffix
+                hasSuffix = p_Suffix.match(_allele)
+
+                if hasSuffix:
+                    _allele2 = _allele[:-1]
+                    _allele_Suffix = _allele[-1]
+                else:
+                    _allele2 = _allele
+                    _allele_Suffix = -1
+
+                ### Main Digit-checking
+
+                sr_TEMP = _d__HAT__.loc[:, _from].str
+
+                if len(_allele2) == 4:
+                    # 2 + 2 (+C) = 4
+
+                    trial1_allele = ':'.join([_allele2[:2], _allele2[2:4]]) + (_allele_Suffix if _allele_Suffix != -1 else "")
+                    Flag_trial1 = sr_TEMP.match(trial1_allele)
+
+                    if Flag_trial1.any():
+                        [__RETURN__, LOG_MESSAGE] = get1stAllele2(trial1_allele, _d__HAT__, _from, _OUTPUT_FORMAT, __leave_NotFound, _allele0=_allele)
+                    else:
+                        __RETURN__ = _allele if __leave_NotFound else "0"
+                        if __leave_NotFound:
+                            LOG_MESSAGE = '[Leave Not Found] {} -> {}'.format(_allele, _allele)
+                        else:
+                            LOG_MESSAGE = "[Not Found] {} -> 0".format(_allele)
+
+
+
+
+                elif len(_allele2) == 5:
+
+                    # (1) 2 + 3 (+C) = 5
+                    # (2) 3 + 2 (+C) = 5
+
+                    trial1_allele = ':'.join([_allele2[:2], _allele2[2:]]) + (_allele_Suffix if _allele_Suffix != -1 else "")
+                    Flag_trial1 = sr_TEMP.match(trial1_allele)
+
+                    if Flag_trial1.any():
+                        [__RETURN__, LOG_MESSAGE] = get1stAllele2(trial1_allele, _d__HAT__, _from, _OUTPUT_FORMAT, __leave_NotFound, _allele0=_allele)
+                    else:
+                        trial2_allele = ':'.join([_allele2[:3], _allele2[3:]]) + (_allele_Suffix if _allele_Suffix != -1 else "")
+                        Flag_trial2 = sr_TEMP.match(trial2_allele)
+
+                        if Flag_trial2.any():
+                            [__RETURN__, LOG_MESSAGE] = get1stAllele2(trial2_allele, _d__HAT__, _from, _OUTPUT_FORMAT, __leave_NotFound, _allele0=_allele)
+                        else:
+                            __RETURN__ = _allele if __leave_NotFound else "0"
+                            if __leave_NotFound:
+                                LOG_MESSAGE = '[Leave Not Found] {} -> {}'.format(_allele, _allele)
+                            else:
+                                LOG_MESSAGE = "[Not Found] {} -> 0".format(_allele)
+
+                elif len(_allele2) == 6:
+
+                    # (1) 2 + 2 + 2 (+C)
+                    # (2) 3 + 3 (+C)
+
+                    # (1) 2 + 2 + 2 (+C)
+                    trial1_allele = ':'.join([_allele2[:2], _allele2[2:4], _allele2[4:]]) + (_allele_Suffix if _allele_Suffix != -1 else "")
+                    Flag_trial1 = sr_TEMP.match(trial1_allele)
+
+                    if Flag_trial1.any():
+                        [__RETURN__, LOG_MESSAGE] = get1stAllele2(trial1_allele, _d__HAT__, _from, _OUTPUT_FORMAT, __leave_NotFound, _allele0=_allele)
+                    else:
+                        # (2) 3 + 3 (+C)
+                        trial2_allele = ':'.join([_allele2[:3], _allele2[3:]]) + (_allele_Suffix if _allele_Suffix != -1 else "")
+                        Flag_trial2 = sr_TEMP.match(trial2_allele)
+
+                        if Flag_trial2:
+                            [__RETURN__, LOG_MESSAGE] = get1stAllele2(trial2_allele, _d__HAT__, _from, _OUTPUT_FORMAT, __leave_NotFound, _allele0=_allele)
+                        else:
+                            __RETURN__ = _allele if __leave_NotFound else "0"
+                            if __leave_NotFound:
+                                LOG_MESSAGE = '[Leave Not Found] {} -> {}'.format(_allele, _allele)
+                            else:
+                                LOG_MESSAGE = "[Not Found] {} -> 0".format(_allele)
+
+
+                elif len(_allele2) == 7:
+
+                    # (1) 2 + 3 + 2 (+C) = 7
+                    # (2) 2 + 2 + 3 (+C) = 7
+                    # (3) 3 + 2 + 2 (+C) = 7
+
+                    # (1) 2 + 3 + 2 (+C) = 7
+                    trial1_allele = ':'.join([_allele2[:2], _allele2[2:5], _allele2[5:]]) + (_allele_Suffix if _allele_Suffix != -1 else "")
+                    Flag_trial1 = sr_TEMP.match(trial1_allele)
+
+                    if Flag_trial1.any():
+                        [__RETURN__, LOG_MESSAGE] = get1stAllele2(trial1_allele, _d__HAT__, _from, _OUTPUT_FORMAT, __leave_NotFound, _allele0=_allele)
+                    else:
+                        # (2) 2 + 2 + 3 (+C) = 7
+                        trial2_allele = ':'.join([_allele2[:2], _allele2[2:4], _allele2[4:]]) + (_allele_Suffix if _allele_Suffix != -1 else "")
+                        Flag_trial2 = sr_TEMP.match(trial2_allele)
+
+                        if Flag_trial2:
+                            [__RETURN__, LOG_MESSAGE] = get1stAllele2(trial2_allele, _d__HAT__, _from, _OUTPUT_FORMAT, __leave_NotFound, _allele0=_allele)
+                        else:
+                            # (3) 3 + 2 + 2 (+C) = 7
+                            trial3_allele = ':'.join([_allele2[:3], _allele2[3:5], _allele2[5:]]) + (_allele_Suffix if _allele_Suffix != -1 else "")
+                            Flag_trial3 = sr_TEMP.match(trial3_allele)
+
+                            if Flag_trial3.any():
+                                [__RETURN__, LOG_MESSAGE] = get1stAllele2(trial3_allele, _d__HAT__, _from, _OUTPUT_FORMAT, __leave_NotFound, _allele0=_allele)
+                            else:
+                                __RETURN__ = _allele if __leave_NotFound else "0"
+                                if __leave_NotFound:
+                                    LOG_MESSAGE = '[Leave Not Found] {} -> {}'.format(_allele, _allele)
+                                else:
+                                    LOG_MESSAGE = "[Not Found] {} -> 0".format(_allele)
+
+
+                elif len(_allele2) == 8:
+
+                    # (1) 2 + 2 + 2 + 2 (+C)
+                    # (2) 3 + 2 + 3 (+C)
+                    # (3) 3 + 3 + 2 (+C)
+
+                    # (1) 2 + 2 + 2 + 2
+                    trial1_allele = ':'.join([_allele2[:2], _allele2[2:4], _allele2[4:6], _allele2[6:]]) + (_allele_Suffix if _allele_Suffix != -1 else "")
+                    Flag_trial1 = sr_TEMP.match(trial1_allele)
+
+                    if Flag_trial1.any():
+                        [__RETURN__, LOG_MESSAGE] = get1stAllele2(trial1_allele, _d__HAT__, _from, _OUTPUT_FORMAT, __leave_NotFound, _allele0=_allele)
+                    else:
+                        # (2) 3 + 2 + 3
+                        trial2_allele = ':'.join([_allele2[:3], _allele2[3:5], _allele2[5:]]) + (_allele_Suffix if _allele_Suffix != -1 else "")
+                        Flag_trial2 = sr_TEMP.match(trial2_allele)
+
+                        if Flag_trial2:
+                            [__RETURN__, LOG_MESSAGE] = get1stAllele2(trial2_allele, _d__HAT__, _from, _OUTPUT_FORMAT, __leave_NotFound, _allele0=_allele)
+                        else:
+                            # (3) 3 + 3 + 2
+                            trial3_allele = ':'.join([_allele2[:3], _allele2[3:6], _allele2[6:]]) + (_allele_Suffix if _allele_Suffix != -1 else "")
+                            Flag_trial3 = sr_TEMP.match(trial3_allele)
+
+                            if Flag_trial3.any():
+                                [__RETURN__, LOG_MESSAGE] = get1stAllele2(trial3_allele, _d__HAT__, _from, _OUTPUT_FORMAT, __leave_NotFound, _allele0=_allele)
+                            else:
+                                __RETURN__ = _allele if __leave_NotFound else "0"
+                                if __leave_NotFound:
+                                    LOG_MESSAGE = '[Leave Not Found] {} -> {}'.format(_allele, _allele)
+                                else:
+                                    LOG_MESSAGE = "[Not Found] {} -> 0".format(_allele)
+
+
+                elif len(_allele2) == 9:
+
+                    # (1) 2 + 3 + 2 + 2 (+C)
+                    # (2) 3 + 2 + 2 + 2 (+C)
+
+                    # (1) 2 + 3 + 2 + 2
+                    trial1_allele = ':'.join([_allele2[:2], _allele2[2:5], _allele2[5:7], _allele2[7:]]) + (_allele_Suffix if _allele_Suffix != -1 else "")
+                    Flag_trial1 = sr_TEMP.match(trial1_allele)
+
+                    if Flag_trial1.any():
+                        [__RETURN__, LOG_MESSAGE] = get1stAllele2(trial1_allele, _d__HAT__, _from, _OUTPUT_FORMAT, __leave_NotFound, _allele0=_allele)
+                    else:
+                        # (2) 3 + 2 + 2 + 2
+                        trial2_allele = ':'.join([_allele2[:3], _allele2[3:5], _allele2[5:7], _allele2[7:]]) + (_allele_Suffix if _allele_Suffix != -1 else "")
+                        Flag_trial2 = sr_TEMP.match(trial2_allele)
+
+                        if Flag_trial2.any():
+                            [__RETURN__, LOG_MESSAGE] = get1stAllele2(trial2_allele, _d__HAT__, _from, _OUTPUT_FORMAT, __leave_NotFound, _allele0=_allele)
+                        else:
+                            __RETURN__ = _allele if __leave_NotFound else "0"
+                            if __leave_NotFound:
+                                LOG_MESSAGE = '[Leave Not Found] {} -> {}'.format(_allele, _allele)
+                            else:
+                                LOG_MESSAGE = "[Not Found] {} -> 0".format(_allele)
+
+
+                elif len(_allele2) == 10:
+
+                    # (1) 3 + 3 + 2 + 2
+
+                    trial1_allele = ':'.join([_allele2[0:3], _allele2[3:6], _allele2[6:8], _allele2[8:10]]) + (_allele_Suffix if _allele_Suffix != -1 else "")
+                    Flag_trial1 = sr_TEMP.match(trial1_allele)
+
+                    if Flag_trial1.any():
+                        [__RETURN__, LOG_MESSAGE] = get1stAllele2(trial1_allele, _d__HAT__, _from, _OUTPUT_FORMAT, __leave_NotFound, _allele0=_allele)
+                    else:
+                        __RETURN__ = _allele if __leave_NotFound else "0"
+                        if __leave_NotFound:
+                            LOG_MESSAGE = '[Leave Not Found] {} -> {}'.format(_allele, _allele)
+                        else:
+                            LOG_MESSAGE = "[Not Found] {} -> 0".format(_allele)
+
+
+
+
+    return [__RETURN__, LOG_MESSAGE]
+
+
+
+
+def get1stAllele2(_allele, _df, _from, _OUTPUT_FORMAT, __leave_NotFound=False, _allele0=None):
+
+
+    __1st_Allele__ = None
+    LOG_MESSAGE = None
+
+    sr_from = _df.loc[:, _from]
+
+
+    ##### < HAT column to use (`_to`) > #####
+
+    if _OUTPUT_FORMAT == 0:
+
+        # Default mode. (`_from` == `_to`)
+
+        if _from == 'STANDARD':
+            _to = 1
+        elif _from == 'OLD':
+            _to = 1
+        elif _from == 'Ggroup':
+            _to = 3
+        elif _from == 'Pgroup':
+            _to = 4
+        else:
+            _to = -1
+
+    elif 0 < _OUTPUT_FORMAT <= 4:
+        _to = 1
+    elif _OUTPUT_FORMAT == 5:
+        _to = 3
+    elif _OUTPUT_FORMAT == 6:
+        _to = 4
+    else:
+        _to = -1
+
+
+
+    ##### < Main Matching job > #####
+
+    ## (1) Exact match
+    Flag_exact_match = sr_from.str.match(_allele + '$')
+    f_exact = False
+
+    if Flag_exact_match.any():
+
+        # (ex. '03:28' -> '03:28')
+
+        df_candidate = _df.loc[Flag_exact_match, :]
+        __1st_Allele__ = df_candidate.iat[0, _to]
+
+        f_exact = True
+
+    else:
+
+        ## (2) Just match
+        Flag_match = sr_from.str.match(_allele)
+
+        if Flag_match.any():
+
+            # (ex. '03:28' -> '03:280')
+
+            df_candidate = _df.loc[Flag_match, :]
+            __1st_Allele__ = df_candidate.iat[0, _to]
+
+        else:
+
+            ## (3) Nothing matched.
+            __1st_Allele__ = _allele if __leave_NotFound else '0'
+
+            if __leave_NotFound:
+                LOG_MESSAGE = '[Leave Not Found] {} -> {}'.format(_allele, _allele)
+            else:
+                LOG_MESSAGE = "[Not Found] {} -> 0".format(_allele)
+
+            return [__1st_Allele__, LOG_MESSAGE]
+
+
+
+
+    ##### < Log message & Field trimming > #####
+
+
+    if _from == 'OLD':
+
+        if _to == 1:
+
+            if _OUTPUT_FORMAT == 4:
+
+                # to Standard
+                LOG_MESSAGE = "[{}] {} -> {}(OLD) => {}(STANDARD)".format(
+                    'Exact match' if f_exact else 'Approximated', _allele, df_candidate.iat[0, 2], __1st_Allele__)
+
+                if not f_exact and df_candidate.shape[0] > 0:
+                    LOG_MESSAGE = ' '.join([LOG_MESSAGE, "(Possible candidates: {})".format(
+                        df_candidate.iloc[:, [2, 1]].apply(' -> '.join, axis=1).tolist())])
+
+            else:
+                # 0 <= _OUTPUT_FORMAT < 4
+
+                __1st_Allele_cutted__ = FieldCutter(':'.join(a+b for a,b in zip(_allele0[::2], _allele0[1::2])), __1st_Allele__, _OUTPUT_FORMAT)
+
+                # to Standard
+                LOG_MESSAGE = "[{}] {} -> ({}(OLD) -> {}(STANDARD)) => {}".format(
+                    'Exact match' if f_exact else 'Approximated', _allele, df_candidate.iat[0, 2], __1st_Allele__, __1st_Allele_cutted__)
+
+                if not f_exact and df_candidate.shape[0] > 0:
+                    LOG_MESSAGE = ' '.join([LOG_MESSAGE, "(Possible candidates: {})".format(
+                        df_candidate.iloc[:, [2, 1]].apply(' -> '.join, axis=1).tolist())])
+
+
+                __1st_Allele__ = __1st_Allele_cutted__
+
+
+
+        elif _to == 3 or _to == 4:
+            # to Ggroup or Pgroup
+            LOG_MESSAGE = "[{}] {} -> ({}(OLD) -> {}(STANDARD)) => {}".format(
+                'Exact match' if f_exact else 'Approximated', _allele, df_candidate.iat[0, 2], df_candidate.iat[0, 1], __1st_Allele__)
+
+            if not f_exact and df_candidate.shape[0] > 0:
+                LOG_MESSAGE = ' '.join([LOG_MESSAGE, "(Possible candidates: {})".format(
+                    df_candidate.iloc[:, [2, 1, _to]].apply(' -> '.join, axis=1).tolist())])
+
+
+
+    elif _from == 'Ggroup':
+
+        s_temp = '({}'.format(_allele) if _allele0 == _allele else '{} -> ({}'.format(_allele0, _allele)
+
+        if _to == 1:
+
+            # There would be no duplicates in this case block.
+            f_exact_Ggroup = f_exact and (df_candidate.shape[0] == 1)
+
+            if _OUTPUT_FORMAT == 4:
+
+                # to Standard
+                LOG_MESSAGE = "[{}] {} => {}(STANDARD))".format(
+                    'Exact match' if f_exact_Ggroup else 'Approximated', s_temp, __1st_Allele__)
+
+                if not f_exact_Ggroup:
+                    LOG_MESSAGE = ' '.join([LOG_MESSAGE, "(Possible candidates: {})".format(df_candidate.iloc[:, _to].tolist())])
+
+            else:
+                # 0 < _OUTPUT_FORMAT < 4
+                # the case "_OUTPUT_FORMAT == 0" can't be here. It will go to next "_to == 3" case block.
+
+                __1st_Allele_cutted__ = FieldCutter(_allele, __1st_Allele__, _OUTPUT_FORMAT)
+
+                LOG_MESSAGE = "[{}] {} -> {}(STANDARD)) => {}".format(
+                    'Exact match' if f_exact_Ggroup else 'Approximated', s_temp, __1st_Allele__, __1st_Allele_cutted__)
+
+                if not f_exact_Ggroup:
+                    LOG_MESSAGE = ' '.join([LOG_MESSAGE, "(Possible candidates: {})".format(df_candidate.iloc[:, _to].tolist())])
+
+
+                __1st_Allele__ = __1st_Allele_cutted__
+
+
+
+        elif _to == 3:
+
+            # to G-group itself.
+
+            df_candidate = df_candidate.drop_duplicates(['Ggroup'])
+            # print(df_candidate)
+            f_exact_Ggroup = f_exact and (df_candidate.shape[0] == 1)
+
+            LOG_MESSAGE = "[{}] ({} => {})".format(
+                'Exact match' if f_exact_Ggroup else 'Approximated', _allele0, __1st_Allele__)
+
+            if not f_exact_Ggroup:
+                LOG_MESSAGE = ' '.join([LOG_MESSAGE, "(Possible candidates: {})".format(df_candidate.iloc[:, _to].tolist())])
+
+
+
+        elif _to == 4:
+            # to Pgroup
+
+            df_candidate = df_candidate.drop_duplicates(['Ggroup', 'Pgroup'])
+            # print(df_candidate)
+            f_exact_Ggroup = f_exact and (df_candidate.shape[0] == 1)
+
+            LOG_MESSAGE = "[{}] {} => {})".format(
+                'Exact match' if f_exact else 'Approximated', s_temp, __1st_Allele__)
+
+            if not f_exact_Ggroup:
+                LOG_MESSAGE = ' '.join([LOG_MESSAGE, "(Possible candidates: {})".format(
+                    df_candidate.iloc[:, [3, _to]].apply(' -> '.join, axis=1).tolist())])
+
+
+
+    elif _from == 'Pgroup':
+
+        s_temp = '({}'.format(_allele) if _allele0 == _allele else '{} -> ({}'.format(_allele0, _allele)
+
+
+        if _to == 1:
+
+            f_exact_Pgroup = f_exact and (df_candidate.shape[0] == 1)
+
+            if _OUTPUT_FORMAT == 4:
+
+                # to Standard.
+                LOG_MESSAGE = "[{}] {} => {}(STANDARD))".format(
+                    'Exact match' if f_exact_Pgroup else 'Approximated', s_temp, __1st_Allele__)
+
+                if not f_exact_Pgroup:
+                    LOG_MESSAGE = ' '.join([LOG_MESSAGE, "(Possible candidates: {})".format(df_candidate.iloc[:, _to].tolist())])
+
+            else:
+                # 0 < _OUTPUT_FORMAT < 4
+                # the case "_OUTPUT_FORMAT == 0" can't be here. It will go to next "_to == 4" case block.
+
+                __1st_Allele_cutted__ = FieldCutter(_allele, __1st_Allele__, _OUTPUT_FORMAT)
+
+                LOG_MESSAGE = "[{}] {} -> {}(STANDARD)) => {}".format(
+                    'Exact match' if f_exact_Pgroup else 'Approximated', s_temp, __1st_Allele__, __1st_Allele_cutted__)
+
+                if not f_exact_Pgroup:
+                    LOG_MESSAGE = ' '.join([LOG_MESSAGE, "(Possible candidates: {})".format(df_candidate.iloc[:, _to].tolist())])
+
+
+                __1st_Allele__ = __1st_Allele_cutted__
+
+
+
+        elif _to == 3:
+            # to G-group
+
+            df_candidate = df_candidate.drop_duplicates(['Ggroup', 'Pgroup'])
+            f_exact_Pgroup = f_exact and (df_candidate.shape[0] == 1)
+
+            LOG_MESSAGE = "[{}] {} => {})".format(
+                'Exact match' if f_exact_Pgroup else 'Approximated', s_temp, __1st_Allele__)
+
+            if not f_exact_Pgroup:
+                LOG_MESSAGE = ' '.join([LOG_MESSAGE, "(Possible candidates: {})".format(
+                    df_candidate.iloc[:, [4, _to]].apply(' -> '.join, axis=1).tolist())])
+
+
+
+        elif _to == 4:
+            # to P-group itself.
+
+            df_candidate = df_candidate.drop_duplicates(['Pgroup'])
+            f_exact_Pgroup = f_exact and (df_candidate.shape[0] == 1)
+
+            LOG_MESSAGE = "[{}] ({} => {})".format(
+                'Exact match' if f_exact_Pgroup else 'Approximated', _allele0, __1st_Allele__)
+
+            if not f_exact_Pgroup:
+                LOG_MESSAGE = ' '.join([LOG_MESSAGE, "(Possible candidates: {})".format(df_candidate.iloc[:, _to].tolist())])
+
+
+
+    else:
+
+        if _to == 1:
+
+            if _OUTPUT_FORMAT == 4:
+
+                # to Standard
+                LOG_MESSAGE = "[{}] {} => {}(STANDARD)".format(
+                    'Exact match' if f_exact else 'Approximated', _allele0 if bool(_allele0) else _allele, __1st_Allele__)
+
+                if not f_exact and df_candidate.shape[0] > 0:
+                    LOG_MESSAGE = ' '.join([LOG_MESSAGE, "(Possible candidates: {})".format(df_candidate.iloc[:, 1].tolist())])
+
+            else:
+                # 0 <= _OUTPUT_FORMAT < 4
+
+                __1st_Allele_cutted__ = FieldCutter(_allele, __1st_Allele__, _OUTPUT_FORMAT)
+
+                # to Standard
+                LOG_MESSAGE = "[{}] ({} -> {}(STANDARD)) => {}".format(
+                    'Exact match' if f_exact else 'Approximated', _allele0 if bool(_allele0) else _allele, __1st_Allele__, __1st_Allele_cutted__)
+
+                if not f_exact and df_candidate.shape[0] > 0:
+                    LOG_MESSAGE = ' '.join(
+                        [LOG_MESSAGE, "(Possible candidates: {})".format(df_candidate.iloc[:, 1].tolist())])
+
+
+                __1st_Allele__ = __1st_Allele_cutted__
+
+
+
+        elif _to == 3 or _to == 4:
+            # to Ggroup
+            LOG_MESSAGE = "[{}] {} -> ({} => {})".format(
+                'Exact match' if f_exact else 'Approximated', _allele0 if bool(_allele0) else _allele, df_candidate.iat[0, 1], __1st_Allele__)
+
+            if not f_exact and df_candidate.shape[0] > 0:
+                LOG_MESSAGE = ' '.join([LOG_MESSAGE, "(Possible candidates: {})".format(
+                    df_candidate.iloc[:, [1, _to]].apply(' -> '.join, axis=1).tolist())])
+
+
+
+
+    return [__1st_Allele__, LOG_MESSAGE]
+
+
+
+
+
+def FieldCutter(_allele0, _1st_allele, _field_format):
+
+    if _field_format > 4:
+        return _allele0
+
+
+    if 0 < _field_format <= 4:
+        N_field = _field_format
+    else:
+        N_field = len(_allele0.split(':'))
+
+
+    l_allele_found = _1st_allele.split(':')
+
+
+    while N_field < len(l_allele_found) and len(l_allele_found) > 0:
+        l_allele_found.pop()
+
+
+    __RETURN__ = ':'.join(l_allele_found)
+    # print("OUTPUT : {}".format(__RETURN__))
+
+
+    return __RETURN__
 
 
 
@@ -1030,14 +804,19 @@ def MakeSuffixInfo(_imgt, _field_format):
 
 if __name__ == '__main__':
 
+
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,
                                      description=textwrap.dedent('''\
     #########################################################################################
 
-        NomenCleaner.py
+        < NomenCleaner.py >
         
-         
-        
+        - Transforms *.hped file to *.chped file.
+        - *.hat file must be given as input file.
+
+
+
+
 
 
     #########################################################################################
@@ -1051,175 +830,74 @@ if __name__ == '__main__':
     # Input (1) : *.ped file
     PED_TYPE = parser.add_mutually_exclusive_group(required=True)
     PED_TYPE.add_argument("--hped", help="\nHLA Type Data with raw HLA allele(ex. 0101).\n\n", dest="hped")
-    PED_TYPE.add_argument("--hped-Ggroup", help="\nHLA Type Data with raw G-group allele(ex. 020601G).\n\n", dest="hped_G")
-    PED_TYPE.add_argument("--hped-Pgroup", help="\nHLA Type Data with raw P-group allele (ex. 0102P).\n\n", dest="hped_P")
 
     # Input (2) : *.iat file
-    parser.add_argument("-iat", help="\nIntegrated Allele Table file(*.iat).\n\n", required=True)
+    parser.add_argument("-hat", help="\nHLA Allele Table file(*.hat).\n\n", required=True)
     parser.add_argument("-imgt", help="\nSpecifying the IMGT-HLA version.\n\n", required=True)
 
     # Ouptut Prefix
     parser.add_argument("--out", "-o", help="\nOutput file prefix.\n\n", required=True)
-    parser.add_argument("--leave-NotFound", help="\nLeaving HLA alleles which can't be found in given *.iat file(Novel or Erroneous allele) intact.\n\n", action='store_true')
+    parser.add_argument("--leave-NotFound",
+                        help="\nLeaving HLA alleles which can't be found in given *.hat file(Novel or Erroneous allele) intact.\n\n",
+                        action='store_true')
 
     # Output format
-    output_digit_selection = parser.add_mutually_exclusive_group(required=True)
-    output_digit_selection.add_argument("--1field", help="\nOutput ped file as '1-field' format.\n\n",
+    output_digit_selection = parser.add_mutually_exclusive_group()
+    output_digit_selection.add_argument("--1field", help="\nMake converted HLA alleles have maximum 1 field.\n\n",
                                         action="store_true", dest="oneF")
-    output_digit_selection.add_argument("--2field", help="\nOutput ped file as '2-field' format.\n\n",
+    output_digit_selection.add_argument("--2field", help="\nMake converted HLA alleles have maximum 2 fields.\n\n",
                                         action="store_true", dest="twoF")
-    output_digit_selection.add_argument("--3field", help="\nOutput ped file as '3-field' format.\n\n",
+    output_digit_selection.add_argument("--3field", help="\nMake converted HLA alleles have maximum 3 fields.\n\n",
                                         action="store_true", dest="threeF")
-    output_digit_selection.add_argument("--4field",
-                                        help="\nOutput ped file as '4-field(Current Standard Names)' format.\n\n",
+    output_digit_selection.add_argument("--4field", help="\nMake converted HLA alleles have maximum 4 fields\n\n",
                                         action="store_true", dest="fourF")
-    output_digit_selection.add_argument("--G-group", help="\nOutput ped file as 'G-group' format.\n\n",
+    output_digit_selection.add_argument("--Ggroup", help="\nMake converted HLA alleles have G code names.\n\n",
                                         action="store_true")
-    output_digit_selection.add_argument("--P-group", help="\nOutput ped file as 'P-group' format.\n\n",
-                                        action="store_true")
-
-    output_digit_selection.add_argument("--old-format",
-                                        help="\nOutput ped file as previous version format. (ex. A:01:01)\n\n",
+    output_digit_selection.add_argument("--Pgroup", help="\nMake converted HLA alleles have P code names.\n\n",
                                         action="store_true")
 
     # Flag to remove HLA gene caption.
-    parser.add_argument("--NoCaption", help="\nOutput without HLA gene(ex. \"A*\").\n\n", action='store_true')
-
+    parser.add_argument("--NoCaption", help="\nMake converted HLA alleles NOT have HLA gene prefix(ex. \"A*\").\n\n", action='store_true')
 
 
 
     ##### <for Test> #####
 
-    ### < Raw 4-field *.hped >
+    # in OS X
+    # _hped = '/Users/wansun/Dropbox/_Sync_MyLaptop/Projects/HATK/NomenCleanerv3/dummy_freeze/DummyCHPED.10.ruined.nocolon.hped'
+    # _hat = '/Users/wansun/Dropbox/_Sync_MyLaptop/Projects/HATK/NomenCleanerv3/dummy_freeze/HLA_ALLELE_TABLE.imgt3320.hat'
+    # _out = '/Users/wansun/Dropbox/_Sync_MyLaptop/Projects/HATK/NomenCleanerv3/dummy_freeze/DummyCHPED.10.ruined.nocolon.20190927'
 
-    # # raw 4-field to standard 4-field / with Novel Allele / --leave-NotFound
-    # args = parser.parse_args(["-ped", "/Users/wansun/Projects/20190222_JSH_GWAS/NomenCleanerTest/wtccc_filtered_58C_NBS.raw4field.novelallele.before.hped",
-    #                           "-iat", "/Users/wansun/Git_Projects/HATK/tests/_1_IMGT2Sequence/20190123_hg18_imgt3320/HLA_INTEGRATED_ALLELE_TABLE.hg18.imgt3320.iat",
-    #                           "-imgt", "3320",
-    #                           "-o", "/Users/wansun/Projects/20190222_JSH_GWAS/NomenCleanerTest/wtccc_filtered_58C_NBS.raw4field.novelallele.after",
-    #                           "--4field",
-    #                           "--leave-NotFound"
-    #                           ])
+    # in Ubuntu
+    # _hped = '/home/wanson/Dropbox/_Sync_MyLaptop/Projects/HATK/NomenCleanerv3/dummy_freeze/DummyCHPED.10.ruined.hped'
+    # _hat = '/home/wanson/Dropbox/_Sync_MyLaptop/Projects/HATK/NomenCleanerv3/dummy_freeze/HLA_ALLELE_TABLE.imgt3320.hat'
+    # _out = '/home/wanson/Dropbox/_Sync_MyLaptop/Projects/HATK/NomenCleanerv3/dummy_freeze/DummyCHPED.10.ruined.20190922'
 
-    # # raw 4-field to standard 4-field / with Novel Allele / NotFound : 0
-    # args = parser.parse_args(["-ped", "/Users/wansun/Projects/20190222_JSH_GWAS/NomenCleanerTest/wtccc_filtered_58C_NBS.raw4field.novelallele.before.hped",
-    #                           "-iat", "/Users/wansun/Git_Projects/HATK/tests/_1_IMGT2Sequence/20190123_hg18_imgt3320/HLA_INTEGRATED_ALLELE_TABLE.hg18.imgt3320.iat",
-    #                           "-imgt", "3320",
-    #                           "-o", "/Users/wansun/Projects/20190222_JSH_GWAS/NomenCleanerTest/wtccc_filtered_58C_NBS.raw4field.novelallele.after",
-    #                           "--4field"
-    #                           ])
-
-
-    # # raw 4-field to G-group / with Novel Allele / --leave-NotFound
-    # args = parser.parse_args(["-ped", "/Users/wansun/Projects/20190222_JSH_GWAS/NomenCleanerTest/wtccc_filtered_58C_NBS.raw4field.novelallele.before.hped",
-    #                           "-iat", "/Users/wansun/Git_Projects/HATK/tests/_1_IMGT2Sequence/20190123_hg18_imgt3320/HLA_INTEGRATED_ALLELE_TABLE.hg18.imgt3320.iat",
-    #                           "-imgt", "3320",
-    #                           "-o", "/Users/wansun/Projects/20190222_JSH_GWAS/NomenCleanerTest/wtccc_filtered_58C_NBS.raw4field.novelallele.after",
-    #                           "--G-group",
-    #                           "--leave-NotFound"
-    #                           ])
-
-    # # raw 4-field to P-group / with Novel Allele / --leave-NotFound
-    # args = parser.parse_args(["-ped", "/Users/wansun/Projects/20190222_JSH_GWAS/NomenCleanerTest/wtccc_filtered_58C_NBS.raw4field.novelallele.before.hped",
-    #                           "-iat", "/Users/wansun/Git_Projects/HATK/tests/_1_IMGT2Sequence/20190123_hg18_imgt3320/HLA_INTEGRATED_ALLELE_TABLE.hg18.imgt3320.iat",
-    #                           "-imgt", "3320",
-    #                           "-o", "/Users/wansun/Projects/20190222_JSH_GWAS/NomenCleanerTest/wtccc_filtered_58C_NBS.raw4field.novelallele.after",
-    #                           "--P-group",
-    #                           "--leave-NotFound"
-    #                           ])
-
-
-
-    ### < raw G-group >
-
-    # # raw G-group to 4-field / with Novel Allele / --leave-NotFound
-    # args = parser.parse_args(["-ped-Ggroup", "/Users/wansun/Projects/20190222_JSH_GWAS/NomenCleanerTest/DummyPED.Ggroup.Ncap.Ndc.10.novelallele.ped",
-    #                           "-iat", "/Users/wansun/Git_Projects/HATK/tests/_1_IMGT2Sequence/20190123_hg18_imgt3320/HLA_INTEGRATED_ALLELE_TABLE.hg18.imgt3320.iat",
-    #                           "-imgt", "3320",
-    #                           "-o", "/Users/wansun/Projects/20190222_JSH_GWAS/NomenCleanerTest/DummyPED.Ggroup.Ncap.Ndc.10.novelallele",
-    #                           "--4field",
-    #                           "--leave-NotFound"
-    #                           ])
-
-    # # raw G-group to 3-field / with Novel Allele / --leave-NotFound
-    # args = parser.parse_args(["-ped-Ggroup", "/Users/wansun/Projects/20190222_JSH_GWAS/NomenCleanerTest/DummyPED.Ggroup.Ncap.Ndc.10.novelallele.ped",
-    #                           "-iat", "/Users/wansun/Git_Projects/HATK/tests/_1_IMGT2Sequence/20190123_hg18_imgt3320/HLA_INTEGRATED_ALLELE_TABLE.hg18.imgt3320.iat",
-    #                           "-imgt", "3320",
-    #                           "-o", "/Users/wansun/Projects/20190222_JSH_GWAS/NomenCleanerTest/DummyPED.Ggroup.Ncap.Ndc.10.novelallele",
-    #                           "--3field",
-    #                           "--leave-NotFound"
-    #                           ])
-
-    # # raw G-group to 2-field / with Novel Allele / --leave-NotFound
-    # args = parser.parse_args(["-ped-Ggroup", "/Users/wansun/Projects/20190222_JSH_GWAS/NomenCleanerTest/DummyPED.Ggroup.Ncap.Ndc.10.novelallele.ped",
-    #                           "-iat", "/Users/wansun/Git_Projects/HATK/tests/_1_IMGT2Sequence/20190123_hg18_imgt3320/HLA_INTEGRATED_ALLELE_TABLE.hg18.imgt3320.iat",
-    #                           "-imgt", "3320",
-    #                           "-o", "/Users/wansun/Projects/20190222_JSH_GWAS/NomenCleanerTest/DummyPED.Ggroup.Ncap.Ndc.10.novelallele",
-    #                           "--2field",
-    #                           "--leave-NotFound"
-    #                           ])
-
-    # # raw G-group to 1-field / with Novel Allele / --leave-NotFound
-    # args = parser.parse_args(["-ped-Ggroup", "/Users/wansun/Projects/20190222_JSH_GWAS/NomenCleanerTest/DummyPED.Ggroup.Ncap.Ndc.10.novelallele.ped",
-    #                           "-iat", "/Users/wansun/Git_Projects/HATK/tests/_1_IMGT2Sequence/20190123_hg18_imgt3320/HLA_INTEGRATED_ALLELE_TABLE.hg18.imgt3320.iat",
-    #                           "-imgt", "3320",
-    #                           "-o", "/Users/wansun/Projects/20190222_JSH_GWAS/NomenCleanerTest/DummyPED.Ggroup.Ncap.Ndc.10.novelallele",
-    #                           "--1field",
-    #                           "--leave-NotFound"
-    #                           ])
-
-    # # raw G-group to old-format / with Novel Allele / --leave-NotFound
-    # args = parser.parse_args(["-ped-Ggroup", "/Users/wansun/Projects/20190222_JSH_GWAS/NomenCleanerTest/DummyPED.Ggroup.Ncap.Ndc.10.novelallele.ped",
-    #                           "-iat", "/Users/wansun/Git_Projects/HATK/tests/_1_IMGT2Sequence/20190123_hg18_imgt3320/HLA_INTEGRATED_ALLELE_TABLE.hg18.imgt3320.iat",
-    #                           "-imgt", "3320",
-    #                           "-o", "/Users/wansun/Projects/20190222_JSH_GWAS/NomenCleanerTest/DummyPED.Ggroup.Ncap.Ndc.10.novelallele",
-    #                           "--old-format",
-    #                           "--leave-NotFound"
-    #                           ])
-
-
-
-    # # raw G-group to G-group / with Novel Allele / --leave-NotFound
-    # args = parser.parse_args(["-ped-Ggroup", "/Users/wansun/Projects/20190222_JSH_GWAS/NomenCleanerTest/DummyPED.Ggroup.Ncap.Ndc.10.novelallele.ped",
-    #                           "-iat", "/Users/wansun/Git_Projects/HATK/tests/_1_IMGT2Sequence/20190123_hg18_imgt3320/HLA_INTEGRATED_ALLELE_TABLE.hg18.imgt3320.iat",
-    #                           "-imgt", "3320",
-    #                           "-o", "/Users/wansun/Projects/20190222_JSH_GWAS/NomenCleanerTest/DummyPED.Ggroup.Ncap.Ndc.10.novelallele",
-    #                           "--G-group",
-    #                           "--leave-NotFound"
-    #                           ])
-
-
-    # # raw G-group to P-group / with Novel Allele / --leave-NotFound
-    # args = parser.parse_args(["-ped-Ggroup", "/Users/wansun/Projects/20190222_JSH_GWAS/NomenCleanerTest/DummyPED.Ggroup.Ncap.Ndc.10.novelallele.ped",
-    #                           "-iat", "/Users/wansun/Git_Projects/HATK/tests/_1_IMGT2Sequence/20190123_hg18_imgt3320/HLA_INTEGRATED_ALLELE_TABLE.hg18.imgt3320.iat",
-    #                           "-imgt", "3320",
-    #                           "-o", "/Users/wansun/Projects/20190222_JSH_GWAS/NomenCleanerTest/DummyPED.Ggroup.Ncap.Ndc.10.novelallele",
-    #                           "--P-group",
-    #                           "--leave-NotFound"
-    #                           ])
-
-
-    ### < raw P-group to >
-
-    # 4-field
-    # args = parser.parse_args(["--hped-Pgroup", "/Users/wansun/Git_Projects/MakeReference_v2/data/NomenCleaner/v2/BEFORE_DummyHPED.rawPgroup.Ncap.Ndc.10.novelallele.hped",
-    #                           "--iat", "/Users/wansun/Git_Projects/HATK/tests/_1_IMGT2Sequence/20190303_hg19_imgt3320/HLA_INTEGRATED_ALLELE_TABLE.hg19.imgt3320.iat",
-    #                           "--imgt", "3320",
-    #                           "-o", "/Users/wansun/Git_Projects/MakeReference_v2/data/NomenCleaner/v2/from_Pgroup_to/EMERGENCY_AFTER_DummyHPED.rawPgroup.Ncap.Ndc.10.novelallele.imgt3320.Pgroup.chped",
-    #                           "--4field",
-    #                           "--leave-NotFound"
-    #                           ])
-
-    # P-group
-    # args = parser.parse_args(["--hped-Pgroup", "/Users/wansun/Git_Projects/MakeReference_v2/data/NomenCleaner/v2/BEFORE_DummyHPED.rawPgroup.Ncap.Ndc.10.novelallele.hped",
-    #                           "--iat", "/Users/wansun/Git_Projects/HATK/tests/_1_IMGT2Sequence/20190303_hg19_imgt3320/HLA_INTEGRATED_ALLELE_TABLE.hg19.imgt3320.iat",
-    #                           "--imgt", "3320",
-    #                           "-o", "/Users/wansun/Git_Projects/MakeReference_v2/data/NomenCleaner/v2/from_Pgroup_to/EMERGENCY_AFTER_DummyHPED.rawPgroup.Ncap.Ndc.10.novelallele.imgt3320.Pgroup.chped",
-    #                           "--P-group",
-    #                           "--leave-NotFound"
-    #                           ])
-
-
+    # for _output_format in ['DEFAULT', '1field', '2field', '3field', '4field', 'Ggroup', 'Pgroup']:
+    #
+    #     OUT = _out + '.{}'.format(_output_format.upper())
+    #
+    #     if _output_format == 'DEFAULT':
+    #         args = parser.parse_args(['--hped', _hped, '-hat', _hat, '-o', OUT, '-imgt', '3320', "--NoCaption"]) # No field format given.
+    #     else:
+    #         args = parser.parse_args(['--hped', _hped, '-hat', _hat, '-o', OUT, '-imgt', '3320', "--NoCaption", '--{}'.format(_output_format)]) # No field format given.
+    #
+    #     # args = parser.parse_args(['--hped', _hped, '-hat', _hat, '-o', _out, '-imgt', '3320', "--NoCaption", "--4field"]) # No field format given.
+    #     # args = parser.parse_args(['--hped', _hped, '-hat', _hat, '-o', _out, '-imgt', '3320', "--NoCaption", "--3field"]) # No field format given.
+    #     # args = parser.parse_args(['--hped', _hped, '-hat', _hat, '-o', _out, '-imgt', '3320', "--NoCaption", "--2field"]) # No field format given.
+    #     # args = parser.parse_args(['--hped', _hped, '-hat', _hat, '-o', _out, '-imgt', '3320', "--NoCaption", "--1field"]) # No field format given.
+    #     # args = parser.parse_args(['--hped', _hped, '-hat', _hat, '-o', _out, '-imgt', '3320', "--NoCaption", "--Ggroup"]) # No field format given.
+    #     # args = parser.parse_args(['--hped', _hped, '-hat', _hat, '-o', _out, '-imgt', '3320', "--NoCaption", "--Pgroup"]) # No field format given.
+    #
+    #     ##### <for Publication> #####
+    #
+    #     # args = parser.parse_args()
+    #     print(args)
+    #
+    #
+    #     NomenCleaner(args.hped, args.hat, args.imgt, args.out,
+    #                  __f_NoCaption=args.NoCaption, __leave_NotFound=args.leave_NotFound,
+    #                  __oneF=args.oneF, __twoF=args.twoF, __threeF=args.threeF, __fourF=args.fourF, __Ggroup=args.Ggroup, __Pgroup=args.Pgroup)
 
 
 
@@ -1229,52 +907,6 @@ if __name__ == '__main__':
     print(args)
 
 
-
-    ### Additional Argument processing
-
-
-    ## Output Format Flags
-
-    if args.oneF:
-        FIELD_FORMAT = 1
-    elif args.twoF:
-        FIELD_FORMAT = 2
-    elif args.threeF:
-        FIELD_FORMAT = 3
-    elif args.fourF:
-        FIELD_FORMAT = 4
-    elif args.G_group:
-        FIELD_FORMAT = 5
-    elif args.P_group:
-        FIELD_FORMAT = 6
-    elif args.old_format:
-        FIELD_FORMAT = 0 # Old format will be assigned 0 for `FIELD_FORMAT`.
-    else:
-        print(std_ERROR_MAIN_PROCESS_NAME + "Argument for Field format is not appropriate. Please check them again.\n")
-        sys.exit()
-
-    ## Which type of ped file given?
-    _p_hped = -1
-    _p_hped_descriptor = -1
-
-    if args.hped:
-        # Standard 4-field *.ped file given
-        _p_hped = args.hped
-        _p_hped_descriptor = 1
-    elif args.hped_G:
-        # G-group *.ped file given
-        _p_hped = args.hped_G
-        _p_hped_descriptor = 2
-    elif args.hped_P:
-        # P-group *.ped file given
-        _p_hped = args.hped_P
-        _p_hped_descriptor = 3
-    else:
-        # Assuming at least three of them given, there won't be the case which comes to here.
-        print(std_ERROR_MAIN_PROCESS_NAME + "Argument for input *.ped file is not appropriate. Please check it again.\n")
-        sys.exit()
-
-
-    NomenCleaner(_p_hped, _p_hped_descriptor, args.iat, args.imgt, args.out, FIELD_FORMAT, __f_NoCaption=args.NoCaption,
-                 __leave_NotFound=args.leave_NotFound)
-
+    NomenCleaner(args.hped, args.hat, args.imgt, args.out,
+                 __f_NoCaption=args.NoCaption, __leave_NotFound=args.leave_NotFound,
+                 __oneF=args.oneF, __twoF=args.twoF, __threeF=args.threeF, __fourF=args.fourF, __Ggroup=args.Ggroup, __Pgroup=args.Pgroup)

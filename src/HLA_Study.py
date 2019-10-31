@@ -114,18 +114,19 @@ class HLA_Study(object):
             ########## < [0] IMGT2Seq > ##########
 
             myIMGT2Seq = HATK_IMGT2Seq(_args.imgt, _args.hg, _args.out,
+                                       _args.oneF, _args.twoF, _args.threeF, _args.fourF, _args.Ggroup, _args.Pgroup,
                                        _no_indel=_args.no_indel, _multiprocess=_args.multiprocess,
                                        _save_intermediates=_args.save_intermediates,
                                        _imgt_dir=_args.imgt_dir)
 
             if myIMGT2Seq:
-                print(std_MAIN_PROCESS_NAME + "IMGT2Seq results : \n{}".format(myIMGT2Seq))
+                print(std_MAIN_PROCESS_NAME + "IMGT2Seq result : \n{}".format(myIMGT2Seq))
 
-                _args.dict_AA, _args.dict_SNPS, _args.iat, _args.maptable = myIMGT2Seq.getResults()
+                _args.dict_AA, _args.dict_SNPS, _args.hat, _args.maptable = myIMGT2Seq.getResult()
 
             else:
                 print(std_ERROR_MAIN_PROCESS_NAME + "Failed to preprocess HLA sequence information.")
-                print(std_MAIN_PROCESS_NAME + "IMGT2Seq results : \n{}".format(myIMGT2Seq))
+                print(std_MAIN_PROCESS_NAME + "IMGT2Seq result : \n{}".format(myIMGT2Seq))
                 sys.exit()
 
 
@@ -133,30 +134,19 @@ class HLA_Study(object):
 
             ########## < [1] Checking HLA Typing information > ##########
 
-            _args.oneF = False
-            _args.twoF = False
-            _args.threeF = False
-            _args.fourF = True  # In whole implementation, Nothing but only 4-field format is needed.
-            _args.G_group = False
-            _args.P_group = False
-            _args.old_format = False
-
-
             if _args.chped:
                 pass
 
 
-            elif _args.hped or _args.hped_G or _args.hped_P:
+            elif _args.hped:
 
                 print(std_MAIN_PROCESS_NAME + "Given HPED file('{}') is to be processed by NomenCleaner.".format(_args.hped))
 
-                myNomenCleaner = HATK_NomenCleaner(_args.iat, _args.imgt, _args.out,
-                                                   _args.hped, _args.hped_G, _args.hped_P,
-                                                   _args.oneF, _args.twoF, _args.threeF, _args.fourF,
-                                                   _args.G_group, _args.P_group, _args.old_format,
+                myNomenCleaner = HATK_NomenCleaner(_args.hped, _args.hat, _args.imgt, _args.out,
+                                                   _args.oneF, _args.twoF, _args.threeF, _args.fourF, _args.Ggroup, _args.Pgroup,
                                                    __f_NoCaption=_args.NoCaption, __leave_NotFound=_args.leave_NotFound)
 
-                _args.chped = myNomenCleaner.getResults()
+                _args.chped = myNomenCleaner.getResult()
 
                 if _args.chped == -1:
                     print(std_ERROR_MAIN_PROCESS_NAME + "Failed to process HPED file('{}') by NomenCleaner.".format(_args.hped))
@@ -170,7 +160,7 @@ class HLA_Study(object):
 
                 myHLA2HPED = HATK_HLA2HPED(_args.rhped, _args.out, _args.platform)
 
-                _args.hped = myHLA2HPED.getResults()
+                _args.hped = myHLA2HPED.getResult()
 
                 if _args.hped == -1:
                     print(std_ERROR_MAIN_PROCESS_NAME + "Failed to process raw HPED file('{}') by HLA2HPED.")
@@ -180,13 +170,11 @@ class HLA_Study(object):
                 ### Step 2 : hped to chped (NomenCleaner)
                 print(std_MAIN_PROCESS_NAME + "Generated HPED file('{}') is to be processed by NomenCleaner.".format(_args.hped))
 
-                myNomenCleaner = HATK_NomenCleaner(_args.iat, _args.imgt, _args.out,
-                                                   _args.hped, _args.hped_G, _args.hped_P,
-                                                   _args.oneF, _args.twoF, _args.threeF, _args.fourF,
-                                                   _args.G_group, _args.P_group, _args.old_format,
+                myNomenCleaner = HATK_NomenCleaner(_args.hped, _args.hat, _args.imgt, _args.out,
+                                                   _args.oneF, _args.twoF, _args.threeF, _args.fourF, _args.Ggroup, _args.Pgroup,
                                                    __f_NoCaption=_args.NoCaption, __leave_NotFound=_args.leave_NotFound)
 
-                _args.chped = myNomenCleaner.getResults()
+                _args.chped = myNomenCleaner.getResult()
 
 
                 if _args.chped == -1:
@@ -210,13 +198,13 @@ class HLA_Study(object):
                                               _variants=_args.variants, __save_intermediates=_args.save_intermediates,
                                               _p_src="bMarkerGenerator/src")
 
-            _args.variants = mybMarkers.getReuslts()
+            _args.variants = mybMarkers.getReuslt()
 
             if _args.variants == -1:
                 print(std_ERROR_MAIN_PROCESS_NAME + "Failed to generate Binary Markers for '{}'".format(_args.chped))
                 sys.exit()
             else:
-                print(std_MAIN_PROCESS_NAME + "bMarkerGenerator result(Prefix) : \n{}".format(mybMarkers.getReuslts()))
+                print(std_MAIN_PROCESS_NAME + "bMarkerGenerator result(Prefix) : \n{}".format(mybMarkers.getReuslt()))
 
 
 
@@ -233,13 +221,13 @@ class HLA_Study(object):
                                                           _condition_list=_args.condition_list,
                                                           _ref_allele=_args.reference_allele)
 
-            _args.assoc_result = [myLogistcRegression.getResults()] # `_args.assoc_result` is supposed to be a list.
+            _args.assoc_result = [myLogistcRegression.getResult()] # `_args.assoc_result` is supposed to be a list.
 
             if _args.assoc_result[0] == -1:
                 print(std_ERROR_MAIN_PROCESS_NAME + "Failed to perform logistic regression test on the Binary Markers('{}').".format(_args.variants))
                 sys.exit()
             else:
-                print(std_MAIN_PROCESS_NAME + "Logistic Regression result : \n{}".format(myLogistcRegression.getResults()))
+                print(std_MAIN_PROCESS_NAME + "Logistic Regression result : \n{}".format(myLogistcRegression.getResult()))
 
 
 
@@ -251,10 +239,10 @@ class HLA_Study(object):
                                          _point_size=_args.point_size, _yaxis_unit=_args.yaxis_unit,
                                          _p_src="HLA_Manhattan/src", _p_data="HLA_Manhattan/data")
 
-            if myManhattan.getResults() == -1:
+            if myManhattan.getResult() == -1:
                 print(std_WARNING_MAIN_PROCESS_NAME + "Failed to plot HLA Manhattan plot.")
             else:
-                print(std_MAIN_PROCESS_NAME + "Manhattan results : \n{}".format(myManhattan.getResults()))
+                print(std_MAIN_PROCESS_NAME + "Manhattan result : \n{}".format(myManhattan.getResult()))
 
 
 
@@ -271,15 +259,15 @@ class HLA_Study(object):
                 t_maptable = _args.maptable[t_HLA]
 
                 myHeatmap = HATK_Heatmap(t_HLA, _args.out+".HLA_{}.heatmap".format(t_HLA), t_maptable, _args.assoc_result[0],
-                                         __as4field=_args.as4field, __save_intermediates=_args.save_intermediates,
+                                         __save_intermediates=_args.save_intermediates,
                                          _p_src="HLA_Heatmap/src", _p_data="HLA_Heatmap/data")
 
-                if myHeatmap.getResults() == -1:
+                if myHeatmap.getResult() == -1:
                     print(std_WARNING_MAIN_PROCESS_NAME + "Failed to plot Heatmap of HLA {} gene.".format(t_HLA))
                 else:
-                    Heatmap_status[t_HLA] = myHeatmap.getResults()
+                    Heatmap_status[t_HLA] = myHeatmap.getResult()
 
-            print(std_MAIN_PROCESS_NAME + "Heatmap results : ")
+            print(std_MAIN_PROCESS_NAME + "Heatmap result : ")
             for i in range(0, len(HLA_names)):
                 print(" {} : {}".format(HLA_names[i], Heatmap_status[HLA_names[i]]))
 
@@ -297,11 +285,12 @@ class HLA_Study(object):
                 from IMGT2Seq.IMGT2Seq import HATK_IMGT2Seq
 
                 myIMGT2Seq = HATK_IMGT2Seq(_args.imgt, _args.hg, _args.out,
+                                           _args.oneF, _args.twoF, _args.threeF, _args.fourF, _args.Ggroup, _args.Pgroup,
                                            _no_indel=_args.no_indel, _multiprocess=_args.multiprocess,
                                            _save_intermediates=_args.save_intermediates,
                                            _imgt_dir=_args.imgt_dir)
 
-                print(std_MAIN_PROCESS_NAME + "IMGT2Seq results : \n{}".format(myIMGT2Seq))
+                print(std_MAIN_PROCESS_NAME + "IMGT2Seq result : \n{}".format(myIMGT2Seq))
 
             elif _args.bmarkergenerator:
 
@@ -312,7 +301,7 @@ class HLA_Study(object):
                                                   _variants=_args.variants, __save_intermediates=_args.save_intermediates,
                                                   _p_src="bMarkerGenerator/src")
 
-                print(std_MAIN_PROCESS_NAME + "bMarkerGenerator result(Prefix) : \n{}".format(mybMarkers.getReuslts()))
+                print(std_MAIN_PROCESS_NAME + "bMarkerGenerator result(Prefix) : \n{}".format(mybMarkers.getReuslt()))
 
             elif _args.hla2hped:
 
@@ -321,20 +310,19 @@ class HLA_Study(object):
 
                 myHLA2HPED = HATK_HLA2HPED(_args.rhped, _args.out, _args.platform)
 
-                print(std_MAIN_PROCESS_NAME + "HLA2HPED result : \n{}".format(myHLA2HPED.getResults()))
+                print(std_MAIN_PROCESS_NAME + "HLA2HPED result : \n{}".format(myHLA2HPED.getResult()))
 
             elif _args.nomencleaner:
 
                 ### NomenCleaner
-                from NomenCleaner.NomenCleaner import HATK_NomenCleaner
+                from NomenCleaner.NomenCleaner import NomenCleaner
 
-                myNomenCleaner = HATK_NomenCleaner(_args.iat, _args.imgt, _args.out,
-                                                   _args.hped, _args.hped_G, _args.hped_P,
-                                                   _args.oneF, _args.twoF, _args.threeF, _args.fourF,
-                                                   _args.G_group, _args.P_group, _args.old_format,
-                                                   __f_NoCaption=_args.NoCaption, __leave_NotFound=_args.leave_NotFound)
+                myNomenCleaner = NomenCleaner(_args.hped, _args.hat, _args.imgt, _args.out,
+                                              __oneF=_args.oneF, __twoF=_args.twoF, __threeF=_args.threeF, __fourF=_args.fourF,
+                                              __Ggroup=_args.Ggroup, __Pgroup=_args.Pgroup,
+                                              __f_NoCaption=_args.NoCaption, __leave_NotFound=_args.leave_NotFound)
 
-                print(std_MAIN_PROCESS_NAME + "NomenCleaner result : \n{}".format(myNomenCleaner.getResults()))
+                print(std_MAIN_PROCESS_NAME + "NomenCleaner result : \n{}".format(myNomenCleaner))
 
             elif _args.logistic:
 
@@ -347,7 +335,7 @@ class HLA_Study(object):
                                                               _condition=_args.condition, _condition_list=_args.condition_list,
                                                               _ref_allele=_args.reference_allele)
 
-                print(std_MAIN_PROCESS_NAME + "Logistic Regression result : \n{}".format(myLogistcRegression.getResults()))
+                print(std_MAIN_PROCESS_NAME + "Logistic Regression result : \n{}".format(myLogistcRegression.getResult()))
 
             elif _args.omnibus:
 
@@ -367,7 +355,7 @@ class HLA_Study(object):
 
                 myMetaAnalysis = HATK_MetaAnalysis(_args.out, _args.assoc_result)
 
-                print(std_MAIN_PROCESS_NAME + "Meta-Analysis result : \n{}".format(myMetaAnalysis.getResults()))
+                print(std_MAIN_PROCESS_NAME + "Meta-Analysis result : \n{}".format(myMetaAnalysis.getResult()))
 
             elif _args.heatmap:
 
@@ -375,10 +363,10 @@ class HLA_Study(object):
                 from HLA_Heatmap.heatmap import HATK_Heatmap
 
                 myHeatmap = HATK_Heatmap(_args.HLA, _args.out, _args.maptable, _args.assoc_result,
-                                         __as4field=_args.as4field, __save_intermediates=_args.save_intermediates,
+                                         __save_intermediates=_args.save_intermediates,
                                          _p_src="HLA_Heatmap/src", _p_data="HLA_Heatmap/data")
 
-                print(std_MAIN_PROCESS_NAME + "Heatmap results : \n{}".format(myHeatmap.getResults()))
+                print(std_MAIN_PROCESS_NAME + "Heatmap result : \n{}".format(myHeatmap.getResult()))
 
             elif _args.manhattan:
 
@@ -390,7 +378,10 @@ class HLA_Study(object):
                                              _point_size=_args.point_size, _yaxis_unit=_args.yaxis_unit,
                                              _p_src="HLA_Manhattan/src", _p_data="HLA_Manhattan/data")
 
-                print(std_MAIN_PROCESS_NAME + "Manhattan results : \n{}".format(myManhattan.getResults()))
+                if myManhattan.getResult() == -1:
+                    print(std_WARNING_MAIN_PROCESS_NAME + "Failed to plot HLA Manhattan plot.")
+                else:
+                    print(std_MAIN_PROCESS_NAME + "Manhattan result : \n{}".format(myManhattan.getResult()))
 
 
         elif f_sum > 1:

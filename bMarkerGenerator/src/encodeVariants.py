@@ -11,7 +11,7 @@ std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % (os.path.basename(__file__))
 std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % (os.path.basename(__file__))
 
 
-def encodeVariants(_ped, _map, _out, __asSmallLetter=True, __addDummyMarker=True):
+def encodeVariants(_ped, _map, _out, __asSmallLetter=True, __addDummyMarker=False):
 
 
     ### Intermediate path.

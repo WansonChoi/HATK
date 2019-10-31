@@ -21,6 +21,8 @@ isREVERSE = {'A': False, 'C': True, 'B': True, 'DRB1': True, 'DQA1': False, 'DQB
 def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc, _gen, _prot, _p_data,
                 _no_Indel=False, _save_intermediates=False, _no_prime=True):
 
+    print(std_MAIN_PROCESS_NAME + "Generating sequence information dictionary for HLA {}.".format(_hla))
+
 
     ########## < Core Variables > ##########
 
@@ -177,8 +179,8 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc, _gen, _prot, _p_data,
 
         if _no_Indel:
 
-            print("\n\nMarkers without Indel characters.\n")
-            print(df_Markers_NoIndel_gen.head())
+            # print("\n\nMarkers without Indel characters.\n")
+            # print(df_Markers_NoIndel_gen.head())
 
             # File Writing
             if _save_intermediates:
@@ -213,8 +215,8 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc, _gen, _prot, _p_data,
             df_Seqs_splited_Indel_gen.columns = pd.Index(l_idx_gen)
             df_Seqs_splited_Indel_gen.index.name = "Alleles"
 
-            print("\nSeqs with Indel characters of gen splitted.\n")
-            print(df_Seqs_splited_Indel_gen.head())
+            # print("\nSeqs with Indel characters of gen splitted.\n")
+            # print(df_Seqs_splited_Indel_gen.head())
 
             # File Writing
             if _save_intermediates:
@@ -261,8 +263,8 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc, _gen, _prot, _p_data,
         # Final output as markers
         df_Markers_gen = SeqsToMarkers(df_temp, l_genomic_positions, l_relative_positions)
 
-        print("\nFinal output as markers\n")
-        print(df_Markers_gen.head())
+        # print("\nFinal output as markers\n")
+        # print(df_Markers_gen.head())
 
 
 
@@ -291,8 +293,8 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc, _gen, _prot, _p_data,
 
         ### precursor which will be used in making map file.
         precursor_SNPS_forMAP = df_Markers_gen.columns.to_frame(index=False)
-        print("\nframes for .map file.\n")
-        print(precursor_SNPS_forMAP.head())
+        # print("\nframes for .map file.\n")
+        # print(precursor_SNPS_forMAP.head())
 
 
         # File Writing
@@ -318,8 +320,8 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc, _gen, _prot, _p_data,
                 df_Seqs_gen.to_csv(_out+".HLA_{0}.gen.seqs.noindel.txt".format(_hla), sep='\t', header=False, index=True) # ***
 
 
-        print("\ndf_Markers_gen\n")
-        print(df_Seqs_gen.head())
+        # print("\ndf_Markers_gen\n")
+        # print(df_Seqs_gen.head())
 
 
 
@@ -331,8 +333,8 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc, _gen, _prot, _p_data,
 
         ##### Loading *_nuc.txt file.
 
-        print("\n\n=============<NUC>=============\n")
-        print(std_MAIN_PROCESS_NAME + "Processing *_nuc.txt file.\n")
+        # print("\n\n=============<NUC>=============\n")
+        # print(std_MAIN_PROCESS_NAME + "Processing *_nuc.txt file.\n")
 
         # Raw Markers
         df_raw_Markers_nuc, start_offset_nuc = LoadRawSeq2(_nuc, _hla, "nuc")
@@ -351,8 +353,8 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc, _gen, _prot, _p_data,
         df_raw_Seqs_splitted_nuc.index.name = "Alleles"
         # df_raw_Seqs_splitted_nuc.to_csv(_out + ".HLA_{0}.nuc.raw.seqs.splitted.txt".format(_hla), sep='\t', header=True, index=True)
 
-        print("\nRaw seqs(with Indels) of nuc splitted.\n")
-        print(df_raw_Seqs_splitted_nuc.head())
+        # print("\nRaw seqs(with Indels) of nuc splitted.\n")
+        # print(df_raw_Seqs_splitted_nuc.head())
 
         # (Trimmed) Sequences splitted without any indel character(for Exon checking with gen file)
         df_Seqs_splited_noIndel_nuc = df_raw_Seqs_splitted_nuc.apply(lambda x: ProcessIndel(x, _remove_indel=True), axis=0)
@@ -361,8 +363,8 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc, _gen, _prot, _p_data,
             # Hardcoding only for HLA-C due to exceptional form.
             df_Seqs_splited_noIndel_nuc = HardCodingforHLA_C(df_Seqs_splited_noIndel_nuc)
 
-        print("\n\nSeqeunces(without Indels) of nuc splitted.\n")
-        print(df_Seqs_splited_noIndel_nuc.head())
+        # print("\n\nSeqeunces(without Indels) of nuc splitted.\n")
+        # print(df_Seqs_splited_noIndel_nuc.head())
 
 
         # File Writing
@@ -377,16 +379,16 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc, _gen, _prot, _p_data,
     if _4_LOADING_PROT:
 
 
-        print("\n\n=============<Prot>=============\n")
-        print(std_MAIN_PROCESS_NAME + "Processing Prot files for AA.\n")
+        # print("\n\n=============<Prot>=============\n")
+        # print(std_MAIN_PROCESS_NAME + "Processing Prot files for AA.\n")
 
         # Raw Markers
         df_raw_Markers_prot, dummy = LoadRawSeq2(_prot, _hla, "prot")
-        print(df_raw_Markers_prot.head())
+        # print(df_raw_Markers_prot.head())
 
         # Raw Sequences
         sr_raw_Seqs_prot = get_DF_rawSeqs(df_raw_Markers_prot)
-        print(sr_raw_Seqs_prot.head())
+        # print(sr_raw_Seqs_prot.head())
 
 
 
@@ -417,12 +419,12 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc, _gen, _prot, _p_data,
         l_relative_positions, l_genomic_positions, l_type = getPositionInfo_AA(df_Seqs_IndelProcessed_prot.iat[0], isREVERSE[_hla], int(start_offset_nuc),
                                                                                _has_Indel=(not _no_Indel), _df_precursor_map=precursor_AA_forMAP)
 
-        print("\ngenomic positions")
-        print(l_genomic_positions)
-        print("\n\nrelative positions")
-        print(l_relative_positions)
-        print("\n\ntype information.")
-        print(l_type)
+        # print("\ngenomic positions")
+        # print(l_genomic_positions)
+        # print("\n\nrelative positions")
+        # print(l_relative_positions)
+        # print("\n\ntype information.")
+        # print(l_type)
 
 
         l_Markers = df_Seqs_IndelProcessed_prot.apply(lambda x : tuple(x)).tolist()
@@ -433,9 +435,9 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc, _gen, _prot, _p_data,
 
         precursor2_AA_forMAP = df_Markers_prot.columns.to_frame(index=False)
 
-        print("\nFinal output as markers.\n")
-        print(df_Markers_prot.head())
-        print(precursor2_AA_forMAP.head())
+        # print("\nFinal output as markers.\n")
+        # print(df_Markers_prot.head())
+        # print(precursor2_AA_forMAP.head())
 
         # File Writing
         if _save_intermediates:
@@ -459,7 +461,7 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc, _gen, _prot, _p_data,
 
     if _6_GENERATING_forMAP:
 
-        print(std_MAIN_PROCESS_NAME + "Generating precursor file for *.map file.")
+        # print(std_MAIN_PROCESS_NAME + "Generating precursor file for *.map file.")
 
         """
         
@@ -486,11 +488,11 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc, _gen, _prot, _p_data,
             final_SNPS_forMAP = precursor_SNPS_forMAP
 
 
-        print("\nFinally created \"forMAP\" of AA.\n")
-        print(final_AA_forMAP.head())
-
-        print("\nFinally created \"forMAP\" of SNPS.\n")
-        print(final_SNPS_forMAP.head())
+        # print("\nFinally created \"forMAP\" of AA.\n")
+        # print(final_AA_forMAP.head())
+        #
+        # print("\nFinally created \"forMAP\" of SNPS.\n")
+        # print(final_SNPS_forMAP.head())
 
 
         # File Writing
@@ -889,8 +891,8 @@ def getPositionInfo_AA(_1st_string, _is_Reverse, _rel_s_offset, _has_Indel=False
     if not isinstance(_df_precursor_map, pd.DataFrame):
         return -1
 
-    print(_df_precursor_map.head(10))
-    print(_df_precursor_map.shape[0])
+    # print(_df_precursor_map.head(10))
+    # print(_df_precursor_map.shape[0])
 
 
 

@@ -75,14 +75,35 @@ cat("min=", min(P), " max=", max(P), "\n")
 org.ncol=ncol(P)
 
 
+# Maximum Length of HLA allele name.
+max.length_HLA.allele = max(sapply(rownames(alleleP), nchar))
+cat("Maximum length of given HLA alleles : ", max.length_HLA.allele, "\n")
+
+
 # MERGE P AND ALLELE.P
-for (i in 1:11) { 
+l_HLA_allele = max.length_HLA.allele + (if(max.length_HLA.allele < 14) 1 else 0) # Defalut : 11
+for (i in 1:l_HLA_allele) { 
 P=cbind(P, alleleP)
 maptable=cbind(maptable, rep("", nrow(maptable)))
 colnames(P)[ncol(P)]=""
 }
 
+# ncol(P)
+ncol_P = ncol(P)
+cat("The # of columns of `P` : ", ncol_P, "\n")
 
+
+FixWidth = function(ncol_P_){
+  
+  a = 0.09375 # (7.5)/67 ... I set it manually
+  
+  if (ncol_P_ < 70) {
+    return(7)
+  }
+  else{
+    return(a*ncol_P_)
+  }
+}
 
 
 
@@ -91,7 +112,8 @@ colnames(P)[ncol(P)]=""
 brew=rev(brewer.pal(11,"Spectral"))
 mycol=colorRampPalette(brew)(100)
 
-pdf(paste0(args5.plot.outf_, ".pdf"), width=7, height=5.2, pointsize=8) # argument[5]
+# pdf(paste0(args5.plot.outf_, ".pdf"), width=7, height=5.2, pointsize=8) # argument[5]
+pdf(paste0(args5.plot.outf_, ".pdf"), width=FixWidth(ncol_P), height=5.2, pointsize=8) # argument[5]
 par(mar=c(5,4,4,3))
 
 lmat=matrix(c(0,3,2,1,0,4), 3, 2, byrow=T)

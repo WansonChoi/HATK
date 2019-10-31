@@ -2,7 +2,7 @@
 
 import os, sys, re
 import argparse, textwrap
-# from platform import platform
+from platform import platform
 
 
 ########## < Core Global Variables > ##########
@@ -64,7 +64,7 @@ class HATK_bMarkerGenertor(object):
                                          _p_src=kwargs["_p_src"], _p_dependency=p_dependency)
 
 
-    def getReuslts(self):
+    def getReuslt(self):
         return self.bMarkers
 
 
@@ -84,8 +84,17 @@ def bMarkerGenerator(_CHPED, _OUT, _hg, _dictionary_AA, _dictionary_SNPS, _varia
 
 
     # [2] dependency (with "_p_dependency")
-    _p_plink = os.path.join(p_dependency, "plink")
-    # _p_plink = os.path.join(p_dependency, "plink_mac" if not bool(re.search(pattern="Linux", string=platform())) else "plink_linux")
+
+    # Plink(1.9b)
+    if os.path.exists(os.path.join(p_dependency, "plink")):
+        _p_plink = os.path.join(p_dependency, "plink")
+    else:
+        if bool(re.search(pattern="Linux", string=platform())):
+            _p_plink = os.path.join(p_dependency, "os/linux/plink")
+        else:
+            _p_plink = os.path.join(p_dependency, "os/osx/plink")
+
+    # Beagle(3.0.1)
     _p_beagle = os.path.join(p_dependency, "beagle.jar")
     _p_linkage2beagle = os.path.join(p_dependency, "linkage2beagle.jar")
 
@@ -543,13 +552,17 @@ def bMarkerGenerator(_CHPED, _OUT, _hg, _dictionary_AA, _dictionary_SNPS, _varia
                 
             """
 
+            if not __save_intermediates:
 
-            os.system("rm " + (SNP_DATA2 + ".FOUNDERS.{bed,bim,fam,log,nosex}"))
-            os.system("rm " + (SNP_DATA2 + ".FOUNDERS.hardy.*"))
-            os.system("rm " + (SNP_DATA2 + ".FOUNDERS.freq.*"))
-            os.system("rm " + (SNP_DATA2 + ".FOUNDERS.missing.*"))
-            os.system("rm " + os.path.join(INTERMEDIATE_PATH, "remove.snps.*"))
-            os.system("rm " + os.path.join(INTERMEDIATE_PATH, "all.remove.snps"))
+                os.system("rm " + (SNP_DATA2 + ".FOUNDERS.{bed,bim,fam,log}"))
+                os.system("rm " + (SNP_DATA2 + ".FOUNDERS.hardy.*"))
+                os.system("rm " + (SNP_DATA2 + ".FOUNDERS.freq.*"))
+                os.system("rm " + (SNP_DATA2 + ".FOUNDERS.missing.*"))
+                os.system("rm " + os.path.join(INTERMEDIATE_PATH, "remove.snps.*"))
+                os.system("rm " + os.path.join(INTERMEDIATE_PATH, "all.remove.snps"))
+
+                if os.path.exists(SNP_DATA2 + ".FOUNDERS.nosex"):
+                    os.system("rm " + (SNP_DATA2 + ".FOUNDERS.nosex"))
 
 
             index += 1
@@ -612,11 +625,13 @@ def bMarkerGenerator(_CHPED, _OUT, _hg, _dictionary_AA, _dictionary_SNPS, _varia
             
             """
 
-            os.system("rm " + (OUTPUT + ".HLA.*"))
-            os.system("rm " + (OUTPUT + ".AA.*"))
-            os.system("rm " + (OUTPUT + ".SNPS.*"))
-            os.system("rm " + (SNP_DATA2 + ".FOUNDERS.QC.*"))
-            os.system("rm " + TMP_merged_list)
+            if not __save_intermediates:
+
+                os.system("rm " + (OUTPUT + ".HLA.*"))
+                os.system("rm " + (OUTPUT + ".AA.*"))
+                os.system("rm " + (OUTPUT + ".SNPS.*"))
+                os.system("rm " + (SNP_DATA2 + ".FOUNDERS.QC.*"))
+                os.system("rm " + TMP_merged_list)
 
 
 
@@ -705,11 +720,24 @@ def bMarkerGenerator(_CHPED, _OUT, _hg, _dictionary_AA, _dictionary_SNPS, _varia
                 - *.MERGED.FOUNDERS.FRQ
                 - all.remove.snps
                 - allele.order
+                - TMP_allele_order (:= OUTPUT + ".refallele")
+                - OUTPUT.{nosex,log}
+                - *.FRQ.{nosex,log}
                 
             """
 
-            os.system("rm " + (OUTPUT + ".MERGED.FOUNDERS.*"))
-            os.system("rm " + TMP_all_remove_snps)
+            if not __save_intermediates:
+
+                os.system("rm " + (OUTPUT + ".MERGED.FOUNDERS.*"))
+                os.system("rm " + (OUTPUT + ".FRQ.log"))
+                os.system("rm " + (OUTPUT + ".log"))
+                os.system("rm " + TMP_all_remove_snps)
+                os.system("rm " + TMP_allele_order)
+
+                if os.path.exists(OUTPUT + ".FRQ.nosex"):
+                    os.system("rm " + (OUTPUT + ".FRQ.nosex"))
+                if os.path.exists(OUTPUT + ".nosex"):
+                    os.system("rm " + (OUTPUT + ".nosex"))
 
 
 
@@ -872,7 +900,12 @@ def bMarkerGenerator(_CHPED, _OUT, _hg, _dictionary_AA, _dictionary_SNPS, _varia
                 os.system("rm " + OUTPUT+".SNPS.CODED.{bed,bim,fam,log}")
                 os.system("rm " + OUTPUT+".AA.CODED.{bed,bim,fam,log}")
 
-
+                if os.path.exists(__HLA__+".nosex"):
+                    os.system("rm " + __HLA__ + ".nosex")
+                if os.path.exists(__SNPS__+".nosex"):
+                    os.system("rm " + __SNPS__ + ".nosex")
+                if os.path.exists(__AA__+".nosex"):
+                    os.system("rm " + __AA__ + ".nosex")
 
         if MERGE:
 
@@ -925,6 +958,14 @@ def bMarkerGenerator(_CHPED, _OUT, _hg, _dictionary_AA, _dictionary_SNPS, _varia
                 os.system("rm " + __HLA__+".{bed,bim,fam,log}")
                 os.system("rm " + TMP_merged_list)
 
+                if os.path.exists(__HLA__+".nosex"):
+                    os.system("rm " + __HLA__ + ".nosex")
+                if os.path.exists(__SNPS__+".nosex"):
+                    os.system("rm " + __SNPS__ + ".nosex")
+                if os.path.exists(__AA__+".nosex"):
+                    os.system("rm " + __AA__ + ".nosex")
+
+
 
             index += 1
 
@@ -956,21 +997,55 @@ def bMarkerGenerator(_CHPED, _OUT, _hg, _dictionary_AA, _dictionary_SNPS, _varia
             __MERGED__ = OUTPUT + '.MERGED'
             TMP_allele_order = __MERGED__ + ".refallele"
 
-            command = ' '.join(
-                ["awk", '\'{if (NR > 1){if (($5 == "a" && $6 == "p") || ($6 == "a" && $5 == "p")){print $2 "\tp"}}}\'',
-                 __MERGED__+'.bim', ">", TMP_allele_order])
+
+            command = "{} --bfile {} --freq --out {}".format(plink, __MERGED__, __MERGED__+'.FRQ')
             # print(command)
             os.system(command)
 
+            all_remove_snps = os.path.join(INTERMEDIATE_PATH, "all.remove.snps")
+            command = "awk '{if (NR > 1 && ($5 < 0.0001 || $5 > 0.9999)){print $2}}' %s > %s" % (__MERGED__+'.FRQ.frq', all_remove_snps)
+            # print(command)
+            os.system(command)
+
+            # command = ' '.join(
+            #     ["awk", '\'{if (NR > 1){if (($5 == "a" && $6 == "p") || ($6 == "a" && $5 == "p")){print $2 "\tp"}}}\'',
+            #      __MERGED__+'.bim', ">", TMP_allele_order])
+            command = 'awk \'{if (NR > 1){if (($3 == "a" && $4 == "p") || ($4 == "a" && $3 == "p")){print $2 "\tp"}}}\' %s > %s' % (__MERGED__+'.FRQ.frq', TMP_allele_order)
+            # print(command)
+            os.system(command)
+
+            # command = ' '.join(
+            #     [plink, "--make-bed", "--bfile", __MERGED__, "--a1-allele", TMP_allele_order,
+            #      "--out", OUTPUT]) # (2019. 01. 10.) Final output as just output prefix(`OUTPUT`)
             command = ' '.join(
-                [plink, "--make-bed", "--bfile", __MERGED__, "--a1-allele", TMP_allele_order,
-                 "--out", OUTPUT]) # (2019. 01. 10.) Final output as just output prefix(`OUTPUT`)
+                [plink, "--make-bed", "--bfile", __MERGED__, "--a1-allele", TMP_allele_order, "--exclude",
+                 all_remove_snps, "--geno 0.5", "--out", OUTPUT])
+            # print(command)
+            os.system(command)
+
+            # Calculate allele frequencies
+            command = ' '.join([plink, "--bfile", OUTPUT, "--keep-allele-order", "--freq", "--out", OUTPUT + '.FRQ'])
             # print(command)
             os.system(command)
 
 
             if not __save_intermediates:
-                os.system("rm " + __MERGED__+".{bed,bim,fam,log,refallele}")
+
+                os.system("rm " + __MERGED__+".{bed,bim,fam,log}")
+                os.system("rm " + __MERGED__+".FRQ.{frq,log}")
+                os.system("rm " + TMP_allele_order)
+                os.system("rm " + all_remove_snps)
+                os.system("rm " + OUTPUT+".FRQ.log")
+                os.system("rm " + OUTPUT+".log")
+
+                if os.path.exists(__MERGED__+'.nosex'):
+                    os.system("rm " + __MERGED__ + ".nosex")
+                if os.path.exists(__MERGED__+'.FRQ.nosex'):
+                    os.system("rm " + __MERGED__ + ".FRQ.nosex")
+                if os.path.exists(OUTPUT+".nosex"):
+                    os.system("rm " + OUTPUT+".nosex")
+                if os.path.exists(OUTPUT+".FRQ.nosex"):
+                    os.system("rm " + OUTPUT+".FRQ.nosex")
 
 
             index += 1

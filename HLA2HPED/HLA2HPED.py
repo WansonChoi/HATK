@@ -31,11 +31,11 @@ class HATK_HLA2HPED(object):
             sys.exit()
 
 
-        self.results = HLA2HPED(_rhped, _out, _platform)
+        self.result = HLA2HPED(_rhped, _out, _platform)
 
 
-    def getResults(self):
-        return self.results
+    def getResult(self):
+        return self.result
 
 
 
@@ -105,7 +105,7 @@ def _convert_AXIOM(_i_HLA, _out):
 
 
     DICT_HLA_INPUTS = \
-        {HLA_names[i]: pd.read_table(_i_HLA[i], header=None, sep='\t|\s+', engine='python', dtype=str,
+        {HLA_names[i]: pd.read_csv(_i_HLA[i], header=None, sep='\s+', dtype=str,
                                      names=["Label", "No", "Allele", "v1", "v2"]) for i in range(0, len(HLA_names))}
 
     N_rows = []
@@ -194,7 +194,7 @@ def _convert_HIBAG(_i_HLA, _out):
 
 
     DICT_HLA_INPUTS = \
-        {HLA_names[i]: pd.read_table(_i_HLA[i], header=None, sep='\t|\s+', engine='python', dtype=str,
+        {HLA_names[i]: pd.read_csv(_i_HLA[i], header=None, sep='\s+', dtype=str,
                                      names=["Label", "Allele1", "Allele2", "v1"]) for i in range(0, len(HLA_names))}
 
 
