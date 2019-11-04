@@ -613,7 +613,8 @@ def HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_result, __save_intermediates=
                             _out+".alleleP.txt",
                             _hla_name,
                             _out,
-                            '1>{LOG} 2>{LOG}'.format(LOG=(_out+'.log'))])
+                            # '1>{LOG} 2>{LOG}'.format(LOG=(_out+'.log'))])
+                            '1>{LOG}'.format(LOG=(_out+'.log'))])
 
         # print(command)
         os.system(command)
@@ -636,7 +637,7 @@ def HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_result, __save_intermediates=
     if os.path.exists(__RESULTS__):
         return _out + ".pdf"
     else:
-        print(std_WARNING_MAIN_PROCESS_NAME + "Heatmap failed. ('{}')".format(_out+'.pdf'))
+        print(std_ERROR_MAIN_PROCESS_NAME + "Heatmap failed. ('{}')".format(_out+'.pdf'))
         return -1
 
 
