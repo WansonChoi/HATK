@@ -1,0 +1,33 @@
+PLINK v1.90b4 64-bit (20 Mar 2017)             www.cog-genomics.org/plink/1.9/
+(C) 2005-2017 Shaun Purcell, Christopher Chang   GNU General Public License v3
+Logging to tests/_0_wholeProcess/20191101_2/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.58C_RA.300+300.chr6.hg18.log.
+Options in effect:
+  --a1-allele tests/_0_wholeProcess/20191101_2/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.58C_RA.300+300.chr6.hg18.ref
+  --allow-no-sex
+  --bfile tests/_0_wholeProcess/20191101_2/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.58C_RA.300+300.chr6.hg18
+  --chr 6
+  --ci 0.95
+  --from-mb 29
+  --logistic hide-covar
+  --out tests/_0_wholeProcess/20191101_2/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.58C_RA.300+300.chr6.hg18
+  --pheno example/wtccc_filtered_58C_RA.hatk.58C_RA.300+300.phe
+  --pheno-name RA
+  --to-mb 34
+
+16384 MB RAM detected; reserving 8192 MB for main workspace.
+12462 out of 37486 variants loaded from .bim file.
+600 people (0 males, 0 females, 600 ambiguous) loaded from .fam.
+Ambiguous sex IDs written to
+tests/_0_wholeProcess/20191101_2/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.58C_RA.300+300.chr6.hg18.nosex
+.
+600 phenotype values present after --pheno.
+Using 1 thread (no multithreaded calculations invoked).
+Before main variant filters, 600 founders and 0 nonfounders present.
+Calculating allele frequencies... 0%1%2%3%4%5%6%7%8%9%10%11%12%13%14%15%16%17%18%19%20%21%22%23%24%25%26%27%28%29%30%31%32%33%34%35%36%37%38%39%40%41%42%43%44%45%46%47%48%49%50%51%52%53%54%55%56%57%58%59%60%61%62%63%64%65%66%67%68%69%70%71%72%73%74%75%76%77%78%79%80%81%82%83%84%85%86%87%88%89%90%91%92%93%94%95%96%97%98%99% done.
+Total genotyping rate is 0.958084.
+--a1-allele: 12462 assignments made.
+12462 variants and 600 people pass filters and QC.
+Among remaining phenotypes, 300 are cases and 300 are controls.
+Writing logistic model association results to
+tests/_0_wholeProcess/20191101_2/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.58C_RA.300+300.chr6.hg18.assoc.logistic
+... 0%4%8%12%16%20%24%28%32%36%41%45%49%53%57%61%65%69%73%78%82%86%90%94%98%done.
