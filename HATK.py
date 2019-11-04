@@ -165,8 +165,9 @@ if __name__ == "__main__":
     g_ASSOC2_Omnibus = parser.add_argument_group(title='(Association Test 2) Omnibus Test', description='')
     g_ASSOC2_Omnibus.add_argument("--omnibus", "-om", help="\nGive this argument to implement \"Omnibus Test\".\n\n", action='store_true')
 
-    g_ASSOC2_Omnibus.add_argument("--phased", "-ph", help="\nSpecify the \"*.bgl.phased\" file.\n\n")
-    g_ASSOC2_Omnibus.add_argument("--aa", help="\nSpecify the \"*.aa\" file.\n\n")
+    g_ASSOC2_Omnibus.add_argument("--fam", help="\nSpecify \"*.fam\" file.\n\n")
+    g_ASSOC2_Omnibus.add_argument("--phased", "-ph", help="\nSpecify the phased beagle file(ex. \"*.bgl.phased\") to make \"*.aa\" file.\n\n")
+    g_ASSOC2_Omnibus.add_argument("--aa", help="\nSpecify the \"*.aa\" file for Omnibus test.\n\n")
     # g_ASSOC2_Omnibus.add_argument("--rare-threshold", "-rth", help="\nSpecify the threshold value for rare variants.\n\n")
 
 

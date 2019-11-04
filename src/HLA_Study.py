@@ -342,8 +342,7 @@ class HLA_Study(object):
                 ### Omnibus Test
                 from HLA_Analysis.HLA_Analysis import HATK_OmibusTest
 
-                myOminubus = HATK_OmibusTest(_args.out, _args.variants + '.fam',
-                                             _phe=_args.pheno, _phe_name=_args.pheno_name,
+                myOminubus = HATK_OmibusTest(_args.out, _args.fam, _phe=_args.pheno, _phe_name=_args.pheno_name,
                                              _covar=_args.covar, _covar_name=_args.covar_name,
                                              _condition=_args.condition, _condition_list=_args.condition_list,
                                              _bgl_phased=_args.phased, _aa=_args.aa)

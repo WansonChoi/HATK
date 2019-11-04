@@ -203,6 +203,12 @@ class HATK_OmibusTest():
         # print(kwargs)
 
 
+        ## _fam
+        if not _fam:
+            print(std_ERROR_MAIN_PROCESS_NAME + "*.fam file('{}') can't be found.\n"
+                                                "Please check '--fam' argument again.".format(_fam))
+            sys.exit()
+
 
 
         ## _phe and _phe_name
@@ -259,11 +265,6 @@ class HATK_OmibusTest():
 
 
 
-        ## _fam
-        if not _fam:
-            print(std_ERROR_MAIN_PROCESS_NAME + "Given *.fam file('{}') doesn't exist.\n"
-                                                "Please check '--input' argument again.".format(_fam))
-            sys.exit()
 
 
         ## _aa, _bgl_phased
@@ -279,6 +280,7 @@ class HATK_OmibusTest():
             if kwargs['_bgl_phased'] and os.path.exists(kwargs['_bgl_phased']):
 
                 # *.bgl.phased instead of *.aa.
+                print(std_MAIN_PROCESS_NAME + "Generating '{}.aa' file using '{}' file.".format(_out, kwargs['_bgl_phased']))
                 __aa__ = GetPhasedAACalls(_fam, kwargs['_bgl_phased'], _out)
 
             else:
