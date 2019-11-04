@@ -167,7 +167,7 @@ if __name__ == "__main__":
 
     g_ASSOC2_Omnibus.add_argument("--fam", help="\nSpecify \"*.fam\" file.\n\n")
     g_ASSOC2_Omnibus.add_argument("--phased", "-ph", help="\nSpecify the phased beagle file(ex. \"*.bgl.phased\") to make \"*.aa\" file.\n\n")
-    g_ASSOC2_Omnibus.add_argument("--aa", help="\nSpecify the \"*.aa\" file for Omnibus test.\n\n")
+    g_ASSOC2_Omnibus.add_argument("--aa", help="\nSpecify the \"*.aa\" file to be used in Omnibus test.\n\n")
     # g_ASSOC2_Omnibus.add_argument("--rare-threshold", "-rth", help="\nSpecify the threshold value for rare variants.\n\n")
 
 

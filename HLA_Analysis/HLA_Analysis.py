@@ -472,10 +472,14 @@ def GetPhasedAACalls(_fam, _bgl_phased, _out):
 
     FAM = _fam
 
-    command = ' '.join([GLOBAL_p_Rscript, "HLA_Analysis/src/OmnibusTest/AllCC_Get_Phased_AA_Calls.R", _bgl_phased, FAM, _out])
-    os.system(command)
+    command = ' '.join([GLOBAL_p_Rscript, "HLA_Analysis/src/OmnibusTest/AllCC_Get_Phased_AA_Calls.R", _bgl_phased, FAM, _out, '1>{LOG}'.format(LOG=(_out+'.aa.log'))])
+    bash_result = os.system(command)
 
-    return _out + ".aa"
+    if bash_result == 0:
+        return _out + ".aa"
+    else:
+        print(std_ERROR_MAIN_PROCESS_NAME + "Failed to make {} file."
+                                            "Please check '--phased' argument again.".format(_out + ".aa"))
 
 
 def Omnibus_Test(_fam, _out, _aa, _phe, _phe_name, _covar, _covar_name="NA", _condition="NA"):
@@ -489,25 +493,20 @@ def Omnibus_Test(_fam, _out, _aa, _phe, _phe_name, _covar, _covar_name="NA", _co
 
     """
 
-    ### File existence Check.
-
-
+    print(std_MAIN_PROCESS_NAME + "Performing Omnibus Test.")
 
     ### Argument Processing && Generating Command.
 
     command = [GLOBAL_p_Rscript, "HLA_Analysis/src/OmnibusTest/OmnibusTest_BHv5.R",
-               _out, _fam, _aa, _phe, _phe_name, _covar, _covar_name]
-
-    if bool(_condition):
-        command.append(_condition)
-    else:
-        command.append("NA")
+               _out, _fam, _aa, _phe, _phe_name, _covar, _covar_name, _condition if bool(_condition) else "NA",
+               '1>{LOG}'.format(LOG=(_out+'.omnibus.log'))]
 
     command = ' '.join(command)
     # print(command)
+    bash_result = os.system(command)
 
-
-    if not os.system(command):
+    if bash_result == 0:
+        print(std_MAIN_PROCESS_NAME + "Omnibus test successfully done.")
         return (_out + ".omnibus")
     else:
         print(std_ERROR_MAIN_PROCESS_NAME + "Omnibus Test failed.\n")
