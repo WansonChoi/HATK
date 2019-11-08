@@ -63,37 +63,40 @@ We strongly recommend using 'Anaconda(or Miniconda)' to set up HATK. HATK suppor
     - Anaconda : (https://www.anaconda.com/)
     - Miniconda : (https://docs.conda.io/en/latest/miniconda.html)
 <br>
-<br>
+
 2. Create a new independent work environment.
 
-    By using 'HATK.yml' file in the project folder, Create a new virtual environment. 
+	By using 'HATK.yml' file in the project folder, Create a new virtual environment. 
+    
+	```
+	conda env create -f HATK.yml
+	```
+	
+	The above command will generate a new work environment named 'HATK', which handles dependent Python packages or libraries of HATK, independent to your system. For more detailed explanation about Anaconda's managing environment, Please check this reference(https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#create-env-file-manually)
 
-    ```
-    conda env create -f HATK.yml
-    ```
+	If the new environment is succuessfully installed, then activte it.
 
-    This command will generate a new work environment named 'HATK', which handles dependent Python packages or libraries of HATK, independent to your system. For more detailed explanation about Anaconda's managing environment, Please check this reference(https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#create-env-file-manually)
+	```
+	conda activate HATK
+	```
 
-    After a new environment succuessfully installed, activte it.
-    ```
-    conda activate HATK
-    ```
+	HATK can be implemented in this environment. When you want to go back to your system setting, then
 
-    HATK can be implemented in this environment. When you want to go back to your system setting, then
-    ```
-    conda activate base
-    ```
-    or
-    ```
-    conda deactivate HATK
-    ```
+	```
+	conda activate base
+	```
+	or    
+	```
+	conda deactivate HATK
+	```
 
-    If you want to remove this virtual environment forever in your system, then
+	If you want to remove this virtual environment forever in your system, then
 
-    ```
-    conda remove -n HATK
-    ```
-    <br>
+	```
+	conda remove -n HATK
+	```
+<br>
+<br>
 
 3. Download each dependent software in 'dependency/' folder.
 
