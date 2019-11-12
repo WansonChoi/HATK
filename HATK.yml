@@ -128,5 +128,4 @@ dependencies:
   - xz=5.2.4
   - zlib=1.2.11
   - zstd=1.4.3
-prefix: /home/wschoi/miniconda3/envs/HATK2
 
