@@ -6,9 +6,6 @@
 
 Human leukocyte antigen (HLA) genes encode the major histocompatibility complex (MHC) protein, which controls human immune responses and affects the susceptibility to various diseases. Identifying which allele or amino acid position of the HLA gene is driving the disease is called HLA fine-mapping, which is an indispensable analysis in studies of autoimmune diseases. However, for researchers who want to conduct HLA fine-mapping, it can be a burden because there are multiple technical problems that need to be solved such as acquiring HLA sequence information from IPD-IMGT/HLA(https://www.ebi.ac.uk/ipd/imgt/hla/) database, fitting HLA allele name in standard nomeclature system, preparing panel for association test, huge amount of text-preprocessing and etc. HATK provides a collection of tools that not only can solve those technical problems but also can help researchers to analyze the fine-mapping result.
 
-* HATK란? : HLA region에서 association test를 수행할 수 있게 해주고, 이를 통해 얻은 association signal을 fine-mapping할 수 있게 도와주는 tool.
-* HLA Finemapping을 하는데 있어 맞닥드리게 될 문제점들.
-* 그리고 HATK가 제공하는 이에 대한 Solution들.
 
 ## (1.5) Why do we need HATK? (Current Technical challenges)
 #### [No standard file format for HLA information]
@@ -69,18 +66,18 @@ We strongly recommend using 'Anaconda(or Miniconda)' to set up HATK. HATK suppor
 	By using 'HATK.yml' file in the project folder, Create a new virtual environment. 
     
 	```
-	conda env create -f HATK.yml
+	conda env create -f HATK_LINUX.yml
 	```
 	
-	The above command will generate a new work environment named 'HATK', which handles dependent Python packages or libraries of HATK, independent to your system. For more detailed explanation about Anaconda's managing environment, Please check this reference(https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#create-env-file-manually)
+	The above command will generate a new virtual environment named 'HATK', which contains dependent Python packages, Java and R libraries, independent to your system. For more detailed explanation about Anaconda's managing environment, Please check this reference(https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#create-env-file-manually)
 
-	If the new environment is succuessfully installed, then activte it.
+	If the new environment is succuessfully installed, then activate it.
 
 	```
 	conda activate HATK
 	```
 
-	HATK can be implemented in this environment. When you want to go back to your system setting, then
+	HATK will be implemented in this environment. When you want to go back to your Python system setting, then
 
 	```
 	conda activate base
@@ -93,21 +90,21 @@ We strongly recommend using 'Anaconda(or Miniconda)' to set up HATK. HATK suppor
 	If you want to remove this virtual environment forever in your system, then
 
 	```
-	conda remove -n HATK
+	conda env remove -n HATK
 	```
 <br>
 <br>
 
 3. Download each dependent software in 'dependency/' folder.
 
-    Though Anaconda can facilitate installing necessary Python packages or libraries with less endeavour, there are some other software which you must install manually by yourself.
+    Though Anaconda handles installing necessary Python packages and R libraries with less endeavour, there are some other software which you must prepare manually by yourself (primarily due to copyright issue).
 
     In the project folder, make a folder named 'dependency'. (**with right exactly this name**)
     ```
-    mkdir dependency
+    mkdir dependency/
     ```
 
-    And download below software to this directory.
+    And download below software to this directory and change their name to below ones.
 
     - beagle.jar (http://faculty.washington.edu/browning/beagle/b3.html - 'Old version'; **Choose the version "3.0.4"**)
     <!-- - beagle4.jar (https://faculty.washington.edu/browning/beagle/b4_1.html#download) -->
@@ -121,11 +118,13 @@ We strongly recommend using 'Anaconda(or Miniconda)' to set up HATK. HATK suppor
 <br>
 <br>
 
-4. Install R language(https://www.r-project.org/) and below R packages.
+<!-- 4. Install R language(https://www.r-project.org/) and below R packages.
+
+    You **MUST** check wether these R packages are successfully installed or not. If not, Generating heatmap plot will fail.
 
     - gplots (https://cran.r-project.org/web/packages/gplots/index.html)
     - RColorBrewer (https://cran.r-project.org/web/packages/RColorBrewer/index.html)
-    - shape (https://cran.r-project.org/web/packages/shape/index.html)
+    - shape (https://cran.r-project.org/web/packages/shape/index.html) -->
 
 
 <br>
@@ -138,20 +137,21 @@ run below command
 
 ```
 python3 HATK.py \
-    --variants example/wtccc_filtered_58C_RA.hatk.58C_RA.300+300 \
+    --variants example/wtccc_filtered_58C_RA.hatk.58C_RA.300+300.chr6.hg18 \
     --hped example/wtccc_filtered_58C_RA.hatk.58C_RA.300+300.hped \
     --pheno example/wtccc_filtered_58C_RA.hatk.58C_RA.300+300.phe \
     --pheno-name RA \
-    --out MyHLAStudy/MyHLAStudy_wtccc_filtered_58C_RA.hatk.58C_RA.300+300 \
+    --out MyHLAStudy/MyHLAStudy_wtccc_filtered_58C_RA.hatk.58C_RA.300+300.chr6.hg18 \
     -imgt 3320 \
-    -hg 19 \
+    -hg 18 \
     --imgt-dir example/IMGTHLA3320 \
-    --multiprocess
+    --multiprocess \
+    --2field
 ```
 
-This command will implement (1) IMGT2Seq, (2) NomenCleaner, (3) bMarkerGenerator, (4) HLA_Analyzer(Association Test - logistic regression), (5) Manhattan Plot and (6) Heatmap, which are the minimal components to be doen for HLA fine-mapping.
+This command will implement (1) IMGT2Seq, (2) NomenCleaner, (3) bMarkerGenerator, (4) HLA_Analyzer(Association Test - logistic regression), (5) Manhattan Plot and (6) Heatmap Plot, which are the minimal components to be doen for HLA fine-mapping.
 
-On the other hand, as mentioned above, each module of HATK can be implemented repectively. The README files of each of those modules are prepared in 'docs/' folder. Those files include more detailed explanation and respective usage examples.
+On the other hand, as mentioned above, each module of HATK can be implemented repectively. **The README files of each of those modules are prepared in 'docs/' folder.** Those files include more detailed explanation and respective usage examples.
 
 ## (4) Citation
 
