@@ -57,19 +57,20 @@ We strongly recommend using 'Anaconda(or Miniconda)' to set up HATK. HATK suppor
 
 
 1. install Anaconda or Miniconda
+
     - Anaconda : (https://www.anaconda.com/)
     - Miniconda : (https://docs.conda.io/en/latest/miniconda.html)
 <br>
 
-2. Create a new independent work environment.
+2. Create a new independent virtual Python environment.
 
-	By using 'HATK.yml' file in the project folder, Create a new virtual environment. 
+	By using 'HATK_LINUX.yml'('HATK_OSX.yml' in case of using OS X) file in the project folder, Create a new virtual environment. 
     
 	```
 	conda env create -f HATK_LINUX.yml
 	```
 	
-	The above command will generate a new virtual environment named 'HATK', which contains dependent Python packages, Java and R libraries, independent to your system. For more detailed explanation about Anaconda's managing environment, Please check this reference(https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#create-env-file-manually)
+	The above command will generate a new virtual environment named 'HATK', which contains dependent Python packages, Java and R libraries, independent to your original Python system. For more detailed explanation about Anaconda's managing virtual environment, Please check this reference(https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#create-env-file-manually).
 
 	If the new environment is succuessfully installed, then activate it.
 
@@ -77,7 +78,7 @@ We strongly recommend using 'Anaconda(or Miniconda)' to set up HATK. HATK suppor
 	conda activate HATK
 	```
 
-	HATK will be implemented in this environment. When you want to go back to your Python system setting, then
+	HATK will be implemented in this virtual environment. When you want to go back to your original Python system setting, then
 
 	```
 	conda activate base
@@ -87,7 +88,7 @@ We strongly recommend using 'Anaconda(or Miniconda)' to set up HATK. HATK suppor
 	conda deactivate HATK
 	```
 
-	If you want to remove this virtual environment forever in your system, then
+	If you want to remove this virtual environment forever in your Anaconda, then
 
 	```
 	conda env remove -n HATK
@@ -101,10 +102,10 @@ We strongly recommend using 'Anaconda(or Miniconda)' to set up HATK. HATK suppor
 
     In the project folder, make a folder named 'dependency'. (**with right exactly this name**)
     ```
-    mkdir dependency/
+    mkdir dependency
     ```
 
-    And download below software to this directory and change their name to below ones.
+    And download below software to this directory and change their name as below.
 
     - beagle.jar (http://faculty.washington.edu/browning/beagle/b3.html - 'Old version'; **Choose the version "3.0.4"**)
     <!-- - beagle4.jar (https://faculty.washington.edu/browning/beagle/b4_1.html#download) -->
@@ -133,23 +134,21 @@ We strongly recommend using 'Anaconda(or Miniconda)' to set up HATK. HATK suppor
 
 ## (3) Usage example
 
-run below command
-
 ```
 python3 HATK.py \
     --variants example/wtccc_filtered_58C_RA.hatk.58C_RA.300+300.chr6.hg18 \
     --hped example/wtccc_filtered_58C_RA.hatk.58C_RA.300+300.hped \
+    --2field
     --pheno example/wtccc_filtered_58C_RA.hatk.58C_RA.300+300.phe \
     --pheno-name RA \
     --out MyHLAStudy/MyHLAStudy_wtccc_filtered_58C_RA.hatk.58C_RA.300+300.chr6.hg18 \
     -imgt 3320 \
     -hg 18 \
     --imgt-dir example/IMGTHLA3320 \
-    --multiprocess \
-    --2field
+    --multiprocess 2
 ```
 
-This command will implement (1) IMGT2Seq, (2) NomenCleaner, (3) bMarkerGenerator, (4) HLA_Analyzer(Association Test - logistic regression), (5) Manhattan Plot and (6) Heatmap Plot, which are the minimal components to be doen for HLA fine-mapping.
+This command will implement (1) IMGT2Seq, (2) NomenCleaner, (3) bMarkerGenerator, (4) HLA_Analyzer(Association Test - logistic regression), (5) Manhattan Plot and (6) Heatmap Plot, which are the minimal components for HLA fine-mapping to be done.
 
 On the other hand, as mentioned above, each module of HATK can be implemented repectively. **The README files of each of those modules are prepared in 'docs/' folder.** Those files include more detailed explanation and respective usage examples.
 
