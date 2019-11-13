@@ -1,10 +1,20 @@
 # HATK (HLA Analysis Toolkit)
 
 
+## (0) Background
+
+- `Human Leukocyte Antigen(HLA)` genes encode the `Major Histocompatibility Complex (MHC)` protein, which controls human immune responses and affects the susceptibility to various diseases.
+- The genomic region where these genes are located is called `HLA region`. This region has distinguishable polymorphism compared to other genomic regions.
+- It is common for each HLA gene to have even thousands of alleles. For example, It has been found that there are at least 7,000 alleles for HLA-B gene. (<https://www.ebi.ac.uk/ipd/imgt/hla/stats.html)>
+<!-- - Due to its highly polymorphic nature, The result of High-throughput sequence alignment to Human Reference Genome and SNP array in HLA region can't be used as it is. -->
+- Acquring exact HLA allele information of patients is usually costly(e.g. HLA typing service). However, thanks to recent development of HLA imputation and inference technologies, researchers now can acquire many samples' HLA allele information.
+
+<!-- ![HLA region](github_images/Figure1.png) -->
+
 ## (1) Introduction
 
 
-Human leukocyte antigen (HLA) genes encode the major histocompatibility complex (MHC) protein, which controls human immune responses and affects the susceptibility to various diseases. Identifying which allele or amino acid position of the HLA gene is driving the disease is called HLA fine-mapping, which is an indispensable analysis in studies of autoimmune diseases. However, for researchers who want to conduct HLA fine-mapping, it can be a burden because there are multiple technical problems that need to be solved such as acquiring HLA sequence information from IPD-IMGT/HLA(https://www.ebi.ac.uk/ipd/imgt/hla/) database, fitting HLA allele name in standard nomeclature system, preparing panel for association test, huge amount of text-preprocessing and etc. HATK provides a collection of tools that not only can solve those technical problems but also can help researchers to analyze the fine-mapping result.
+ Identifying which allele or amino acid position of the HLA gene is driving the disease is called HLA fine-mapping, which is an indispensable analysis in studies of autoimmune diseases. However, for researchers who want to conduct HLA fine-mapping, it can be a burden because there are multiple technical problems that need to be solved such as acquiring HLA sequence information from IPD-IMGT/HLA(https://www.ebi.ac.uk/ipd/imgt/hla/) database, fitting HLA allele name in standard nomeclature system, preparing marker panel for association test, huge amount of text-preprocessing and etc. `HATK` provides a collection of tools that not only can solve those technical problems but also can help researchers to analyze HLA fine-mapping result.
 
 
 ## (1.5) Why do we need HATK? (Current Technical challenges)
@@ -64,15 +74,15 @@ We strongly recommend using 'Anaconda(or Miniconda)' to set up HATK. HATK suppor
 
 2. Create a new independent virtual Python environment.
 
-	By using 'HATK_LINUX.yml'('HATK_OSX.yml' in case of using OS X) file in the project folder, Create a new virtual environment. 
+	By using 'HATK_LINUX.yml'('HATK_OSX.yml' in case of using OS X) file in the project folder, Create a new Python virtual environment.
     
 	```
 	conda env create -f HATK_LINUX.yml
 	```
 	
-	The above command will generate a new virtual environment named 'HATK', which contains dependent Python packages, Java and R libraries, independent to your original Python system. For more detailed explanation about Anaconda's managing virtual environment, Please check this reference(https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#create-env-file-manually).
+	The above command will generate a new Python virtual environment named 'HATK', which contains dependent Python packages, Java and R libraries, independent to your original Python system. For more detailed explanation about Anaconda's managing Python virtual environment, Please check this reference(https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#create-env-file-manually).
 
-	If the new environment is succuessfully installed, then activate it.
+	If the new virtual environment is succuessfully installed, then activate it.
 
 	```
 	conda activate HATK
@@ -88,7 +98,7 @@ We strongly recommend using 'Anaconda(or Miniconda)' to set up HATK. HATK suppor
 	conda deactivate HATK
 	```
 
-	If you want to remove this virtual environment forever in your Anaconda, then
+	If you want to remove this virtual environment for HATK forever in your Anaconda, then
 
 	```
 	conda env remove -n HATK
