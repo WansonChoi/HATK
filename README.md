@@ -5,9 +5,13 @@
 
 - `Human Leukocyte Antigen(HLA)` genes encode the `Major Histocompatibility Complex (MHC)` protein, which controls human immune responses and affects the susceptibility to various diseases.
 - The genomic region where these genes are located is called `HLA region`. This region has distinguishable polymorphism compared to other genomic regions.
-- It is common for each HLA gene to have even thousands of alleles. For example, It has been found that there are at least 7,000 alleles for HLA-B gene. (<https://www.ebi.ac.uk/ipd/imgt/hla/stats.html)>
+- It is common for each HLA gene to have even thousands of alleles. For example, It has been found that there are at least 7,000 alleles for HLA-B gene. (<https://www.ebi.ac.uk/ipd/imgt/hla/stats.html>)
+- Acquring exact HLA allele information of patients is usually costly(e.g. HLA Typing Service). However, thanks to recent development of HLA imputation and inference technologies, researchers now can acquire many samples' HLA allele information.
+- The official sequence information of HLA region is supervised by the specialist database `IPD-IMGT/HLA`(<https://www.ebi.ac.uk/ipd/imgt/hla/>). Also, this group names those official HLA sequences based on the `WHO Nomenclature Committee For Factors of the HLA System`(<http://hla.alleles.org/nomenclature/committee.html>).
+- Because of the extreme polymorphism in HLA region, variant information in HLA region of Human Reference Genome or SNP array can't be used as it is. Rather, the HLA information distributed by IPD-IMGT/HLA database should be used.
+
+
 <!-- - Due to its highly polymorphic nature, The result of High-throughput sequence alignment to Human Reference Genome and SNP array in HLA region can't be used as it is. -->
-- Acquring exact HLA allele information of patients is usually costly(e.g. HLA typing service). However, thanks to recent development of HLA imputation and inference technologies, researchers now can acquire many samples' HLA allele information.
 
 <!-- ![HLA region](github_images/Figure1.png) -->
 
