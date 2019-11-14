@@ -8,7 +8,7 @@
 - It is common for each HLA gene to have even thousands of alleles. For example, It has been found that there are at least 7,000 alleles for HLA-B gene. (<https://www.ebi.ac.uk/ipd/imgt/hla/stats.html>)
 - Acquring exact HLA allele information of patients is usually costly(e.g. HLA Typing Service). However, thanks to recent development of HLA imputation and inference technologies, researchers now can acquire many samples' HLA allele information.
 - The official sequence information of HLA region is supervised by the specialist database `IPD-IMGT/HLA`(<https://www.ebi.ac.uk/ipd/imgt/hla/>). Also, this group names those official HLA sequences based on the `WHO Nomenclature Committee For Factors of the HLA System`(<http://hla.alleles.org/nomenclature/committee.html>).
-- Because of the extreme polymorphism in HLA region, variant information in HLA region of Human Reference Genome or SNP array can't be used as it is. Rather, the HLA information distributed by IPD-IMGT/HLA database should be used.
+- Because of the extreme polymorphism in HLA region, variant information found in HLA region of Human Reference Genome or SNP array usually contains not enough information. So, the HLA information distributed by IPD-IMGT/HLA database should be applied.
 
 
 <!-- - Due to its highly polymorphic nature, The result of High-throughput sequence alignment to Human Reference Genome and SNP array in HLA region can't be used as it is. -->
