@@ -8,7 +8,7 @@
 - It is common for each HLA gene to have even thousands of alleles. For example, It has been found that there are at least 7,000 alleles for HLA-B gene. (<https://www.ebi.ac.uk/ipd/imgt/hla/stats.html>)
 - Acquring exact HLA allele information of patients is usually costly(e.g. HLA Typing Service). However, thanks to recent development of HLA imputation and inference technologies, researchers now can acquire many samples' HLA allele information.
 - The official sequence information of HLA region is supervised by the specialist database `IPD-IMGT/HLA`(<https://www.ebi.ac.uk/ipd/imgt/hla/>). Also, this group names those official HLA sequences based on the `WHO Nomenclature Committee For Factors of the HLA System`(<http://hla.alleles.org/nomenclature/committee.html>).
-- Because of the extreme polymorphism in HLA region, variant information found in HLA region of Human Reference Genome or SNP array usually contains not enough information. So, the HLA information distributed by IPD-IMGT/HLA database should be applied.
+- Because of the extreme polymorphism in HLA region, variant information found in HLA region of Human Reference Genome or SNP array usually contains not enough information. So, the HLA information distributed by the IPD-IMGT/HLA database should be applied.
 
 
 <!-- - Due to its highly polymorphic nature, The result of High-throughput sequence alignment to Human Reference Genome and SNP array in HLA region can't be used as it is. -->
@@ -17,8 +17,18 @@
 
 ## (1) Introduction
 
+`HATK` is the abbreviation for **HLA Analysis Tool-Kit** and is a collection of tools and modules to perform `HLA fine-mapping`. Identifying which HLA allele or amino acid position of the HLA gene is driving the disease is called HLA fine-mapping, which is an indispensable analysis in studies of autoimmune diseases. However, for researchers who want to conduct HLA fine-mapping, it can be a burden because there are multiple obstacles that need to be handled.
 
- Identifying which allele or amino acid position of the HLA gene is driving the disease is called HLA fine-mapping, which is an indispensable analysis in studies of autoimmune diseases. However, for researchers who want to conduct HLA fine-mapping, it can be a burden because there are multiple technical problems that need to be solved such as acquiring HLA sequence information from IPD-IMGT/HLA(https://www.ebi.ac.uk/ipd/imgt/hla/) database, fitting HLA allele name in standard nomeclature system, preparing marker panel for association test, huge amount of text-preprocessing and etc. `HATK` provides a collection of tools that not only can solve those technical problems but also can help researchers to analyze HLA fine-mapping result.
+For example,
+
+1. Acquiring and preprocessing HLA amino acid and DNA sequence information from IPD-IMGT/HLA(https://www.ebi.ac.uk/ipd/imgt/hla/) database, which is updated 4 times a year. (cf. In every update, novel HLA alleles are introduced and sequence information slightly can be changed.)
+2. Fitting HLA allele name of given samples to standard nomeclature system.
+3. Preparing marker panel for association test.
+4. Choosing proper statistical methods for association test.
+5. Visualizing the HLA fine-mapping result appropriately.
+5. Huge amount of text-preprocessing and etc.
+
+`HATK` provides a collection of tools that not only can solve those problems but also can help researchers to analyze HLA fine-mapping result.
 
 
 ## (1.5) Why do we need HATK? (Current Technical challenges)
@@ -66,7 +76,7 @@ Though researchers acquired HLA information such as sequences or alleles, they m
 
 ## (2) Installation
 
-We strongly recommend using 'Anaconda(or Miniconda)' to set up HATK. HATK supports OS X and Linux environment(ex. Ubuntu) and currently dosen't support Windows.
+We strongly recommend using 'Anaconda(or Miniconda)' to set up HATK. HATK supports OS X and Linux environments(ex. Ubuntu) and currently dosen't support Windows.
 
 
 
@@ -76,7 +86,7 @@ We strongly recommend using 'Anaconda(or Miniconda)' to set up HATK. HATK suppor
     - Miniconda : (https://docs.conda.io/en/latest/miniconda.html)
 <br>
 
-2. Create a new independent virtual Python environment.
+2. Create a new independent Python virtual environment.
 
 	By using 'HATK_LINUX.yml'('HATK_OSX.yml' in case of using OS X) file in the project folder, Create a new Python virtual environment.
     
