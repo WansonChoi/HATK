@@ -18,33 +18,33 @@ Aside from commonly used SNP variant markers(ex. rs41557221), 3 classes of marke
 4. SNP variant marker (Optional) (ex. rs41557221)
 
 
-## (3) Usage example
+## (3) Usage Examples.
 
 (1) Typical usage
 
 ```
 python3 HATK.py \
     --bmarkergenerator \
-    --variants example/wtccc_filtered_58C_RA.hatk.58C_RA.300+300 \
-    --chped example/wtccc_filtered_58C_RA.hatk.58C_RA.300+300.imgt3320.4field.chped \
-    --out tests/_2_b_MarkerGenerator/20190829_RA_300_300/20190702_wtccc_filtered_58C_RA.hatk.58C_RA.300+300 \
+    --variants example/wtccc_filtered_58C_RA.hatk.58C_RA.300+300.chr6.hg18 \
+    --chped example/wtccc_filtered_58C_RA.hatk.58C_RA.300+300.imgt3320.2field.chped \
+    --out MybMarkerGenerator/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.58C_RA.300+300.chr6.hg18 \
     -hg 18 \
-    --dict-AA tests/_1_IMGT2Sequence/20190829_hg19_imgt3320/HLA_DICTIONARY_AA.hg19.imgt3320 \
-    --dict-SNPS tests/_1_IMGT2Sequence/20190829_hg19_imgt3320/HLA_DICTIONARY_SNPS.hg19.imgt3320
+    --dict-AA example/RESULT_EXAMPLE/HLA_DICTIONARY_AA.hg18.imgt3320 \
+    --dict-SNPS example/RESULT_EXAMPLE/HLA_DICTIONARY_SNPS.hg18.imgt3320
 ```
 
 Here, '--chped' takes the output from NomenCleaner. '--dict-AA' and '--dict-SNPS' take the output from IMGT2Seq.
 
-(2) Just HLA markers. (No SNP variant markers; Only 3 classes of HLA related markers)
+(2) Just HLA markers. (When No SNP variant markers; Only 3 classes of HLA related markers)
 
 Don't include '--variant' argument in above useage example.
 
 ```
 python3 HATK.py \
     --bmarkergenerator \
-    --chped example/wtccc_filtered_58C_RA.hatk.58C_RA.300+300.imgt3320.4field.chped \
-    --out tests/_2_b_MarkerGenerator/20190829_RA_300_300/20190702_wtccc_filtered_58C_RA.hatk.58C_RA.300+300 \
+    --chped example/wtccc_filtered_58C_RA.hatk.58C_RA.300+300.imgt3320.2field.chped \
+    --out MybMarkerGenerator/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.58C_RA.300+300.chr6.hg18 \
     -hg 18 \
-    --dict-AA tests/_1_IMGT2Sequence/20190829_hg19_imgt3320/HLA_DICTIONARY_AA.hg19.imgt3320 \
-    --dict-SNPS tests/_1_IMGT2Sequence/20190829_hg19_imgt3320/HLA_DICTIONARY_SNPS.hg19.imgt3320
+    --dict-AA example/RESULT_EXAMPLE/HLA_DICTIONARY_AA.hg18.imgt3320 \
+    --dict-SNPS example/RESULT_EXAMPLE/HLA_DICTIONARY_SNPS.hg18.imgt3320
 ```
