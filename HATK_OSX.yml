@@ -8,15 +8,16 @@ dependencies:
   - _r-mutex=1.0.1
   - bwidget=1.9.13
   - bzip2=1.0.8
-  - ca-certificates=2019.9.11
+  - ca-certificates=2019.11.28
   - cairo=1.16.0
   - cctools=921
-  - certifi=2019.9.11
+  - certifi=2019.11.28
   - clang=9.0.0
   - clang_osx-64=9.0.0
   - clangxx=9.0.0
   - clangxx_osx-64=9.0.0
   - compiler-rt=9.0.0
+  - compiler-rt_osx-64=9.0.0
   - curl=7.65.3
   - fontconfig=2.13.1
   - freetype=2.10.0
@@ -62,6 +63,7 @@ dependencies:
   - pcre=8.43
   - pip=19.3.1
   - pixman=0.38.0
+  - plink=1.90b4
   - python=3.6.7
   - python-dateutil=2.8.1
   - pytz=2019.3
@@ -101,4 +103,3 @@ dependencies:
   - xz=5.2.4
   - zlib=1.2.11
   - zstd=1.4.3
-prefix: /Users/wansun/miniconda3/envs/HATK
