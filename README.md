@@ -15,7 +15,7 @@ Ultimately, HATK aims to perform an association test targeted to the HLA region.
 <br>
 
 
-## (2) Backgrounds
+## (2) Backgrounds (Challenges)
 
 #### [Extreme Polymorphism in HLA region]
 
@@ -83,7 +83,7 @@ We strongly recommend using 'Anaconda(or Miniconda)' to set up HATK. HATK suppor
     - Miniconda : (https://docs.conda.io/en/latest/miniconda.html)
 <br>
 
-2. Create a new independent Python virtual environment with the YML file.
+2. Create a new independent Python virtual environment with the given YML file.
 
 	By using 'HATK_LINUX.yml'('HATK_OSX.yml' in case of using OS X) file in the project folder, Create a new Python virtual environment.
     
@@ -99,14 +99,12 @@ We strongly recommend using 'Anaconda(or Miniconda)' to set up HATK. HATK suppor
 	$ conda activate HATK
 	```
 
-	HATK will be implemented in this virtual environment. When you want to go back to your original Python system setting, then
+	HATK will be implemented in this virtual environment. 
+    
+    If you want to go back to your original Python system setting, then
 
 	```
-	$ conda activate base
-	```
-	or    
-	```
-	$ conda deactivate HATK
+	$ conda deactivate
 	```
 
 	If you want to remove this virtual environment for HATK forever in your Anaconda, then
