@@ -79,12 +79,16 @@ def bMarkerGenerator(_CHPED, _OUT, _hg, _dictionary_AA, _dictionary_SNPS, _varia
 
     # [1] src (with "_p_src")
     p_src = _p_src
-    p_dependency = "dependency" if not bool(_p_dependency) else _p_dependency
+    # p_dependency = "dependency" if not bool(_p_dependency) else _p_dependency
 
 
     # [2] dependency (with "_p_dependency")
 
-    _p_plink = which('plink')
+    if bool(which('plink')):
+        _p_plink = which('plink')
+    else:
+        print(std_ERROR_MAIN_PROCESS_NAME + "There is no software 'PLINK'.")
+        sys.exit()
 
     # # Beagle(3.0.1)
     # _p_beagle = os.path.join(p_dependency, "beagle.jar")
@@ -115,9 +119,9 @@ def bMarkerGenerator(_CHPED, _OUT, _hg, _dictionary_AA, _dictionary_SNPS, _varia
 
     ### Other Software.
 
-    if not os.path.exists(_p_plink):
-        print(std_MAIN_PROCESS_NAME + "Please Prepare 'PLINK' (http://pngu.mgh.harvard.edu/~purcell/plink/download.shtml) in '{0}'\n".format(os.path.dirname(_p_plink)))
-        sys.exit()
+    # if not os.path.exists(_p_plink):
+    #     print(std_MAIN_PROCESS_NAME + "Please Prepare 'PLINK' (http://pngu.mgh.harvard.edu/~purcell/plink/download.shtml) in '{0}'\n".format(os.path.dirname(_p_plink)))
+    #     sys.exit()
 
     # if not os.path.exists(_p_beagle):
     #     print(std_MAIN_PROCESS_NAME + "Please Prepare 'Beagle 3' (http://faculty.washington.edu/browning/beagle/beagle.html#download) in '{0}'\n".format(os.path.dirname(_p_beagle)))
