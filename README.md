@@ -65,7 +65,7 @@ Ultimately, HATK aims to perform an association test targeted to the HLA region.
 
 ## (3) Installation
 
-First of all, Download this project in somewhere directory of your Linux(or OS_X) system. It will be assumed that your system already installed 'git' command.
+First of all, Download this project in somewhere directory of your Linux(or OS_X) system. HATK supports only OS_X and Linux environments(ex. Ubuntu) and currently dosen't support Windows. It will be assumed that your system already installed 'git' command.
 
 ```
 $ git clone git@github.com:WansonChoi/HATK.git
@@ -73,7 +73,7 @@ $ cd HATK
 ```
 <br>
 
-We strongly recommend using 'Anaconda(or Miniconda)' to set up HATK. HATK supports only OS X and Linux environments(ex. Ubuntu) and currently dosen't support Windows.
+We strongly recommend using 'Anaconda(or Miniconda)' to set up HATK. 
 
 
 
@@ -114,41 +114,6 @@ We strongly recommend using 'Anaconda(or Miniconda)' to set up HATK. HATK suppor
 	```
 	$ conda env remove -n HATK
 	```
-<br>
-<br>
-
-3. Download each dependent software in 'dependency/' folder.
-
-    Though Anaconda handles installing necessary Python packages and R libraries with less endeavour, there are some other software which you must prepare manually by yourself (primarily due to copyright issue).
-
-    In the project folder, **make a folder named 'dependency'**. (**with right exactly this name**)
-    ```
-    $ mkdir dependency
-    ```
-
-    And **download below software to this directory** and **change their name as below**.
-
-    - beagle.jar (http://faculty.washington.edu/browning/beagle/b3.html - 'Old version'; **Choose the version "3.0.4"**)
-    <!-- - beagle4.jar (https://faculty.washington.edu/browning/beagle/b4_1.html#download) -->
-    - beagle2vcf.jar (https://faculty.washington.edu/browning/beagle_utilities/utilities.html  - 'File conversion utilities')
-    - beagle2linkage.jar (https://faculty.washington.edu/browning/beagle_utilities/utilities.html  - 'File conversion utilities')
-    - linkage2beagle.jar (https://faculty.washington.edu/browning/beagle_utilities/utilities.html  - 'File conversion utilities')
-    - vcf2beagle.jar (https://faculty.washington.edu/browning/beagle_utilities/utilities.html  - 'File conversion utilities')
-    - plink - (https://www.cog-genomics.org/plink2 - v1.9beta)
-
-    The copyright of 1 ~ 5 belongs to B. Browning (https://faculty.washington.edu/browning/beagle/b4_1.html) and that of 6 belongs to Purcell's laboratory (https://www.cog-genomics.org/plink/1.9/general_usage#cite).
-<br>
-<br>
-
-<!-- 4. Install R language(https://www.r-project.org/) and below R packages.
-
-    You **MUST** check wether these R packages are successfully installed or not. If not, Generating heatmap plot will fail.
-
-    - gplots (https://cran.r-project.org/web/packages/gplots/index.html)
-    - RColorBrewer (https://cran.r-project.org/web/packages/RColorBrewer/index.html)
-    - shape (https://cran.r-project.org/web/packages/shape/index.html) -->
-
-
 <br>
 <br>
 
