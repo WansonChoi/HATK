@@ -4,7 +4,7 @@
 
 `HATK`(**HLA Analysis Tool-Kit**) is a collection of tools and modules to perform `HLA fine-mapping` analysis, which is to identify which HLA allele or amino acid position of the HLA gene is driving the disease. HLA fine-mapping analysis is an indispensable analysis in studies of autoimmune diseases.
 
-In `GWAS`(Genome-wide Association Test) and its fine-mapping analysis, researchers can obtain candidate causal variants of the target disease. However, the association test performed on the variants in the HLA(Human Leukocyte Antigen) region, chromosome 6p21, usually shows unreliable results because this region bears an outlandish polymorphism. For example, it is common for the variants in this region to have tri-allelic variants or even more while typical variants in most of the genomic regions are usually bi-allelic. Also, it has been found that there are at least 7,000 alleles for only one HLA-B gene. Consequently, Performing conventional association test based on SNP array panel usually generate inaccurate association test result in the HLA region.
+In `GWAS`(**Genome-wide Association Test**) and its fine-mapping analysis, researchers can obtain candidate causal variants of the target disease. However, the association test performed on the variants in the HLA(Human Leukocyte Antigen) region, chromosome 6p21, usually shows unreliable results because this region bears an outlandish polymorphism. For example, it is common for the variants in this region to have tri-allelic variants or even more while typical variants in most of the genomic regions are usually bi-allelic. Also, it has been found that there are at least 7,000 alleles for only one HLA-B gene. Consequently, Performing conventional association test based on SNP array panel usually generate inaccurate association test result in the HLA region.
 
 On the other hand, the `IPD-IMGT/HLA`, which is a specialist database, provides the official and most detailed information of the HLA region. Being updated roughly 4 times a year, They keep and manage whole HLA allele information. They name those many alleles based on the nomenclature defined by the '`WHO Nomenclature Committee For Factors of the HLA System`’. Also, they provide each HLA allele's (1) amino acid and (2) DNA sequence information. To use these useful data, Exact HLA allele information of patients is required and researchers may have to employ expensive HLA typing technologies. However, thanks to the recent development of HLA imputation and inference technologies, researchers now can obtain hundreds to thousands of patients’ HLA allele information and detour the cost issue of using HLA typing service.
 
@@ -17,31 +17,78 @@ Ultimately, HATK aims to perform an association test targeted to the HLA region.
 
 ## (2) Backgrounds
 
+#### [Extreme Polymorphism in HLA region]
+
+- Genes in the HLA region are well known for their extreme polymorphism. For example, It has been found that there are at least 7,000 alleles for the HLA-B gene and other HLA genes also usually have more than 100 alleles. (<https://www.ebi.ac.uk/ipd/imgt/hla/stats.html>) Furthermore, while the SNPs in the most of genome are assumed to be bi-allelic, which means only two kinds of different alleles appear in each position of those SNPs, the SNPs in the HLA region are often more than bi-allelic.
+- NGS technique with Human Reference Genome and most SNP array panel, which lots of genomic researchers employ, actually assume that all SNPs are bi-allelic including the SNPs in the HLA region. That's why the result of the association test on the HLA region is usually inaccurate when based on those methods.
+- The IPD-IMGT/HLA database is a specialist database and provides the official amino acid and DNA sequence of each HLA allele. This information can be used to make a marker panel of the researcher's study samples where this marker panel includes the polymorphism of the HLA region.
+- The IPD-IMGT/HLA database not only supervises the sequence information but also names those official sequences based on the `WHO Nomenclature Committee For Factors of the HLA System`(<http://hla.alleles.org/nomenclature/committee.html>).
+
+- Also, the IMGT-HLA database continuously updates itself 4 times a year collecting new HLA alleles and their sequence information.
+- HLA researchers may want to choose the latest or specific version of the IMGT-HLA database.
+
+- HATK provides a module IMGT2Seq which can pre-process data files distributed by the IMGT-HLA database with the specific version. By processing the data to dictionary files, the IMGT2Seq not only facilitates the following steps of HATK but also lets researchers use that information more conveniently. Please check ***.md file for more details about the IMGT2Seq.
+
+<!-- <br> -->
+
+
+#### [HLA Nomenclature]
+
+- As mentioned above, it is common for HLA genes to have more than 100, even thousands, alleles due to its polymorphism. Consequently, To handle those many alleles, the 'WHO Nomenclature Committee For Factors of the HLA System’ introduced their own nomenclature system and names all those alleles based on this nomenclature.
+
+- The 1st nomenclature without separator (ex. A*3301) was introduced in 1987. However, as more and more new HLA alleles were found, that nomenclature became not enough to embrace all those alleles, which is called 'rollover' problem. So, around 2010, 'The WHO Nomenclature Committee for Factors of the HLA System' met and updated the old nomenclature(http://hla.alleles.org/nomenclature/naming_2010.html).
+
+- Also, in the updated nomenclature, there are two sub-nomenclatures, P-code and G-code(the standard, G-code, and P-code in the updated nomenclature), which were introduced to effectively classify HLA alleles based on the difference in the 2nd and 3rd exon of amino acid or DNA sequence. Researchers may have to convert HLA alleles given in P-code or G-code nomenclature to the ones in the standard nomenclature.
+
+- The thing is that both old and updated nomenclature can be used in the HLA research area. In other words, some research groups keep their patients' HLA type information in the old nomenclature and other groups do it in the updated one. Researches may confront a situation where they have to check whether the given HLA allele is in either the old or updated nomenclature. Also, they might need to convert a given HLA allele name within the old nomenclature to its updated one.
+
+- The field-separator is often omitted implicitly though the updated nomenclature is used. Sometimes researchers need to retrieve that field information back. For example, if the allele DPB1*101101 is given, then researchers need to determine whether this allele corresponds to DBP1*10:11:01, DPB1*101:101 or DPB1*1011:01. The actual answer for this is DPB1*1011:01 in the IMGT version 3.37.0. This job could be tiresome to researchers.
+
+- The module NomenCleaner undertakes converting jobs including field-checking function.  Please check '_3_NomenCleaner.md' file in 'docs/' folder for more details about the NomenCleaner.
+
+<!-- <br> -->
+
+#### [Various sources to acquire patients’ HLA type information]
+
+- HLA type information of patients is required to bring the amino acid and DNA sequence information distributed by the IMGT-HLA database.
+- To get the patients' HLA type information, the gold-standard way is to take advantage of sequencing-based HLA typing service. However, this way usually takes lots of costs for researchers.
+- Thanks to the recent development of HLA imputation and inference technologies, researchers now can obtain patients’ HLA allele information without using the HLA typing service and detour the cost issue.
+- There are lots of software that realize that HLA imputaton or inference. However, the output of each of that software, i.e. output file format, containing HLA type information also varies. Researchers may perform additional text-processing to merge and integrate those results.
+- Here, we introduced a new file format HLA PED(HPED) where all those results from different software can be merged. This file format is similar to the PLINK ped file but consists of 22(6 + 8*2) columns. Left 6 columns are exactly same as Plink ped file ('Family_ID', 'Individual_ID', 'Paternal_ID', 'Maternal_ID', 'Sex', 'Phenotype') and other 16 columns are Individual's HLA diploid (unphased) genotypes(2 HLA alleles for each HLA gene) of 8 HLA genes(A, B, C, DPA1, DPB1, DQA1, DQB1, DRB1; in this order).
+- HLA2HPED takes the results from each different software and merge them into a new HPED file.
+
+#### [Proper Association Test]
+
+- Under construction.
+
+<br>
+
 ## (3) Installation
 
-First of all, Download this project somewhere directory of your Linux(or OS_X) system.
+First of all, Download this project in somewhere directory of your Linux(or OS_X) system. It will be assumed that your system already installed 'git' command.
 
 ```
 $ git clone git@github.com:WansonChoi/HATK.git
 $ cd HATK
 ```
+<br>
 
-We strongly recommend using 'Anaconda(or Miniconda)' to set up HATK. HATK supports OS X and Linux environments(ex. Ubuntu) and currently dosen't support Windows.
+We strongly recommend using 'Anaconda(or Miniconda)' to set up HATK. HATK supports only OS X and Linux environments(ex. Ubuntu) and currently dosen't support Windows.
 
 
 
-1. install Anaconda or Miniconda
+1. install Anaconda or Miniconda.
 
     - Anaconda : (https://www.anaconda.com/)
     - Miniconda : (https://docs.conda.io/en/latest/miniconda.html)
 <br>
 
-2. Create a new independent Python virtual environment.
+2. Create a new independent Python virtual environment with the YML file.
 
 	By using 'HATK_LINUX.yml'('HATK_OSX.yml' in case of using OS X) file in the project folder, Create a new Python virtual environment.
     
 	```
-	conda env create -f HATK_LINUX.yml
+	$ conda env create -f HATK_LINUX.yml
 	```
 	
 	The above command will generate a new Python virtual environment named 'HATK', which contains dependent Python packages, Java and R libraries, independent to your original Python system. For more detailed explanation about Anaconda's managing Python virtual environment, Please check this reference(https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#create-env-file-manually).
@@ -49,23 +96,23 @@ We strongly recommend using 'Anaconda(or Miniconda)' to set up HATK. HATK suppor
 	If the new virtual environment is succuessfully installed, then activate it.
 
 	```
-	conda activate HATK
+	$ conda activate HATK
 	```
 
 	HATK will be implemented in this virtual environment. When you want to go back to your original Python system setting, then
 
 	```
-	conda activate base
+	$ conda activate base
 	```
 	or    
 	```
-	conda deactivate HATK
+	$ conda deactivate HATK
 	```
 
 	If you want to remove this virtual environment for HATK forever in your Anaconda, then
 
 	```
-	conda env remove -n HATK
+	$ conda env remove -n HATK
 	```
 <br>
 <br>
@@ -74,12 +121,12 @@ We strongly recommend using 'Anaconda(or Miniconda)' to set up HATK. HATK suppor
 
     Though Anaconda handles installing necessary Python packages and R libraries with less endeavour, there are some other software which you must prepare manually by yourself (primarily due to copyright issue).
 
-    In the project folder, make a folder named 'dependency'. (**with right exactly this name**)
+    In the project folder, **make a folder named 'dependency'**. (**with right exactly this name**)
     ```
-    mkdir dependency
+    $ mkdir dependency
     ```
 
-    And download below software to this directory and change their name as below.
+    And **download below software to this directory** and **change their name as below**.
 
     - beagle.jar (http://faculty.washington.edu/browning/beagle/b3.html - 'Old version'; **Choose the version "3.0.4"**)
     <!-- - beagle4.jar (https://faculty.washington.edu/browning/beagle/b4_1.html#download) -->
@@ -122,9 +169,9 @@ python3 HATK.py \
     --multiprocess 2
 ```
 
-This command will implement (1) IMGT2Seq, (2) NomenCleaner, (3) bMarkerGenerator, (4) HLA_Analyzer(Association Test - logistic regression), (5) Manhattan Plot and (6) Heatmap Plot, which are the minimal components for HLA fine-mapping to be done.
+This command will implement (1) IMGT2Seq, (2) NomenCleaner, (3) bMarkerGenerator, (4) HLA_Analyzer(Association Test - logistic regression), (5) Manhattan Plot and (6) Heatmap Plot, which are the minimal components for HLA fine-mapping analysis.
 
-On the other hand, as mentioned above, each module of HATK can be implemented repectively. **The README files of each of those modules are prepared in 'docs/' folder.** Those files include more detailed explanation and respective usage examples.
+Each module of HATK can be implemented repectively. **The README files of each of those modules are prepared in 'docs/' folder.** Those files include more detailed explanation and respective usage examples.
 
 ## (5) Citation
 
