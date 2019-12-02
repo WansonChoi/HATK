@@ -19,6 +19,13 @@ Ultimately, HATK aims to perform an association test targeted to the HLA region.
 
 ## (3) Installation
 
+First of all, Download this project somewhere directory of your Linux(or OS_X) system.
+
+```
+$ git clone git@github.com:WansonChoi/HATK.git
+$ cd HATK
+```
+
 We strongly recommend using 'Anaconda(or Miniconda)' to set up HATK. HATK supports OS X and Linux environments(ex. Ubuntu) and currently dosen't support Windows.
 
 
@@ -105,7 +112,7 @@ We strongly recommend using 'Anaconda(or Miniconda)' to set up HATK. HATK suppor
 python3 HATK.py \
     --variants example/wtccc_filtered_58C_RA.hatk.58C_RA.300+300.chr6.hg18 \
     --hped example/wtccc_filtered_58C_RA.hatk.58C_RA.300+300.hped \
-    --2field
+    --2field \
     --pheno example/wtccc_filtered_58C_RA.hatk.58C_RA.300+300.phe \
     --pheno-name RA \
     --out MyHLAStudy/MyHLAStudy_wtccc_filtered_58C_RA.hatk.58C_RA.300+300.chr6.hg18 \
