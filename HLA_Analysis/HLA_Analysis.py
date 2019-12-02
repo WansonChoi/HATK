@@ -13,16 +13,17 @@ std_MAIN_PROCESS_NAME = "\n[%s]: " % (os.path.basename(__file__))
 std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % (os.path.basename(__file__))
 std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % (os.path.basename(__file__))
 
-if os.path.isdir('./dependency'):
-    print(std_MAIN_PROCESS_NAME + "Using dependent software in './dependency'")
-    GLOBAL_p_plink = "./dependency/plink" if os.path.isfile("./dependency/plink") else which("plink")
-elif os.path.isdir('../dependency'):
-    print(std_MAIN_PROCESS_NAME + "Using dependent software in '../dependency'")
-    GLOBAL_p_plink = "../dependency/plink"
-else:
-    print(std_ERROR_MAIN_PROCESS_NAME + "'dependency' folder can't be found. Please check it again.")
-    sys.exit()
+# if os.path.isdir('./dependency'):
+#     print(std_MAIN_PROCESS_NAME + "Using dependent software in './dependency'")
+#     GLOBAL_p_plink = "./dependency/plink" if os.path.isfile("./dependency/plink") else which("plink")
+# elif os.path.isdir('../dependency'):
+#     print(std_MAIN_PROCESS_NAME + "Using dependent software in '../dependency'")
+#     GLOBAL_p_plink = "../dependency/plink"
+# else:
+#     print(std_ERROR_MAIN_PROCESS_NAME + "'dependency' folder can't be found. Please check it again.")
+#     sys.exit()
 
+GLOBAL_p_plink = which("plink")
 GLOBAL_p_Rscript = which("Rscript")
 GLOBAL_p_JAVA = which("java")
 
