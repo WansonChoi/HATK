@@ -4,6 +4,7 @@
 
 `HLA2HPED` is a module to merge and convert the output from other HLA imputation or inference software to `HLA PED(HPED)` file so that researchers can perform `HLA fine-mapping analysis` directly using the output of other HLA software. Currently, this module supports **xHLA**, **HIBAG**, and **Axiom** software and it is planned to make HLA2HPED to cover more HLA imputation/inference software output.
 
+<br>
 
 ## (2) Usage Examples.
 

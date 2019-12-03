@@ -3,6 +3,8 @@
 ## (1) Introduction
 The Manhattan plot is an indispensable method to visualize the result of the association test. HATK provides the module to plot the association signal of each marker focused on the HLA region.
 
+<br>
+
 ## (2) Usage Example
 
 ```
