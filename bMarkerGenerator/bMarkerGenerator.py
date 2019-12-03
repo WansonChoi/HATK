@@ -2,8 +2,7 @@
 
 import os, sys, re
 import argparse, textwrap
-from platform import platform
-
+from shutil import which
 
 ########## < Core Global Variables > ##########
 
@@ -45,23 +44,23 @@ class HATK_bMarkerGenertor(object):
                                                 "Please check '--dict-SNPS' argument again.")
             sys.exit()
 
-        # dependency folder check
-        if os.path.isdir('./dependency'):
-            # Normal python usage
-            print(std_MAIN_PROCESS_NAME + "Using dependent software in './dependency'")
-            p_dependency = './dependency'
-        elif os.path.isdir('../dependency'):
-            # Docker usage
-            print(std_MAIN_PROCESS_NAME + "Using dependent software in '../dependency'")
-            p_dependency = '../dependency'
-        else:
-            print(std_ERROR_MAIN_PROCESS_NAME + "'dependency' folder can't be found. Please check it again.")
-            sys.exit()
+        # # dependency folder check
+        # if os.path.isdir('./dependency'):
+        #     # Normal python usage
+        #     print(std_MAIN_PROCESS_NAME + "Using dependent software in './dependency'")
+        #     p_dependency = './dependency'
+        # elif os.path.isdir('../dependency'):
+        #     # Docker usage
+        #     print(std_MAIN_PROCESS_NAME + "Using dependent software in '../dependency'")
+        #     p_dependency = '../dependency'
+        # else:
+        #     print(std_ERROR_MAIN_PROCESS_NAME + "'dependency' folder can't be found. Please check it again.")
+        #     sys.exit()
 
 
         self.bMarkers = bMarkerGenerator(_CHPED, _OUT, _hg, _dictionary_AA, _dictionary_SNPS,
                                          _variants=kwargs["_variants"], __save_intermediates=kwargs["__save_intermediates"],
-                                         _p_src=kwargs["_p_src"], _p_dependency=p_dependency)
+                                         _p_src=kwargs["_p_src"])
 
 
     def getReuslt(self):
@@ -80,23 +79,20 @@ def bMarkerGenerator(_CHPED, _OUT, _hg, _dictionary_AA, _dictionary_SNPS, _varia
 
     # [1] src (with "_p_src")
     p_src = _p_src
-    p_dependency = "dependency" if not bool(_p_dependency) else _p_dependency
+    # p_dependency = "dependency" if not bool(_p_dependency) else _p_dependency
 
 
     # [2] dependency (with "_p_dependency")
 
-    # Plink(1.9b)
-    if os.path.exists(os.path.join(p_dependency, "plink")):
-        _p_plink = os.path.join(p_dependency, "plink")
+    if bool(which('plink')):
+        _p_plink = which('plink')
     else:
-        if bool(re.search(pattern="Linux", string=platform())):
-            _p_plink = os.path.join(p_dependency, "os/linux/plink")
-        else:
-            _p_plink = os.path.join(p_dependency, "os/osx/plink")
+        print(std_ERROR_MAIN_PROCESS_NAME + "There is no software 'PLINK'.")
+        sys.exit()
 
-    # Beagle(3.0.1)
-    _p_beagle = os.path.join(p_dependency, "beagle.jar")
-    _p_linkage2beagle = os.path.join(p_dependency, "linkage2beagle.jar")
+    # # Beagle(3.0.1)
+    # _p_beagle = os.path.join(p_dependency, "beagle.jar")
+    # _p_linkage2beagle = os.path.join(p_dependency, "linkage2beagle.jar")
 
 
     ### Dictionary Files
@@ -123,17 +119,17 @@ def bMarkerGenerator(_CHPED, _OUT, _hg, _dictionary_AA, _dictionary_SNPS, _varia
 
     ### Other Software.
 
-    if not os.path.exists(_p_plink):
-        print(std_MAIN_PROCESS_NAME + "Please Prepare 'PLINK' (http://pngu.mgh.harvard.edu/~purcell/plink/download.shtml) in '{0}'\n".format(os.path.dirname(_p_plink)))
-        sys.exit()
+    # if not os.path.exists(_p_plink):
+    #     print(std_MAIN_PROCESS_NAME + "Please Prepare 'PLINK' (http://pngu.mgh.harvard.edu/~purcell/plink/download.shtml) in '{0}'\n".format(os.path.dirname(_p_plink)))
+    #     sys.exit()
 
-    if not os.path.exists(_p_beagle):
-        print(std_MAIN_PROCESS_NAME + "Please Prepare 'Beagle 3' (http://faculty.washington.edu/browning/beagle/beagle.html#download) in '{0}'\n".format(os.path.dirname(_p_beagle)))
-        sys.exit()
-
-    if not os.path.exists(_p_linkage2beagle):
-        print(std_MAIN_PROCESS_NAME + "Please Prepare 'linkage2beagle.jar' (http://faculty.washington.edu/browning/beagle_utilities/utilities.html) (beagle.3.0.4/utility/linkage2beagle.jar) in '{0}'\n".format(os.path.dirname(_p_linkage2beagle)))
-        sys.exit()
+    # if not os.path.exists(_p_beagle):
+    #     print(std_MAIN_PROCESS_NAME + "Please Prepare 'Beagle 3' (http://faculty.washington.edu/browning/beagle/beagle.html#download) in '{0}'\n".format(os.path.dirname(_p_beagle)))
+    #     sys.exit()
+    #
+    # if not os.path.exists(_p_linkage2beagle):
+    #     print(std_MAIN_PROCESS_NAME + "Please Prepare 'linkage2beagle.jar' (http://faculty.washington.edu/browning/beagle_utilities/utilities.html) (beagle.3.0.4/utility/linkage2beagle.jar) in '{0}'\n".format(os.path.dirname(_p_linkage2beagle)))
+    #     sys.exit()
 
 
     ### Dictionary Information for HLA sequence
@@ -207,8 +203,8 @@ def bMarkerGenerator(_CHPED, _OUT, _hg, _dictionary_AA, _dictionary_SNPS, _varia
     SNPS_CODED = OUTPUT + '.SNPS.CODED'
 
     plink = ' '.join([_p_plink, "--noweb", "--silent"])
-    beagle = ' '.join(["java", "-Xmx4000m", "-jar", _p_beagle])
-    linkage2beagle = ' '.join(["java", "-Xmx2000m", "-jar", _p_linkage2beagle])
+    # beagle = ' '.join(["java", "-Xmx4000m", "-jar", _p_beagle])
+    # linkage2beagle = ' '.join(["java", "-Xmx2000m", "-jar", _p_linkage2beagle])
 
 
 

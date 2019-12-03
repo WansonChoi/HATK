@@ -81,7 +81,7 @@ Then NomenCleaner converts their names to be in the new nomenclature which user 
 
 
 
-## Usage example.
+## (4) Usage Example.
 
 NomenCleaner requires 'Integrated Allele Table(*.iat)' file from IMGT2Seq.
 
@@ -89,10 +89,10 @@ NomenCleaner requires 'Integrated Allele Table(*.iat)' file from IMGT2Seq.
 ```
 python3 HATK.py \
     --nomencleaner \
-    -iat /Users/wansun/Git_Projects/HATK/tests/_1_IMGT2Sequence/20190303_hg19_imgt3320/HLA_INTEGRATED_ALLELE_TABLE.hg19.imgt3320.iat \
-    -hped /Users/wansun/Dropbox/_Sync_MyLaptop/Data/HATK/data/wtccc_filtered_58C_NBS_RA_T1D.hped \
-    -o /Users/wansun/Dropbox/_Sync_MyLaptop/Data/HATK/data/wtccc_filtered_58C_NBS_RA_T1D \
-    --4field \
+    -hat example/RESULT_EXAMPLE/HLA_ALLELE_TABLE.imgt3320.hat \
+    --hped example/wtccc_filtered_58C_RA.hatk.58C_RA.300+300.hped \
+    -o MyNomenCleaner/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.58C_RA.300+300.chr6.hg18 \
+    --2field \
     -imgt 3320
 
 ```

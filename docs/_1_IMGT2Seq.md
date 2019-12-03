@@ -35,16 +35,18 @@ Researchers would better distinguish between 'indels(dots) in the official refer
 
 
 
-## (3) Usage example
+## (3) Usage Example
 
 ```
 python3 HATK.py \
     --imgt2seq \
-    -hg 19 \
+    -hg 18 \
     -imgt 3320 \
-    -o MyIMGT2Seq/IMGT.hg19.imgt3320 \
+    -o MyIMGT2Seq/ExamplePrefix.hg18.imgt3320 \
     --imgt-dir example/IMGTHLA3320 \
     --multiprocess 2
 ```
 
-A path to the folder of downloaded IPD-IMGT/HLA database must be given to '--imgt-dir' argument. Be aware which version of IMGT database('-imgt') and Human Genome version('-hg') you are going to use.
+- The path to the folder of downloaded IPD-IMGT/HLA database must be given to '--imgt-dir' argument. 
+- Be aware which version of IMGT database('-imgt') and Human Genome version('-hg') you are going to use.
+- Actually, the output prefix given to the '-o' argument has no effect on the output of IMGT2Seq. However, it is recommended to specify the output prefix so that you don't forget what Human Genome version('-hg') and IMGT version('-imgt') are being used.
