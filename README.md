@@ -70,7 +70,7 @@ Ultimately, HATK aims to perform an association test targeted to the HLA region.
 First of all, Download this project in somewhere directory of your Linux(or OS_X) system. HATK supports only OS_X and Linux environments(ex. Ubuntu) and currently dosen't support Windows. It will be assumed that your system already installed 'git' command.
 
 ```
-$ git clone git@github.com:WansonChoi/HATK.git
+$ git clone https://github.com/WansonChoi/HATK.git
 $ cd HATK
 ```
 <br>
@@ -101,17 +101,15 @@ We strongly recommend using 'Anaconda(or Miniconda)' to set up HATK.
 	$ conda activate HATK
 	```
 
-	HATK will be implemented in this virtual environment. When you want to go back to your original Python system setting, then
+    HATK will be implemented in this virtual environment. 
 
-	```
-	$ conda deactivate
-	```
+    <br>
 
-	If you want to remove this virtual environment for HATK forever in your Anaconda, then
+	> (Tip) Type '_conda deacitvate_' on your command line if you want to go back to your original Python system setting. (https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#deactivating-an-environment)
 
-	```
-	$ conda env remove -n HATK
-	```
+
+	> (Tip) Type '_conda env remove -n HATK_' in your command line if you want to remove this virtual environment for HATK forever in your Anaconda. (https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#removing-an-environment)
+
 <br>
 <br>
 
