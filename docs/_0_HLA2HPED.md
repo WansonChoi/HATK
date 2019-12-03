@@ -2,14 +2,14 @@
 
 ## (1) What is HLA2HPED
 
-HLA2HPED is a module to merge and convert the output from other HLA imputation or inference software to `HLA PED(HPED)` file so that researchers can perform `HLA fine-mapping analysis` directly using the output of other HLA software. Currently, this module supports **xHLA**, **HIBAG**, and **Axiom** software and it is planned to make HLA2HPED to cover more HLA imputation/inference software output.
+`HLA2HPED` is a module to merge and convert the output from other HLA imputation or inference software to `HLA PED(HPED)` file so that researchers can perform `HLA fine-mapping analysis` directly using the output of other HLA software. Currently, this module supports **xHLA**, **HIBAG**, and **Axiom** software and it is planned to make HLA2HPED to cover more HLA imputation/inference software output.
 
 
 ## (2) Usage Examples.
 
 1. xHLA
 
-The output of xHLA is assumed to be multiple json files each of which represents a single sample's HLA type information. The next photo is an example of the json output file of xHLA. Multiple json files like this will be given to HLA2HPED with the argument '--rhped'.
+The output of xHLA is assumed to be multiple JSON files each of which represents a single sample's HLA type information. The next photo is an example of the JSON output file of xHLA. Multiple JSON files like this will be given to HLA2HPED with the argument '--rhped'.
 
 ![README-HLA2HPED-xHLA_example](./img/README-HLA2HPED-xHLA_example.png)
 
@@ -29,9 +29,9 @@ The 1st column, Family_ID, will be set by the sample id, the 2nd column value by
 
 2. HIBAG
 
-HIBAG output is usually generated as splited files by HLA. The next photo is an example of one output file which contains HLA-A imputation.
+HIBAG output is usually generated as files split by HLA. The next photo is an example of one output file which contains HLA-A imputation.
 
-As HATK focuses on the **8 HLA genes(A, B, C, DPA1, DPB1, DQA1, DQB1, DRB1)**, HLA2HPED will work by taking 8 output files of each HLA gene. **Please pass the files of the 8 HLA genes with that order**.
+Because HATK focuses on the **8 HLA genes(A, B, C, DPA1, DPB1, DQA1, DQB1, DRB1)**, HLA2HPED will work by taking 8 output files of each HLA gene. **Please pass the files of the 8 HLA genes with that order**.
 
 ![README-HLA2HPED-HIBAG_example](./img/README-HLA2HPED-HIBAG_example.png)
 
@@ -61,7 +61,7 @@ $ python HATK.py \
 
 3. Axiom
 
-The output of Axiom is also generated as splited files of respective HLA. Likewise HIBAG, **Please pass the files of the 8 HLA genes with the above order**.
+The output of Axiom is also generated as split files of respective HLA. Likewise HIBAG, **Please pass the files of the 8 HLA genes with the above order**.
 
 ```
 $ python HATK.py \
