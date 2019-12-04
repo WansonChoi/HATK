@@ -1,90 +1,106 @@
 # NomenCleaner
 
+## (0) Backgrounds
 
-- 1987년에 최초로 HLA allele들의 Nomenclature가 정의된 이후로 계속 새로운 HLA allele들이 발견되면서 기존의 Nomenclature도 계속 변화를 겪음.
-- 또한, 특별한 목적을 가지고 도입된 부가적인 Nomenclature들도 있음.(P-group, G-group).
-- 따라서, 연구자들은 HLA allele정보들이 어떤 Nomenclature에 담겨져 받게 될지 모름.
-- 또, 특정 Nomenclature에 담긴 HLA allele name들을 다른 Nomenclature 규칙을 따르는 이름으로 바꿔야할 필요성도 맞닥드리게 될 수 있음.
-- Nomencleaner는 이에 대한 solution임.
+#### [Old vs. Updated Nomenclature]
 
+The '`WHO Nomenclature Committee for Factors of the HLA System`' defined the official nomenclature for HLA alleles for the 1st time in 1987. However, as more and more new HLA alleles were found, that nomenclature became not enough to embrace all alleles, which was called 'rollover' problem. So, the committee met and did a major update to the old nomenclature in April 2010. (http://hla.alleles.org/nomenclature/naming_2010.html).
 
-## (1) WHO HLA Nomenclature
-
-### (1-1) Old vs. Updated Nomenclature
-
-Since the 'WHO Nomenclature Committee for Factors of the HLA System' defiend a nomenclature for HLA alleles for the first time in 1987, there have been several changes in the nomenclature. Especially, the committee did major update to the nomeclature in April 2010. (http://hla.alleles.org/nomenclature/naming_2010.html) 
-
-
-In the old nomenclature, HLA allele name is supposed to have 
+In **the old nomenclature**, HLA allele name is supposed to have 
 
 1. Only 2 digits in each field.
 2. No field separator.
 
-On the other hand, in the updated one, HLA allele name has
+On the other hand, in **the updated nomenclature**, HLA allele name has
 
 1. 2 to 3 digits in each field
 2. Field separators
-3. Maximum 4 fields.
 
+![README-NomenCleaner](./img/README_3_NomenCleaner_Nomenclature.png)
 
-(사진)
 (http://hla.alleles.org/nomenclature/naming.html)
 
 
-The IPD-IMGT/HLA database currently uses the updated one and researchers should use it. However, there are some practical reasons that hinder its usage.
+<!-- The IPD-IMGT/HLA database currently uses the updated one and researchers should use it. However, there are some practical reasons that hinder its usage.
 
 - It can be burdensome for preceding researchers to move from the old to updated nomenclature.
-- HLA typing technologies, which take a critical role in HLA research, still face a challenge in unambiguously determining full resolution of a single HLA allele, i.e. determinig all fields exactly. Consequently, though HLA allele names are based on the updated nomenclature, it is quite common to skip 3rd and 4th fields in order to aggregate multiple possible answers.
+ -->
 
-### (1-2) G and P codes
-To deal with the above 2nd reason, the committee introduced G and P codes in the updated nomenclature. 
+<br>
 
-* G-group : HLA alleles that share identical nucleotide sequences for the exons encoding the peptide binding domains.
-* P-group : HLA alleles that encode for identical peptide binding domains.
+#### [G-group and P-group nomenclature]
 
-Because most HLA typing technologies focus on resolving alleles that encode differences within the peptide binding domains, those classification criteria can effectively represent an ambigous result of typing strategies.
+Refer to the next link for the official definition about G-group and P-group nomenclatures. (http://hla.alleles.org/nomenclature/naming_2010.html - '3. Reporting of ambiguous HLA allele typing') 
 
-(http://hla.alleles.org/nomenclature/naming_2010.html - '3. Reporting of ambiguous HLA allele typing')
+HLA typing technologies, which is the gold-standard way to obtain patients' HLA type information, still face a challenge in getting the fully resolved HLA type, i.e. determining all fields exactly. Consequently, **it is quite common to skip 3rd and 4th fields in order to aggregate multiple possible answers**.
+To deal with this, the committee introduced G and P codes in the updated nomenclature. 
 
+* G-group: HLA alleles that share identical nucleotide sequences for the exons encoding the peptide-binding domains.
+* P-group: HLA alleles that encode for identical peptide-binding domains.
 
-In summary of '(1) WHO nomenclature', researchers should be able to recognize not only the old and updated nomenclatures but also additional G and P codes.
-
-1. Old nomenclature (Without separator; defined in 1987 for the first time.)
-2. Updated nomenclature (Maximum 4 fields with seperator; currently used by the IPD-IMGT/HLA)
-3. G-group
-4. P-group
+Because most HLA typing technologies focus on resolving alleles that encode differences within the peptide binding domains, those classification criteria can effectively represent an ambiguous result of typing strategies.
 
 
+<br>
 
-## (2) What NomenCleaner does
+#### [Background Summary]
 
-NomenCleaner basically takes HLA alleles in either the updated, G-group or P-group nomenclature in HPED file('*.hped').
-
-Then NomenCleaner converts their names to be in the new nomenclature which user requests (ex. 4-field, 2-field, G-group or P-group). In NomenCleaner, '4-field' allude to the updated HLA nomenclature which the IPD-IMGT/HLA currently uses.
-
-
-=============(2019. 09. 17.)
+1. There are practically 4 nomenclatures to distinguish, (1) `Old`, (2) `Updated(Standard)`, (3) `G-group`, and (4) `P-group`.
+2. Determining the 3rd and 4th fields unambiguously is a challenging job even for the current HLA typing technologies. That's why G-group and P-group nomenclatures are additionally introduced in the updated nomenclature.
 
 
-## (3) Inevitable approximated mapping.
+<br>
+<br>
 
-- 많은 사람들이 updated to old는 그렇다치지만 old to updated는 납득이 안갈거임. 이 부분에 관한 내용.
-- 한 가지 명확한 사실은, 2-field(4-5 digits) 정보만 주어졌을 때, 3번째, 4번째 field에 대한 정보를 알아낼 수는 없음.
-- 그러나, IPD-IMGT/HLA 데이터베이스 정보는 무조건 updated standard nomenclature로만 정보가 공개되기 때문에, sequence정보를 활용하기 위해서는 어떤식으로든 4-field형태의 HLA allele name이 준비되어야 함.
-- 이 부분에 대해 NomenCleaner는 다음과 같은 approximated mapping을 수행함.
 
-- 설명...
-- 이렇게 approximated mapping된 4-field HLA allele name들을 기반으로 P-group과 G-group을 찾음( 혹은, 뒤에 suffix field들을 제거해서 다시 separator 구분이 되는 old 를 만듬.)
-- 결론은, old to updated로 가는 NomenCleaner는 approximated된 결과물이란걸 꼭 염두해 놓고 후속 연구를 해라.
+## (1) Introduction
+
+`NomenCleaner` is a module to help researchers to solve challenges related to HLA nomenclature. Two major challenges would be (1) Conversion between nomenclatures, and (2) Field checking.
 
 
 
+1. Conversion
+
+![NomenCleaner_Conversions](./img/README_3_NomenCleaner_Conversions.png)
+
+NomenCleaner converts a given set of HLA alleles which is in arbitrary nomenclature to the ones in the updated nomenclature. **The conversion from the updated to old nomenclature is NOT available**.
+
+<br>
+
+2. Field checking
+
+**Often, the field separator is skipped though given HLA type information is in the  standard name of the updated nomenclature**. This barely causes a problem in most cases, however, there is definitely some case that may confuse researchers. For example, if the HLA allele **DPB1\*101101** is given, then some researchers may be perplexed as to which one is right among <U>DBP1\*10:11:01</U>, <U>DPB1\*101:101</U> and <U>DPB1\*1011:01</U>. NomenCleaner searches the `HAT(HLA Allele Table)` file, which contains whole HLA allele name information of the IMGT database of a specific version, and determines that **DPB1*1011:01 is the only valid solution**. (cf. DBP1*1011:01 is in the IMGT database of the version 3.37.0.)
 
 
-## (4) Usage Example.
+<br>
+<br>
 
-NomenCleaner requires 'Integrated Allele Table(*.iat)' file from IMGT2Seq.
 
+## (2) Usage Examples
+
+NomenCleaner basically takes `HPED` file(e.g. '\*.hped') and `HAT(HLA Allele Table)` file (e.g. '\*.hat') as input, then performs its jobs as required by the user. Finally the NomenCleaner generates `Cleaned HPED(CHPED)` file, e.g. '\*.chped', which contains the converted HLA alleles and its log file, e.g. '\*.chped.log'.
+
+> The `HPED` file can be generated by the module `HLA2HPED`. The `HAT(HLA Allele Table)` file is generated by the module `IMGT2Seq`. Please check 'docs/_0_HLA2HPED.md' and 'docs/_1_IMGT2Seq.md' README files of those modules for more detailed information.
+
+<br>
+
+**There are two main ways of using the NomenCleaner**. The 1st one is to specify the output nomenclature and the other one is not.
+
+1. Specifying the output nomenclature, i.e. passing the arguments of either '--1field', '--2field', '--3field', '--4field', '--Ggroup', or '--Pgroup'.
+2. Specifying **NO** output nomenclature.
+
+<br>
+<br>
+
+### [1. Specifying the output nomenclature]
+
+Users can specify the output nomenclature by passing either argument of '--1field', '--2field', '--3field', '--4field', '--Ggroup', or '--Pgroup'.
+
+- The standard: '--1field', '--2field', '--3field', '--4field'
+- G-group: '--Ggroup'
+- P-group: '--Pgroup'
+
+The number in the arguments '--1field', '--2field', '--3field', and '--4field' means **the maximum number of fields** of the output alleles. For example, if the user passes the '--3field' argument, then all converted alleles in the output `CHPED` file will have a maximum of 3 fields and the 4th field value will be discarded.
 
 ```
 python3 HATK.py \
@@ -94,5 +110,66 @@ python3 HATK.py \
     -o MyNomenCleaner/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.58C_RA.300+300.chr6.hg18 \
     --2field \
     -imgt 3320
+```
+
+<br>
+
+### [2. Specifying **NO** output nomenclature]
+
+If a user doesn't specify the output field, then the NomenCleaner will perform the next jobs.
+
+<!-- - First of all, the NomenCleaner will check or automatically guess the number of fields for each HLA allele in the HPED file.
+- If the allele doesn't have the field separator, then the NomenCleaner will check whether that allele belongs to the old or updated nomenclature.
+- If the allele belongs to the old nomenclature, then it will be converted to the one in the standard name of the updated nomenclature with the previously confirmed number of fields.
+- If the allele belongs to the updated nomenclature(standard, G-group, or P-group), then the NomenCleaner won't perform any conversion but will insert the field separator.
+- If the allele has the field separoator at first, then it will be considered as an allele in the updated nomenclature -->
+
+- If the allele belongs to the old nomenclature, then it will be converted to have the standard name of the updated nomenclature with the field separator.
+- If the allele belongs to the updated nomenclature but doesn't have the field separator, then the NomenCleaner will only insert the field separator.
+- If the allele doesn't belong to the above 2 cases, then it will be just returned as it is.
+- In the end, the alleles in the `HPED` file will belong to one of the updated nomenclatures, having the field separator and the same number of fields as it originally had.
+
+<!-- i.e. old -> standard, standarad -> standard, G-group -> G-group, P-group -> P-group, while each converted allele has the same number of fields as that of its original fields. -->
 
 ```
+python3 HATK.py \
+    --nomencleaner \
+    -hat example/RESULT_EXAMPLE/HLA_ALLELE_TABLE.imgt3320.hat \
+    --hped example/wtccc_filtered_58C_RA.hatk.58C_RA.300+300.hped \
+    -o MyNomenCleaner/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.58C_RA.300+300.chr6.hg18 \
+    -imgt 3320
+```
+
+<br>
+<br>
+
+## (3) Mapping based on Approximation
+
+<!-- Somebody would have a question how the allele with less than 3 fields can be converted to the one with 3 or 4 fields. -->
+
+The amino acid and DNA sequence information distributed by the `IMGT-HLA` database are as below, the right rectangle.
+
+![Need_to_Approximate1](./img/README_3_NomenCleaner_approximation1.png)
+
+You can see that each sequence is given as paired with the HLA allele in the standard name with a maximum of 4 fields.
+
+However, It was mentioned in '(0) Backgrounds' section that it is quite a challenge even for the current HLA typing technology, which is the gold-standard way to obtain patients' HLA type, to resolve all 4 fields unambiguously. So, most of HLA type information given to HLA researchers will be in a maximum of 2 fields, which naturally implies that researchers can't use the IMGT sequence information as it is.
+
+To solve this problem, the NomenCleaner maps the allele with a maximum 2 of fields to the 1st one among the possible candidates that share the same fields in the `HAT(HLA Allele Table)`. For example, in the next photo, the allele A\*01:01 will be mapped(approximated) to A\*01:01:01:01 where there are 96 candidates sharing the same 1st and 2nd fields. By doing this, HATK can bring amino acid and DNA sequence information and  generate a marker panel based on that information.
+
+![Need_to_Approximate2](./img/README_3_NomenCleaner_approximation2.png)
+
+Likewise, if the user asks the NomenCleaner to convert an allele to the one with more fields than the original one, then it will do the same approximation.
+
+The approximation or exact match that happens in the process of the NomenCleaner will be recorded in the log file, e.g. *.chped.log, so that the users can make their own decision to use the result as it is or not.
+
+<!-- <br>
+<br>
+
+
+## (4) Log file example
+
+
+![LogFile_example_1](./img/README_3_NomenCleaner_Logfile1.png)
+
+![LogFile_example_2](./img/README_3_NomenCleaner_Logfile2.png) -->
