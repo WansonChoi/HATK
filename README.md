@@ -55,9 +55,11 @@ We strongly recommend using 'Anaconda(or Miniconda)' to set up HATK.
 	```
 
 
-  HATK will be implemented in this virtual environment. 
+    HATK will be implemented in this virtual environment. 
+
 
     <br>
+
 
 	> (Tip) Type '_conda deacitvate_' on your command line if you want to go back to your original Python system setting. (https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#deactivating-an-environment)
 
