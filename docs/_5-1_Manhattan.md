@@ -1,7 +1,7 @@
 # Manhattan Plot
 
 ## (1) Introduction
-The Manhattan plot is an indispensable method to visualize the result of the association test. HATK provides the module to plot the association signal of each marker focused on the HLA region.
+The Manhattan plot is an indispensable method to visualize the result of the association test. HATK provides the module to plot this.
 
 <br>
 
@@ -17,7 +17,7 @@ $ python HATK.py \
 ```
 
 
-## (3) Reuslt Example
+## (3) Result Example
 ![Manhattan_example](img/README_5-1_Manhattan_example.png)
 
 - Yellow: HLA marker (ex. HLA_A_0101)
