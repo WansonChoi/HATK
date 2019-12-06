@@ -54,7 +54,8 @@ We strongly recommend using 'Anaconda(or Miniconda)' to set up HATK.
 	$ conda activate HATK
 	```
 
-    HATK will be implemented in this virtual environment. 
+
+  HATK will be implemented in this virtual environment. 
 
     <br>
 
