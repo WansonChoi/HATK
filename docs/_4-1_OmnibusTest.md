@@ -39,7 +39,7 @@ We recommend using Beagle(v3.x.x) software to phase target data. The official in
 
 ## (4) Usage Examples
 
-When no condition(i.e. when interested in only one amino acid locus) is set, phasing isn't needed. However, you can just pass the unphased beagle file(e.g. *.bgl) to the argument '--phased'.
+> When no condition is set, phasing isn't needed. However, you can just pass the unphased beagle file(e.g. *.bgl) to the argument '--phased'.
 
 ```
 $ python3 HATK.py \
@@ -83,7 +83,9 @@ $ python3 HATK.py \
 
 ```
 
-(Tip) To sort the output of the omnibus test on P-value, Use the below bash command.
+<br>
+
+> (Tip) To sort the output of the omnibus test on P-value, Use the below bash command.
 ```
 $ sort -gk 5 MyOmnibusTest/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.58C_RA.300+300.chr6.hg18.RA.NA.omnibus
 ```
