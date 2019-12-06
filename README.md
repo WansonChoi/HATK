@@ -40,10 +40,11 @@ We strongly recommend using 'Anaconda(or Miniconda)' to set up HATK.
 
 2. Create a new independent Python virtual environment with the given YML file.
 
-	By using 'HATK_LINUX.yml'('HATK_OSX.yml' in case of using OS_X) file in the project folder, Create a new Python virtual environment.
+	By using 'HATK_LINUX.yml' or ' HATK_OSX.yml' file in the project folder depending on your operating system, Create a new Python virtual environment.
     
 	```
-	$ conda env create -f HATK_LINUX.yml
+	$ conda env create -f HATK_OSX.yml  ## OS X(Mac)
+	$ conda env create -f HATK_LINUX.yml    ## Linux
 	```
 	
 	The above command will generate a new Python virtual environment named 'HATK', which contains dependent Python packages, Java and R libraries, independent to your original Python system. For more detailed explanation about Anaconda's managing Python virtual environment, Please check this reference(https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#create-env-file-manually).
