@@ -1,4 +1,12 @@
-## () Usage Example
+# Logistic Regression
+
+## (1) Introduction
+
+Logistic regression is one of the most widely used association test methods for the `Genome-Wide Association Test(GWAS)`. HATK provides the module to implement a logistic regression that is optimized to perform `HLA fine-mapping`.
+
+<br>
+
+## (2) Usage Example
 
 ```
 $ python HATK.py \

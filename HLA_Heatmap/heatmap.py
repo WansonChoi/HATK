@@ -613,8 +613,8 @@ def HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_result, __save_intermediates=
                             _out+".alleleP.txt",
                             _hla_name,
                             _out,
-                            # '1>{LOG} 2>{LOG}'.format(LOG=(_out+'.log'))])
-                            '1>{LOG}'.format(LOG=(_out+'.log'))])
+                            '2>{LOG} 1>/dev/null'.format(LOG=(_out+'.heatmap.log'))])
+                            # '2>{LOG}'.format(LOG=(_out+'.heatmap.log'))])
 
         # print(command)
         os.system(command)
@@ -623,6 +623,7 @@ def HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_result, __save_intermediates=
     if not __save_intermediates:
 
         l_remove = [".map.txt", ".alleleP.txt", ".assoc.txt"]
+        l_remove.append(".heatmap.log")
 
         for item in l_remove:
 

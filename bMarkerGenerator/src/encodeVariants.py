@@ -136,49 +136,49 @@ def divideToBinaryMarkers(_SNP1, _SNP2, _factors, __asSmallLetter=True):
                 else:
                     Seq.append(_absent_)
 
-        if len(_factors) > 3:
-
-            j_end = 1 if len(_factors) == 4 else len(_factors)
-
-            for j in range(0, j_end):
-
-                for k in range(j + 1, len(_factors)):
-
-                    if _SNP1 == "0" or _SNP2 == "0":
-                        Seq.append("0"); Seq.append("0")
-
-                    else:
-                        if _factors[j] == _SNP1 or _factors[k] == _SNP1:
-                            Seq.append(_present_)
-                        else:
-                            Seq.append(_absent_)
-
-                        if _factors[j] == _SNP2 or _factors[k] == _SNP2:
-                            Seq.append(_present_)
-                        else:
-                            Seq.append(_absent_)
-
-            if len(_factors) > 5:
-
-                j_end = 1 if len(_factors) == 6 else len(_factors)
-
-                for j in range(0, j_end):
-                    for k in range(j + 1, len(_factors)):
-                        for l in range(k + 1, len(_factors)):
-
-                            if _SNP1 == "0" or _SNP2 == "0":
-                                Seq.append("0"); Seq.append("0")
-
-                            else:
-                                if _factors[j] == _SNP1 or _factors[k] == _SNP1 or _factors[l] == _SNP1:
-                                    Seq.append(_present_)
-                                else:
-                                    Seq.append(_absent_)
-
-                                if _factors[j] == _SNP2 or _factors[k] == _SNP2 or _factors[l] == _SNP2:
-                                    Seq.append(_present_)
-                                else:
-                                    Seq.append(_absent_)
+        # if len(_factors) > 3:
+        #
+        #     j_end = 1 if len(_factors) == 4 else len(_factors)
+        #
+        #     for j in range(0, j_end):
+        #
+        #         for k in range(j + 1, len(_factors)):
+        #
+        #             if _SNP1 == "0" or _SNP2 == "0":
+        #                 Seq.append("0"); Seq.append("0")
+        #
+        #             else:
+        #                 if _factors[j] == _SNP1 or _factors[k] == _SNP1:
+        #                     Seq.append(_present_)
+        #                 else:
+        #                     Seq.append(_absent_)
+        #
+        #                 if _factors[j] == _SNP2 or _factors[k] == _SNP2:
+        #                     Seq.append(_present_)
+        #                 else:
+        #                     Seq.append(_absent_)
+        #
+        #     if len(_factors) > 5:
+        #
+        #         j_end = 1 if len(_factors) == 6 else len(_factors)
+        #
+        #         for j in range(0, j_end):
+        #             for k in range(j + 1, len(_factors)):
+        #                 for l in range(k + 1, len(_factors)):
+        #
+        #                     if _SNP1 == "0" or _SNP2 == "0":
+        #                         Seq.append("0"); Seq.append("0")
+        #
+        #                     else:
+        #                         if _factors[j] == _SNP1 or _factors[k] == _SNP1 or _factors[l] == _SNP1:
+        #                             Seq.append(_present_)
+        #                         else:
+        #                             Seq.append(_absent_)
+        #
+        #                         if _factors[j] == _SNP2 or _factors[k] == _SNP2 or _factors[l] == _SNP2:
+        #                             Seq.append(_present_)
+        #                         else:
+        #                             Seq.append(_absent_)
 
 
 
@@ -238,23 +238,23 @@ def MakeNewMap(_p_map, _l_factors, __addDummyMarker=False):
                     yield '\t'.join([t_line[0], t_line[1] + '_' + _l_factors[idx][j], t_line[2], t_line[3]]) + "\n"
 
 
-                if len(_l_factors[idx]) > 3:
-
-                    j_end = 1 if len(_l_factors[idx]) == 4 else len(_l_factors[idx])
-
-                    for j in range(0, j_end):
-                        for k in range(j+1, len(_l_factors[idx])):
-                            yield '\t'.join([t_line[0], t_line[1]+ '_' + _l_factors[idx][j]+_l_factors[idx][k], t_line[2], t_line[3]]) + "\n"
-
-
-                    if len(_l_factors[idx]) > 5:
-
-                        j_end = 1 if len(_l_factors[idx]) == 6 else len(_l_factors[idx])
-
-                        for j in range(0, j_end):
-                            for k in range(j+1, len(_l_factors[idx])):
-                                for l in range(k+1, len(_l_factors[idx])):
-                                    yield '\t'.join([t_line[0], t_line[1]+ '_' + _l_factors[idx][j]+_l_factors[idx][k]+_l_factors[idx][l], t_line[2], t_line[3]]) + "\n"
+                # if len(_l_factors[idx]) > 3:
+                #
+                #     j_end = 1 if len(_l_factors[idx]) == 4 else len(_l_factors[idx])
+                #
+                #     for j in range(0, j_end):
+                #         for k in range(j+1, len(_l_factors[idx])):
+                #             yield '\t'.join([t_line[0], t_line[1]+ '_' + _l_factors[idx][j]+_l_factors[idx][k], t_line[2], t_line[3]]) + "\n"
+                #
+                #
+                #     if len(_l_factors[idx]) > 5:
+                #
+                #         j_end = 1 if len(_l_factors[idx]) == 6 else len(_l_factors[idx])
+                #
+                #         for j in range(0, j_end):
+                #             for k in range(j+1, len(_l_factors[idx])):
+                #                 for l in range(k+1, len(_l_factors[idx])):
+                #                     yield '\t'.join([t_line[0], t_line[1]+ '_' + _l_factors[idx][j]+_l_factors[idx][k]+_l_factors[idx][l], t_line[2], t_line[3]]) + "\n"
 
             else:
                 yield l # "\n" is included.

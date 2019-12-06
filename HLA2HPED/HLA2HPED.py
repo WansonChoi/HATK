@@ -62,21 +62,21 @@ def HLA2HPED(_rhped, _out, _platform):
 
     if _platform == "AXIOM":
 
-        print(std_MAIN_PROCESS_NAME + "Converting output files from \"AXIOM\" to \".hped\".\n")
+        # print(std_MAIN_PROCESS_NAME + "Converting output files from \"AXIOM\" to \".hped\".\n")
 
         OUTPUT_RETURN = _convert_AXIOM(_rhped, _out)
 
 
     elif _platform == "HIBAG":
 
-        print(std_MAIN_PROCESS_NAME + "Converting output files of \"HIBAG\" to \".hped\".\n")
+        # print(std_MAIN_PROCESS_NAME + "Converting output files of \"HIBAG\" to \".hped\".\n")
 
         OUTPUT_RETURN = _convert_HIBAG(_rhped, _out)
 
 
     elif _platform == "xHLA":
 
-        print(std_MAIN_PROCESS_NAME + "Converting output files of \"xHLA\" to \".hped\".\n")
+        # print(std_MAIN_PROCESS_NAME + "Converting output files of \"xHLA\" to \".hped\".\n")
 
         OUTPUT_RETURN = _convert_xHLA(_rhped, _out)
 
@@ -97,158 +97,164 @@ def HLA2HPED(_rhped, _out, _platform):
 
 
 
-def _convert_AXIOM(_i_HLA, _out):
+def _convert_AXIOM(_rhped, _out):
 
-    if len(_i_HLA) != 8:
+    if len(_rhped) != 8:
         print(std_ERROR_MAIN_PROCESS_NAME + "Platform \"{0}\" needs 8 input files. Please check it again.\n".format("AXIOM"))
         sys.exit()
 
 
-    DICT_HLA_INPUTS = \
-        {HLA_names[i]: pd.read_csv(_i_HLA[i], header=None, sep='\s+', dtype=str,
-                                     names=["Label", "No", "Allele", "v1", "v2"]) for i in range(0, len(HLA_names))}
+    ### Exception handling 1 - When every rhped is 'NA'.
 
-    N_rows = []
+    f_isNA = list(map(lambda x : x == 'NA', _rhped))
 
+    if not any(f_isNA):
+        print(std_ERROR_MAIN_PROCESS_NAME + "No any HIBAG output file has been given. Please check the '--rhped' argument again.")
+        sys.exit()
 
-    for i in range(0, len(HLA_names)):
+    first_appear = -1
 
-        print("\nGiven input(HLA : {0})".format(HLA_names[i]))
-        print(DICT_HLA_INPUTS[HLA_names[i]].head())
-
-        if DICT_HLA_INPUTS[HLA_names[i]].shape[0] % 2 == 1:
-            # When given input has odd number of entities.
-            print(std_WARNING_MAIN_PROCESS_NAME + "Input file of HLA-{0} has odd number of rows."
-                                                  "Appendig last entity one more time by force.\n")
-
-        N_rows.append(DICT_HLA_INPUTS[HLA_names[i]].shape[0])
+    for i in range(len(HLA_names)):
+        if not f_isNA[i]:
+            first_appear = i
+            break
 
 
-    print("\nThe numbers of each HLA input files are : {0}".format(N_rows))
+    DICT_rhped = {HLA_names[i]: pd.read_csv(_rhped[i], header=None, sep='\s+', dtype=str, names=["IID", "idx", "4digit", "p1", "p2"], usecols=['IID', 'idx', '4digit']) if not f_isNA[i] else pd.DataFrame([]) for i in range(0, len(HLA_names))}
+    # print(DICT_rhped['B'])
 
 
-
-    l_df_RETURN = []
-
-    for i in range(0, len(HLA_names)):
-
-        df_temp = DICT_HLA_INPUTS[HLA_names[i]]
-
-        l_temp = []
-
-        for j in range(0, df_temp.shape[0], 2):
-
-            l_temp.append([df_temp.iat[j, 2], df_temp.iat[j+1, 2]])
+    ### Restructuring rhped
+    for i in range(len(HLA_names)):
+        if not f_isNA[i]:
+            DICT_rhped[HLA_names[i]] = DICT_rhped[HLA_names[i]].set_index(['IID', 'idx']).unstack(['idx'])
+            # print(DICT_rhped[HLA_names[i]])
 
 
-        df_temp2 = pd.DataFrame(l_temp)
-        l_df_RETURN.append(df_temp2)
-
-    df_RETURN = pd.concat(l_df_RETURN, axis=1)
-
-    ### Index
-    l_idx_RETURN = []
-
-    # (2) SampleID
-    idx_temp = df_temp.iloc[:, 0].tolist()
-    idx_SampleID = [idx_temp[i] for i in range(0, len(idx_temp), 2)]
-
-    # (1) FamID
-    l_idx_RETURN.append(["FamID_"+str(i) for i in range(0, len(idx_SampleID))])
-    l_idx_RETURN.append(idx_SampleID)
-
-    # (3), (4), (5) : P_ID, M_ID, Sex(Unknown default)
-    idx_temp = ["0" for i in range(0, len(idx_SampleID))]
-    l_idx_RETURN.append(idx_temp)
-    l_idx_RETURN.append(idx_temp)
-    l_idx_RETURN.append(idx_temp)
-
-    # (6) Phe (Unknown default.)
-    idx_temp = ["-9" for i in range(0, len(idx_SampleID))]
-    l_idx_RETURN.append(idx_temp)
-
-
-    idx_RETURN = pd.MultiIndex.from_arrays(l_idx_RETURN)
-    df_RETURN.index = idx_RETURN
+    ### Exception handling 2 - When there is any rhped which has different number of rows.
+    L = [DICT_rhped[HLA_names[i]].shape[0] for i in range(len(HLA_names)) if not f_isNA[i]]
+    if len(set(L)) > 1:
+        print(std_ERROR_MAIN_PROCESS_NAME + "There is an HIBAG output file which has different number of rows."
+                                            "Please check the HIBAG output files given to the '--rhped' argument.")
+        sys.exit()
+    else:
+        L = L.pop()
 
 
 
-    print("\ndf_AXIOM is \n")
-    print(df_RETURN.head())
+    ### The Main step to generate hped file.
 
-    # Exporting(File Writing)
-    df_RETURN.to_csv(_out+".hped", sep='\t', header=False, index=True)
+    l_HLA = []
+
+    for i in range(len(HLA_names)):
+
+        if not f_isNA[i]:
+            df_temp = DICT_rhped[HLA_names[i]].reset_index(drop=True)
+        else:
+            df_temp = pd.DataFrame([['0', '0'] for z in range(L)])
+
+        df_temp.columns = [HLA_names[i]+'_1', HLA_names[i]+'_2']
+        # print(df_temp)
+        l_HLA.append(df_temp)
 
 
-    return _out + ".hped"
+    df_Right = pd.concat(l_HLA, axis=1)
+    # print(df_Right)
 
 
 
+    ### Meta information(Left 6 columns)
 
-def _convert_HIBAG(_i_HLA, _out):
+    #
+    sr_PID = pd.Series(['0' for z in range(L)])
+    sr_MID = pd.Series(['0' for z in range(L)])
+    sr_Sex = pd.Series(['0' for z in range(L)])
+    sr_Phe = pd.Series(['-9' for z in range(L)])
+
+    df_Left = pd.concat([DICT_rhped[HLA_names[first_appear]].index.to_frame(index=False),
+                         DICT_rhped[HLA_names[first_appear]].index.to_frame(index=False),
+                         sr_PID, sr_MID, sr_Sex, sr_Phe], axis=1)
+    # print(df_Left)
 
 
-    if len(_i_HLA) != 8:
+    df_HPED_axiom = pd.concat([df_Left, df_Right], axis=1)
+    # print(df_HPED_axiom)
+    df_HPED_axiom.to_csv(_out+'.hped', sep='\t', header=False, index=False)
+
+    return _out+'.hped'
+
+
+
+def _convert_HIBAG(_rhped, _out):
+
+
+    if len(_rhped) != 8:
         print(std_ERROR_MAIN_PROCESS_NAME + "Platform \"{0}\" needs 8 input files. Please check it again.\n".format("HIBAG"))
         sys.exit()
 
+    ### Exception handling 1 - When every rhped is 'NA'.
 
-    DICT_HLA_INPUTS = \
-        {HLA_names[i]: pd.read_csv(_i_HLA[i], header=None, sep='\s+', dtype=str,
-                                     names=["Label", "Allele1", "Allele2", "v1"]) for i in range(0, len(HLA_names))}
+    f_isNA = list(map(lambda x : x == 'NA', _rhped))
 
+    if not any(f_isNA):
+        print(std_ERROR_MAIN_PROCESS_NAME + "No any HIBAG output file has been given. Please check the '--rhped' argument again.")
+        sys.exit()
 
-    N_rows = []
-    l_df_RETURN = []
+    first_appear = -1
 
-    for i in range(0, len(HLA_names)):
+    for i in range(len(HLA_names)):
+        if not f_isNA[i]:
+            first_appear = i
+            break
 
-        print("\nGiven input(HLA : {0})".format(HLA_names[i]))
-        print(DICT_HLA_INPUTS[HLA_names[i]].head())
-
-        N_rows.append(DICT_HLA_INPUTS[HLA_names[i]].shape[0])
-
-        l_df_RETURN.append(DICT_HLA_INPUTS[HLA_names[i]].iloc[:, [1, 2]])
-
-
-    print("\nThe numbers of each HLA input files are : {0}\n".format(N_rows))
+    DICT_rhped = {HLA_names[i]: pd.read_csv(_rhped[i], header=None, sep='\s+', dtype=str, names=["FID", "IID", "HLA", "2digit", "4digit", "p1", "p2"]) if not f_isNA[i] else pd.DataFrame([]) for i in range(0, len(HLA_names))}
 
 
-    df_RETURN = pd.concat(l_df_RETURN, axis=1)
+    ### Exception handling 2 - When there is any rhped which has different number of rows.
+    L = [DICT_rhped[HLA_names[i]].shape[0] for i in range(len(HLA_names)) if not f_isNA[i]]
+    if len(set(L)) > 1:
+        print(std_ERROR_MAIN_PROCESS_NAME + "There is an HIBAG output file which has different number of rows."
+                                            "Please check the HIBAG output files given to the '--rhped' argument.")
+        sys.exit()
+    else:
+        L = L.pop()
 
 
-    ### Index
-    l_idx_RETURN = []
+    ### The Main step to generate hped file.
 
-    # (1) FamID
-    l_idx_RETURN.append(["FamID_"+str(i) for i in range(0, N_rows[-1])])
+    l_HLA = []  # the list to be pd.concat(..., axis=1)
 
-    # (2) SampleID
-    idx_SampleID = DICT_HLA_INPUTS["A"].iloc[:, 0].tolist()
-    l_idx_RETURN.append(idx_SampleID)
+    for i in range(len(HLA_names)):
 
-    # (3), (4), (5) : P_ID, M_ID, Sex(Unknown default)
-    idx_temp = ["0" for i in range(0, len(idx_SampleID))]
-    l_idx_RETURN.append(idx_temp)
-    l_idx_RETURN.append(idx_temp)
-    l_idx_RETURN.append(idx_temp)
+        if not f_isNA[i]:
+            df_temp = DICT_rhped[HLA_names[i]]['4digit'].str.extract(r'(\d{4,5}),(\d{4,5})')
+        else:
+            df_temp = pd.DataFrame([['0', '0'] for z in range(L)])
 
-    # (6) Phe (Unknown default.)
-    idx_temp = ["-9" for i in range(0, len(idx_SampleID))]
-    l_idx_RETURN.append(idx_temp)
+        df_temp.columns = [HLA_names[i]+'_1', HLA_names[i]+'_2']
+        # print(df_temp)
+        l_HLA.append(df_temp)
 
-    idx_REUTURN = pd.MultiIndex.from_arrays(l_idx_RETURN)
-    df_RETURN.index = idx_REUTURN
+
+    df_RIGHT = pd.concat(l_HLA, axis=1)
+    # print(df_RIGHT)
 
 
 
-    print("\ndf_HIBAG is \n")
-    print(df_RETURN.head())
+    ### Meta information(Left 6 columns)
 
-    # Exporting(File Writing)
-    df_RETURN.to_csv(_out+".hped", sep='\t', header=False, index=True)
+    sr_PID = pd.Series(['0' for z in range(L)])
+    sr_MID = pd.Series(['0' for z in range(L)])
+    sr_Sex = pd.Series(['0' for z in range(L)])
+    sr_Phe = pd.Series(['-9' for z in range(L)])
 
-    return _out+".hped"
+    df_Left = pd.concat([DICT_rhped[HLA_names[first_appear]][['FID', 'IID']], sr_PID, sr_MID, sr_Sex, sr_Phe], axis=1)
+    # print(df_Left)
+
+    df_HPED_HIBAG = pd.concat([df_Left, df_RIGHT], axis=1)
+    df_HPED_HIBAG.to_csv(_out+'.hped', sep='\t', header=False, index=False)
+
+    return _out + '.hped'
 
 
 
@@ -296,8 +302,8 @@ def _convert_xHLA(_i_HLA, _out):
 
         l_HLA.append(l_eachRows)
 
-    print(l_SampleID)
-    print(l_HLA)
+    # print(l_SampleID)
+    # print(l_HLA)
 
 
     ### DataFrame
@@ -326,8 +332,8 @@ def _convert_xHLA(_i_HLA, _out):
     df_RETURN.index = idx_REUTURN
 
 
-    print("\ndf_xHLA is \n")
-    print(df_RETURN.head())
+    # print("\ndf_xHLA is \n")
+    # print(df_RETURN.head())
 
 
 
@@ -401,27 +407,27 @@ if __name__ == "__main__":
     ##### < for Test > #####
 
     # args = parser.parse_args(["-p", "AXIOM", "-rhped",
-    #                           "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/HATK/data/HLA2HPED/AxiomHLA_TestResult/AxiomHLA_4dig_A_Results.txt",
-    #                           "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/HATK/data/HLA2HPED/AxiomHLA_TestResult/AxiomHLA_4dig_B_Results.txt",
-    #                           "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/HATK/data/HLA2HPED/AxiomHLA_TestResult/AxiomHLA_4dig_C_Results.txt",
-    #                           "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/HATK/data/HLA2HPED/AxiomHLA_TestResult/AxiomHLA_4dig_DPA1_Results.txt",
-    #                           "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/HATK/data/HLA2HPED/AxiomHLA_TestResult/AxiomHLA_4dig_DPB1_Results.txt",
-    #                           "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/HATK/data/HLA2HPED/AxiomHLA_TestResult/AxiomHLA_4dig_DQA1_Results.txt",
-    #                           "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/HATK/data/HLA2HPED/AxiomHLA_TestResult/AxiomHLA_4dig_DQB1_Results.txt",
-    #                           "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/HATK/data/HLA2HPED/AxiomHLA_TestResult/AxiomHLA_4dig_DRB1_Results.txt",
-    #                           "-o", "HLA2HPED_removethis"
+    #                           "NA",
+    #                           "/Users/wansun/Git_Projects/HATK/example/HLA2HPED/Axiom/AxiomHLA_4dig_B_Results.txt",
+    #                           "/Users/wansun/Git_Projects/HATK/example/HLA2HPED/Axiom/AxiomHLA_4dig_C_Results.txt",
+    #                           "NA",
+    #                           "/Users/wansun/Git_Projects/HATK/example/HLA2HPED/Axiom/AxiomHLA_4dig_DPB1_Results.txt",
+    #                           "/Users/wansun/Git_Projects/HATK/example/HLA2HPED/Axiom/AxiomHLA_4dig_DQA1_Results.txt",
+    #                           "/Users/wansun/Git_Projects/HATK/example/HLA2HPED/Axiom/AxiomHLA_4dig_DQB1_Results.txt",
+    #                           "/Users/wansun/Git_Projects/HATK/example/HLA2HPED/Axiom/AxiomHLA_4dig_DRB1_Results.txt",
+    #                           "-o", "/Users/wansun/Git_Projects/HATK/MyHLA2HPED_AXIOM/AXIOM"
     #                           ])
 
     # args = parser.parse_args(["-p", "HIBAG", "-rhped",
-    #                           "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/HATK/data/HLA2HPED/HIBAG_TestResult_HLA-A.txt",
-    #                           "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/HATK/data/HLA2HPED/HIBAG_TestResult_HLA-A.txt",
-    #                           "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/HATK/data/HLA2HPED/HIBAG_TestResult_HLA-A.txt",
-    #                           "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/HATK/data/HLA2HPED/HIBAG_TestResult_HLA-A.txt",
-    #                           "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/HATK/data/HLA2HPED/HIBAG_TestResult_HLA-A.txt",
-    #                           "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/HATK/data/HLA2HPED/HIBAG_TestResult_HLA-A.txt",
-    #                           "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/HATK/data/HLA2HPED/HIBAG_TestResult_HLA-A.txt",
-    #                           "/Users/wansun/Dropbox/_Sync_MyLaptop/Data/HATK/data/HLA2HPED/HIBAG_TestResult_HLA-A.txt",
-    #                           "-o", "HLA2HPED_removethis_HIBAG"
+    #                           "NA",
+    #                           "/Users/wansun/Git_Projects/HATK/example/HLA2HPED/HIBAG/HIBAG_TestResult.HLA-B.out",
+    #                           "/Users/wansun/Git_Projects/HATK/example/HLA2HPED/HIBAG/HIBAG_TestResult.HLA-C.out",
+    #                           "NA",
+    #                           "/Users/wansun/Git_Projects/HATK/example/HLA2HPED/HIBAG/HIBAG_TestResult.HLA-DPB1.out",
+    #                           "/Users/wansun/Git_Projects/HATK/example/HLA2HPED/HIBAG/HIBAG_TestResult.HLA-DQA1.out",
+    #                           "/Users/wansun/Git_Projects/HATK/example/HLA2HPED/HIBAG/HIBAG_TestResult.HLA-DQB1.out",
+    #                           "/Users/wansun/Git_Projects/HATK/example/HLA2HPED/HIBAG/HIBAG_TestResult.HLA-DRB1.out",
+    #                           "-o", "/Users/wansun/Git_Projects/HATK/MyHLA2HPED_HIBAG/HIBAG"
     #                           ])
 
     # args = parser.parse_args(["-p", "xHLA", "-rhped",
