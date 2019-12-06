@@ -20,4 +20,7 @@ $ python HATK.py \
 <br>
 
 ## (3) Result Example
-![REAMDE-Heatmap_example](img/REAMDE-Heatmap_example.png)
+![Heatmap_example](img/README_5-2_Heatmap_example.png)
+
+- The cells on the right side represent the signals of HLA allele markers.
+- The cells in the main part represent the signals of amino acid markers. The characters are the amino acid residue values and Each column is the position of the amino acid sequence.

@@ -31,11 +31,17 @@ On the other hand, If some SNP has more than 2 variations, e.g. SNPs in the HLA 
 ![README-BinaryMarker2](./img/README_2_bMarkerGenerator2.png)
 
 
+In terms of amino acids, it is far more common for each position to have multiple variations than SNPs. With the same binary marker strategy, divide the 2 x 4 table into four 2 x 2 tables so that each of them represents respective amino acid residues.
+
+![README-BinaryMarker3](./img/README_2_bMarkerGenerator3.png)
+
+
+
 <br>
 <br>
 
 
-## (3) Four classes of markers
+## (3) Four classes of Markers
 
 With the conventional intergenic SNP markers(ex. rs41557221), 3 classes of markers representing the variants in the HLA region will be included in a newly generated marker panel.
 

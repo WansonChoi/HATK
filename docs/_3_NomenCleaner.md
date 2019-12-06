@@ -30,7 +30,7 @@ On the other hand, in **the updated nomenclature**, HLA allele name has
 
 #### [G-group and P-group nomenclature]
 
-Refer to the next link for the official definition about G-group and P-group nomenclatures. (http://hla.alleles.org/nomenclature/naming_2010.html - '3. Reporting of ambiguous HLA allele typing') 
+Refer to the next link for the official definition of G-group and P-group nomenclatures. (http://hla.alleles.org/nomenclature/naming_2010.html - '3. Reporting of ambiguous HLA allele typing') 
 
 HLA typing technologies, which is the gold-standard way to obtain patients' HLA type information, still face a challenge in getting the fully resolved HLA type, i.e. determining all fields exactly. Consequently, **it is quite common to skip 3rd and 4th fields in order to aggregate multiple possible answers**.
 To deal with this, the committee introduced G and P codes in the updated nomenclature. 
@@ -69,7 +69,7 @@ NomenCleaner converts a given set of HLA alleles which is in arbitrary nomenclat
 
 2. Field checking
 
-**Often, the field separator is skipped though given HLA type information is in the  standard name of the updated nomenclature**. This barely causes a problem in most cases, however, there is definitely some case that may confuse researchers. For example, if the HLA allele **DPB1\*101101** is given, then some researchers may be perplexed as to which one is right among <U>DBP1\*10:11:01</U>, <U>DPB1\*101:101</U> and <U>DPB1\*1011:01</U>. NomenCleaner searches the `HAT(HLA Allele Table)` file, which contains whole HLA allele name information of the IMGT database of a specific version, and determines that **DPB1*1011:01 is the only valid solution**. (cf. DBP1*1011:01 is in the IMGT database of the version 3.37.0.)
+**Often, the field separator is removed though given HLA allele conforms to the updated nomenclature**. This barely causes a problem in most cases, however, there is definitely some case that may confuse researchers. For example, if the HLA allele **DPB1\*101101** is given, then some researchers may be perplexed as to which one is right among <U>DBP1\*10:11:01</U>, <U>DPB1\*101:101</U> and <U>DPB1\*1011:01</U>. NomenCleaner searches the `HAT(HLA Allele Table)` file, which contains whole HLA allele name information of the IMGT database of a specific version, and determines that **DPB1*1011:01 is the only valid solution**. (cf. DBP1*1011:01 is in the IMGT database of the version 3.37.0.)
 
 
 <br>

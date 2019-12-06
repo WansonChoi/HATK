@@ -9,7 +9,7 @@
 
 1. Most accurate information of the HLA region
 
-In most `Genome-Wide Association Study` and `Next-generation Sequencing` analysis, all `Single Nucleotide Polymorphism(SNP)` are assumed to be bi-allelic, i.e. there are only two variations in each SNP. In most SNPs in the human genome, this is actually true. However, SNPs in the `HLA region` are often more than bi-allelic because this HLA region has extreme polymorphism. In other words, when it comes to the HLA region, NGS technique with Human Reference Genome and most SNP array panels usually can't fully cover the variation of this region. That's why the result of the association test on the HLA region with those techniques is usually unreliable.
+In `Genome-Wide Association Study` and `Next-generation Sequencing` analysis, all `Single Nucleotide Polymorphism(SNP)` are assumed to be bi-allelic, i.e. there are only two variations in each SNP. In most SNPs in the human genome, this is actually true. However, SNPs in the `HLA region` are often more than bi-allelic because this HLA region has extreme polymorphism. In other words, when it comes to the HLA region, NGS technique with Human Reference Genome and most SNP array panels usually can't fully cover the variation of this region. That's why the result of the association test on the HLA region with those techniques is usually unreliable.
 
 The IPD-IMGT/HLA database is a specialist database and provides the official amino acid and DNA sequence of each HLA allele. This information should be used to make a marker panel so that the polymorphism information of the HLA region can be applied. IMGT2Seq pre-processes the data files distributed by the IMGT database and bMarkerGenerator generates a marker panel based on that preprocessed output. By performing the association test on this marker panel, researchers can analyze the signals arising in the HLA region.
 
@@ -28,7 +28,8 @@ The IPD-IMGT/HLA database not only supervises the sequence information but also 
 
 The IMGT database updates itself usually 4 times a year. In each update, new HLA alleles are introduced and some existing alleles are merged/removed. The next photo shows that the entire number of found HLA alleles keeps increasing, which means using the latest version of the database is recommended.
 
-![README-IMGT2Seq_HAT](./img/README_1_IMGT2Seq-history.png)
+![README-IMGT2Seq_history](./img/README_1_IMGT2Seq-history.png)
+(https://www.ebi.ac.uk/ipd/imgt/hla/stats.html - 'Database Growth'.)
 
 
 
