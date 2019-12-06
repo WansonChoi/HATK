@@ -19,19 +19,19 @@ bMarkerGenerator solves this problem by using a similar strategy which `SNP2HLA`
 
 ## (2) Binary Marker
 
-Typical markers labeled with dbSNP id in most genotype data represent the possible two variations of each position. As most SNPs are bi-allelic, these markers can successfully represent those SNPs. For instance, the SNP in the position 29941758 has two possible variations, allele 'G' or 'A'. The marker with the dbSNP id 'rs2734979' represents this SNP and its status will be reduced to 2 x 2 table. Most of the association study performs the association test on this 2 x 2 table.
+Typical markers labeled with dbSNP id in most genotype data represent the possible two variations of each position. As most SNPs are bi-allelic, these markers can successfully represent those SNPs. For instance, the SNP in the position 29941758 has two possible variations, allele 'G' or 'A'. The marker with the dbSNP id 'rs2734979' represents this SNP and its status will be reduced to 2 x 2 table. Most of the association study performs an association test that is based on this 2 x 2 table.
 
 
 ![README-BinaryMarker1](./img/README_2_bMarkerGenerator1.png)
 
 
 
-On the other hand, If some SNP has more than 2 variations, e.g. SNPs in the HLA region, then the above strategy can't be used as it is. Here, the binary markers strategy comes in. For example in the next photo, the position 30018461 which has three variations, allele A, G, and T, will be reduced to the 2 x 3 table. The binary marker strategy disjointly divides this 2 x 3 table into a new three 2 x 2 tables where the 3 is the number of variations. In each new 2 x 2 table, the column will represent the **Presence(p)** and **Absence(a)** of each variation.
+On the other hand, If some SNP has more than 2 variations, e.g. SNPs in the HLA region, then the above strategy can't be used as it is. Here comes in the _binary marker_ strategy. For example in the next photo, the position 30018461 which has three variations, allele A, G, and T, will be reduced to the 2 x 3 table. The _binary marker_ strategy disjointly divides this 2 x 3 table into a new three 2 x 2 tables where the 3 is the number of variations. In each new 2 x 2 table, the column will represent the **Presence(p)** and **Absence(a)** of each variation.
 
 ![README-BinaryMarker2](./img/README_2_bMarkerGenerator2.png)
 
 
-In terms of amino acids, it is far more common for each position to have multiple variations than SNPs. With the same binary marker strategy, divide the 2 x 4 table into four 2 x 2 tables so that each of them represents respective amino acid residues.
+In terms of amino acids, it is far more common for each position to have multiple variations than SNPs. With the same _binary marker_ strategy, divide the 2 x 4 table into four 2 x 2 tables so that each of them represents respective amino acid residues.
 
 ![README-BinaryMarker3](./img/README_2_bMarkerGenerator3.png)
 
