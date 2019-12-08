@@ -175,7 +175,7 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc, _gen, _prot, _p_data,
 
 
         df_Markers_NoIndel_gen = SeqsToMarkers(df_Seqs_splited_noIndel_gen, l_genomic_positions, l_relative_positions)
-
+        df_Markers_NoIndel_gen.to_csv(_out + ".HLA_{0}.gen.markers.noindel.HARD_DEBUGGING.txt".format(_hla), sep='\t', header=True, index=True)
 
         if _no_Indel:
 
@@ -189,13 +189,13 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc, _gen, _prot, _p_data,
 
         # Filtering only exon columns in `df_Markers_NoIndel_gen`
 
-        p = re.compile("(e|E)xon\d?")
+        p = re.compile("exon\d")
 
         df_Markers_onlyExons =  df_Markers_NoIndel_gen.filter(regex=p, axis=1)
         # print("Only exons")
         # print(df_Markers_onlyExons.head())
 
-        # df_Markers_onlyExons.to_csv(_out+".HLA_{0}.gen.onlyexons.markers.txt".format(_hla), sep='\t', header=True, index=True)
+        df_Markers_onlyExons.to_csv(_out+".HLA_{0}.gen.onlyexons.markers.HARD_DEBUGGING.txt".format(_hla), sep='\t', header=True, index=True)
 
         precursor_AA_forMAP = df_Markers_onlyExons.columns.to_frame(index=False)
         precursor_AA_forMAP.columns = pd.Index(["SNP_rel_pos", "SNP_gen_pos", "Type"])
@@ -517,7 +517,7 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc, _gen, _prot, _p_data,
 
         # File Writing
         if _save_intermediates:
-            df_Seqs_gen.to_csv(_out + ".HLA_{0}.gen.complementSeqs.txt".format(_hla))
+            df_Seqs_gen.to_csv(_out + ".HLA_{0}.gen.complementSeqs.txt".format(_hla), sep='\t', header=False, index=True)
 
 
 
