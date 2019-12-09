@@ -6,7 +6,7 @@
 
 In `GWAS`(**Genome-wide Association Test**) and its fine-mapping analysis, researchers can obtain candidate causal variants of the target disease. However, the association test performed on the variants in the HLA(Human Leukocyte Antigen) region, chromosome 6p21, usually shows unreliable results because this region has an outlandish polymorphism. Consequently, Performing conventional association test based on SNP array panel may generate inaccurate signals in the HLA region.
 
-On the other hand, the `IPD-IMGT/HLA`, which is a specialist database, provides the official and most detailed information of the HLA region. Being updated 4 times a year, they keep and manage whole HLA allele information. Also, they name those alleles based on the nomenclature defined by the '`WHO Nomenclature Committee For Factors of the HLA System`’. Furthermore, they provide each HLA allele's (1) amino acid and (2) DNA sequence information. To use these data, Exact HLA allele information of patients is required and researchers may have to employ expensive HLA typing technologies. However, thanks to the recent development of HLA imputation and inference technologies, researchers now can obtain hundreds to thousands of patients’ HLA allele information and detour the cost issue of using HLA typing service.
+On the other hand, the `IPD-IMGT/HLA`, which is a specialist database, provides the official and most detailed information of the HLA region. Being updated 4 times a year, they keep and manage whole HLA allele information and name those alleles based on the nomenclature defined by the '`WHO Nomenclature Committee For Factors of the HLA System`’. Furthermore, they provide each HLA allele's (1) amino acid and (2) DNA sequence information. To use these data, Exact HLA allele information of patients is required and researchers may have to employ expensive HLA typing technologies. However, thanks to the recent development of HLA imputation and inference technologies, researchers now can obtain hundreds to thousands of patients’ HLA allele information and detour the cost issue of using HLA typing service.
 
 Ultimately, HATK aims to perform an association test targeted to the HLA region. Based on patients’ HLA type information and its corresponding Amino acid and DNA sequence information distributed by the IMGT-HLA database, HATK builds a marker panel including not only the typical intergenic genomic variants(i.e. SNPs) markers but also variants of HLA region. Also, HATK provides the additional association test method so that researchers can analyze the signals arising in the amino acid sequence position.
 
@@ -36,6 +36,9 @@ We strongly recommend using 'Anaconda(or Miniconda)' to set up HATK.
 
     - Anaconda : (https://www.anaconda.com/)
     - Miniconda : (https://docs.conda.io/en/latest/miniconda.html)
+
+    In case of using **Catalina OS X**, Using anaconda with **bash** not zsh is strongly recommended.
+
 <br>
 
 2. Create a new independent Python virtual environment with the given YML file.
@@ -47,7 +50,7 @@ We strongly recommend using 'Anaconda(or Miniconda)' to set up HATK.
 	$ conda env create -f HATK_LINUX.yml        ## Linux
 	```
 	
-	The above command will generate a new Python virtual environment named 'HATK', which contains dependent Python packages, Java and R libraries, independent to your original Python system. For more detailed explanation about Anaconda's managing Python virtual environment, Please check this reference(https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#create-env-file-manually).
+	The above command will generate a new Python virtual environment named 'HATK', which contains dependent Python packages, Java and R, independent to your original Python system. For more detailed explanation about Anaconda's managing Python virtual environment, Please check this reference(https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#create-env-file-manually).
 
 	If the new virtual environment has been succuessfully installed, then activate it.
 
@@ -58,14 +61,38 @@ We strongly recommend using 'Anaconda(or Miniconda)' to set up HATK.
 
     HATK will be implemented in this virtual environment. 
 
+<br>
 
-    <br>
+3. Install the next three R libraries.
+
+    - gplots
+    - RColorBrewer
+    - shape
+
+    ```
+    $ Rscript -e "install.packages(c('gplots', 'RColorBrewer', 'shape'), dependencies=TRUE, repos='https://cran.cnr.berkeley.edu/')"
+    ```
+
+    > (Tip) You can use another CRAN repository. Choose the one located near to your country. (https://cran.r-project.org/mirrors.html)
 
 
-	> (Tip) Type '_conda deacitvate_' on your command line if you want to go back to your original Python system setting. (https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#deactivating-an-environment)
+    To check whether those three R libraries have been successfully installed or not, Type the next command.
+
+    ```
+    $ Rscript -e "c('gplots', 'RColorBrewer', 'shape') %in% rownames(installed.packages())"
+    # [1] TRUE TRUE TRUE
+    ```
+
+    If three 'TRUE's appear, then those three R libraries have been successfully installed.
 
 
-	> (Tip) Type '_conda env remove -n HATK_' in your command line if you want to remove this newly created virtual environment for HATK forever in your Anaconda. (https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#removing-an-environment)
+<br>
+
+
+> (Tip) Type '_conda acitvate base_' on your command line if you want to go back to your original Python system setting. (https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#deactivating-an-environment)
+
+
+> (Tip) Type '_conda env remove -n HATK_' in your command line if you want to remove this newly created virtual environment for HATK forever in your Anaconda. (https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#removing-an-environment)
 
 <br>
 <br>
