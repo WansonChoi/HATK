@@ -20,7 +20,12 @@ Ultimately, HATK aims to perform an association test targeted to the HLA region.
 
 ## (2) Installation
 
-First of all, Download this project in somewhere directory of your Linux(or OS_X) system. HATK supports only OS_X and Linux environments(ex. Ubuntu) and currently dosen't support Windows. It will be assumed that your system already installed 'git' command.
+First, Prepare OS X(Mac) or Linux operating system. HATK currently doesn't support Windows. It was checked that HATK can work in the next specific operating systems.
+
+- Linux : Ubuntu_19.04(Disco Dingo), CentOS_7, Linux_Mint_19.2_Tina_Cinnamon.
+- OS X : Catalina(**with Bash NOT Zsh**), Mojave.
+
+Then, Download this project in somewhere directory of your OS X or Linux system. It will be assumed that 'git' command is already installed in your system.
 
 ```
 $ git clone https://github.com/WansonChoi/HATK.git
@@ -28,7 +33,7 @@ $ cd HATK
 ```
 <br>
 
-We strongly recommend using 'Anaconda(or Miniconda)' to set up HATK. 
+We strongly recommend using the latest version of 'Anaconda(or Miniconda)' to set up HATK. 
 
 
 
@@ -36,8 +41,6 @@ We strongly recommend using 'Anaconda(or Miniconda)' to set up HATK.
 
     - Anaconda : (https://www.anaconda.com/)
     - Miniconda : (https://docs.conda.io/en/latest/miniconda.html)
-
-    In case of using **Catalina OS X**, Using anaconda with **bash** not zsh is strongly recommended.
 
 <br>
 
@@ -63,11 +66,13 @@ We strongly recommend using 'Anaconda(or Miniconda)' to set up HATK.
 
 <br>
 
-3. Install the next three R libraries.
+3. Install 'R' statistical programming language and the next three R libraries.
 
     - gplots
     - RColorBrewer
     - shape
+
+    These 3 libraries are required to plot Heatmap. Otherwise, Heatmap will fail.
 
     ```
     $ Rscript -e "install.packages(c('gplots', 'RColorBrewer', 'shape'), dependencies=TRUE, repos='https://cran.cnr.berkeley.edu/')"
