@@ -6,9 +6,14 @@ import argparse, textwrap
 from glob import glob
 import multiprocessing as mp
 
-from IMGT2Seq.src.NfieldDictionary import NfieldDictionary
-from IMGT2Seq.src.GenerateHAT import GenerateHAT
-from IMGT2Seq.src.ProcessIMGT import ProcessIMGT
+if __name__ == '__main__':
+    from src.GenerateHAT import GenerateHAT
+    from src.ProcessIMGT import ProcessIMGT
+    from src.NfieldDictionary import NfieldDictionary
+else:
+    from IMGT2Seq.src.NfieldDictionary import NfieldDictionary
+    from IMGT2Seq.src.GenerateHAT import GenerateHAT
+    from IMGT2Seq.src.ProcessIMGT import ProcessIMGT
 
 
 ########## < Core Global Varialbes > ##########
@@ -619,33 +624,37 @@ if __name__ == "__main__":
     ##### < for Test > #####
 
     ## in Ubuntu
-    # out = '/home/wanson/Git_Projects/HATK/tests/IMGT3370_test/TEST.20190923'
-    # imgt_dir = '/home/wanson/Git_Projects/IMGTHLA3370'
+    # out = '/home/wansonchoi/Projects/HATK/tests/MyIMGT2Seq_fixed2/20191211'
+    # imgt_dir = '/home/wansonchoi/Projects/HATK/example/IMGTHLA3320'
 
     ## in OS X
-    out = '/Users/wansun/Git_Projects/HATK/tests/_1_IMGT2Sequence/20190924/test'
-    imgt_dir = '/Users/wansun/Dropbox/_Sync_MyLaptop/Projects/IMGTHLA/IMGTHLA3320'
+    # out = '/Users/wansun/Git_Projects/HATK/tests/_1_IMGT2Sequence/20190924/test'
+    # imgt_dir = '/Users/wansun/Dropbox/_Sync_MyLaptop/Projects/IMGTHLA/IMGTHLA3320'
 
-    # hg18 / imgt3370
-    args = parser.parse_args(["-hg", "18",
-                              "-o", out,
-                              "-imgt", "3370",
-                              "--imgt-dir", imgt_dir,
-                              "--multiprocess"])
+    # hg18 / imgt3320
+    # args = parser.parse_args(["-hg", "18",
+    #                           "-o", out,
+    #                           "-imgt", "3320",
+    #                           "--imgt-dir", imgt_dir,
+    #                           '--save-intermediates'])
 
+    # hg18 / imgt3320
+    # args = parser.parse_args(["-hg", "18",
+    #                           "-o", out,
+    #                           "-imgt", "3320",
+    #                           "--imgt-dir", imgt_dir,
+    #                           '--save-intermediates',
+    #                           '--multiprocess'])
 
 
 
     ##### < for Publish > #####
 
-    # args = parser.parse_args()
+    args = parser.parse_args()
     print(args)
 
 
     ##### < Main function Execution. > #####
-
-    from src.GenerateHAT import GenerateHAT
-    from src.ProcessIMGT import ProcessIMGT
 
     IMGT2Seq(_imgt=args.imgt, _hg=args.hg, _out=args.o, _imgt_dir=args.imgt_dir, _no_Indel=args.no_indel,
              _MultiP=args.multiprocess, _save_intermediates=args.save_intermediates)

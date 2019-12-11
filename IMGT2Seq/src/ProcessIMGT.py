@@ -197,8 +197,11 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc, _gen, _prot, _p_data,
 
         df_Markers_onlyExons.to_csv(_out+".HLA_{0}.gen.onlyexons.markers.HARD_DEBUGGING.txt".format(_hla), sep='\t', header=True, index=True)
 
-        precursor_AA_forMAP = df_Markers_onlyExons.columns.to_frame(index=False)
-        precursor_AA_forMAP.columns = pd.Index(["SNP_rel_pos", "SNP_gen_pos", "Type"])
+        df_Markers_onlyExons.columns.to_frame(index=False).to_csv(_out+".HLA_{0}.gen.precursor_AA_forMAP_TO_FRAME.noindel.HARD_DEBUGGING.txt".format(_hla), sep='\t', header=True, index=False) # for debugging
+
+        # precursor_AA_forMAP = df_Markers_onlyExons.columns.to_frame(index=False) # original
+        precursor_AA_forMAP = df_Markers_onlyExons.columns.to_frame(index=False).reindex(["SNP_rel_pos", "SNP_gen_pos", "Type"], axis=1)
+        # precursor_AA_forMAP.columns = pd.Index(["SNP_rel_pos", "SNP_gen_pos", "Type"])
 
         # File Writing
         if _save_intermediates:
@@ -948,6 +951,9 @@ def getPositionInfo_AA(_1st_string, _is_Reverse, _rel_s_offset, _has_Indel=False
             if j < _df_precursor_map.shape[0]:
                 l_RETURN_gen_pos.append(int(_df_precursor_map.iat[j, 1]))
                 l_RETURN_type.append(_df_precursor_map.iat[j, 2])
+
+                # l_RETURN_gen_pos.append(int(_df_precursor_map['SNP_gen_pos'].iat[j]))
+                # l_RETURN_type.append(_df_precursor_map['Type'].iat[j])
             else:
 
                 L_l_RETURN = len(l_RETURN_gen_pos)
