@@ -20,7 +20,7 @@ $ python HATK.py \
 ## (3) Result Example
 ![Manhattan_example](img/README_5-1_Manhattan_example.png)
 
-- Yellow: HLA marker (ex. HLA_A_0101)
+- Yellow: HLA marker (ex. HLA_A*01:01)
 - Red: Amino acid marker (ex. AA_A_9_30018537_F, AA_A_-15_30018338)
 - Dark grey: Intragenic DNA base pair marker (ex. SNPS_A_30018457, SNPS_A_30018461_A)
 - Ligtht grey: Intergenic dbSNP marker (ex. rs41557221)

@@ -53,7 +53,7 @@ We strongly recommend using the latest version of 'Anaconda(or Miniconda)' to se
 	$ conda env create -f HATK_LINUX.yml        ## Linux
 	```
 	
-	The above command will generate a new Python virtual environment named 'HATK', which contains dependent Python packages, Java and R, independent to your original Python system. For more detailed explanation about Anaconda's managing Python virtual environment, Please check this reference(https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#create-env-file-manually).
+	The above command will generate a new Python virtual environment named 'HATK', which contains dependent Python packages, R and R libraries, independent to your original Python system. For more detailed explanation about Anaconda's managing Python virtual environment, Please check this reference(https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#create-env-file-manually).
 
 	If the new virtual environment has been succuessfully installed, then activate it.
 
@@ -64,7 +64,7 @@ We strongly recommend using the latest version of 'Anaconda(or Miniconda)' to se
 
     HATK will be implemented in this virtual environment. 
 
-<br>
+<!-- <br>
 
 3. Install 'R' statistical programming language and the next three R libraries.
 
@@ -78,17 +78,8 @@ We strongly recommend using the latest version of 'Anaconda(or Miniconda)' to se
     $ Rscript -e "install.packages(c('gplots', 'RColorBrewer', 'shape'), dependencies=TRUE, repos='https://cran.cnr.berkeley.edu/')"
     ```
 
-    > (Tip) You can use another CRAN repository. Choose the one located near to your country. (https://cran.r-project.org/mirrors.html)
+    > (Tip) You can use another CRAN repository. Choose the one located near to your country. (https://cran.r-project.org/mirrors.html) -->
 
-
-    To check whether those three R libraries have been successfully installed or not, Type the next command.
-
-    ```
-    $ Rscript -e "c('gplots', 'RColorBrewer', 'shape') %in% rownames(installed.packages())"
-    # [1] TRUE TRUE TRUE
-    ```
-
-    If three 'TRUE's appear, then those three R libraries have been successfully installed.
 
 
 <br>
@@ -129,12 +120,15 @@ Each module of HATK can be implemented repectively. **The README files of each o
 <br>
 
 ## (4) Citation
+W. Choi, Y. Luo, S. Raychaudhuri, B. Han. HATK:HLA-Analysis Tool-kit. Under review.
 
 <br>
 <br>
 
 
-## (5) Lincense
+## (5) License
+
+The HATK Software Code is freely available for non-commercial academic research use. If you would like to obtain a license to the Code for commercial use, please contact Wanson Choi (WC) at wschoi.bhlab@gmail.com and Buhm Han (BH) at buhm.han@gmail.com. WE (WC and BH) MAKE NO REPRESENTATIONS OR WARRANTIES WHATSOEVER, EITHER EXPRESS OR IMPLIED, WITH RESPECT TO THE CODE PROVIDED HERE UNDER. IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE WITH RESPECT TO CODE ARE EXPRESSLY DISCLAIMED. THE CODE IS FURNISHED "AS IS" AND "WITH ALL FAULTS" AND DOWNLOADING OR USING THE CODE IS UNDERTAKEN AT YOUR OWN RISK. TO THE FULLEST EXTENT ALLOWED BY APPLICABLE LAW, IN NO EVENT SHALL WE BE LIABLE, WHETHER IN CONTRACT, TORT, WARRANTY, OR UNDER ANY STATUTE OR ON ANY OTHER BASIS FOR SPECIAL, INCIDENTAL, INDIRECT, PUNITIVE, MULTIPLE OR CONSEQUENTIAL DAMAGES SUSTAINED BY YOU OR ANY OTHER PERSON OR ENTITY ON ACCOUNT OF USE OR POSSESSION OF THE CODE, WHETHER OR NOT FORESEEABLE AND WHETHER OR NOT WE HAVE BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES, INCLUDING WITHOUT LIMITATION DAMAGES ARISING FROM OR RELATED TO LOSS OF USE, LOSS OF DATA, DOWNTIME, OR FOR LOSS OF REVENUE, PROFITS, GOODWILL, BUSINESS OR OTHER FINANCIAL LOSS.
 
 
 
