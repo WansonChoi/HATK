@@ -295,7 +295,7 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc, _gen, _prot, _p_data,
 
 
         ### precursor which will be used in making map file.
-        precursor_SNPS_forMAP = df_Markers_gen.columns.to_frame(index=False)
+        precursor_SNPS_forMAP = df_Markers_gen.columns.to_frame(index=False).reindex(["SNP_rel_pos", "SNP_gen_pos", "Type"], axis=1)
         # print("\nframes for .map file.\n")
         # print(precursor_SNPS_forMAP.head())
 
@@ -436,7 +436,7 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc, _gen, _prot, _p_data,
                                        columns=pd.MultiIndex.from_arrays([l_relative_positions, l_genomic_positions, l_type],
                                                                          names=["AA_rel_pos", "AA_gen_pos", "Type"]))
 
-        precursor2_AA_forMAP = df_Markers_prot.columns.to_frame(index=False)
+        precursor2_AA_forMAP = df_Markers_prot.columns.to_frame(index=False).reindex(["AA_rel_pos", "AA_gen_pos", "Type"], axis=1)
 
         # print("\nFinal output as markers.\n")
         # print(df_Markers_prot.head())
