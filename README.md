@@ -11,7 +11,7 @@ On the other hand, the `IPD-IMGT/HLA`, which is a specialist database, provides 
 Ultimately, HATK aims to perform an association test targeted to the HLA region. Based on patients’ HLA type information and its corresponding Amino acid and DNA sequence information distributed by the IMGT-HLA database, HATK builds a marker panel including not only the typical intergenic genomic variants(i.e. SNPs) markers but also variants of HLA region. Also, HATK provides the additional association test method so that researchers can analyze the signals arising in the amino acid sequence position.
 
 
-![WorkFlow](docs/img/Pipeline_WorkFlow.png)
+![README_Main_Pipeline_WorkFlow](docs/img/README_Main_Pipeline_WorkFlow.png)
 
 <br>
 <br>
@@ -22,8 +22,18 @@ Ultimately, HATK aims to perform an association test targeted to the HLA region.
 
 First, Prepare OS X(Mac) or Linux operating system. HATK currently doesn't support Windows. It was checked that HATK can work in the next specific operating systems.
 
-- Linux : Ubuntu 19.04(Disco Dingo), Ubuntu 18.04.3 LTS(Bionic Beaver) CentOS_7, Linux Mint 19.2 Cinnamon(Tina).
-- OS X : Catalina(**with <span style="color:red">Bash NOT Zsh**</span>), Mojave.
+- Linux : 
+    - Ubuntu 19.04(Disco Dingo)
+    - Ubuntu 18.04.3 LTS(Bionic Beaver)
+    - CentOS_7
+    - Linux Mint 19.2 Cinnamon(Tina)
+- OS X : 
+    - Catalina(**with Bash NOT Zsh**)
+    - Mojave
+
+    > (**Heads-up**) In case of using Catalina OS X, **Make sure your default shell is 'Bash($)' not 'Zsh(%)'**. To change the default shell to Bash, Please reference this blog(https://www.howtogeek.com/444596/how-to-change-the-default-shell-to-bash-in-macos-catalina/).
+
+<br>
 
 Then, Download this project in somewhere directory of your OS X or Linux system. It will be assumed that 'git' command is already installed in your system.
 
@@ -33,8 +43,7 @@ $ cd HATK
 ```
 <br>
 
-We strongly recommend using the latest version of 'Anaconda(or Miniconda)' to set up HATK. 
-
+We strongly recommend using the latest version of 'Anaconda(or Miniconda)' to set up HATK.
 
 
 1. install Anaconda or Miniconda.
@@ -97,7 +106,7 @@ We strongly recommend using the latest version of 'Anaconda(or Miniconda)' to se
 ## (3) Usage example
 
 ```
-python3 HATK.py \
+$ python3 HATK.py \
     --variants example/wtccc_filtered_58C_RA.hatk.58C_RA.300+300.chr6.hg18 \
     --hped example/wtccc_filtered_58C_RA.hatk.58C_RA.300+300.hped \
     --2field \
