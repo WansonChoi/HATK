@@ -32,7 +32,7 @@ The setting condition means adding an amino acid position as an additional covar
 
 We recommend using Beagle(v3.x.x) software to phase target data. The official instruction is available at https://faculty.washington.edu/browning/beagle/b3.html
 
-> Phasing output generated from BEAGLE with version 4.x.x and 5.x.x can also be used in the Omnibus Test. However, BEAGLE with those version doesn't allow markers to have the same base position while HATK generates a bunch of markers which share the same base position. **So, It is recommended to just use BEAGLE with the version 3.x.x to generate the phased beagle file of the HATK output**.
+> Phasing output generated from BEAGLE with version 4.x.x and 5.x.x can also be used in the Omnibus Test. However, BEAGLE with those version **doesn't allow markers to have the same base position** while HATK generates a bunch of markers which share the same base position. **So, It is recommended to just use BEAGLE with the version 3.x.x to generate the phased beagle file of the HATK output**.
 
 <br>
 <br>
@@ -78,14 +78,31 @@ $ python3 HATK.py \
     -o MyOmnibusTest/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.58C_RA.300+300.chr6.hg18 \
     --pheno example/wtccc_filtered_58C_RA.hatk.58C_RA.300+300.phe \
     --pheno-name RA \
-    --condition AA_A_-15
-    # --condition AA_A_-15,AA_DRB1_166 (when passing multiple coditions.)
+    --condition AA_DRB1_96
+    # --condition AA_DRB1_96,AA_DRB1_13 (when passing multiple coditions.)
 
 ```
 
 <br>
+<br>
 
-> (Tip) To sort the output of the omnibus test on P-value, Use the below bash command.
+<!-- > (Tip) To sort the output of the omnibus test on P-value, Use the below bash command.
 ```
 $ sort -gk 5 MyOmnibusTest/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.58C_RA.300+300.chr6.hg18.RA.NA.omnibus
-```
+``` -->
+
+
+
+## (5) Output examples
+
+Default output is not sorted by 'log10_P' value. The next output examples are sorted by 'log10_P' value intentionally.
+
+![OmnibusTest_result_1](img/README_4-1_OmnibusTest_result_1.png)
+
+(The output result of the 1st(and 2nd) usage example.)
+
+<br>
+
+![OmnibusTest_result_2](img/README_4-1_OmnibusTest_result_2.png)
+
+(The output result of the 3rd usage example when the amino acid marker 'AA_DRB1_96' is conditioned.)

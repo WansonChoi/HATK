@@ -4,7 +4,7 @@
 
 `HLA2HPED` is a module to merge and convert the output from other HLA imputation or inference software to `HLA PED(HPED)` file so that researchers can use `HATK` directly using the output of other HLA software. Currently, this module supports **xHLA**, **HIBAG**, and **Axiom** software and it is planned to make HLA2HPED to cover more HLA imputation/inference software output.
 
-`HLA PED(HPED)` file format is similar to the PLINK ped file but consists of 22(6 + 8*2) columns. Left 6 columns are exactly same as PLINK ped file ('Family_ID', 'Individual_ID', 'Paternal_ID', 'Maternal_ID', 'Sex', 'Phenotype'). Other 16 columns are Individual's HLA type information (2 HLA alleles for each HLA gene) of **8 HLA genes(A, B, C, DPA1, DPB1, DQA1, DQB1, DRB1; in this order)**.
+`HLA PED(HPED)` file format is similar to the PLINK ped file but consists of 22(6 + 8*2) columns. Left 6 columns are exactly same as PLINK ped file ('Family_ID', 'Individual_ID', 'Paternal_ID', 'Maternal_ID', 'Sex', 'Phenotype'). Other 16 columns are Individual's HLA type information (2 HLA alleles for each HLA gene) of **8 HLA genes(A, B, C, DPA1, DPB1, DQA1, DQB1, DRB1; in this order)**. If some allele values are **not accessible(NA)**, then fill them with just '0'.
 
 
 ![README-HLA2HPED-HPED](./img/README_0_HLA2HPED-HPED.png)
