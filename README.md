@@ -31,7 +31,7 @@ First, Prepare OS X(Mac) or Linux operating system. HATK currently doesn't suppo
     - Catalina(**with Bash NOT Zsh**)
     - Mojave
 
-    > (**Heads-up**) In case of using Catalina OS X, **Make sure your default shell is 'Bash($)' not 'Zsh(%)'**. To change the default shell to Bash, Please reference this blog(https://www.howtogeek.com/444596/how-to-change-the-default-shell-to-bash-in-macos-catalina/).
+    In case of using Catalina OS X, **Make sure your default shell is 'Bash($)' not 'Zsh(%)'**. To change the default shell to Bash, Please reference this blog(https://www.howtogeek.com/444596/how-to-change-the-default-shell-to-bash-in-macos-catalina/).
 
 <br>
 
