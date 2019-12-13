@@ -49,7 +49,6 @@ $ python3 HATK.py \
     -o MyOmnibusTest/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.58C_RA.300+300.chr6.hg18 \
     --pheno example/wtccc_filtered_58C_RA.hatk.58C_RA.300+300.phe \
     --pheno-name RA
-
 ```
 
 The input '\*.bgl.phased' file is first processed to '\*.aa' file, which is genuine input of the Omnibus Test. Once the '\*.aa' file of the input '\*.bgl.phased' has been generated, then you don't need to repeat this process. The user can skip this with '--aa' argument.
@@ -62,7 +61,6 @@ $ python3 HATK.py \
     -o MyOmnibusTest/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.58C_RA.300+300.chr6.hg18 \
     --pheno example/wtccc_filtered_58C_RA.hatk.58C_RA.300+300.phe \
     --pheno-name RA
-
 ```
 This 2nd example will generate the same output as that of the 1st example.
 
@@ -80,7 +78,6 @@ $ python3 HATK.py \
     --pheno-name RA \
     --condition AA_DRB1_96
     # --condition AA_DRB1_96,AA_DRB1_13 (when passing multiple coditions.)
-
 ```
 
 <br>
