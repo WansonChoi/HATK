@@ -229,7 +229,7 @@ for (i in 1:length(testvariants)) {
 results = as.data.frame(results)
 
 outfilename = paste(outfile, data.phe.name, paste0(condvar,collapse='+'), "omnibus", sep='.', collapse='.')
-write.table(results, outfilename, quote=F,sep='\t',row.names=F,col.names=c("Variant","deltaDeviance","deltaDF","N","P","Residues"))
+write.table(results, outfilename, quote=F,sep='\t',row.names=F,col.names=c("Variant","deltaDeviance","deltaDF","N","log10_P","Residues"))
 
 
 
