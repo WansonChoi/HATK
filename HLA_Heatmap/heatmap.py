@@ -28,6 +28,8 @@ class HATK_Heatmap(object):
         if not _hla_name:
             print(std_ERROR_MAIN_PROCESS_NAME + "Please check '--HLA' argument again.")
             sys.exit()
+        elif isinstance(_hla_name, list) and len(_hla_name) == 1:
+            _hla_name = _hla_name.pop()
 
         if not _out:
             print(std_ERROR_MAIN_PROCESS_NAME + "Please check '--out' argument again.")
