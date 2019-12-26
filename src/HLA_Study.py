@@ -237,7 +237,7 @@ class HLA_Study(object):
             myManhattan = HATK_Manhattan(_args.assoc_result, _args.out+".manhattan", _args.hg,
                                          _point_col=_args.point_color, _top_color=_args.top_color,
                                          _point_size=_args.point_size, _yaxis_unit=_args.yaxis_unit,
-                                         _p_src="HLA_Manhattan/src", _p_data="HLA_Manhattan/data")
+                                         _p_src="HLA_Manhattan/src", _p_data="HLA_Manhattan/data", _HLA=None)
 
             if myManhattan.getResult() == -1:
                 print(std_WARNING_MAIN_PROCESS_NAME + "Failed to plot HLA Manhattan plot.")
