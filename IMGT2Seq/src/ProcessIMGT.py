@@ -175,7 +175,7 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc, _gen, _prot, _p_data,
 
 
         df_Markers_NoIndel_gen = SeqsToMarkers(df_Seqs_splited_noIndel_gen, l_genomic_positions, l_relative_positions)
-        df_Markers_NoIndel_gen.to_csv(_out + ".HLA_{0}.gen.markers.noindel.HARD_DEBUGGING.txt".format(_hla), sep='\t', header=True, index=True)
+        # df_Markers_NoIndel_gen.to_csv(_out + ".HLA_{0}.gen.markers.noindel.HARD_DEBUGGING.txt".format(_hla), sep='\t', header=True, index=True)
 
         if _no_Indel:
 
@@ -195,12 +195,11 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc, _gen, _prot, _p_data,
         # print("Only exons")
         # print(df_Markers_onlyExons.head())
 
-        df_Markers_onlyExons.to_csv(_out+".HLA_{0}.gen.onlyexons.markers.HARD_DEBUGGING.txt".format(_hla), sep='\t', header=True, index=True)
-
-        df_Markers_onlyExons.columns.to_frame(index=False).to_csv(_out+".HLA_{0}.gen.precursor_AA_forMAP_TO_FRAME.noindel.HARD_DEBUGGING.txt".format(_hla), sep='\t', header=True, index=False) # for debugging
+        # df_Markers_onlyExons.to_csv(_out+".HLA_{0}.gen.onlyexons.markers.HARD_DEBUGGING.txt".format(_hla), sep='\t', header=True, index=True)
+        # df_Markers_onlyExons.columns.to_frame(index=False).to_csv(_out+".HLA_{0}.gen.precursor_AA_forMAP_TO_FRAME.noindel.HARD_DEBUGGING.txt".format(_hla), sep='\t', header=True, index=False) # for debugging
 
         # precursor_AA_forMAP = df_Markers_onlyExons.columns.to_frame(index=False) # original
-        precursor_AA_forMAP = df_Markers_onlyExons.columns.to_frame(index=False).reindex(["SNP_rel_pos", "SNP_gen_pos", "Type"], axis=1)
+        precursor_AA_forMAP = df_Markers_onlyExons.columns.to_frame(index=False).reindex(["SNP_rel_pos", "SNP_gen_pos", "Type"], axis=1) # Bug fixed(2019. 12. 27.)
         # precursor_AA_forMAP.columns = pd.Index(["SNP_rel_pos", "SNP_gen_pos", "Type"])
 
         # File Writing
