@@ -59,7 +59,7 @@ if __name__ == "__main__":
     parser.add_argument("--input", "-i", help="\nCommon prefix of input files.\n\n") # Core argument of this program.
     parser.add_argument("--out", "-o", help="\nOutput file name prefix\n\n")
 
-    parser.add_argument("-hg", help="\nHuman Genome version(ex. 18, 19, 38)\n\n", choices=["18", "19", "38"], metavar="HG")
+    parser.add_argument("--hg", help="\nHuman Genome version(ex. 18, 19, 38)\n\n", choices=["18", "19", "38"], metavar="HG")
 
     parser.add_argument("--variants", help="\nNormal SNP marker data.\n\n")
 
@@ -86,7 +86,7 @@ if __name__ == "__main__":
 
     g_IMGT2Sequence.add_argument("--imgt2seq", help="\nGive this argument to implement \"IMGT2Seq\" sub-module.\n\n", action='store_true')
 
-    g_IMGT2Sequence.add_argument("-imgt", help="\nIMGT-HLA data version(ex. 370, 3300)\n\n")
+    g_IMGT2Sequence.add_argument("--imgt", help="\nIMGT-HLA data version(ex. 370, 3300)\n\n")
 
     g_IMGT2Sequence.add_argument("--no-indel", help="\nExcluding indel in HLA sequence outputs.\n\n", action='store_true')
     g_IMGT2Sequence.add_argument("--multiprocess", help="\nSetting off parallel multiprocessing.\n\n", type=int, choices=[2,3,4,5,6,7,8], nargs='?', default=1, const=8)
@@ -114,7 +114,7 @@ if __name__ == "__main__":
     g_NomenCleaner.add_argument("--nomencleaner", help="\nGive this argument to implement \"NomenCleaner\" sub-module.\n\n",
                                 action='store_true')
 
-    g_NomenCleaner.add_argument("-hat", help="\nHLA Allele Table file(*.hat).\n\n")
+    g_NomenCleaner.add_argument("--hat", help="\nHLA Allele Table file(*.hat).\n\n")
 
     # Output format selection
     format_selection = g_NomenCleaner.add_mutually_exclusive_group()
