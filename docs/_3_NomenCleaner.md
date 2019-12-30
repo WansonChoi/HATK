@@ -105,11 +105,11 @@ The number in the arguments '--1field', '--2field', '--3field', and '--4field' m
 ```
 python3 HATK.py \
     --nomencleaner \
-    -hat example/RESULT_EXAMPLE/HLA_ALLELE_TABLE.imgt3320.hat \
-    --hped example/wtccc_filtered_58C_RA.hatk.58C_RA.300+300.hped \
-    -o MyNomenCleaner/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.58C_RA.300+300.chr6.hg18 \
+    --hat example/RESULT_EXAMPLE/HLA_ALLELE_TABLE.imgt3320.hat \
+    --hped example/wtccc_filtered_58C_RA.hatk.300+300.hped \
+    --out MyNomenCleaner/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18.2field \
     --2field \
-    -imgt 3320
+    --imgt 3320
 ```
 
 <br>
@@ -134,10 +134,10 @@ If a user doesn't specify the output field, then the NomenCleaner will perform t
 ```
 python3 HATK.py \
     --nomencleaner \
-    -hat example/RESULT_EXAMPLE/HLA_ALLELE_TABLE.imgt3320.hat \
-    --hped example/wtccc_filtered_58C_RA.hatk.58C_RA.300+300.hped \
-    -o MyNomenCleaner/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.58C_RA.300+300.chr6.hg18 \
-    -imgt 3320
+    --hat example/RESULT_EXAMPLE/HLA_ALLELE_TABLE.imgt3320.hat \
+    --hped example/wtccc_filtered_58C_RA.hatk.300+300.hped \
+    --out MyNomenCleaner/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18 \
+    --imgt 3320
 ```
 
 <br>

@@ -23,39 +23,27 @@ p_Prefix = re.compile(r'^\w+\*')
 
 class HATK_NomenCleaner(object):
 
-    def __init__(self, _hped, _hat, _imgt, _out, *args, **kwargs):
+    def __init__(self, _hped, _hat, _imgt, _out, **kwargs):
 
         """
 
         """
 
-
-        if not _hat or not os.path.exists(_hat):
-            print(std_ERROR_MAIN_PROCESS_NAME + "Please check '-hat' argument again.")
+        if not os.path.exists(_hped):
+            print(std_ERROR_MAIN_PROCESS_NAME + "Given HPED file('{}') doesn't exist.\n"
+                                                "Please check the '--hped' argument again.\n"
+                                                "".format(_hped))
             sys.exit()
 
-        if not _imgt:
-            print(std_ERROR_MAIN_PROCESS_NAME + "Please check '-imgt' argument again.")
-            sys.exit()
+        if not os.path.exists(_hat):
+            print(std_ERROR_MAIN_PROCESS_NAME + "Given HAT(HLA Allel Table) file('{}') doesn't exist.\n"
+                                                "Please check the '--hat")
 
-        if not _out:
-            print(std_ERROR_MAIN_PROCESS_NAME + "Please check '--out/-o' argument again.")
-            sys.exit()
-
-
-        oneF = args[0]
-        twoF = args[1]
-        threeF = args[2]
-        fourF = args[3]
-        Ggroup = args[4]
-        Pgroup = args[5]
-
-        if not (oneF or twoF or threeF or fourF or Ggroup or Pgroup):
-            fourF = True
 
 
         self.chped = NomenCleaner(_hped, _hat, _imgt, _out,
-                                  __oneF=oneF, __twoF=twoF, __threeF=threeF, __fourF=fourF, __Ggroup=Ggroup, __Pgroup=Pgroup,
+                                  __oneF=kwargs['__oneF'], __twoF=kwargs['__twoF'], __threeF=kwargs['__threeF'], __fourF=kwargs['__fourF'],
+                                  __Ggroup=kwargs['__Ggroup'], __Pgroup=kwargs['__Pgroup'],
                                   __f_NoCaption=kwargs["__f_NoCaption"], __leave_NotFound=kwargs["__leave_NotFound"])
 
 
