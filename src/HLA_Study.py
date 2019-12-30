@@ -88,7 +88,7 @@ class HLA_Study(object):
                         _args.bmarkergenerator,
                         _args.hla2hped,
                         _args.nomencleaner,
-                        _args.logistic, _args.omnibus, _args.meta_analysis,
+                        _args.logistic, _args.omnibus, _args.metaanalysis,
                         _args.heatmap,
                         _args.manhattan]
 
@@ -347,14 +347,14 @@ class HLA_Study(object):
                                              _condition=_args.condition, _condition_list=_args.condition_list,
                                              _bgl_phased=_args.phased, _aa=_args.aa)
 
-            elif _args.meta_analysis:
+            elif _args.metaanalysis:
 
                 ### Meta Analysis
-                from HLA_Analysis.HLA_Analysis import HATK_MetaAnalysis
+                from HLA_Analysis.src.MetaAnalysis.HLA_MetaAnalysis import HATK_MetaAnalysis
 
-                myMetaAnalysis = HATK_MetaAnalysis(_args.out, _args.assoc_result)
-
-                print(std_MAIN_PROCESS_NAME + "Meta-Analysis result : \n{}".format(myMetaAnalysis.getResult()))
+                myMeta = HATK_MetaAnalysis(_args.s1_logistic_result, _args.s2_logistic_result, _args.out,
+                                           _study1_m=_args.s1_bim, _study2_m=_args.s2_bim)
+                print(std_MAIN_PROCESS_NAME + "MetaAnalysis result : \n{}".format(myMeta))
 
             elif _args.heatmap:
 

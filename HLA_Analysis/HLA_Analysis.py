@@ -353,25 +353,6 @@ class HATK_OmibusTest():
 
 
 
-class HATK_MetaAnalysis():
-
-    def __init__(self, _out, _assoc_result):
-
-
-        if not isinstance(_assoc_result, list):
-            print(std_ERROR_MAIN_PROCESS_NAME + "Please check '--assoc-result' argument again.")
-            sys.exit()
-
-        self.result = Meta_Analysis(_out, _assoc_result)
-
-
-    def getResult(self):
-        return self.result
-
-
-
-
-
 ########## < Association Test > ##########
 
 
@@ -512,44 +493,5 @@ def Omnibus_Test(_fam, _out, _aa, _phe, _phe_name, _covar, _covar_name="NA", _co
     else:
         print(std_ERROR_MAIN_PROCESS_NAME + "Omnibus Test failed.\n")
         sys.exit()
-
-
-
-
-
-
-
-
-
-
-########## < Meta Analysis > ##########
-
-
-### < Meta Analysis >
-def Meta_Analysis(_out, _assoc_result):
-
-
-    ### Generating Command
-
-    command = [GLOBAL_p_plink, "--noweb", "--out {0}".format(_out), "--meta-analysis", *_assoc_result]
-    command = ' '.join(command)
-
-
-    # Conducting Meta-Analysis by Plink(v1.9)
-
-    print(command)
-
-    if not os.system(command):
-
-        if os.path.exists(_out + ".meta"):
-            return (_out + ".meta")
-        else:
-            return -1
-
-    else:
-        print(std_ERROR_MAIN_PROCESS_NAME + "Meta-Analysis failed.")
-        return -1
-
-
 
 

@@ -26,10 +26,46 @@ ComplementBase = {
 }
 
 
-def HATK_MetaAnalysis():
+def HATK_MetaAnalysis(_study1_lr, _study2_lr, _out, **kwargs):
 
 
-    return 0
+    if not os.path.exists(_study1_lr):
+        print(std_ERROR_MAIN_PROCESS_NAME + "Given logistic regression result('{}') doesn't exist.\n"
+                                            "Please check the '--s1-logistic-result/-s1lr' argument again."
+                                            "".format(_study1_lr))
+        sys.exit()
+
+    if not os.path.exists(_study2_lr):
+        print(std_ERROR_MAIN_PROCESS_NAME + "Given logistic regression result('{}') doesn't exist.\n"
+                                            "Please check the '--s2-logistic-result/-s2lr' argument again."
+                                            "".format(_study2_lr))
+        sys.exit()
+
+
+    ### Creating intermediate directories.
+    OUTPUT = _out if not _out.endswith('/') else _out.rstrip('/')
+    if bool(os.path.dirname(OUTPUT)):
+        INTERMEDIATE_PATH = os.path.dirname(OUTPUT)
+        os.makedirs(INTERMEDIATE_PATH, exist_ok=True)
+
+
+    if bool(kwargs['_study1_m']) and (not os.path.exists(kwargs['_study1_m'])):
+        print(std_ERROR_MAIN_PROCESS_NAME + "Given PLINK bim file('{}') doesn't exist.\n"
+                                            "Please check the '--s1-bim/-s1b' argument again."
+                                            "".format(kwargs['_study1_m']))
+        sys.exit()
+
+    if bool(kwargs['_study2_m']) and (not os.path.exists(kwargs['_study2_m'])):
+        print(std_ERROR_MAIN_PROCESS_NAME + "Given PLINK bim file('{}') doesn't exist.\n"
+                                            "Please check the '--s2-bim/-s1b' argument again."
+                                            "".format(kwargs['_study2_m']))
+        sys.exit()
+
+
+    return HLA_MetaAnalysis(_study1_lr, _study2_lr, _out, _study1_m=kwargs['_study1_m'], _study2_m=kwargs['_study2_m'])
+
+
+
 
 
 
@@ -98,7 +134,7 @@ def HLA_MetaAnalysis(_study1_lr, _study2_lr, _out=None, _study1_m=None, _study2_
                                                     "('{file1}', '{file2}')".format(file1=_study1_m, file2=_study2_m))
                 sys.exit()
 
-            df_Main = f ## Flip information is applied here.
+            df_Main = f.copy() ## Flip information is applied here.
 
             # print("df_Main(Flipped) : \n{}\n".format(df_Main))
 
@@ -166,6 +202,7 @@ def isLogisticResult(_lr):
 
             # PLINK Logistic Regression Result.
             df_RETURN = pd.read_csv(_lr, sep='\s+', header=0, usecols=['SNP', 'OR', 'SE', 'STAT', 'P'])
+            df_RETURN.dropna(inplace=True)
 
             df_RETURN['BETA'] = df_RETURN['OR'].map(lambda x : log(x))
 
@@ -220,6 +257,7 @@ def isLogisticResult(_lr):
 
 
             df_RETURN = pd.read_csv(_lr, sep='\s+', header=0, usecols=['SNP']+l_having)
+            df_RETURN.dropna(inplace=True)
 
             if not 'BETA' in l_Header and 'OR' in l_Header:
                 # Make 'BETA' based on 'OR'

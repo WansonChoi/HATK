@@ -176,10 +176,13 @@ if __name__ == "__main__":
 
     g_MetaAnalysis = parser.add_argument_group(title='MetaAnalysis', description='')
 
-    g_MetaAnalysis.add_argument("--meta-analysis", help="\nGive this argument to implement \"Meta-Analysis\" sub-module. (Plink v1.07)\n\n", action='store_true')
+    g_MetaAnalysis.add_argument("--metaanalysis", help="\nGive this argument to implement \"Meta-Analysis\" sub-module. (Plink v1.07)\n\n", action='store_true')
 
-    # g_MetaAnalysis.add_argument("--rassoc", "-ra", help="\nSpecify the Result file(s) of association test for Meta-Analysis\n"
-    #                                                     "(ex. \"*.asssoc.logistic\", etc.)\n\n", nargs='+')
+    parser.add_argument("--s1-logistic-result", "-s1lr", help="\nLogistic Regression Result file of Study 1(ex. *.assoc.logistic).\n\n")
+    parser.add_argument("--s1-bim", "-s1b", help="\nThe bim file used in Study 1 Logistic Regression(ex. *.bim).\n\n")
+
+    parser.add_argument("--s2-logistic-result", "-s2lr", help="\nLogistic Regression Result file of Study 2(ex. *.assoc.logistic).\n\n")
+    parser.add_argument("--s2-bim", "-s2b", help="\nThe bim file used in Study 2 Logistic Regression(ex. *.bim).\n\n")
 
 
 
