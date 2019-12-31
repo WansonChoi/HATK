@@ -363,7 +363,7 @@ class HLA_Study(object):
                 ### HLA Heatmap
                 from HLA_Heatmap.heatmap import HATK_Heatmap
 
-                myHeatmap = HATK_Heatmap(_args.HLA, _args.out, _args.maptable, _args.assoc_result,
+                myHeatmap = HATK_Heatmap(_args.HLA, _args.out, _args.maptable, _args.ar,
                                          __save_intermediates=_args.save_intermediates,
                                          _p_src="HLA_Heatmap/src", _p_data="HLA_Heatmap/data")
 
@@ -374,7 +374,7 @@ class HLA_Study(object):
                 ### HLA Manhattan
                 from HLA_Manhattan.manhattan import HATK_Manhattan
 
-                myManhattan = HATK_Manhattan(_args.assoc_result, _args.out, _args.hg,
+                myManhattan = HATK_Manhattan(_args.ar, _args.out, _args.hg,
                                              _point_col=_args.point_color, _top_color=_args.top_color,
                                              _point_size=_args.point_size, _yaxis_unit=_args.yaxis_unit,
                                              _p_src="HLA_Manhattan/src", _p_data="HLA_Manhattan/data", _HLA=_args.HLA)

@@ -45,6 +45,17 @@ class HATK_Manhattan():
             sys.exit()
 
 
+        isOmnibus = list(map(lambda x : x.endswith('.omnibus'), _assoc_result))
+
+        if all(isOmnibus):
+
+            if not bool(kwargs['_HLA']):
+                print(std_ERROR_MAIN_PROCESS_NAME + "Which HLA genes to plot must be specified.\n"
+                                                    "Please check the '--HLA' argument again."
+                                                    "")
+                sys.exit()
+
+
         self.result = Manhattan(_assoc_result, _out, _hg, _pointcol=kwargs['_point_col'], _topcol=kwargs['_top_color'],
                                 _pointsize=kwargs['_point_size'], _yaxis_unit=kwargs['_yaxis_unit'],
                                 _p_src=kwargs['_p_src'], _p_data=kwargs['_p_data'], _HLA=kwargs['_HLA'])

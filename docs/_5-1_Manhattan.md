@@ -5,17 +5,30 @@ The Manhattan plot is an indispensable method to visualize the result of the ass
 
 <br>
 
-## (2) Usage Example
+## (2) Usage Examples
+
+1. Logistic regression result
 
 ```
 $ python HATK.py \
     --manhattan \
-    -ar example/RESULT_EXAMPLE/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.58C_RA.300+300.chr6.hg18.assoc.logistic \
-    -imgt 3320 \
-    -hg 18 \
-    -o MyManhattan/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.58C_RA.300+300.chr6.hg18
+    --ar example/RESULT_EXAMPLE/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18.assoc.logistic \
+    --imgt 3320 \
+    --hg 18 \
+    --out MyManhattan/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18
 ```
 
+2. Omnibus Test result
+
+```
+$ python HATK.py \
+    --manhattan \
+    --ar example/OmnibusTest/wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18.RA.NA.omnibus \
+    --imgt 3320 \
+    --hg 18 \
+    --out MyManhattan/wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18.RA.NA.omnibus \
+    --HLA A DRB1 DQA1 DQB1
+```
 
 ## (3) Result Example
 ![Manhattan_example](img/README_5-1_Manhattan_example.png)

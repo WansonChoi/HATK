@@ -75,7 +75,7 @@ if __name__ == "__main__":
     HLA_TYPE.add_argument("--chped", help="\nHLA Type Data processed by \'NomenCleaner\' (*.chped)\n\n")
 
     # (Meta-Analysis or Manhattan Plot)
-    parser.add_argument("--assoc-result", "-ar", help="\nAssociation test result file(s)(ex. *.assoc.logistic).\n\n", nargs='+')
+    parser.add_argument("--ar", help="\nAssociation test result file(s) (ex. *.assoc.logistic, *.omnibus).\n\n", nargs='+')
 
 
     ##### < IMGT2Sequence > #####
