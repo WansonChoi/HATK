@@ -1,0 +1,32 @@
+PLINK v1.90b6.12 64-bit (28 Oct 2019)          www.cog-genomics.org/plink/1.9/
+(C) 2005-2019 Shaun Purcell, Christopher Chang   GNU General Public License v3
+Logging to MyHLAStudy/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18.log.
+Options in effect:
+  --a1-allele MyHLAStudy/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18.ref
+  --allow-no-sex
+  --bfile MyHLAStudy/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18
+  --chr 6
+  --ci 0.95
+  --from-mb 29
+  --logistic hide-covar
+  --out MyHLAStudy/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18
+  --pheno example/wtccc_filtered_58C_RA.hatk.300+300.phe
+  --pheno-name RA
+  --to-mb 34
+
+16040 MB RAM detected; reserving 8020 MB for main workspace.
+10439 out of 35463 variants loaded from .bim file.
+600 people (0 males, 0 females, 600 ambiguous) loaded from .fam.
+Ambiguous sex IDs written to
+MyHLAStudy/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18.nosex .
+600 phenotype values present after --pheno.
+Using 1 thread (no multithreaded calculations invoked).
+Before main variant filters, 600 founders and 0 nonfounders present.
+Calculating allele frequencies... 0%1%2%3%4%5%6%7%8%9%10%11%12%13%14%15%16%17%18%19%20%21%22%23%24%25%26%27%28%29%30%31%32%33%34%35%36%37%38%39%40%41%42%43%44%45%46%47%48%49%50%51%52%53%54%55%56%57%58%59%60%61%62%63%64%65%66%67%68%69%70%71%72%73%74%75%76%77%78%79%80%81%82%83%84%85%86%87%88%89%90%91%92%93%94%95%96%97%98%99% done.
+Total genotyping rate is 0.963807.
+--a1-allele: 10439 assignments made.
+10439 variants and 600 people pass filters and QC.
+Among remaining phenotypes, 300 are cases and 300 are controls.
+Writing logistic model association results to
+MyHLAStudy/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18.assoc.logistic
+... 0%4%9%14%19%24%29%34%39%44%49%53%58%63%68%73%78%83%88%93%98%done.

@@ -107,14 +107,14 @@ We strongly recommend using the latest version of 'Anaconda(or Miniconda)' to se
 
 ```
 $ python3 HATK.py \
-    --variants example/wtccc_filtered_58C_RA.hatk.58C_RA.300+300.chr6.hg18 \
-    --hped example/wtccc_filtered_58C_RA.hatk.58C_RA.300+300.hped \
+    --variants example/wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18 \
+    --hped example/wtccc_filtered_58C_RA.hatk.300+300.hped \
     --2field \
-    --pheno example/wtccc_filtered_58C_RA.hatk.58C_RA.300+300.phe \
+    --pheno example/wtccc_filtered_58C_RA.hatk.300+300.phe \
     --pheno-name RA \
-    --out MyHLAStudy/MyHLAStudy_wtccc_filtered_58C_RA.hatk.58C_RA.300+300.chr6.hg18 \
-    -imgt 3320 \
-    -hg 18 \
+    --out MyHLAStudy/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18 \
+    --imgt 3320 \
+    --hg 18 \
     --imgt-dir example/IMGTHLA3320 \
     --multiprocess 2
 ```
