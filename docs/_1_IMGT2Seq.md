@@ -44,9 +44,9 @@ Meanwhile, there must be some researchers who want to use the database with a sp
 ```
 python3 HATK.py \
     --imgt2seq \
-    -hg 18 \
-    -imgt 3320 \
-    -o MyIMGT2Seq/ExamplePrefix.hg18.imgt3320 \
+    --hg 18 \
+    --imgt 3320 \
+    --out MyIMGT2Seq/ExamplePrefix.hg18.imgt3320 \
     --imgt-dir example/IMGTHLA3320 \
     --multiprocess 2
 ```
