@@ -34,6 +34,20 @@ class HATK_NomenCleaner(object):
                                                 "Please check the '--hped' argument again.\n"
                                                 "".format(_hped))
             sys.exit()
+        else:
+            # Checking the number of columns
+            f_hped = open(_hped, 'r')
+
+            hped_1st_line = f_hped.readline()
+            hped_1st_line = re.split(pattern='\s+', string=hped_1st_line.rstrip('\n'))
+
+            if len(hped_1st_line) != 22:
+                # # of columns of hped file must be 22(6 + 8*2).
+                print(std_ERROR_MAIN_PROCESS_NAME + "The number of columns of given HPED file('{}') must be 22 but it is '{}'.\n"
+                                                    "Please check the number of columns of that HPED file again."
+                                                    "".format(_hped, len(hped_1st_line)))
+                sys.exit()
+
 
         if not os.path.exists(_hat):
             print(std_ERROR_MAIN_PROCESS_NAME + "Given HAT(HLA Allel Table) file('{}') doesn't exist.\n"
