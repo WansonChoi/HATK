@@ -59,10 +59,10 @@ With the conventional intergenic SNP markers(ex. rs41557221), 3 classes of marke
 ```
 python3 HATK.py \
     --bmarkergenerator \
-    --variants example/wtccc_filtered_58C_RA.hatk.58C_RA.300+300.chr6.hg18 \
-    --chped example/wtccc_filtered_58C_RA.hatk.58C_RA.300+300.imgt3320.2field.chped \
-    --out MybMarkerGenerator/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.58C_RA.300+300.chr6.hg18 \
-    -hg 18 \
+    --variants example/wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18 \
+    --chped example/wtccc_filtered_58C_RA.hatk.300+300.imgt3320.2field.chped \
+    --out MybMarkerGenerator/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18 \
+    --hg 18 \
     --dict-AA example/RESULT_EXAMPLE/HLA_DICTIONARY_AA.hg18.imgt3320 \
     --dict-SNPS example/RESULT_EXAMPLE/HLA_DICTIONARY_SNPS.hg18.imgt3320
 ```
@@ -80,9 +80,9 @@ bMarkerGenerator can work without the '--variants' argument. In this case, Only 
 ```
 python3 HATK.py \
     --bmarkergenerator \
-    --chped example/wtccc_filtered_58C_RA.hatk.58C_RA.300+300.imgt3320.2field.chped \
-    --out MybMarkerGenerator/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.58C_RA.300+300.chr6.hg18 \
-    -hg 18 \
+    --chped example/wtccc_filtered_58C_RA.hatk.300+300.imgt3320.2field.chped \
+    --out MybMarkerGenerator/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18 \
+    --hg 18 \
     --dict-AA example/RESULT_EXAMPLE/HLA_DICTIONARY_AA.hg18.imgt3320 \
     --dict-SNPS example/RESULT_EXAMPLE/HLA_DICTIONARY_SNPS.hg18.imgt3320
 ```
