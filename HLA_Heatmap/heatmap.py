@@ -22,14 +22,20 @@ std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % (os.path.basename(__file__
 
 class HATK_Heatmap(object):
 
-    def __init__(self, _hla_name, _out, _p_maptable, _p_assoc_result, *args, **kwargs):
+    def __init__(self, _HLA, _out, _p_maptable, _p_assoc_result, *args, **kwargs):
 
 
-        if not _hla_name:
+        if not _HLA:
             print(std_ERROR_MAIN_PROCESS_NAME + "Please check '--HLA' argument again.")
             sys.exit()
-        elif isinstance(_hla_name, list) and len(_hla_name) == 1:
-            _hla_name = _hla_name.pop()
+
+        if isinstance(_HLA, list) and len(_HLA) == 1:
+            _HLA = _HLA.pop()
+        elif isinstance(_HLA, list) and len(_HLA) > 1:
+            print(std_WARNING_MAIN_PROCESS_NAME + "Only 1 HLA gene can be used.\n"
+                                                  "Only the 1st HLA gene('{}') will be used for Heatmap plot and the other(s)('{}') will be discarded."
+                                                  "".format(_HLA[0], ', '.join(_HLA[1:])))
+            _HLA = _HLA[0]
 
         if not _out:
             print(std_ERROR_MAIN_PROCESS_NAME + "Please check '--out' argument again.")
@@ -50,7 +56,7 @@ class HATK_Heatmap(object):
             if isinstance(_p_assoc_result, list):
 
                 if len(_p_assoc_result) > 1:
-                    print(std_WARNING_MAIN_PROCESS_NAME + "More than 1 association test result was given.\n"
+                    print(std_WARNING_MAIN_PROCESS_NAME + "More than 1 association test results were given.\n"
                                                           "Only 1st item will be used to plot HLA Heatmap.")
 
                 t_single_assoc_result = _p_assoc_result[0]
@@ -60,7 +66,7 @@ class HATK_Heatmap(object):
                 t_single_assoc_result = _p_assoc_result
 
 
-        self.result = HEATMAP(_hla_name, _out, _p_maptable, t_single_assoc_result,
+        self.result = HEATMAP(_HLA, _out, _p_maptable, t_single_assoc_result,
                               __save_intermediates=kwargs["__save_intermediates"], _p_src=kwargs["_p_src"],
                               _p_data=kwargs["_p_data"])
 
