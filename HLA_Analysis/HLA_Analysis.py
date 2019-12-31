@@ -273,8 +273,8 @@ class HATK_OmibusTest():
 
             # *.aa file given
             # No more need *.bgl.phased file. (+ No need to call 'GetPhasedAACalls()')
-
             __aa__ = kwargs['_aa']
+            print(std_MAIN_PROCESS_NAME + "Amino acid file('{}') will be used for Omnibus Test.".format(__aa__))
 
         else:
 

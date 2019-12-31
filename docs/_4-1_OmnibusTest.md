@@ -44,10 +44,10 @@ We recommend using Beagle(v3.x.x) software to phase target data. The official in
 ```
 $ python3 HATK.py \
     --omnibus \
-    --fam example/wtccc_filtered_58C_RA.hatk.58C_RA.300+300.chr6.hg18.fam \
-    --phased example/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.58C_RA.300+300.chr6.hg18.bgl.phased \
-    -o MyOmnibusTest/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.58C_RA.300+300.chr6.hg18 \
-    --pheno example/wtccc_filtered_58C_RA.hatk.58C_RA.300+300.phe \
+    --fam example/wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18.fam \
+    --phased example/OmnibusTest/wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18.bgl.phased \
+    --out MyOmnibusTest/wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18 \
+    --pheno example/wtccc_filtered_58C_RA.hatk.300+300.phe \
     --pheno-name RA
 ```
 
@@ -56,10 +56,10 @@ The input '\*.bgl.phased' file is first processed to '\*.aa' file, which is genu
 ```
 $ python3 HATK.py \
     --omnibus \
-    --fam example/wtccc_filtered_58C_RA.hatk.58C_RA.300+300.chr6.hg18.fam \
-    --aa example/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.58C_RA.300+300.chr6.hg18.aa \
-    -o MyOmnibusTest/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.58C_RA.300+300.chr6.hg18 \
-    --pheno example/wtccc_filtered_58C_RA.hatk.58C_RA.300+300.phe \
+    --fam example/wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18.fam \
+    --aa example/OmnibusTest/wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18.aa \
+    --out MyOmnibusTest/wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18 \
+    --pheno example/wtccc_filtered_58C_RA.hatk.300+300.phe \
     --pheno-name RA
 ```
 This 2nd example will generate the same output as that of the 1st example.
@@ -71,10 +71,10 @@ If you want to set another marker(possibly another amino acid position) as a cov
 ```
 $ python3 HATK.py \
     --omnibus \
-    --fam example/wtccc_filtered_58C_RA.hatk.58C_RA.300+300.chr6.hg18.fam \
-    --aa example/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.58C_RA.300+300.chr6.hg18.aa \
-    -o MyOmnibusTest/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.58C_RA.300+300.chr6.hg18 \
-    --pheno example/wtccc_filtered_58C_RA.hatk.58C_RA.300+300.phe \
+    --fam example/wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18.fam \
+    --aa example/OmnibusTest/wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18.aa \
+    --out MyOmnibusTest/wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18 \
+    --pheno example/wtccc_filtered_58C_RA.hatk.300+300.phe \
     --pheno-name RA \
     --condition AA_DRB1_96
     # --condition AA_DRB1_96,AA_DRB1_13 (when passing multiple coditions.)
