@@ -75,8 +75,6 @@ if __name__ == "__main__":
     HLA_TYPE.add_argument("--chped", help="\nHLA Type Data processed by \'NomenCleaner\' (*.chped)\n\n")
 
     # (Meta-Analysis or Manhattan Plot)
-    # parser.add_argument("--results-assoc", "-ra", help="\nResult files conducted by Logistic Regression Tests(ex.\"*.assoc.logistic\").\n\n",
-    #                     nargs='+')
     parser.add_argument("--assoc-result", "-ar", help="\nAssociation test result file(s)(ex. *.assoc.logistic).\n\n", nargs='+')
 
 
@@ -152,11 +150,11 @@ if __name__ == "__main__":
 
 
 
-    ### Association Test 1 (Logistic Regression by Plink 1.07)
+    ### Association Test 1 (Logistic Regression by Plink 1.9)
 
     g_ASSOC1_Logistic = parser.add_argument_group(title='(Association Test 1) Logistic Regression', description='')
 
-    g_ASSOC1_Logistic.add_argument("--logistic", "-lr", help="\nGive this argument to implement \"Logistic Regression\". (Plink v1.07)\n\n", action='store_true')
+    g_ASSOC1_Logistic.add_argument("--logistic", "-lr", help="\nGive this argument to implement \"Logistic Regression\". (Plink v1.9)\n\n", action='store_true')
 
 
 
@@ -172,11 +170,11 @@ if __name__ == "__main__":
 
 
 
-    ### Meta-Analysis (by Plink 1.07)
+    ### Meta-Analysis
 
     g_MetaAnalysis = parser.add_argument_group(title='MetaAnalysis', description='')
 
-    g_MetaAnalysis.add_argument("--metaanalysis", help="\nGive this argument to implement \"Meta-Analysis\" sub-module. (Plink v1.07)\n\n", action='store_true')
+    g_MetaAnalysis.add_argument("--metaanalysis", help="\nPeforming MetaAnalysis(Inverse-Variance Weight Method(Fixed effect) on the results of HATK.\n\n", action='store_true')
 
     parser.add_argument("--s1-logistic-result", "-s1lr", help="\nLogistic Regression Result file of Study 1(ex. *.assoc.logistic).\n\n")
     parser.add_argument("--s1-bim", "-s1b", help="\nThe bim file used in Study 1 Logistic Regression(ex. *.bim).\n\n")
