@@ -11,8 +11,8 @@ Logistic regression is one of the most widely used association test methods for 
 ```
 $ python HATK.py \
     --logistic \
-    --input example/RESULT_EXAMPLE/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.58C_RA.300+300.chr6.hg18 \
+    --input example/RESULT_EXAMPLE/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18 \
     --pheno-name RA \
-    --pheno example/wtccc_filtered_58C_RA.hatk.58C_RA.300+300.phe \
-    -o MyLogisticReg/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.58C_RA.300+300.chr6.hg18
+    --pheno example/wtccc_filtered_58C_RA.hatk.300+300.phe \
+    --out MyLogisticReg/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18
 ```
