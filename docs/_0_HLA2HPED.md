@@ -24,13 +24,15 @@ The output of xHLA is assumed to be multiple JSON files each of which represents
 $ python HATK.py \
     --hla2hped \
     --platform xHLA \
-    --out MyHLA2HPED_xHLA/test \
-    --rhped example/HLA2HPED/xHLA/test{,2,3}.json
+    --out MyHLA2HPED_xHLA/MyxHLA \
+    --rhped \
+    example/HLA2HPED/xHLA/test.json \
+    example/HLA2HPED/xHLA/test2.json \
+    example/HLA2HPED/xHLA/test3.json
 ```
 
 The 1st column, Family_ID, will be set by the sample id, the 2nd column value by default.
 
-> The usage like the last line '--rhped example/HLA2HPED/xHLA/test{,2,3}.json' is called **brace expansion** in Unix/Linux. That line is exactly same as '--rhped example/HLA2HPED/xHLA/test.json example/HLA2HPED/xHLA/test2.json example/HLA2HPED/xHLA/test3.json'.
 
 <br>
 
@@ -47,7 +49,15 @@ $ python HATK.py \
     --hla2hped \
     --platform HIBAG \
     --out MyHLA2HPED_HIBAG/MyHIBAG \
-    --rhped example/HLA2HPED/HIBAG/HIBAG_TestResult.{A,B,C,DPA1,DPB1,DQA1,DQB1,DRB1}.out
+    --rhped \
+    example/HLA2HPED/HIBAG/HIBAG_TestResult.HLA-A.out \
+    example/HLA2HPED/HIBAG/HIBAG_TestResult.HLA-B.out \
+    example/HLA2HPED/HIBAG/HIBAG_TestResult.HLA-C.out \
+    example/HLA2HPED/HIBAG/HIBAG_TestResult.HLA-DPA1.out \
+    example/HLA2HPED/HIBAG/HIBAG_TestResult.HLA-DPB1.out \
+    example/HLA2HPED/HIBAG/HIBAG_TestResult.HLA-DQA1.out \
+    example/HLA2HPED/HIBAG/HIBAG_TestResult.HLA-DQB1.out \
+    example/HLA2HPED/HIBAG/HIBAG_TestResult.HLA-DRB1.out
 
 ```
 
@@ -59,7 +69,15 @@ $ python HATK.py \
     --hla2hped \
     --platform HIBAG \
     --out MyHLA2HPED_HIBAG/MyHIBAG \
-    --rhped NA example/HLA2HPED/HIBAG/HIBAG_TestResult.B.out NA NA NA NA NA NA
+    --rhped \
+    NA \
+    example/HLA2HPED/HIBAG/HIBAG_TestResult.HLA-B.out \
+    NA \
+    NA \
+    NA \
+    NA \
+    NA \
+    NA
 
 # Using only HLA-B gene information
 ```
@@ -75,5 +93,13 @@ $ python HATK.py \
     --hla2hped \
     --platform AXIOM \
     --out MyHLA2HPED_Axiom/MyAxiom \
-    --rhped example/HLA2HPED/Axiom/AxiomHLA_4dig_{A,B,C,DPA1,DPB1,DQA1,DQB1,DRB1}_Results.txt
+    --rhped \
+    example/HLA2HPED/Axiom/AxiomHLA_4dig_A_Results.txt \
+    example/HLA2HPED/Axiom/AxiomHLA_4dig_B_Results.txt \
+    example/HLA2HPED/Axiom/AxiomHLA_4dig_C_Results.txt \
+    example/HLA2HPED/Axiom/AxiomHLA_4dig_DPA1_Results.txt \
+    example/HLA2HPED/Axiom/AxiomHLA_4dig_DPB1_Results.txt \
+    example/HLA2HPED/Axiom/AxiomHLA_4dig_DQA1_Results.txt \
+    example/HLA2HPED/Axiom/AxiomHLA_4dig_DQB1_Results.txt \
+    example/HLA2HPED/Axiom/AxiomHLA_4dig_DRB1_Results.txt    
 ```

@@ -108,8 +108,8 @@ def _convert_AXIOM(_rhped, _out):
 
     f_isNA = list(map(lambda x : x == 'NA', _rhped))
 
-    if not any(f_isNA):
-        print(std_ERROR_MAIN_PROCESS_NAME + "No any HIBAG output file has been given. Please check the '--rhped' argument again.")
+    if all(f_isNA):
+        print(std_ERROR_MAIN_PROCESS_NAME + "No any AXIOM output file has been given. Please check the '--rhped' argument again.")
         sys.exit()
 
     first_appear = -1
@@ -196,7 +196,7 @@ def _convert_HIBAG(_rhped, _out):
 
     f_isNA = list(map(lambda x : x == 'NA', _rhped))
 
-    if not any(f_isNA):
+    if all(f_isNA):
         print(std_ERROR_MAIN_PROCESS_NAME + "No any HIBAG output file has been given. Please check the '--rhped' argument again.")
         sys.exit()
 
