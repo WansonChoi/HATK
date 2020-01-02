@@ -13,6 +13,8 @@ def HATK_TestAll(_out=None, _control_flags=None):
             if bool(os.path.dirname(_out)):
                 INTERMEDIATE_PATH = os.path.dirname(_out)
                 os.makedirs(INTERMEDIATE_PATH, exist_ok=True)
+            else:
+                os.makedirs(_out, exist_ok=True)
 
             _out = _out + '/'
     else:
@@ -66,7 +68,7 @@ def HATK_TestAll(_out=None, _control_flags=None):
             --imgt 3320 \
             --hg 18 \
             --imgt-dir example/IMGTHLA3320 \
-            --multiprocess 8".format(OUT=_out)
+            --multiprocess 8 > {LOG}".format(OUT=_out, LOG=os.path.join(_out, 'MyHLAStudy.log'))
 
         O = os.system(command)
 
@@ -84,7 +86,7 @@ def HATK_TestAll(_out=None, _control_flags=None):
             --rhped \
             example/HLA2HPED/xHLA/test.json \
             example/HLA2HPED/xHLA/test2.json \
-            example/HLA2HPED/xHLA/test3.json".format(OUT=_out)
+            example/HLA2HPED/xHLA/test3.json > {LOG}".format(OUT=_out, LOG=os.path.join(_out, 'MyHLA2HPED_xHLA.log'))
 
         O = os.system(command)
 
@@ -102,7 +104,7 @@ def HATK_TestAll(_out=None, _control_flags=None):
             example/HLA2HPED/HIBAG/HIBAG_TestResult.HLA-DPB1.out \
             example/HLA2HPED/HIBAG/HIBAG_TestResult.HLA-DQA1.out \
             example/HLA2HPED/HIBAG/HIBAG_TestResult.HLA-DQB1.out \
-            example/HLA2HPED/HIBAG/HIBAG_TestResult.HLA-DRB1.out".format(OUT=_out)
+            example/HLA2HPED/HIBAG/HIBAG_TestResult.HLA-DRB1.out > {LOG}".format(OUT=_out, LOG=os.path.join(_out, 'MyHLA2HPED_HIBAG.log'))
 
         O = os.system(command)
 
@@ -120,7 +122,7 @@ def HATK_TestAll(_out=None, _control_flags=None):
             example/HLA2HPED/HIBAG/HIBAG_TestResult.HLA-DPB1.out \
             NA \
             example/HLA2HPED/HIBAG/HIBAG_TestResult.HLA-DQB1.out \
-            example/HLA2HPED/HIBAG/HIBAG_TestResult.HLA-DRB1.out".format(OUT=_out)
+            example/HLA2HPED/HIBAG/HIBAG_TestResult.HLA-DRB1.out > {LOG}".format(OUT=_out, LOG=os.path.join(_out, 'MyHLA2HPED_HIBAG_withNA.log'))
 
         O = os.system(command)
 
@@ -138,7 +140,7 @@ def HATK_TestAll(_out=None, _control_flags=None):
             example/HLA2HPED/Axiom/AxiomHLA_4dig_DPB1_Results.txt \
             example/HLA2HPED/Axiom/AxiomHLA_4dig_DQA1_Results.txt \
             example/HLA2HPED/Axiom/AxiomHLA_4dig_DQB1_Results.txt \
-            example/HLA2HPED/Axiom/AxiomHLA_4dig_DRB1_Results.txt".format(OUT=_out)
+            example/HLA2HPED/Axiom/AxiomHLA_4dig_DRB1_Results.txt > {LOG}".format(OUT=_out, LOG=os.path.join(_out, 'MyHLA2HPED_Axiom.log'))
 
         O = os.system(command)
 
@@ -154,7 +156,7 @@ def HATK_TestAll(_out=None, _control_flags=None):
             --imgt 3320 \
             --out {OUT}MyIMGT2Seq/ExamplePrefix.hg18.imgt3320 \
             --imgt-dir example/IMGTHLA3320 \
-            --multiprocess 8".format(OUT=_out)
+            --multiprocess 8 > {LOG}".format(OUT=_out, LOG=os.path.join(_out, 'MyIMGT2Seq.log'))
 
         O = os.system(command)
 
@@ -172,7 +174,7 @@ def HATK_TestAll(_out=None, _control_flags=None):
             --out {OUT}MybMarkerGenerator/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18 \
             --hg 18 \
             --dict-AA example/RESULT_EXAMPLE/HLA_DICTIONARY_AA.hg18.imgt3320 \
-            --dict-SNPS example/RESULT_EXAMPLE/HLA_DICTIONARY_SNPS.hg18.imgt3320".format(OUT=_out)
+            --dict-SNPS example/RESULT_EXAMPLE/HLA_DICTIONARY_SNPS.hg18.imgt3320 > {LOG}".format(OUT=_out, LOG=os.path.join(_out, 'MybMarkerGenerator.log'))
 
         # O = os.system(command)
 
@@ -181,10 +183,10 @@ def HATK_TestAll(_out=None, _control_flags=None):
         "python3 HATK.py \
             --bmarkergenerator \
             --chped example/wtccc_filtered_58C_RA.hatk.300+300.imgt3320.2field.chped \
-            --out {OUT}MybMarkerGenerator/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18 \
+            --out {OUT}MybMarkerGenerator/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18.novariants \
             --hg 18 \
             --dict-AA example/RESULT_EXAMPLE/HLA_DICTIONARY_AA.hg18.imgt3320 \
-            --dict-SNPS example/RESULT_EXAMPLE/HLA_DICTIONARY_SNPS.hg18.imgt3320".format(OUT=_out)
+            --dict-SNPS example/RESULT_EXAMPLE/HLA_DICTIONARY_SNPS.hg18.imgt3320 > {LOG}".format(OUT=_out, LOG=os.path.join(_out, 'MybMarkerGenerator.novariants.log'))
 
         O = os.system(command)
 
@@ -201,7 +203,7 @@ def HATK_TestAll(_out=None, _control_flags=None):
             --hped example/wtccc_filtered_58C_RA.hatk.300+300.hped \
             --out {OUT}MyNomenCleaner/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18.2field \
             --2field \
-            --imgt 3320".format(OUT=_out)
+            --imgt 3320 > {LOG}".format(OUT=_out, LOG=os.path.join(_out, 'MyNomenCleaner.2field.log'))
         O = os.system(command)
 
         # [2. Specifying NO output nomenclature]
@@ -211,7 +213,7 @@ def HATK_TestAll(_out=None, _control_flags=None):
             --hat example/RESULT_EXAMPLE/HLA_ALLELE_TABLE.imgt3320.hat \
             --hped example/wtccc_filtered_58C_RA.hatk.300+300.hped \
             --out {OUT}MyNomenCleaner/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18 \
-            --imgt 3320".format(OUT=_out)
+            --imgt 3320 > {LOG}".format(OUT=_out, LOG=os.path.join(_out, 'MyNomenCleaner.default.log'))
         O = os.system(command)
 
     if OMNIBUS:
@@ -225,9 +227,9 @@ def HATK_TestAll(_out=None, _control_flags=None):
             --omnibus \
             --fam example/wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18.fam \
             --phased example/OmnibusTest/wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18.bgl.phased \
-            --out {OUT}MyOmnibusTest/wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18 \
+            --out {OUT}MyOmnibusTest/wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18.1 \
             --pheno example/wtccc_filtered_58C_RA.hatk.300+300.phe \
-            --pheno-name RA".format(OUT=_out)
+            --pheno-name RA > {LOG}".format(OUT=_out, LOG=os.path.join(_out, 'MyOmnibusTest.bgl_phased.log'))
 
         O = os.system(command)
 
@@ -237,9 +239,9 @@ def HATK_TestAll(_out=None, _control_flags=None):
             --omnibus \
             --fam example/wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18.fam \
             --aa example/OmnibusTest/wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18.aa \
-            --out {OUT}MyOmnibusTest/wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18 \
+            --out {OUT}MyOmnibusTest/wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18.2 \
             --pheno example/wtccc_filtered_58C_RA.hatk.300+300.phe \
-            --pheno-name RA".format(OUT=_out)
+            --pheno-name RA > {LOG}".format(OUT=_out, LOG=os.path.join(_out, 'MyOmnibusTest.aa.log'))
 
         # O = os.system(command)
 
@@ -252,7 +254,7 @@ def HATK_TestAll(_out=None, _control_flags=None):
             --out {OUT}MyOmnibusTest/wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18 \
             --pheno example/wtccc_filtered_58C_RA.hatk.300+300.phe \
             --pheno-name RA \
-            --condition AA_DRB1_96".format(OUT=_out)
+            --condition AA_DRB1_96 > {LOG}".format(OUT=_out, LOG=os.path.join(_out, 'MyOmnibusTest.condition.log'))
 
         # O = os.system(command)
 
@@ -266,7 +268,7 @@ def HATK_TestAll(_out=None, _control_flags=None):
             --input example/RESULT_EXAMPLE/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18 \
             --pheno-name RA \
             --pheno example/wtccc_filtered_58C_RA.hatk.300+300.phe \
-            --out {OUT}MyLogisticReg/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18".format(OUT=_out)
+            --out {OUT}MyLogisticReg/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18 > {LOG}".format(OUT=_out, LOG=os.path.join(_out, 'MyLogisticReg.log'))
 
         O = os.system(command)
 
@@ -279,7 +281,7 @@ def HATK_TestAll(_out=None, _control_flags=None):
             --metaanalysis \
             --s1-logistic-result example/RESULT_EXAMPLE/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18.assoc.logistic \
             --s2-logistic-result example/MetaAnalysis/RESULT_EXAMPLE_wtccc_filtered_NBS_CD.hatk.300+300.chr6.hg18.assoc.logistic \
-            --out {OUT}MyMetaAnalysis/RESULT_EXAMPLE_wtccc_filtered.RAvsCD".format(OUT=_out)
+            --out {OUT}MyMetaAnalysis/RESULT_EXAMPLE_wtccc_filtered.RAvsCD > {LOG}".format(OUT=_out, LOG=os.path.join(_out, 'MyMetaAnalysis.plain.log'))
 
         O = os.system(command)
 
@@ -290,7 +292,7 @@ def HATK_TestAll(_out=None, _control_flags=None):
             --s1-bim example/RESULT_EXAMPLE/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18.bim \
             --s2-logistic-result example/MetaAnalysis/RESULT_EXAMPLE_wtccc_filtered_NBS_CD.hatk.300+300.chr6.hg18.assoc.logistic \
             --s2-bim example/MetaAnalysis/RESULT_EXAMPLE_wtccc_filtered_NBS_CD.hatk.300+300.chr6.hg18.bim \
-            --out {OUT}MyMetaAnalysis/RESULT_EXAMPLE_wtccc_filtered.RAvsCD2".format(OUT=_out)
+            --out {OUT}MyMetaAnalysis/RESULT_EXAMPLE_wtccc_filtered.RAvsCD2.flip > {LOG}".format(OUT=_out, LOG=os.path.join(_out, 'MyMetaAnalysis.flip.log'))
 
         # O = os.system(command)
 
@@ -304,7 +306,7 @@ def HATK_TestAll(_out=None, _control_flags=None):
             --ar example/RESULT_EXAMPLE/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18.assoc.logistic \
             --imgt 3320 \
             --hg 18 \
-            --out {OUT}MyManhattan/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18".format(OUT=_out)
+            --out {OUT}MyManhattan/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18 > {LOG}".format(OUT=_out, LOG=os.path.join(_out, 'MyManhattan.log'))
 
         # O = os.system(command)
 
@@ -316,7 +318,7 @@ def HATK_TestAll(_out=None, _control_flags=None):
             --imgt 3320 \
             --hg 18 \
             --out {OUT}MyManhattan/wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18.RA.NA.omnibus \
-            --HLA A DRB1 DQA1 DQB1".format(OUT=_out)
+            --HLA A DRB1 DQA1 DQB1 > {LOG}".format(OUT=_out, LOG=os.path.join(_out, 'MyManhattan.HLAs.log'))
 
         O = os.system(command)
 
@@ -330,7 +332,7 @@ def HATK_TestAll(_out=None, _control_flags=None):
             --ar example/RESULT_EXAMPLE/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18.assoc.logistic \
             --HLA A \
             --maptable example/RESULT_EXAMPLE/HLA_MAPTABLE_A.hg18.imgt3320.txt \
-            --out {OUT}MyHeatmap/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18".format(OUT=_out)
+            --out {OUT}MyHeatmap/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18 > {LOG}".format(OUT=_out, LOG=os.path.join(_out, 'MyHeatmap.log'))
 
         O = os.system(command)
 
