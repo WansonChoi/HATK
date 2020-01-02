@@ -176,7 +176,7 @@ def HATK_TestAll(_out=None, _control_flags=None):
             --dict-AA example/RESULT_EXAMPLE/HLA_DICTIONARY_AA.hg18.imgt3320 \
             --dict-SNPS example/RESULT_EXAMPLE/HLA_DICTIONARY_SNPS.hg18.imgt3320 > {LOG}".format(OUT=_out, LOG=os.path.join(_out, 'MybMarkerGenerator.log'))
 
-        # O = os.system(command)
+        O = os.system(command)
 
         # without '--variant'
         command = \
@@ -243,7 +243,7 @@ def HATK_TestAll(_out=None, _control_flags=None):
             --pheno example/wtccc_filtered_58C_RA.hatk.300+300.phe \
             --pheno-name RA > {LOG}".format(OUT=_out, LOG=os.path.join(_out, 'MyOmnibusTest.aa.log'))
 
-        # O = os.system(command)
+        O = os.system(command)
 
         # with condition
         command = \
@@ -256,7 +256,7 @@ def HATK_TestAll(_out=None, _control_flags=None):
             --pheno-name RA \
             --condition AA_DRB1_96 > {LOG}".format(OUT=_out, LOG=os.path.join(_out, 'MyOmnibusTest.condition.log'))
 
-        # O = os.system(command)
+        O = os.system(command)
 
     if LOGISTIC:
         ### 7. _4-2_Logistic Regression
@@ -294,7 +294,7 @@ def HATK_TestAll(_out=None, _control_flags=None):
             --s2-bim example/MetaAnalysis/RESULT_EXAMPLE_wtccc_filtered_NBS_CD.hatk.300+300.chr6.hg18.bim \
             --out {OUT}MyMetaAnalysis/RESULT_EXAMPLE_wtccc_filtered.RAvsCD2.flip > {LOG}".format(OUT=_out, LOG=os.path.join(_out, 'MyMetaAnalysis.flip.log'))
 
-        # O = os.system(command)
+        O = os.system(command)
 
     if MANHATTAN:
         ### 9. _5-1_Manhattan
@@ -308,7 +308,7 @@ def HATK_TestAll(_out=None, _control_flags=None):
             --hg 18 \
             --out {OUT}MyManhattan/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18 > {LOG}".format(OUT=_out, LOG=os.path.join(_out, 'MyManhattan.log'))
 
-        # O = os.system(command)
+        O = os.system(command)
 
         
         command = \
@@ -318,7 +318,7 @@ def HATK_TestAll(_out=None, _control_flags=None):
             --imgt 3320 \
             --hg 18 \
             --out {OUT}MyManhattan/wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18.RA.NA.omnibus \
-            --HLA A DRB1 DQA1 DQB1 > {LOG}".format(OUT=_out, LOG=os.path.join(_out, 'MyManhattan.HLAs.log'))
+            --HLA A DRB1 DQA1 DQB1 > {LOG}".format(OUT=_out, LOG=os.path.join(_out, 'MyManhattan.omnibus.log'))
 
         O = os.system(command)
 
