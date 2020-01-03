@@ -363,7 +363,12 @@ if __name__ == '__main__':
 
     if _control_flags == 'All' or _control_flags == 'all':
         _control_flags = [1,1,1,1,1, 1,1,1,1,1]
+
+    elif bool(re.match(pattern=r'^\d(,\d){9}$', string=_control_flags)):
+        _control_flags = list(map(lambda x : int(x), _control_flags.split(',')))
+        print(_control_flags)
     else:
+        print("Error. Wrong _control_flags!")
         sys.exit()
 
     # print(_control_flags)

@@ -230,7 +230,7 @@ def Manhattan(_assoc_result, _out, _hg, _pointcol="#778899", _topcol="#FF0000", 
 
             # Extracting 'HLA' and 'Relative position' of Amino acid marker
             f_AA = t_ar['Variant'].str.match(p_Omnibus_AA)
-            df_AA = t_ar['Variant'][f_AA].str.extract(p_Omnibus_AA)
+            df_AA = t_ar['Variant'][f_AA].str.extract(p_Omnibus_AA, expand=True)
             df_AA.columns = ['HLA', 'REL_POS']
             # print("df_AA :\n{}\n".format(df_AA))
 

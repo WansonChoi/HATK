@@ -227,7 +227,7 @@ def _convert_HIBAG(_rhped, _out):
     for i in range(len(HLA_names)):
 
         if not f_isNA[i]:
-            df_temp = DICT_rhped[HLA_names[i]]['4digit'].str.extract(r'(\d{4,5}),(\d{4,5})')
+            df_temp = DICT_rhped[HLA_names[i]]['4digit'].str.extract(r'(\d{4,5}),(\d{4,5})', expand=True)
         else:
             df_temp = pd.DataFrame([['0', '0'] for z in range(L)])
 

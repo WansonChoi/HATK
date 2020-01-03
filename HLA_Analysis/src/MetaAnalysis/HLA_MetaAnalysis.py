@@ -160,11 +160,11 @@ def HLA_MetaAnalysis(_study1_lr, _study2_lr, _out=None, _study1_m=None, _study2_
     np.seterr(divide='ignore')
 
 
-    w_study1 = 1/(np.square(df_Main['SE_x'].to_numpy()))
-    w_study2 = 1/(np.square(df_Main['SE_y'].to_numpy()))
+    w_study1 = 1/(np.square(np.array(df_Main['SE_x'])))
+    w_study2 = 1/(np.square(np.array(df_Main['SE_y'])))
 
-    beta_study1 = df_Main['BETA_x'].to_numpy()
-    beta_study2 = df_Main['BETA_y'].to_numpy()
+    beta_study1 = np.array(df_Main['BETA_x'])
+    beta_study2 = np.array(df_Main['BETA_y'])
 
     ivw = (beta_study1*w_study1 + beta_study2*w_study2)/(w_study1 + w_study2)
     ivw_se = np.sqrt(1/(w_study1+w_study2))
