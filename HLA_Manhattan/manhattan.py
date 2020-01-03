@@ -239,7 +239,7 @@ def Manhattan(_assoc_result, _out, _hg, _pointcol="#778899", _topcol="#FF0000", 
             f_INS = t_ar['Variant'].str.match(p_Omnibus_INS)
 
             if f_INS.any():
-                df_INS = t_ar['Variant'][f_INS].str.extract(p_Omnibus_INS)
+                df_INS = t_ar['Variant'][f_INS].str.extract(p_Omnibus_INS, expand=True)
                 df_INS = pd.concat([
                     df_INS.iloc[:, 0],
                     df_INS.iloc[:, [1,2]].apply(lambda x : str(x.astype(int).mean()), axis=1)
