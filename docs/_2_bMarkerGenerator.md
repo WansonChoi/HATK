@@ -19,7 +19,7 @@ bMarkerGenerator solves this problem by using a similar strategy which `SNP2HLA`
 
 ## (2) Binary Marker
 
-Typical markers labeled with dbSNP id in most genotype data represent the possible two variations of each position. As most SNPs are bi-allelic, these markers can successfully represent those SNPs. For instance, the SNP in the position 29941758 has two possible variations, allele 'G' or 'A'. The marker with the dbSNP id 'rs2734979' represents this SNP and its status will be reduced to 2 x 2 table. Most of the association study performs an association test that is based on this 2 x 2 table.
+Typical markers labeled with dbSNP id in most genotype data represent the possible two variations of each position(SNP; Single Nucleotide Polymorphism). As most SNPs are bi-allelic, these markers can successfully represent those SNPs. For instance, the SNP in the position 29941758 has two possible variations, allele 'G' or 'A'. The marker with the dbSNP id 'rs2734979' represents this SNP and its status will be reduced to 2 x 2 table.
 
 
 ![README-BinaryMarker1](./img/README_2_bMarkerGenerator1.png)

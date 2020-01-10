@@ -31,9 +31,20 @@ $ python HATK.py \
 ```
 
 ## (3) Result Example
+
+(3-1) Manhattan plot of association test.
+
 ![Manhattan_example](img/README_5-1_Manhattan_example.png)
 
 - Yellow: HLA marker (ex. HLA_A*01:01)
 - Red: Amino acid marker (ex. AA_A_9_30018537_F, AA_A_-15_30018338)
 - Dark grey: Intragenic DNA base pair marker (ex. SNPS_A_30018457, SNPS_A_30018461_A)
 - Ligtht grey: Intergenic dbSNP marker (ex. rs41557221)
+
+<br>
+
+(3-2) Manhattan plot of the omnibus test.
+
+![Manhattan_example](img/README_5-1_Manhattan_example2.png)
+
+As omnibus test is peformed restricted to only amino acid markers, Only the signals of amino aicd positions(Red) are shown in the omnibus Manhattan plot.
