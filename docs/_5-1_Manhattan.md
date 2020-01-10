@@ -4,6 +4,7 @@
 The Manhattan plot is an indispensable method to visualize the result of the association test. HATK provides the module to plot this.
 
 <br>
+<br>
 
 ## (2) Usage Examples
 
@@ -29,6 +30,9 @@ $ python HATK.py \
     --out MyManhattan/wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18.RA.NA.omnibus \
     --HLA A DRB1 DQA1 DQB1
 ```
+
+<br>
+<br>
 
 ## (3) Result Example
 

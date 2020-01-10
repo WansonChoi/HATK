@@ -5,6 +5,7 @@
 HATK provides the module to plot the Heatmap which targets to show the significance of the (1) HLA allele markers and (2) amino acid markers.
 
 <br>
+<br>
 
 ## (2) Usage Example
 
@@ -17,6 +18,8 @@ $ python HATK.py \
     --out MyHeatmap/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18
 ```
 
+
+<br>
 <br>
 
 ## (3) Result Example
