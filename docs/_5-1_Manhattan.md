@@ -47,4 +47,4 @@ $ python HATK.py \
 
 ![Manhattan_example](img/README_5-1_Manhattan_example2.png)
 
-As omnibus test is peformed restricted to only amino acid markers, Only the signals of amino aicd positions(Red) are shown in the omnibus Manhattan plot.
+As omnibus test is peformed restricted to only amino acid markers, Only the signals of amino acid positions are shown in the omnibus Manhattan plot.
