@@ -43,12 +43,12 @@ In terms of amino acids, it is far more common for each position to have multipl
 
 ## (3) Four classes of Markers
 
-With the conventional intergenic SNP markers(ex. rs41557221), 3 classes of markers representing the variants in the HLA region will be included in a newly generated marker panel.
+With the intergenic SNP markers, 3 classes of markers representing the variants in the HLA region will be included in a newly generated marker panel.
 
 1. HLA allele binary marker (ex. HLA_A*01:01)
-2. Amino acid residue binary marker (ex. AA_A_9_30018537_F, AA_A_-15_30018338)
-3. DNA sequence base pair binary marker (ex. SNP_A_30018457, SNP_A_30018461_A)
-4. Intergenic SNP variant marker (ex. rs41557221)
+2. Amino acid residue binary marker (ex. AA_A_9_30018537_exon2_F, AA_DRB1_233_32656026_exon5)
+3. Intragenic(exonic or intronic) SNP binary marker (ex. SNPS_A_228_30018537_exon2_A, SNPS_DRB1_9472_32656026_exon5)
+4. Intergenic SNP variant marker (ex. rs9269186, rs41557221)
 
 <br>
 <br>
