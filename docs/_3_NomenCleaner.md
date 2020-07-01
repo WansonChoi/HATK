@@ -73,6 +73,14 @@ NomenCleaner converts a given set of HLA alleles which is in arbitrary nomenclat
 
 
 <br>
+
+
+3.	Finding deprecated allele
+
+NomenCleaner can also be used to find deprecated alleles. For example, HLA-A\*23:69 allele was deprecated and merged to HLA-A\*23:01 in the IMGT's update of March 2016. By comparing the HPED('\*.hped') and its CHPED('\*.chped') file converted by NomenCleaner, one can determine a deprecated allele if the allele had an HLA allele name(e.g. '23:69') in the HPED but was marked as removed allele('0') in the CHPED. For instance, If an HPED file contains '23:69' and this '23:69' is converted to '0' in its CHPED, then '23:69' can be considered deprecated in the given IMGT version's nomenclature.
+
+
+<br>
 <br>
 
 
