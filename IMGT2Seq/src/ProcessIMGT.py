@@ -870,11 +870,17 @@ def getPositionInfo_SNPS(_type, _df, _hla, _isReverse, _exon1_offset=1, _as_flat
 
         # curr_POS = l_Rest[-1] + (+1 if _type=="rel" else -1)
 
+        # Setting the next starting BP of the next sequence chunk(i.e. `df_Rest.iat[i+1]`)
         if _type == "rel":
-            curr_POS = l_Rest[-1] +1
+            # curr_POS = l_Rest[-1] +1
+            # Exception where the last element of 'l_Rest' is 'i'.
+            curr_POS = (l_Rest[-1] if l_Rest[-1] != 'i' else l_Rest[-2]) \
+                        + 1
 
         elif _type == "gen":
-            curr_POS = l_Rest[-1] + (+1 if not _isReverse else -1)
+            # curr_POS = l_Rest[-1] + (+1 if not _isReverse else -1)
+            curr_POS = (l_Rest[-1] if l_Rest[-1] != 'i' else l_Rest[-2]) \
+                       + (1 if not _isReverse else -1)
 
         l_RETURN.append(l_Rest)
 
