@@ -129,7 +129,8 @@ Each module of HATK can be implemented repectively. **The README files of each o
 <br>
 
 ## (4) Citation
-W. Choi, Y. Luo, S. Raychaudhuri, B. Han. HATK:HLA-Analysis Tool-kit. Under review.
+HATK: HLA analysis toolkit - Wanson Choi, Yang Luo, Soumya Raychaudhuri, Buhm Han
+(https://academic.oup.com/bioinformatics/advance-article/doi/10.1093/bioinformatics/btaa684/5879278)
 
 <br>
 <br>
