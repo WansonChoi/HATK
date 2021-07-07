@@ -5,9 +5,9 @@ from IMGT2Seq.IMGT2Seq import IMGT2Seq
 
 ########## < Core Global Varialbes > ##########
 
-std_MAIN_PROCESS_NAME = "\n[%s]: " % (os.path.basename(__file__))
-std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % (os.path.basename(__file__))
-std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % (os.path.basename(__file__))
+std_MAIN_PROCESS_NAME = "\n[%s]: " % (os.path.basename("IMGT2Seq"))
+std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % (os.path.basename("IMGT2Seq"))
+std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % (os.path.basename("IMGT2Seq"))
 
 HLA_names = ["A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1"]
 raw_HLA_names = ["A", "B", "C", "DPA", "DPB", "DQA", "DQB", "DRB"]
@@ -26,12 +26,12 @@ class HATK_IMGT2Seq(object):
 
         if not _imgt:
             print(std_ERROR_MAIN_PROCESS_NAME + "IMGT version information wasn't given.\n"
-                                                "Please check '-imgt' argument again.")
+                                                "Please check '--imgt' argument again.")
             sys.exit()
 
         if not _hg:
             print(std_ERROR_MAIN_PROCESS_NAME + "HG(Human Genome) version information wasn't given.\n"
-                                                "Please check '-hg' argument again.")
+                                                "Please check '--hg' argument again.")
             sys.exit()
 
         if not kwargs['_imgt_dir']:
@@ -122,20 +122,26 @@ class HATK_IMGT2Seq(object):
         Ggroup = args[4]
         Pgroup = args[5]
 
-        Nfield_OUTPUT_FORMAT = 1 if oneF else 2 if twoF else 3 if threeF else 4
+        # Nfield_OUTPUT_FORMAT = 1 if oneF else 2 if twoF else 3 if threeF else 4
 
         if oneF:
+            print(std_MAIN_PROCESS_NAME + "Selected Output Nomenclature : 1-field")
             Nfield_OUTPUT_FORMAT = 1
         elif twoF:
+            print(std_MAIN_PROCESS_NAME + "Selected Output Nomenclature : 2-field")
             Nfield_OUTPUT_FORMAT = 2
         elif threeF:
+            print(std_MAIN_PROCESS_NAME + "Selected Output Nomenclature : 3-field")
             Nfield_OUTPUT_FORMAT = 3
-        else:
+        elif fourF:
+            print(std_MAIN_PROCESS_NAME + "Selected Output Nomenclature : 4-field")
             Nfield_OUTPUT_FORMAT = 4
-
-            if Ggroup or Pgroup:
-                print(std_WARNING_MAIN_PROCESS_NAME + "Given '--{}' argument will be overridden to '--4field'.".format(
-                    'Ggroup' if Ggroup else 'Pgroup'))
+        elif Ggroup:
+            print(std_MAIN_PROCESS_NAME + "Selected Output Nomenclature : G-group")
+            Nfield_OUTPUT_FORMAT = 5
+        elif Pgroup:
+            print(std_MAIN_PROCESS_NAME + "Selected Output Nomenclature : P-group")
+            Nfield_OUTPUT_FORMAT = 6
 
 
 
@@ -213,7 +219,7 @@ if __name__ == "__main__":
     parser.add_argument("--imgt-dir", help="\nIn case User just want to specify the directory of IMGT data folder.\n\n", required=True)
 
     # Output format selection
-    format_selection = parser.add_mutually_exclusive_group()
+    format_selection = parser.add_mutually_exclusive_group(required=True)
     format_selection.add_argument("--1field", help="\nMake converted HLA alleles have maximum 1 field.\n\n", action="store_true", dest="oneF")
     format_selection.add_argument("--2field", help="\nMake converted HLA alleles have maximum 2 fields.\n\n", action="store_true", dest="twoF")
     format_selection.add_argument("--3field", help="\nMake converted HLA alleles have maximum 3 fields.\n\n", action="store_true", dest="threeF")

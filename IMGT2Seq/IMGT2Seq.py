@@ -8,7 +8,7 @@ import multiprocessing as mp
 from IMGT2Seq.src.NfieldDictionary import NfieldDictionary
 from IMGT2Seq.src.GenerateHAT import GenerateHAT
 from IMGT2Seq.src.ProcessIMGT import ProcessIMGT
-
+from IMGT2Seq.src.XgroupDictionary import XgroupDictionary
 
 
 ########## < Core Global Varialbes > ##########
@@ -44,14 +44,15 @@ def IMGT2Seq(_imgt, _hg, _out, _imgt_dir, _no_Indel=False, _MultiP=False, _save_
     _OUTPUT_SNPS_RETURN = os.path.join(INTERMEDIATE_PATH, 'HLA_DICTIONARY_SNPS.hg{0}.imgt{1}'.format(_hg, _imgt))
     _OUTPUT_HAT = os.path.join(INTERMEDIATE_PATH, 'HLA_ALLELE_TABLE')
 
+
+
     ########## < Dependency Checking > ##########
 
     # IMGTHLA directory
     IMGTHLA_directory = _imgt_dir
 
     if not os.path.isdir(IMGTHLA_directory):
-        print(
-            std_ERROR_MAIN_PROCESS_NAME + "Given IMGT-HLA directory \"{0}\" can't be found!".format(IMGTHLA_directory))
+        print(std_ERROR_MAIN_PROCESS_NAME + "Given IMGT-HLA directory \"{0}\" can't be found!".format(IMGTHLA_directory))
         sys.exit()
 
     ##### < "*_nuc.txt", "*_prot.txt", "*_gen.txt" > #####
@@ -103,6 +104,8 @@ def IMGT2Seq(_imgt, _hg, _out, _imgt_dir, _no_Indel=False, _MultiP=False, _save_
                 print(std_ERROR_MAIN_PROCESS_NAME + "\"{0}_gen.txt\" file can't be found.".format(HLA_names[i]))
                 sys.exit()
 
+
+
     ##### < "Allelelist.txt", "hla_nom_g.txt", "hla_nom_p.txt" > #####
 
     t_allelelist_2009 = os.path.join(IMGTHLA_directory, "Nomenclature_2009.txt")
@@ -126,11 +129,22 @@ def IMGT2Seq(_imgt, _hg, _out, _imgt_dir, _no_Indel=False, _MultiP=False, _save_
         print(std_ERROR_MAIN_PROCESS_NAME + "'wmda/hla_nom_p.txt' file can't be found.\n")
         sys.exit()
 
-    _1_MAKING_DICTIONARY = 1
-    _2_GENERATE_HAT = 1
+
+
+    _1_GENERATE_HAT = 1
+    _2_MAKING_DICTIONARY = 1
     CLEAN_UP = 0
 
-    if _1_MAKING_DICTIONARY:
+
+
+    if _1_GENERATE_HAT:
+        ########## < 2. Making *.hat file. > ##########
+
+        _OUTPUT_HAT = GenerateHAT(t_allelelist_2009, t_allelelist, t_p_Group, t_p_Proup, _imgt, _OUTPUT_HAT)
+
+
+
+    if _2_MAKING_DICTIONARY:
 
         ########## < 1. Making HLA Dictionary. > ##########
 
@@ -161,8 +175,8 @@ def IMGT2Seq(_imgt, _hg, _out, _imgt_dir, _no_Indel=False, _MultiP=False, _save_
 
             if _MultiP > 1:
 
-                t_df_Seqs_SNPS, t_df_Seqs_AA, t_df_forMAP_SNPS, t_df_forMAP_AA, t_MAPTABLE = dict_Pool[
-                    HLA_names[i]].get()
+                t_df_Seqs_SNPS, t_df_Seqs_AA, t_df_forMAP_SNPS, t_df_forMAP_AA, t_MAPTABLE = \
+                    dict_Pool[HLA_names[i]].get()
 
             else:
                 t_df_Seqs_SNPS, t_df_Seqs_AA, t_df_forMAP_SNPS, t_df_forMAP_AA, t_MAPTABLE \
@@ -200,14 +214,23 @@ def IMGT2Seq(_imgt, _hg, _out, _imgt_dir, _no_Indel=False, _MultiP=False, _save_
         HLA_DICTIONARY_SNPS.to_csv(_OUTPUT_SNPS_RETURN + ".txt", sep='\t', header=False, index=True)
         HLA_DICTIONARY_SNPS_map.to_csv(_OUTPUT_SNPS_RETURN + ".map", sep='\t', header=False, index=False)
 
+
         if 0 < __Nfield_OUTPUT_FORMAT < 4:
+            # 1,2,3-field
             NfieldDictionary(_OUTPUT_AA_RETURN + ".txt", _OUTPUT_SNPS_RETURN + ".txt", d_MapTables,
                              __Nfield_OUTPUT_FORMAT)
 
-    if _2_GENERATE_HAT:
-        ########## < 2. Making *.hat file. > ##########
+        elif __Nfield_OUTPUT_FORMAT == 5:
+            # Ggroup
+            XgroupDictionary(_OUTPUT_HAT, _OUTPUT_AA_RETURN + ".txt", _OUTPUT_SNPS_RETURN + ".txt", d_MapTables,
+                             _out=None, _OUTPUT_FORMAT=__Nfield_OUTPUT_FORMAT) # Overide
 
-        _OUTPUT_HAT = GenerateHAT(t_allelelist_2009, t_allelelist, t_p_Group, t_p_Proup, _imgt, _OUTPUT_HAT)
+        elif __Nfield_OUTPUT_FORMAT == 6:
+            # Pgroup
+            XgroupDictionary(_OUTPUT_HAT, _OUTPUT_AA_RETURN + ".txt", _OUTPUT_SNPS_RETURN + ".txt", d_MapTables,
+                             _out=None, _OUTPUT_FORMAT=__Nfield_OUTPUT_FORMAT) # Overide
+
+
 
     if CLEAN_UP:
         ########## < 5. Removing unnecessary files. > ##########
