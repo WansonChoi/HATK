@@ -1,13 +1,14 @@
 import os, sys, re
+from os.path import basename, dirname, join
 import argparse, textwrap
 from IMGT2Seq.IMGT2Seq import IMGT2Seq
 
 
 ########## < Core Global Varialbes > ##########
 
-std_MAIN_PROCESS_NAME = "\n[%s]: " % (os.path.basename("IMGT2Seq"))
-std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % (os.path.basename("IMGT2Seq"))
-std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % (os.path.basename("IMGT2Seq"))
+std_MAIN_PROCESS_NAME = "\n[%s]: " % ("IMGT2Seq")
+std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % ("IMGT2Seq")
+std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % ("IMGT2Seq")
 
 HLA_names = ["A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1"]
 raw_HLA_names = ["A", "B", "C", "DPA", "DPB", "DQA", "DQB", "DRB"]

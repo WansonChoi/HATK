@@ -2,12 +2,24 @@
 
 import os, sys, re
 
+from IMGT2Seq.__main__ import HATK_IMGT2Seq
+from bMarkerGenerator.bMarkerGenerator import HATK_bMarkerGenertor
+from HLA2HPED.HLA2HPED import HATK_HLA2HPED
+from NomenCleaner.NomenCleaner import HATK_NomenCleaner
+from HLA_Analysis.HLA_Analysis import HATK_LogisticRegression
+from HLA_Heatmap.heatmap import HATK_Heatmap
+from HLA_Manhattan.manhattan import HATK_Manhattan
+from HLA_Analysis.HLA_Analysis import HATK_OmibusTest
+from HLA_Analysis.src.MetaAnalysis.HLA_MetaAnalysis import HATK_MetaAnalysis
+
+
 
 std_MAIN_PROCESS_NAME = "\n[%s]: " % (os.path.basename(__file__))
 std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % (os.path.basename(__file__))
 std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % (os.path.basename(__file__))
 
 HLA_names = ["A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1"]
+
 
 
 class HLA_Study(object):
@@ -97,17 +109,6 @@ class HLA_Study(object):
 
 
         if f_sum == 0:
-
-            ##### Whole Implementation #####
-
-            from IMGT2Seq.IMGT2Seq import HATK_IMGT2Seq
-            from bMarkerGenerator.bMarkerGenerator import HATK_bMarkerGenertor
-            from HLA2HPED.HLA2HPED import HATK_HLA2HPED
-            from NomenCleaner.NomenCleaner import HATK_NomenCleaner
-            from HLA_Analysis.HLA_Analysis import HATK_LogisticRegression
-            from HLA_Heatmap.heatmap import HATK_Heatmap
-            from HLA_Manhattan.manhattan import HATK_Manhattan
-
 
 
 
@@ -284,8 +285,6 @@ class HLA_Study(object):
             if _args.imgt2seq:
 
                 ### IMGT2Seq
-                from IMGT2Seq.IMGT2Seq import HATK_IMGT2Seq
-
                 myIMGT2Seq = HATK_IMGT2Seq(_args.imgt, _args.hg, _args.out,
                                            _args.oneF, _args.twoF, _args.threeF, _args.fourF, _args.Ggroup, _args.Pgroup,
                                            _no_indel=_args.no_indel, _multiprocess=_args.multiprocess,
@@ -297,8 +296,6 @@ class HLA_Study(object):
             elif _args.bmarkergenerator:
 
                 ### bMarkerGenerator
-                from bMarkerGenerator.bMarkerGenerator import HATK_bMarkerGenertor
-
                 mybMarkers = HATK_bMarkerGenertor(_args.chped, _args.out, _args.hg, _args.dict_AA, _args.dict_SNPS,
                                                   _variants=_args.variants, __save_intermediates=_args.save_intermediates,
                                                   _p_src="bMarkerGenerator/src")
@@ -308,8 +305,6 @@ class HLA_Study(object):
             elif _args.hla2hped:
 
                 ### HLA2HPED
-                from HLA2HPED.HLA2HPED import HATK_HLA2HPED
-
                 myHLA2HPED = HATK_HLA2HPED(_args.rhped, _args.out, _args.platform)
 
                 print(std_MAIN_PROCESS_NAME + "HLA2HPED result : \n{}".format(myHLA2HPED.getResult()))
@@ -317,8 +312,6 @@ class HLA_Study(object):
             elif _args.nomencleaner:
 
                 ### NomenCleaner
-                from NomenCleaner.NomenCleaner import HATK_NomenCleaner
-
                 myNomenCleaner = HATK_NomenCleaner(_args.hped, _args.hat, _args.imgt, _args.out,
                                                    __oneF=_args.oneF, __twoF=_args.twoF, __threeF=_args.threeF, __fourF=_args.fourF,
                                                    __Ggroup=_args.Ggroup, __Pgroup=_args.Pgroup,
@@ -329,8 +322,6 @@ class HLA_Study(object):
             elif _args.logistic:
 
                 ### Logistic Regression
-                from HLA_Analysis.HLA_Analysis import HATK_LogisticRegression
-
                 myLogistcRegression = HATK_LogisticRegression(_args.variants, _args.out,
                                                               _phe=_args.pheno, _phe_name=_args.pheno_name,
                                                               _covar=_args.covar, _covar_name=_args.covar_name,
@@ -342,8 +333,6 @@ class HLA_Study(object):
             elif _args.omnibus:
 
                 ### Omnibus Test
-                from HLA_Analysis.HLA_Analysis import HATK_OmibusTest
-
                 myOminubus = HATK_OmibusTest(_args.out, _args.fam, _phe=_args.pheno, _phe_name=_args.pheno_name,
                                              _covar=_args.covar, _covar_name=_args.covar_name,
                                              _condition=_args.condition, _condition_list=_args.condition_list,
@@ -352,8 +341,6 @@ class HLA_Study(object):
             elif _args.metaanalysis:
 
                 ### Meta Analysis
-                from HLA_Analysis.src.MetaAnalysis.HLA_MetaAnalysis import HATK_MetaAnalysis
-
                 myMeta = HATK_MetaAnalysis(_args.s1_logistic_result, _args.s2_logistic_result, _args.out,
                                            _study1_m=_args.s1_bim, _study2_m=_args.s2_bim)
                 print(std_MAIN_PROCESS_NAME + "MetaAnalysis result : \n{}".format(myMeta))
@@ -361,8 +348,6 @@ class HLA_Study(object):
             elif _args.heatmap:
 
                 ### HLA Heatmap
-                from HLA_Heatmap.heatmap import HATK_Heatmap
-
                 myHeatmap = HATK_Heatmap(_args.HLA, _args.out, _args.maptable, _args.ar,
                                          __save_intermediates=_args.save_intermediates, _p_src="HLA_Heatmap/src",
                                          _p_data="HLA_Heatmap/data")
@@ -372,8 +357,6 @@ class HLA_Study(object):
             elif _args.manhattan:
 
                 ### HLA Manhattan
-                from HLA_Manhattan.manhattan import HATK_Manhattan
-
                 myManhattan = HATK_Manhattan(_args.ar, _args.out, _args.hg,
                                              _point_col=_args.point_color, _top_color=_args.top_color,
                                              _point_size=_args.point_size, _yaxis_unit=_args.yaxis_unit,
