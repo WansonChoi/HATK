@@ -17,9 +17,8 @@ std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % (basename(__file__))
 
 
 
-def ProcessIMGTv2(_out, _hla, _imgt, _BP_start_codon, isREVERSE,
-                  _nuc, _gen, _prot,
-                  _no_Ins=False, _no_UTR=True, _save_intermediates=False):
+def ProcessIMGTv2(_out, _hla, _imgt, _BP_start_codon, isREVERSE, _nuc, _gen, _prot, _no_Ins=False, _include_UTR=False,
+                  _save_intermediates=False):
 
     """
 
@@ -155,14 +154,15 @@ def ProcessIMGTv2(_out, _hla, _imgt, _BP_start_codon, isREVERSE,
 
     ### < (4) Filter > ###
 
-    # Filtering condition to `df_gen_markers`, `df_prot_markers`.
+    # Filtering condition to `df_gen_markers`, `df_prot_markers`, `df_SNPS_MAP`, and `df_SNPS_MAP`
+    # Map file filtering이 아직 적용이 안됨!
     if _no_Ins:
         df_gen_markers = FilterInsertion(df_gen_markers)
         print("df_gen_markers(No Insertion):\n{}\n".format(df_gen_markers))
         df_prot_markers = FilterInsertion(df_prot_markers)
         print("df_prot_markers(No Insertion):\n{}\n".format(df_prot_markers))
 
-    if _no_UTR:
+    if not _include_UTR:
         df_gen_markers = FilterUTR(df_gen_markers)
         print("df_gen_markers(No UTRs):\n{}\n".format(df_gen_markers))
         # df_prot_markers = FilterUTR(df_prot_markers)
@@ -852,11 +852,12 @@ if __name__ == "__main__":
                                      description=textwrap.dedent('''\
     ###########################################################################################
 
-        ProcessIMGT.py
+        ProcessIMGTv2.py
 
         : Processing(Parsing HLA sequence information distributed by IMGT-HLA.
 
         Renewed in 2018.09.10
+        Renewed in 2021.07.22
 
 
     ###########################################################################################
@@ -883,7 +884,7 @@ if __name__ == "__main__":
     parser.add_argument("--prot", help="\nInput *_prot.txt file.\n\n", required=True)
 
     # Optional arguments
-    parser.add_argument("--no-Indel", help="\nNo Indels in Markers.\n\n", action="store_true")
+    parser.add_argument("--no-Indel", help="\nNo Insertion Markers.\n\n", action="store_true")
     parser.add_argument("--include-UTR", help="\ninclude UTR parts(5-prime, 3-prime) in Markers.\n\n", action="store_true")
     parser.add_argument("--save-intermediates", help="\nDon't remove intermediate files. (DEBUG)\n\n", action='store_true')
 
@@ -894,13 +895,13 @@ if __name__ == "__main__":
     ##### < for Test > #####
 
     # HLA-E
-    args = parser.parse_args(["--out", "/media/sf_VM_Shared/Projects/HATK/tests/20210710_IMGT2Seq_HLA-E/Dict.HLA-E",
+    args = parser.parse_args(["--out", "/Users/wansonchoi/Git_Projects/HATK/tests/20210706_IMGT2Seq/Dict.HLA-E",
                               "--HLA", "E",
                               "--imgt", "3440",
                               "--BP-start-codon", "30457309",
-                              "--nuc", "/media/sf_VM_Shared/Projects/IMGTHLA3440/alignments/E_nuc.txt",
-                              "--gen", "/media/sf_VM_Shared/Projects/IMGTHLA3440/alignments/E_gen.txt",
-                              "--prot", "/media/sf_VM_Shared/Projects/IMGTHLA3440/alignments/E_prot.txt",
+                              "--nuc", "/Users/wansonchoi/Git_Projects/HATK/example/IMGTHLA3320/alignments/E_nuc.txt",
+                              "--gen", "/Users/wansonchoi/Git_Projects/HATK/example/IMGTHLA3320/alignments/E_gen.txt",
+                              "--prot", "/Users/wansonchoi/Git_Projects/HATK/example/IMGTHLA3320/alignments/E_prot.txt",
                               "--save-intermediates"
                               ])
 
@@ -912,6 +913,6 @@ if __name__ == "__main__":
     print(args)
 
     # main function execution
-    ProcessIMGTv2(_out=args.out, _hla=args.HLA, _imgt=args.imgt, _BP_start_codon=args.BP_start_codon,
-                  isREVERSE=args.isReverse, _nuc=args.nuc, _gen=args.gen, _prot=args.prot, _no_Ins=args.no_Indel,
-                  _save_intermediates=args.save_intermediates, _no_UTR=args.no_UTR)
+    ProcessIMGTv2(_out=args.out, _hla=args.HLA, _imgt=args.imgt, _BP_start_codon=args.BP_start_codon, isREVERSE=args.isReverse,
+                  _nuc=args.nuc, _gen=args.gen, _prot=args.prot,
+                  _no_Ins=args.no_Indel, _include_UTR=args.include_UTR, _save_intermediates=args.save_intermediates)

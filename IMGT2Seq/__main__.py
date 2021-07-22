@@ -1,7 +1,9 @@
 import os, sys, re
-from os.path import basename, dirname, join
 import argparse, textwrap
+
 from IMGT2Seq.IMGT2Seq import IMGT2Seq
+from IMGT2Seq.src.IMGT2SeqError import IMGT2SeqError, ArgumentCheck
+
 
 
 ########## < Core Global Varialbes > ##########
@@ -11,111 +13,28 @@ std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % ("IMGT2Seq")
 std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % ("IMGT2Seq")
 
 HLA_names = ["A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1"]
-raw_HLA_names = ["A", "B", "C", "DPA", "DPB", "DQA", "DQB", "DRB"]
 
 
 
 class HATK_IMGT2Seq(object):
 
-    def __init__(self, _imgt, _hg, _out, *args, **kwargs):
+    # @ArgumentCheck
+    def __init__(self, _imgt, _hg, _out, _HLA, *args, **kwargs):
 
         """
 
-        Either (1) generate a new Dictionary files or (2) find existing dictionaries.
-
         """
 
-        if not _imgt:
-            print(std_ERROR_MAIN_PROCESS_NAME + "IMGT version information wasn't given.\n"
-                                                "Please check '--imgt' argument again.")
-            sys.exit()
-
-        if not _hg:
-            print(std_ERROR_MAIN_PROCESS_NAME + "HG(Human Genome) version information wasn't given.\n"
-                                                "Please check '--hg' argument again.")
-            sys.exit()
-
-        if not kwargs['_imgt_dir']:
-            print(std_ERROR_MAIN_PROCESS_NAME + "Path to IMGT/HLA raw data directory wasn't given.\n"
-                                                "Please check '--imgt-dir' argument again.")
-            sys.exit()
-        else:
-            if not os.path.isdir(kwargs['_imgt_dir']):
-                print(std_ERROR_MAIN_PROCESS_NAME + "Given directory('{}') for IMGT-HLA raw data is not a directory.\n"
-                                                    "Please check '--imgt-dir' argument again.".format(
-                    kwargs['_imgt_dir']))
-                sys.exit()
 
         ########## < Assigning arguments > ##########
 
+        # Main positional arguments
         self.imgt = _imgt
         self.hg = _hg
         self.out = _out
+        self.HLA = _HLA
 
-        # Main Outputs
-        self.__dict_AA__ = None
-        self.__dict_SNPS__ = None
-        self.__HAT__ = None
-        self.__d_MapTable__ = None
-
-        # Flags to check
-        self.f__dict_AA__ = False
-        self.f__dict_SNPS__ = False
-        self.f__HAT__ = False
-        self.f__d_MapTable__ = False
-
-        # Optional arguments
-        self.no_indel = kwargs["_no_indel"]
-        self.multiprocess = kwargs["_multiprocess"]
-        self.save_intermediates = kwargs["_save_intermediates"]
-        self.imgt_dir = kwargs["_imgt_dir"]
-
-        # Summary string
-        self.summary_string = ""
-
-        dir_path = os.path.dirname(self.out)
-        version_label = "hg{}.imgt{}".format(self.hg, self.imgt)
-
-        ########## < Checking existing results > ##########
-
-        # (1) dict_AA
-        dict_AA_txt = os.path.join(dir_path, "HLA_DICTIONARY_AA.{}.txt".format(version_label))
-        dict_AA_map = os.path.join(dir_path, "HLA_DICTIONARY_AA.{}.map".format(version_label))
-
-        if os.path.exists(dict_AA_txt) and os.path.exists(dict_AA_map):
-            self.__dict_AA__ = os.path.join(dir_path, "HLA_DICTIONARY_AA.{}".format(version_label))
-            self.f__dict_AA__ = True
-
-        # (2) dict_SNPS
-        dict_SNPS_txt = os.path.join(dir_path, "HLA_DICTIONARY_SNPS.{}.txt".format(version_label))
-        dict_SNPS_map = os.path.join(dir_path, "HLA_DICTIONARY_SNPS.{}.map".format(version_label))
-
-        if os.path.exists(dict_SNPS_txt) and os.path.exists(dict_SNPS_map):
-            self.__dict_SNPS__ = os.path.join(dir_path, "HLA_DICTIONARY_SNPS.{}".format(version_label))
-            self.f__dict_SNPS__ = True
-
-        # (3) hat
-        hat = os.path.join(dir_path, "HLA_ALLELE_TABLE.imgt{}.hat".format(self.imgt))
-
-        if os.path.exists(hat):
-            self.__HAT__ = hat
-            self.f__HAT__ = True
-
-        # (4) maptables
-        self.__d_MapTable__ = {hla_name: None for hla_name in HLA_names}
-
-        f_temp = True
-
-        for hla_name in HLA_names:
-            t_maptable = os.path.join(dir_path, "HLA_MAPTABLE_{}.{}.txt".format(hla_name, version_label))
-            if os.path.exists(t_maptable):
-                self.__d_MapTable__[hla_name] = t_maptable
-            else:
-                f_temp = False
-
-        self.f__d_MapTable__ = f_temp
-
-        # Output Field format
+        # Output Field format (*args)
         oneF = args[0]
         twoF = args[1]
         threeF = args[2]
@@ -123,8 +42,29 @@ class HATK_IMGT2Seq(object):
         Ggroup = args[4]
         Pgroup = args[5]
 
-        # Nfield_OUTPUT_FORMAT = 1 if oneF else 2 if twoF else 3 if threeF else 4
+        # Optional arguments (**kwargs)
+        self.no_Ins = kwargs["_no_Ins"]
+        self.multiprocess = kwargs["_multiprocess"]
+        self.save_intermediates = kwargs["_save_intermediates"]
+        self.imgt_dir = kwargs["_imgt_dir"]
 
+
+        # Main Outputs
+        self.__HAT__ = None
+        self.__dict_AA__ = None
+        self.__dict_SNPS__ = None
+        self.__d_MapTable__ = None
+
+        # Summary string
+        self.summary_string = ""
+
+
+
+
+
+        ########## < Assigning arguments > ##########
+
+        ### Check output nomenclature
         if oneF:
             print(std_MAIN_PROCESS_NAME + "Selected Output Nomenclature : 1-field")
             Nfield_OUTPUT_FORMAT = 1
@@ -143,40 +83,42 @@ class HATK_IMGT2Seq(object):
         elif Pgroup:
             print(std_MAIN_PROCESS_NAME + "Selected Output Nomenclature : P-group")
             Nfield_OUTPUT_FORMAT = 6
+        else:
+            # Wrong
+            raise IMGT2SeqError(std_ERROR_MAIN_PROCESS_NAME + "Wrong Output Nomenclature.")
 
 
 
         ### No more using existing result.
         self.__dict_AA__, self.__dict_SNPS__, self.__HAT__, self.__d_MapTable__ = \
-            IMGT2Seq(self.imgt, self.hg, self.out, _imgt_dir=self.imgt_dir, _no_Indel=self.no_indel,
+            IMGT2Seq(self.imgt, self.hg, self.out, _imgt_dir=self.imgt_dir, _no_Indel=self.no_Ins,
                      _MultiP=self.multiprocess, _save_intermediates=self.save_intermediates,
                      _p_data="IMGT2Seq/data", __Nfield_OUTPUT_FORMAT=Nfield_OUTPUT_FORMAT)
 
-        self.f__dict_AA__ = True
-        self.f__dict_SNPS__ = True
-        self.f__HAT__ = True
-        self.f__d_MapTable__ = True
 
-        self.summary_string = \
-            ''.join([self.summary_string,
-                     "< IMGT2Sequence(Newly generated.) >\n" \
-                     "- HLA Amino Acids : {}\n" \
-                     "- HLA SNPs : {}\n" \
-                     "- HLA Allele Table : {}\n" \
-                     "- Maptables for heatmap : \n" \
-                     "   A   : {A}\n" \
-                     "   B   : {B}\n" \
-                     "   C   : {C}\n" \
-                     "   DPA1: {DPA1}\n" \
-                     "   DPB1: {DPB1}\n" \
-                     "   DQA1: {DQA1}\n" \
-                     "   DQB1: {DQB1}\n" \
-                     "   DRB1: {DRB1}\n".format(self.__dict_AA__, self.__dict_SNPS__, self.__HAT__,
-                                                **self.__d_MapTable__)
-                     ])
+        self.setSummaryString() # Inplace summary string setting.
+        print(self.summary_string)
 
-    def __bool__(self):
-        return (self.f__dict_AA__ and self.f__dict_SNPS__ and self.f__HAT__ and self.f__d_MapTable__)
+        # self.summary_string = \
+        #     ''.join([self.summary_string,
+        #              "< IMGT2Sequence(Newly generated.) >\n" \
+        #              "- HLA Amino Acids : {}\n" \
+        #              "- HLA SNPs : {}\n" \
+        #              "- HLA Allele Table : {}\n" \
+        #              "- Maptables for heatmap : \n" \
+        #              "   A   : {A}\n" \
+        #              "   B   : {B}\n" \
+        #              "   C   : {C}\n" \
+        #              "   DPA1: {DPA1}\n" \
+        #              "   DPB1: {DPB1}\n" \
+        #              "   DQA1: {DQA1}\n" \
+        #              "   DQB1: {DQB1}\n" \
+        #              "   DRB1: {DRB1}\n".format(self.__dict_AA__, self.__dict_SNPS__, self.__HAT__,
+        #                                         **self.__d_MapTable__)
+        #              ])
+
+    # def __bool__(self):
+    #     return (self.f__dict_AA__ and self.f__dict_SNPS__ and self.f__HAT__ and self.f__d_MapTable__)
 
     def __str__(self):
         return self.summary_string
@@ -184,11 +126,26 @@ class HATK_IMGT2Seq(object):
     def getResult(self):
         return [self.__dict_AA__, self.__dict_SNPS__, self.__HAT__, self.__d_MapTable__]
 
+    def setSummaryString(self):
 
+        self.summary_string = "< IMGT2Sequence Output >\n"
+
+        str_main_output = \
+            "- HLA Amino Acids : {}\n" \
+            "- HLA SNPs : {}\n" \
+            "- HLA Allele Table : {}\n".format(self.__dict_AA__, self.__dict_SNPS__, self.__HAT__)
+
+        self.summary_string = ''.join([self.summary_string, str_main_output])
+
+        return 0
 
 
 
 if __name__ == "__main__":
+
+    """
+    Main wrapper for IMGT2Seq.
+    """
 
     parser = argparse.ArgumentParser(prog='IMGT2Seq',
                                      formatter_class=argparse.RawTextHelpFormatter,
@@ -207,17 +164,21 @@ if __name__ == "__main__":
     parser._optionals.title = "OPTIONS"
 
     parser.add_argument("-h", "--help", help="\nShow this help message and exit\n\n", action='help')
+
+    parser.add_argument("--out", "-o", help="\nOutput File Prefix\n\n", required=True)
     parser.add_argument("--hg", help="\nHuman Genome version(18, 19 or 38)\n\n", choices=["18", "19", "38"],
                         metavar="hg", required=True)
-    parser.add_argument("--out", "-o", help="\nOutput File Prefix\n\n", metavar="OUTPUT", required=True)
-
     parser.add_argument("--imgt", help="\nIMGT-HLA data version(ex. 370, 3300)\n\n", metavar="IMGT_Version",
                         required=True)
+    parser.add_argument("--imgt-dir", help="\nIn case User just want to specify the directory of IMGT data folder.\n\n",
+                        required=True)
 
-    parser.add_argument("--no-indel", help="\nExcluding indel in HLA sequence outputs.\n\n", action='store_true')
-    parser.add_argument("--multiprocess", "--mp", help="\nSetting off parallel multiprocessing.\n\n", type=int, choices=[2,3,4,5,6,7,8], nargs='?', default=1, const=8)
+    parser.add_argument("--HLA", help="\nHLA genes to include.\n\n", nargs='+', required=True)
+
+    parser.add_argument("--mp", help="\nSetting off parallel multiprocessing.\n\n", type=int, choices=[2,3,4,5,6,7,8], nargs='?', default=1, const=8)
+    parser.add_argument("--no-Ins", help="\nNo Insertion Markers in output.\n\n", action="store_true")
+    parser.add_argument("--include-UTR", help="\nInclude UTR parts(5-prime, 3-prime) in output.\n\n", action="store_true")
     parser.add_argument("--save-intermediates", help="\nDon't remove intermediate files. (DEBUG)\n\n", action='store_true')
-    parser.add_argument("--imgt-dir", help="\nIn case User just want to specify the directory of IMGT data folder.\n\n", required=True)
 
     # Output format selection
     format_selection = parser.add_mutually_exclusive_group(required=True)
@@ -243,14 +204,14 @@ if __name__ == "__main__":
 
     ##### < for Publish > #####
 
-    _args = parser.parse_args()
-    print(_args)
+    args = parser.parse_args()
+    print(args)
 
 
     ##### < Main function Execution. > #####
 
-    myIMGT2Seq = HATK_IMGT2Seq(_args.imgt, _args.hg, _args.out,
-                               _args.oneF, _args.twoF, _args.threeF, _args.fourF, _args.Ggroup, _args.Pgroup,
-                               _no_indel=_args.no_indel, _multiprocess=_args.multiprocess,
-                               _save_intermediates=_args.save_intermediates,
-                               _imgt_dir=_args.imgt_dir)
+    myIMGT2Seq = HATK_IMGT2Seq(args.imgt, args.hg, args.out, args.HLA,
+                               args.oneF, args.twoF, args.threeF, args.fourF, args.Ggroup, args.Pgroup,
+                               _no_Ins=args.no_Ins, _multiprocess=args.mp,
+                               _save_intermediates=args.save_intermediates,
+                               _imgt_dir=args.imgt_dir)
