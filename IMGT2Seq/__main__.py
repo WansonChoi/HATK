@@ -19,7 +19,7 @@ HLA_names = ["A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1"]
 class HATK_IMGT2Seq(object):
 
     # @ArgumentCheck
-    def __init__(self, _imgt, _hg, _out, _HLA, *args, **kwargs):
+    def __init__(self, _out, _imgt_dir, _imgt, _hg, _HLA, *args, **kwargs):
 
         """
 
@@ -29,9 +29,10 @@ class HATK_IMGT2Seq(object):
         ########## < Assigning arguments > ##########
 
         # Main positional arguments
+        self.out = _out
+        self.imgt_dir = _imgt_dir
         self.imgt = _imgt
         self.hg = _hg
-        self.out = _out
         self.HLA = _HLA
 
         # Output Field format (*args)
@@ -44,9 +45,9 @@ class HATK_IMGT2Seq(object):
 
         # Optional arguments (**kwargs)
         self.no_Ins = kwargs["_no_Ins"]
+        self.include_UTR = kwargs["_include_UTR"]
         self.multiprocess = kwargs["_multiprocess"]
         self.save_intermediates = kwargs["_save_intermediates"]
-        self.imgt_dir = kwargs["_imgt_dir"]
 
 
         # Main Outputs
@@ -62,9 +63,7 @@ class HATK_IMGT2Seq(object):
 
 
 
-        ########## < Assigning arguments > ##########
-
-        ### Check output nomenclature
+        # Check output nomenclature
         if oneF:
             print(std_MAIN_PROCESS_NAME + "Selected Output Nomenclature : 1-field")
             Nfield_OUTPUT_FORMAT = 1
@@ -89,11 +88,12 @@ class HATK_IMGT2Seq(object):
 
 
 
-        ### No more using existing result.
+        ########## < Main > ##########
+
         self.__dict_AA__, self.__dict_SNPS__, self.__HAT__, self.__d_MapTable__ = \
-            IMGT2Seq(self.imgt, self.hg, self.out, _imgt_dir=self.imgt_dir, _no_Indel=self.no_Ins,
-                     _MultiP=self.multiprocess, _save_intermediates=self.save_intermediates,
-                     _p_data="IMGT2Seq/data", __Nfield_OUTPUT_FORMAT=Nfield_OUTPUT_FORMAT)
+            IMGT2Seq(self.out, self.imgt_dir, self.imgt, self.hg, self.HLA, _Nfield_OUTPUT_FORMAT=Nfield_OUTPUT_FORMAT,
+                     _p_data="IMGT2Seq/data", _multiprocess=self.multiprocess,
+                     _no_Ins=self.no_Ins, _include_UTR=self.include_UTR, _save_intermediates=self.save_intermediates)
 
 
         self.setSummaryString() # Inplace summary string setting.
@@ -141,6 +141,8 @@ class HATK_IMGT2Seq(object):
 
 
 
+
+
 if __name__ == "__main__":
 
     """
@@ -173,7 +175,8 @@ if __name__ == "__main__":
     parser.add_argument("--imgt-dir", help="\nIn case User just want to specify the directory of IMGT data folder.\n\n",
                         required=True)
 
-    parser.add_argument("--HLA", help="\nHLA genes to include.\n\n", nargs='+', required=True)
+    parser.add_argument("--HLA", help="\nHLA genes to include.\n\n", nargs='+',
+                        default=['A', 'B', 'C', 'DPA1', 'DPB1', 'DQA1', 'DQB1', 'DRB1'])
 
     parser.add_argument("--mp", help="\nSetting off parallel multiprocessing.\n\n", type=int, choices=[2,3,4,5,6,7,8], nargs='?', default=1, const=8)
     parser.add_argument("--no-Ins", help="\nNo Insertion Markers in output.\n\n", action="store_true")
@@ -210,8 +213,7 @@ if __name__ == "__main__":
 
     ##### < Main function Execution. > #####
 
-    myIMGT2Seq = HATK_IMGT2Seq(args.imgt, args.hg, args.out, args.HLA,
+    myIMGT2Seq = HATK_IMGT2Seq(args.out, args.imgt_dir, args.imgt, args.hg, args.HLA,
                                args.oneF, args.twoF, args.threeF, args.fourF, args.Ggroup, args.Pgroup,
-                               _no_Ins=args.no_Ins, _multiprocess=args.mp,
-                               _save_intermediates=args.save_intermediates,
-                               _imgt_dir=args.imgt_dir)
+                               _no_Ins=args.no_Ins, _include_UTR=args.include_UTR, _multiprocess=args.mp,
+                               _save_intermediates=args.save_intermediates)

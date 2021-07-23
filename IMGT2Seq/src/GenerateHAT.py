@@ -68,7 +68,11 @@ def GenerateHAT(_Nomenclature_2009, _Allelelist, _G_group, _P_group, _imgt, _out
     # print(__HAT__.head())
     __HAT__.to_csv(_out+'.hat', sep='\t', header=True, index=False)
 
-    return _out+'.hat'
+    # Available HLA genes.
+    l_HLA_available = __HAT__['HLA'].unique().tolist()
+    # print("l_HLA_available:\n{}\n".format(l_HLA_available))
+
+    return (_out+'.hat', l_HLA_available)
 
 
 

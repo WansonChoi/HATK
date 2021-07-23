@@ -17,7 +17,7 @@ std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % (basename(__file__))
 
 
 
-def ProcessIMGTv2(_out, _hla, _imgt, _BP_start_codon, isREVERSE, _nuc, _gen, _prot, _no_Ins=False, _include_UTR=False,
+def ProcessIMGTv2(_out, _hla, _imgt, _BP_start_codon, isREVERSE, _gen, _nuc, _prot, _no_Ins=False, _include_UTR=False,
                   _save_intermediates=False):
 
     """
@@ -914,5 +914,5 @@ if __name__ == "__main__":
 
     # main function execution
     ProcessIMGTv2(_out=args.out, _hla=args.HLA, _imgt=args.imgt, _BP_start_codon=args.BP_start_codon, isREVERSE=args.isReverse,
-                  _nuc=args.nuc, _gen=args.gen, _prot=args.prot,
+                  _gen=args.gen, _nuc=args.nuc, _prot=args.prot,
                   _no_Ins=args.no_Indel, _include_UTR=args.include_UTR, _save_intermediates=args.save_intermediates)
