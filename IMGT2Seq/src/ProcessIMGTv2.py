@@ -32,8 +32,8 @@ def ProcessIMGTv2(_out, _hla, _imgt, _BP_start_codon, isREVERSE, _gen, _nuc, _pr
 
     # Raw sequence as each position
     df_gen_raw_markers, start_offset_gen = LoadRawSeq2(_gen, _hla, "gen")
-    print("df_gen_raw_markers:\n{}\n".format(df_gen_raw_markers))
-    print("start_offset_gen:{}".format(start_offset_gen))
+    # print("df_gen_raw_markers:\n{}\n".format(df_gen_raw_markers))
+    # print("start_offset_gen:{}".format(start_offset_gen))
 
     # Raw Seqeunces splitted by type (ex. 5_prime, exon1, ...)
     df_gen_raw_seqs_splitted = df_gen_raw_markers \
@@ -77,16 +77,16 @@ def ProcessIMGTv2(_out, _hla, _imgt, _BP_start_codon, isREVERSE, _gen, _nuc, _pr
     ### < (2) AA dictionary > ###
 
     df_prot_raw_markers, _ = LoadRawSeq2(_prot, _hla, "prot")
-    print("df_prot_raw_markers:\n{}\n".format(df_prot_raw_markers))
+    # print("df_prot_raw_markers:\n{}\n".format(df_prot_raw_markers))
 
     df_prot_seqs_splitted = df_prot_raw_markers \
         .apply(lambda x: ''.join(x.astype(str)), axis=1) \
         .str.split('\|', expand=True)  # Redundant but effective.
     df_prot_seqs_splitted.columns = ['AA_seq']
-    print("df_prot_seqs_splitted:\n{}\n".format(df_prot_seqs_splitted))
+    # print("df_prot_seqs_splitted:\n{}\n".format(df_prot_seqs_splitted))
 
     df_prot_seqs_splitted_InsAsZ = ProcessInsertion(df_prot_seqs_splitted, "prot", _hla)
-    print("df_prot_seqs_splitted_InsAsZ:\n{}\n".format(df_prot_seqs_splitted_InsAsZ))
+    # print("df_prot_seqs_splitted_InsAsZ:\n{}\n".format(df_prot_seqs_splitted_InsAsZ))
 
     if _save_intermediates:
         df_prot_raw_markers.to_csv(_out + '.HLA-{}.df_prot_raw_markers.txt'.format(_hla), sep='\t', header=False, index=True)
@@ -124,7 +124,7 @@ def ProcessIMGTv2(_out, _hla, _imgt, _BP_start_codon, isREVERSE, _gen, _nuc, _pr
 
     df_prot_markers = \
         pd.DataFrame([list(aa_seq) for aa_seq in df_prot_seqs_splitted_InsAsZ['AA_seq']],
-                     index = df_prot_seqs_splitted_InsAsZ.index,
+                     index=df_prot_seqs_splitted_InsAsZ.index,
                      columns=pd.MultiIndex.from_frame(df_AA_forMAP))
     print("df_prot_markers:\n{}\n".format(df_prot_markers)) # `df_prot_markers` is the '__MAPTABLE__`.
 
@@ -139,34 +139,39 @@ def ProcessIMGTv2(_out, _hla, _imgt, _BP_start_codon, isREVERSE, _gen, _nuc, _pr
 
 
 
-    ### < (3) forMAP > ###
-
-    # make map file for `df_SNPS_forMAP` and `df_AA_forMAP`.
-    df_SNPS_MAP = MakeMap(_hla, "SNPS", df_SNPS_forMAP)
-    print("df_SNPS_MAP:\n{}\n".format(df_SNPS_MAP))
-
-    df_AA_MAP = MakeMap(_hla, "AA", df_AA_forMAP)
-    print("df_AA_MAP:\n{}\n".format(df_AA_MAP))
-
-
-
-
-
     ### < (4) Filter > ###
 
     # Filtering condition to `df_gen_markers`, `df_prot_markers`, `df_SNPS_MAP`, and `df_SNPS_MAP`
-    # Map file filtering이 아직 적용이 안됨!
     if _no_Ins:
-        df_gen_markers = FilterInsertion(df_gen_markers)
+
+        ## Filtering dictionary
+        # SNPS
+        df_gen_markers, df_SNPS_forMAP = FilterInsertion(df_gen_markers)
         print("df_gen_markers(No Insertion):\n{}\n".format(df_gen_markers))
-        df_prot_markers = FilterInsertion(df_prot_markers)
+        print("df_SNPS_forMAP(No Insertion):\n{}\n".format(df_SNPS_forMAP))
+
+        # AA
+        df_prot_markers, df_AA_forMAP = FilterInsertion(df_prot_markers)
         print("df_prot_markers(No Insertion):\n{}\n".format(df_prot_markers))
+        print("df_AA_forMAP(No Insertion):\n{}\n".format(df_AA_forMAP))
+
+
+        if _save_intermediates:
+            df_gen_markers.to_csv(_out + '.HLA-{}.df_gen_markers.noIns.txt'.format(_hla),
+                                  sep='\t', header=True, index=True)
+            df_SNPS_forMAP.to_csv(_out+'.HLA-{}.df_gen_SNPS_forMAP.noIns.txt'.format(_hla), sep='\t', header=True, index=False)
+
+            df_prot_markers.to_csv(_out+'.HLA-{}.df_prot_markers.noIns.txt'.format(_hla), sep='\t', header=True, index=True)
+            df_AA_forMAP.to_csv(_out+'.HLA-{}.df_prot_AA_forMAP.noIns.txt'.format(_hla), sep='\t', header=True, index=False)
+
+
 
     if not _include_UTR:
-        df_gen_markers = FilterUTR(df_gen_markers)
+
+        ## Filtering dictionary (Only to SNPS)
+        df_gen_markers, df_SNPS_forMAP = FilterUTR(df_gen_markers) # New 'df_SNPS_forMAP' is generated based on the filtered 'df_gen_markers'.
         print("df_gen_markers(No UTRs):\n{}\n".format(df_gen_markers))
-        # df_prot_markers = FilterUTR(df_prot_markers)
-        # print("df_prot_markers(No UTRs):\n{}\n".format(df_prot_markers))
+        print("df_SNPS_forMAP(No UTRs):\n{}\n".format(df_SNPS_forMAP))
 
 
 
@@ -187,6 +192,35 @@ def ProcessIMGTv2(_out, _hla, _imgt, _BP_start_codon, isREVERSE, _gen, _nuc, _pr
 
     df_prot_dictionary = df_prot_markers.apply(lambda x: ''.join(x.astype(str)), axis=1)
     print("df_prot_dictionary:\n{}\n".format(df_prot_dictionary))
+
+
+
+
+
+    ### < (3) forMAP > ###
+
+    # make map file for `df_SNPS_forMAP` and `df_AA_forMAP`.
+    df_SNPS_MAP = MakeMap(_hla, "SNPS", df_SNPS_forMAP)
+    print("df_SNPS_MAP:\n{}\n".format(df_SNPS_MAP))
+
+    df_AA_MAP = MakeMap(_hla, "AA", df_AA_forMAP)
+    print("df_AA_MAP:\n{}\n".format(df_AA_MAP))
+
+
+
+
+
+    ### < (7) dimension check > ###
+    print("<SNPS (HLA-{})>".format(_hla))
+    print("reference sequence length : ", len(df_gen_dictionary.iat[0]))
+    print("# of markers : ", df_SNPS_MAP.shape[0])
+    if len(df_gen_dictionary.iat[0]) != df_SNPS_MAP.shape[0]: print(std_WARNING_MAIN_PROCESS_NAME + "Not same.")
+
+    print("<AA (HLA-{})>".format(_hla))
+    print("reference sequence length : ", len(df_prot_dictionary.iat[0]))
+    print("# of markers : ", df_AA_MAP.shape[0])
+    if len(df_prot_dictionary.iat[0]) != df_AA_MAP.shape[0]: print(std_WARNING_MAIN_PROCESS_NAME + "Not same.")
+
 
 
 
@@ -804,28 +838,71 @@ def MakeMap(_hla, _type, _df_forMAP):
 
 
 def FilterInsertion(_df):
+
     df_columns = _df.columns.to_frame()
     #     print(df_columns)
 
+    ## Filtering the 'df_gen_markers' (or 'df_prot_markers').
     f_INS = df_columns.iloc[:, 0] == 'i'
 
-    df_NoINS = _df.loc[:, ~f_INS]
-    #     print("df_NoINS:\n{}\n".format(df_NoINS))
-
-    return df_NoINS
+    df_markers_NoINS = _df.loc[:, ~f_INS]
+    #     print("df_markers_NoINS:\n{}\n".format(df_markers_NoINS))
 
 
+    ## Filtering the 'df_gen_forMAP' (or 'df_prot_forMAP'). (Generating a new one based on the above filtered 'df_gen_markers' (or 'df_prot_markers')
+    df_forMAP_NoINS = df_markers_NoINS.columns.to_frame(index=False)
 
-def FilterUTR(_df):
-    df_columns = _df.columns.to_frame()
-    #     print(df_columns)
 
-    f_UTR = df_columns.iloc[:, 2].str.match('5_prime') | df_columns.iloc[:, 2].str.match('3_prime')
+    return df_markers_NoINS, df_forMAP_NoINS
 
-    df_NoUTR = _df.loc[:, ~f_UTR]
-    #     print("df_NoUTR:\n{}\n".format(df_NoUTR))
 
-    return df_NoUTR
+
+def FilterUTR(_df_gen_markers):
+
+    df_columns = _df_gen_markers.columns.to_frame()
+    # print("df_columns:\n{}\n".format(df_columns))
+
+    """
+    (ex.)
+    
+    df_columns:
+                                    SNP_rel_pos SNP_gen_pos     Type
+    SNP_rel_pos SNP_gen_pos Type                                    
+    -300        30457009    5_prime        -300    30457009  5_prime
+    -299        30457010    5_prime        -299    30457010  5_prime
+    -298        30457011    5_prime        -298    30457011  5_prime
+    ...                                     ...         ...      ...
+     3520       30460828    3_prime        3520    30460828  3_prime
+     3521       30460829    3_prime        3521    30460829  3_prime
+     3522       30460830    3_prime        3522    30460830  3_prime
+    
+    
+    (cf. Insertion)
+    -13	    30457296	5_prime
+    i	    i	        5_prime # Insertion is marked with type.
+    -12	    30457297	5_prime
+    
+    
+    """
+
+    ## Filtering the 'df_gen_markers' (No '5_prime' and '3_prime')
+
+    f_UTR = df_columns['Type'].str.match(r'[53]_prime')
+
+    df_gen_markers_NoUTR = _df_gen_markers.loc[:, ~f_UTR]
+    # print("df_gen_markers_NoUTR:\n{}\n".format(df_gen_markers_NoUTR))
+
+
+    ## Filtering map file (Generating a new 'df_gen_forMAP' based on the above filtered 'df_gen_markers'.
+    df_SNPS_forMAP_NoUTR = df_gen_markers_NoUTR.columns.to_frame(index=False)
+    # print("df_SNPS_forMAP_NoUTR:\n{}\n".format(df_SNPS_forMAP_NoUTR))
+
+    """
+    New 'forMAP' file is generated from the filtered 'df_gen_markers_NoUTR' DataFrame.
+    i.e. Marker numbers will be consistent between 'df_gen_markers_NoUTR' and 'forMAP'.
+    """
+
+    return df_gen_markers_NoUTR, df_SNPS_forMAP_NoUTR
 
 
 
@@ -884,7 +961,7 @@ if __name__ == "__main__":
     parser.add_argument("--prot", help="\nInput *_prot.txt file.\n\n", required=True)
 
     # Optional arguments
-    parser.add_argument("--no-Indel", help="\nNo Insertion Markers.\n\n", action="store_true")
+    parser.add_argument("--no-Ins", help="\nNo Insertion Markers.\n\n", action="store_true")
     parser.add_argument("--include-UTR", help="\ninclude UTR parts(5-prime, 3-prime) in Markers.\n\n", action="store_true")
     parser.add_argument("--save-intermediates", help="\nDon't remove intermediate files. (DEBUG)\n\n", action='store_true')
 
@@ -894,16 +971,28 @@ if __name__ == "__main__":
 
     ##### < for Test > #####
 
-    # HLA-E
-    args = parser.parse_args(["--out", "/Users/wansonchoi/Git_Projects/HATK/tests/20210706_IMGT2Seq/Dict.HLA-E",
+    # HLA-E / imgt3440
+    args = parser.parse_args(["--out", "/Users/wansonchoi/Git_Projects/HATK/tests/20210728_IMGT2Seq/Dict.HLA-E",
                               "--HLA", "E",
-                              "--imgt", "3440",
+                              "--imgt", "3320",
                               "--BP-start-codon", "30457309",
                               "--nuc", "/Users/wansonchoi/Git_Projects/HATK/example/IMGTHLA3320/alignments/E_nuc.txt",
                               "--gen", "/Users/wansonchoi/Git_Projects/HATK/example/IMGTHLA3320/alignments/E_gen.txt",
                               "--prot", "/Users/wansonchoi/Git_Projects/HATK/example/IMGTHLA3320/alignments/E_prot.txt",
-                              "--save-intermediates"
+                              "--save-intermediates",
+                              "--no-Ins"
                               ])
+
+    # HLA-E / imgt3440
+    # args = parser.parse_args(["--out", "/Users/wansonchoi/Git_Projects/HATK/tests/20210706_IMGT2Seq/Dict.HLA-E",
+    #                           "--HLA", "E",
+    #                           "--imgt", "3440",
+    #                           "--BP-start-codon", "30457309",
+    #                           "--nuc", "/Users/wansonchoi/Git_Projects/HATK/example/IMGTHLA3320/alignments/E_nuc.txt",
+    #                           "--gen", "/Users/wansonchoi/Git_Projects/HATK/example/IMGTHLA3320/alignments/E_gen.txt",
+    #                           "--prot", "/Users/wansonchoi/Git_Projects/HATK/example/IMGTHLA3320/alignments/E_prot.txt",
+    #                           "--save-intermediates"
+    #                           ])
 
 
 
@@ -915,4 +1004,4 @@ if __name__ == "__main__":
     # main function execution
     ProcessIMGTv2(_out=args.out, _hla=args.HLA, _imgt=args.imgt, _BP_start_codon=args.BP_start_codon, isREVERSE=args.isReverse,
                   _gen=args.gen, _nuc=args.nuc, _prot=args.prot,
-                  _no_Ins=args.no_Indel, _include_UTR=args.include_UTR, _save_intermediates=args.save_intermediates)
+                  _no_Ins=args.no_Ins, _include_UTR=args.include_UTR, _save_intermediates=args.save_intermediates)
