@@ -125,7 +125,7 @@ def IMGT2Seq(_out, _imgt_dir, _imgt, _hg, _HLA, _Nfield_OUTPUT_FORMAT=4,
     # print("df_HLA_avail_table:\n{}\n".format(df_HLA_avail_table))
 
     df_HLA_avail_table['HLA_both_avail'] = df_HLA_avail_table.apply(lambda x : x.all(), axis=1)
-    # print("df_HLA_avail_table2:\n{}\n".format(df_HLA_avail_table))
+    print("df_HLA_avail_table2:\n{}\n".format(df_HLA_avail_table))
 
 
     # (2) All requested HLA genes in the both avail?
@@ -148,45 +148,13 @@ def IMGT2Seq(_out, _imgt_dir, _imgt, _hg, _HLA, _Nfield_OUTPUT_FORMAT=4,
     HLA_names = sr_HLA_requested[f_all_is_well].tolist()
     df_BP_start_codon = df_BP_start_codon[df_BP_start_codon['HLA_BP_available'].isin(HLA_names)] \
                             .set_index('HLA_BP_available')
-    # print("df_BP_start_codon(Subsetted):\n{}\n".format(df_BP_start_codon))
+    print("df_BP_start_codon(Subsetted):\n{}\n".format(df_BP_start_codon))
 
 
 
 
 
     ########## < 3. Making HLA Dictionary. > ##########
-
-    ## Required input file check. (*.gen, *.nuc, *.prot files)
-    for hla in HLA_names:
-
-        f_gen = join(_imgt_dir, "alignments/{}_gen.txt".format(hla))
-        f_nuc = join(_imgt_dir, "alignments/{}_nuc.txt".format(hla))
-        f_prot = join(_imgt_dir, "alignments/{}_prot.txt".format(hla))
-
-        if not exists(f_gen):
-            raise IMGT2SeqError(
-                std_ERROR_MAIN_PROCESS_NAME +
-                "'{}' file can't be found in '{}' directory. Please check it again." \
-                .format(f_gen, join(_imgt_dir, "alignments"))
-            )
-
-        if not exists(f_nuc):
-            raise IMGT2SeqError(
-                std_ERROR_MAIN_PROCESS_NAME +
-                "'{}' file can't be found in '{}' directory. Please check it again." \
-                .format(f_nuc, join(_imgt_dir, "alignments"))
-            )
-
-        if not exists(f_prot):
-            raise IMGT2SeqError(
-                std_ERROR_MAIN_PROCESS_NAME +
-                "'{}' file can't be found in '{}' directory. Please check it again." \
-                .format(f_prot, join(_imgt_dir, "alignments"))
-            )
-
-
-
-
 
     l_df_Seqs_AA = []
     l_df_MAP_AA = []
@@ -203,9 +171,11 @@ def IMGT2Seq(_out, _imgt_dir, _imgt, _hg, _HLA, _Nfield_OUTPUT_FORMAT=4,
 
             print("Processing HLA-{} (Serial).".format(hla))
 
-            t_gen = join(_imgt_dir, join(_imgt_dir, "alignments/{}_gen.txt".format(hla)))
-            t_nuc = join(_imgt_dir, join(_imgt_dir, "alignments/{}_nuc.txt".format(hla)))
-            t_prot = join(_imgt_dir, join(_imgt_dir, "alignments/{}_prot.txt".format(hla)))
+            # t_gen = join(_imgt_dir, "alignments/{}_gen.txt".format(hla))
+            # t_nuc = join(_imgt_dir, "alignments/{}_nuc.txt".format(hla))
+            # t_prot = join(_imgt_dir, "alignments/{}_prot.txt".format(hla))
+
+            t_gen, t_nuc, t_prot = FileCheck(hla, _imgt_dir)
 
             t_BP_start_codon = df_BP_start_codon.loc[hla, 'BP_start_codon']
             t_isREVERSE = (df_BP_start_codon.loc[hla, 'strand'] == '-')
@@ -322,6 +292,55 @@ def IMGT2Seq(_out, _imgt_dir, _imgt, _hg, _HLA, _Nfield_OUTPUT_FORMAT=4,
     return [_OUTPUT_AA_RETURN, _OUTPUT_SNPS_RETURN, __HAT__, d_MapTables]
 
 
+
+
+
+def FileCheck(_hla, _imgt_dir):
+
+
+    ## Required input file check. (*.gen, *.nuc, *.prot files)
+
+    f_gen = join(_imgt_dir, "alignments/{}_gen.txt".format(_hla))
+    f_nuc = join(_imgt_dir, "alignments/{}_nuc.txt".format(_hla))
+    f_prot = join(_imgt_dir, "alignments/{}_prot.txt".format(_hla))
+
+
+    if _hla == 'DRB1':
+        """
+        DRB1 must use 'DRB_nuc.txt' and 'DRB_prot.txt' instead of 'DRB1_nuc.txt' and 'DRB1_prot.txt'.
+        """
+
+        f_nuc = join(_imgt_dir, "alignments/DRB_nuc.txt") if not exists(f_nuc) else f_nuc
+        # print("f_nuc: ", f_nuc)
+        f_prot = join(_imgt_dir, "alignments/DRB_prot.txt") if not exists(f_prot) else f_prot
+        # print("f_prot: ", f_prot)
+
+
+
+    if not exists(f_gen):
+        raise IMGT2SeqError(
+            std_ERROR_MAIN_PROCESS_NAME +
+            "'{}' file can't be found in '{}' directory. Please check it again." \
+            .format(f_gen, join(_imgt_dir, "alignments"))
+        )
+
+    if not exists(f_nuc):
+        raise IMGT2SeqError(
+            std_ERROR_MAIN_PROCESS_NAME +
+            "'{}' file can't be found in '{}' directory. Please check it again." \
+            .format(f_nuc, join(_imgt_dir, "alignments"))
+        )
+
+    if not exists(f_prot):
+        raise IMGT2SeqError(
+            std_ERROR_MAIN_PROCESS_NAME +
+            "'{}' file can't be found in '{}' directory. Please check it again." \
+            .format(f_prot, join(_imgt_dir, "alignments"))
+        )
+
+
+
+    return f_gen, f_nuc, f_prot
 
 
 

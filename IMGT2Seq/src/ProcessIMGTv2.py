@@ -115,7 +115,7 @@ def ProcessIMGTv2(_out, _hla, _imgt, _BP_start_codon, isREVERSE, _gen, _nuc, _pr
 
 
 
-    df_AA_PositionTable = get_PositionTable_AA(df_prot_seqs_splitted_InsAsZ, int(AA_rel_pos_start), df_SNPS_forMAP)
+    df_AA_PositionTable = get_PositionTable_AA(df_prot_seqs_splitted_InsAsZ, int(AA_rel_pos_start), df_SNPS_forMAP, isREVERSE)
     print("df_AA_PositionTable:\n{}\n".format(df_AA_PositionTable))
 
     df_AA_forMAP = df_AA_PositionTable[['AA_rel_pos', 'SNP_gen_pos', 'Type']]
@@ -173,6 +173,11 @@ def ProcessIMGTv2(_out, _hla, _imgt, _BP_start_codon, isREVERSE, _gen, _nuc, _pr
         print("df_gen_markers(No UTRs):\n{}\n".format(df_gen_markers))
         print("df_SNPS_forMAP(No UTRs):\n{}\n".format(df_SNPS_forMAP))
 
+        if _save_intermediates:
+            df_gen_markers.to_csv(_out + '.HLA-{}.df_gen_markers.includeUTR.txt'.format(_hla),
+                                  sep='\t', header=True, index=True)
+            df_SNPS_forMAP.to_csv(_out+'.HLA-{}.df_gen_SNPS_forMAP.includeUTR.txt'.format(_hla), sep='\t', header=True, index=False)
+
 
 
 
@@ -194,6 +199,11 @@ def ProcessIMGTv2(_out, _hla, _imgt, _BP_start_codon, isREVERSE, _gen, _nuc, _pr
     print("df_prot_dictionary:\n{}\n".format(df_prot_dictionary))
 
 
+    if _save_intermediates:
+        df_gen_dictionary.to_csv(_out+'.HLA-{}.df_gen_dictionary.txt'.format(_hla), sep='\t', header=False, index=True)
+        df_prot_dictionary.to_csv(_out+'.HLA-{}.df_prot_dictionary.txt'.format(_hla), sep='\t', header=False, index=True)
+
+
 
 
 
@@ -205,6 +215,11 @@ def ProcessIMGTv2(_out, _hla, _imgt, _BP_start_codon, isREVERSE, _gen, _nuc, _pr
 
     df_AA_MAP = MakeMap(_hla, "AA", df_AA_forMAP)
     print("df_AA_MAP:\n{}\n".format(df_AA_MAP))
+
+
+    if _save_intermediates:
+        df_SNPS_MAP.to_csv(_out+'.HLA-{}.df_gen_SNPS_MAP.final.txt'.format(_hla), sep='\t', header=False, index=False)
+        df_AA_MAP.to_csv(_out+'.HLA-{}.df_prot_AA_MAP.final.txt'.format(_hla), sep='\t', header=False, index=False)
 
 
 
@@ -226,7 +241,7 @@ def ProcessIMGTv2(_out, _hla, _imgt, _BP_start_codon, isREVERSE, _gen, _nuc, _pr
 
 
     # [df_Seqs_gen, df_Seqs_IndelProcessed_prot, final_SNPS_forMAP, final_AA_forMAP, __MAPTABLE__] ... Previously.
-    return (df_gen_dictionary, df_prot_dictionary, df_SNPS_MAP, df_AA_MAP, df_prot_markers)
+    return df_gen_dictionary, df_prot_dictionary, df_SNPS_MAP, df_AA_MAP, df_prot_markers
 
 
 
@@ -711,7 +726,7 @@ def get_PositionTable_SNPS(_df, _BP_start_codon, _rel_start=-1, isREVERSE=False)
 
 
 
-def get_PositionTable_AA(_df, _AA_rel_pos_start, _df_SNPS_forMAP):
+def get_PositionTable_AA(_df, _AA_rel_pos_start, _df_SNPS_forMAP, _isREVERSE):
 
     """
 
@@ -758,11 +773,12 @@ def get_PositionTable_AA(_df, _AA_rel_pos_start, _df_SNPS_forMAP):
     ### Genomic position
 
     # Mid point of BPs of exon parts.
-    # df_SNPS_forMAP_exons_codon_mid = pd.concat(
-    #     [df_SNPS_forMAP_exons.iloc[[i], 1:] for i in range(1, df_SNPS_forMAP_exons.shape[0], 3)])
     df_SNPS_forMAP_exons_codon_mid = \
         df_SNPS_forMAP_exons.iloc[list(range(1, df_SNPS_forMAP_exons.shape[0], 3)), :]
     print("df_SNPS_forMAP_exons_codon_mid:\n{}\n".format(df_SNPS_forMAP_exons_codon_mid))
+
+    # df_SNPS_forMAP_exons_codon_mid.to_csv('/home/wansonchoi/sf_VM_Shared/Projects/HATK/tests/20210727_IMGT2Seq_debug/Dict.HLA-B.df_gen_exon_codon_mid.txt',
+    #                                       sep='\t', header=True, index=False)
 
 
 
@@ -770,19 +786,59 @@ def get_PositionTable_AA(_df, _AA_rel_pos_start, _df_SNPS_forMAP):
     l_temp = []
     index_codon_mid = 0  # index for `df_SNPS_forMAP_exons_codon_mid`.
 
-    for i in range(df_AA_rel_pos.shape[0]):
+    # for below Exceptional cases.
+    SNP_gen_pos_last = df_SNPS_forMAP_exons_codon_mid.iat[-1, 1] + (-3 if _isREVERSE else +3)
+    SNP_Type_last = df_SNPS_forMAP_exons_codon_mid.iat[-1, 2] # Supposedly '3_prime'
+
+    for i in range(df_AA_rel_pos.shape[0]): # i : index for `df_AA_rel_pos`'s row. Insertion included.
 
         base = df_AA_rel_pos.iat[i, 1]
+        print("{} : {}".format(i, base))
 
-        if base == 'z' or base == 'Z':
-            l_temp.append(['i', 'i', 'i'])
+        if index_codon_mid < df_SNPS_forMAP_exons_codon_mid.shape[0]:
+            ## Most cases. (ex. HLA-A)
+
+            if base == 'z' or base == 'Z':
+                Type = df_SNPS_forMAP_exons_codon_mid.iat[index_codon_mid-1, 2]
+                l_temp.append(['i', 'i', Type])
+
+            else:
+                SNP_rel_pos = df_SNPS_forMAP_exons_codon_mid.iat[index_codon_mid, 0]
+                SNP_gen_pos = df_SNPS_forMAP_exons_codon_mid.iat[index_codon_mid, 1]
+                Type = df_SNPS_forMAP_exons_codon_mid.iat[index_codon_mid, 2]
+
+                l_temp.append([SNP_rel_pos, SNP_gen_pos, Type])
+                index_codon_mid += 1
+
+
         else:
-            SNP_rel_pos = df_SNPS_forMAP_exons_codon_mid.iat[index_codon_mid, 0]
-            SNP_gen_pos = df_SNPS_forMAP_exons_codon_mid.iat[index_codon_mid, 1]
-            Type = df_SNPS_forMAP_exons_codon_mid.iat[index_codon_mid, 2]
+            ## Exceptional cases.
+            """
+            (ex1. HLA-B, imgt v3.44.0)
+            - B*13:123Q
+            - Others ends with '~GSDVSLTA' <=> '~GSDVSLTA' + 'LKGEI LGVX'
+            
+            
+            (ex2. HLA-C imgt v.3.32.0)
+            - C*04:09N, C*04:61N
+            - '~ESLIACKA' vs. '~ESLIACKA' + 'ETAAC VGLRC RISSH LSFVT SRASG ISFCK GIX'
+        
+            """
 
-            l_temp.append([SNP_rel_pos, SNP_gen_pos, Type])
-            index_codon_mid += 1
+            if base == 'z' or base == 'Z':
+                l_temp.append(['i', 'i', SNP_Type_last])
+
+            else:
+                SNP_rel_pos = 'NA'
+                SNP_gen_pos = SNP_gen_pos_last
+                Type = SNP_Type_last
+
+                l_temp.append([SNP_rel_pos, SNP_gen_pos, Type])
+
+                # This block will use 'SNP_gen_pos_last' for BP allocation.
+                SNP_gen_pos_last += (-3 if _isREVERSE else +3)
+
+
 
     df_SNPS_forMAP_exons_codon_mid_INS = pd.DataFrame(l_temp,
                                                       columns=['SNP_rel_pos', 'SNP_gen_pos', 'Type'],
@@ -811,7 +867,7 @@ def MakeMap(_hla, _type, _df_forMAP):
 
             # Rel_pos = 'x'.join([_df_forMAP.iat[i - 1, 0], _df_forMAP.iat[i + 1, 0]])
             Rel_pos = '{}x{}'.format(_df_forMAP.iat[i - 1, 0], _df_forMAP.iat[i + 1, 0])
-            Gen_pos = int(round((int(_df_forMAP.iat[i - 1, 1]) + int(_df_forMAP.iat[i - 1, 1])) / 2))
+            Gen_pos = int(round((int(_df_forMAP.iat[i - 1, 1]) + int(_df_forMAP.iat[i + 1, 1])) / 2))
 
             t_Label = '_'.join(['INS', _type, _hla, str(Rel_pos), str(Gen_pos), Func_Type])
 
@@ -972,27 +1028,27 @@ if __name__ == "__main__":
     ##### < for Test > #####
 
     # HLA-E / imgt3440
-    args = parser.parse_args(["--out", "/Users/wansonchoi/Git_Projects/HATK/tests/20210728_IMGT2Seq/Dict.HLA-E",
-                              "--HLA", "E",
-                              "--imgt", "3320",
-                              "--BP-start-codon", "30457309",
-                              "--nuc", "/Users/wansonchoi/Git_Projects/HATK/example/IMGTHLA3320/alignments/E_nuc.txt",
-                              "--gen", "/Users/wansonchoi/Git_Projects/HATK/example/IMGTHLA3320/alignments/E_gen.txt",
-                              "--prot", "/Users/wansonchoi/Git_Projects/HATK/example/IMGTHLA3320/alignments/E_prot.txt",
-                              "--save-intermediates",
-                              "--no-Ins"
-                              ])
-
-    # HLA-E / imgt3440
-    # args = parser.parse_args(["--out", "/Users/wansonchoi/Git_Projects/HATK/tests/20210706_IMGT2Seq/Dict.HLA-E",
+    # args = parser.parse_args(["--out", "/Users/wansonchoi/Git_Projects/HATK/tests/20210728_IMGT2Seq/Dict.HLA-E",
     #                           "--HLA", "E",
-    #                           "--imgt", "3440",
+    #                           "--imgt", "3320",
     #                           "--BP-start-codon", "30457309",
     #                           "--nuc", "/Users/wansonchoi/Git_Projects/HATK/example/IMGTHLA3320/alignments/E_nuc.txt",
     #                           "--gen", "/Users/wansonchoi/Git_Projects/HATK/example/IMGTHLA3320/alignments/E_gen.txt",
     #                           "--prot", "/Users/wansonchoi/Git_Projects/HATK/example/IMGTHLA3320/alignments/E_prot.txt",
-    #                           "--save-intermediates"
+    #                           "--save-intermediates",
+    #                           "--no-Ins"
     #                           ])
+
+    # HLA-E / imgt3440
+    args = parser.parse_args(["--out", "/home/wansonchoi/sf_VM_Shared/Projects/HATK/tests/20210727_IMGT2Seq_debug/Dict.HLA-E",
+                              "--HLA", "E",
+                              "--imgt", "3440",
+                              "--BP-start-codon", "30457309",
+                              "--nuc", "/home/wansonchoi/sf_VM_Shared/Projects/IMGTHLA3440/alignments/E_nuc.txt",
+                              "--gen", "/home/wansonchoi/sf_VM_Shared/Projects/IMGTHLA3440/alignments/E_gen.txt",
+                              "--prot", "/home/wansonchoi/sf_VM_Shared/Projects/IMGTHLA3440/alignments/E_prot.txt",
+                              "--save-intermediates"
+                              ])
 
 
 

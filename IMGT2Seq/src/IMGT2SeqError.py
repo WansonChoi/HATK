@@ -12,7 +12,7 @@ std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % (basename(__file__))
 class IMGT2SeqError(Exception):
 
     def __init__(self, _msg):
-        print(std_ERROR_MAIN_PROCESS_NAME + _msg)
+        print(_msg)
 
 
 
