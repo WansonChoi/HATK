@@ -10,10 +10,12 @@ class HATK_InputPreparation_Error(HATK_Error):
     """
     Error related to input preparation
     """
-    def __init__(self, _msg, _func=None):
+    def __init__(self, _msg):
+        pass
 
-        if _func:
-            _func(_msg)
-        else:
-            print(_msg)
-    # pass
+class HATK_PLINK_Execution_Error(HATK_Error):
+    """
+    Error related to PLINK bash execution.
+    """
+    def __init__(self, _msg):
+        pass
