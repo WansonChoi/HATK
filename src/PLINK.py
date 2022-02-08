@@ -12,57 +12,6 @@ std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % basename(__file__)
 
 
 
-class PLINK(object):
-    """
-    Wrapper class to manage input PLINK files for association test study.
-
-    Subclasses to be composed. (has-a relationship)
-    - Genotype
-    - Phenetype
-    - Covariate
-    - AssociationTest
-
-    """
-    def __init__(self, _file_prefix_forAll=-1, _file_GT=-1, _file_PT=-1, _file_CV=-1):
-        ### Main Variables ###
-        self.GT = -1
-        self.PT = -1
-        self.CV = -1
-
-        ### Main Actions ###
-        self.setPlinkFiles(_file_prefix_forAll, _file_GT, _file_PT, _file_CV)
-        # self.checkPlinkFiles()
-
-
-    def setPlinkFiles(self, _file_prefix_forAll, _file_GT, _file_PT, _file_CV):
-        if _file_prefix_forAll != -1:
-            _file_PT = _file_prefix_forAll+'.phe' if exists(_file_prefix_forAll+'.phe') else \
-                        _file_prefix_forAll +'.pheno' if exists(_file_prefix_forAll+'.pheno') else -1
-            _file_CV = _file_prefix_forAll+'.cov' if exists(_file_prefix_forAll+'.cov') else \
-                        _file_prefix_forAll + '.covar' if exists(_file_prefix_forAll+'.covar') else -1
-
-        # set instances
-        self.GT = Genotype(_file_GT) if _file_GT != -1 else -1
-        self.PT = Phenotype(_file_PT) if _file_PT != -1 else -1
-        self.CV = Covariate(_file_CV) if _file_CV != -1 else -1
-
-
-    def checkPlinkFiles(self):
-        # ex) Sample number in the files are consistent or not.
-        pass
-
-
-    def __repr__(self):
-        str_GT = "=====< GENOTYPE >=====\n{}\n".format(self.GT)
-        str_PT = "=====< PHENOTYPE >=====\n{}\n".format(self.PT)
-        str_CV = "=====< COVARIATE >=====\n{}\n".format(self.CV)
-        str_endline = "=======================\n"
-
-        str_summary = ''.join([str_GT, str_PT, str_CV, str_endline]).rstrip('\n')
-        return str_summary
-
-
-
 class Genotype(object):
     """
     A wrapper class to manage PLINK genotype files(*.{bed,bim,fam}).
@@ -356,11 +305,5 @@ if __name__ == '__main__':
     ### AssociationTest class
     # assoc = AssociationTest('/home/wansonchoi/sf_VirtualBox_Share/UC-CD-HLA/analysis/01-association/All_CD.assoc.logistic')
     # print(assoc)
-
-    ### PLINK class
-    # myplink = PLINK(_file_GT='/media/sf_VirtualBox_Share/UC-CD-HLA/data/Merged/merged',
-    #                 _file_PT='/media/sf_VirtualBox_Share/UC-CD-HLA/data/Merged/merged.phe',
-    #                 _file_CV='/media/sf_VirtualBox_Share/UC-CD-HLA/data/Merged/merged.covar')
-    # print(myplink)
 
     pass
