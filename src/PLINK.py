@@ -259,31 +259,31 @@ class Covariate(object):
 
 
 
-class AssociationTest(object):
-    """
-    A wrapper class to manage PLINK association test result.
-    """
-    def __init__(self, _file):
-        ### Main Variables ###
-        self.assoc = -1
-
-        ### Main Actions ###
-        self.setAssoc(_file)
-
-
-    def setAssoc(self, _file):
-        if exists(_file):
-            self.assoc = _file
-        else: raise HATK_Error.HATK_InputPreparation_Error(
-            std_ERROR_MAIN_PROCESS_NAME +
-            "The given association test result can't be found('{}').".format(_file))
-
-
-    def __repr__(self):
-        str_assoc = "Association Test Result: '{}'\n".format(self.assoc)
-
-        str_summary = ''.join([str_assoc])
-        return str_summary
+# class AssociationTest(object):
+#     """
+#     A wrapper class to manage PLINK association test result.
+#     """
+#     def __init__(self, _file):
+#         ### Main Variables ###
+#         self.assoc = -1
+#
+#         ### Main Actions ###
+#         self.setAssoc(_file)
+#
+#
+#     def setAssoc(self, _file):
+#         if exists(_file):
+#             self.assoc = _file
+#         else: raise HATK_Error.HATK_InputPreparation_Error(
+#             std_ERROR_MAIN_PROCESS_NAME +
+#             "The given association test result can't be found('{}').".format(_file))
+#
+#
+#     def __repr__(self):
+#         str_assoc = "Association Test Result: '{}'\n".format(self.assoc)
+#
+#         str_summary = ''.join([str_assoc])
+#         return str_summary
 
 
 # ==================== ==================== ==================== #

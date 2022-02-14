@@ -4,6 +4,7 @@ import os, sys, re
 # import logging
 import argparse, textwrap
 
+from src.ArgRouter import ArgRouter
 
 ########## < Core Varialbes > ##########
 
@@ -239,5 +240,5 @@ if __name__ == "__main__":
     print(args)
 
 
-    from src.HLA_Study import HLA_Study
-    myStudy = HLA_Study(args)
+    # myStudy = HLA_Study(args)
+    ArgRouter(args)
