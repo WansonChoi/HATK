@@ -19,3 +19,10 @@ class HATK_PLINK_Execution_Error(HATK_Error):
     """
     def __init__(self, _msg):
         pass
+
+
+def RaiseError(_Error, _msg):
+    """
+    To raise Error with Lambda expression.
+    """
+    raise _Error(_msg)
