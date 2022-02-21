@@ -39,6 +39,13 @@ def IMGT2Seq(_imgt, _hg, _out_dir, _imgt_dir, _no_Indel=False, _MultiP=False, _s
 
 
     ### Main Actions ###
+    if len(_HLA_target) == 0:
+        raise HATK_InputPreparation_Error(
+            std_ERROR_MAIN_PROCESS_NAME +
+            "No target HLA to generate a sequence dictionary.\n"
+            "Please check the '--HLA' argument again."
+        )
+
     checkRequiredFiles(_imgt_dir, dict_prot_files, dict_nuc_files, dict_gen_files, p_allelelist_2009,
                        p_allelelist, p_wmda_Ggroup, p_wmda_Pgroup) # Dependency check
 
@@ -69,16 +76,24 @@ def IMGT2Seq(_imgt, _hg, _out_dir, _imgt_dir, _no_Indel=False, _MultiP=False, _s
             pool.close()
             pool.join()
 
+
             for hla in _HLA_target:
-                dict_temp[hla] = dict_Pool[hla].get()
+                try:
+                    dict_temp[hla] = dict_Pool[hla].get()
+                except TypeError:
+                    print(std_WARNING_MAIN_PROCESS_NAME +
+                          "Generating sequence information dictionary for HLA-{} failed.".format(hla))
+                    dict_temp[hla] = None
+                else:
+                    pass
 
         else: # Sequential
 
             for hla in _HLA_target:
                 dict_temp[hla] = \
-                    ProcessIMGT(_out_dir, hla, _hg, _imgt,
-                                dict_nuc_files[hla], dict_gen_files[hla], dict_prot_files[hla],
-                                _p_data, _no_Indel=_no_Indel, _save_intermediates=_save_intermediates)
+                    ProcessIMGT(_out_dir, hla, _hg, _imgt, dict_nuc_files[hla], dict_gen_files[hla],
+                                dict_prot_files[hla], _p_data, _no_Indel=_no_Indel,
+                                _save_intermediates=_save_intermediates)
         # done.
 
 
@@ -89,6 +104,12 @@ def IMGT2Seq(_imgt, _hg, _out_dir, _imgt_dir, _no_Indel=False, _MultiP=False, _s
         l_df_forMAP_SNPS = []
 
         for i in range(0, len(_HLA_target)):
+
+            if not dict_temp[_HLA_target[i]]:
+                print(std_MAIN_PROCESS_NAME +
+                      "Generating sequence information dictionary for HLA-{} failed.".format(_HLA_target[i]))
+                continue
+
 
             t_df_Seqs_SNPS, t_df_Seqs_AA, t_df_forMAP_SNPS, t_df_forMAP_AA, t_MAPTABLE = dict_temp[_HLA_target[i]]
 
@@ -128,7 +149,8 @@ def IMGT2Seq(_imgt, _hg, _out_dir, _imgt_dir, _no_Indel=False, _MultiP=False, _s
 
         if 0 < __Nfield_OUTPUT_FORMAT < 4:
 
-            NfieldDictionary(_out_prefix_AA + ".txt", _out_prefix_SNPS+".txt", d_MapTables, __Nfield_OUTPUT_FORMAT)
+            NfieldDictionary(_out_prefix_AA + ".txt", _out_prefix_SNPS+".txt", d_MapTables, __Nfield_OUTPUT_FORMAT,
+                             _HLA_target=_HLA_target)
 
 
 
@@ -136,7 +158,8 @@ def IMGT2Seq(_imgt, _hg, _out_dir, _imgt_dir, _no_Indel=False, _MultiP=False, _s
 
         ########## < 2. Making *.hat file. > ##########
 
-        _out_prefix_HAT = GenerateHAT(p_allelelist_2009, p_allelelist, p_wmda_Ggroup, p_wmda_Pgroup, _imgt, _out_prefix_HAT)
+        _out_prefix_HAT = \
+            GenerateHAT(p_allelelist_2009, p_allelelist, p_wmda_Ggroup, p_wmda_Pgroup, _imgt, _out_prefix_HAT)
 
 
 
@@ -280,27 +303,27 @@ def MakeMap(_hla, _type, _df_forMAP, _no_prime=True):
 def checkRequiredFiles(_imgt_dir, _dict_prot, _dict_nuc, _dict_gen,
                        _p_allelelist_2009, _p_allelelist, _p_wmda_Ggroup, _p_wmda_Pgroup):
 
-    # prot
-    for hla, file in _dict_prot.items():
-        if not Exists(file):
-            raise HATK_InputPreparation_Error(
-                std_ERROR_MAIN_PROCESS_NAME +
-                "The prot file for HLA-{} gene can't be found in '{}'.".format(hla, _imgt_dir+'/alignments')
-            )
-    # nuc
-    for hla, file in _dict_nuc.items():
-        if not Exists(file):
-            raise HATK_InputPreparation_Error(
-                std_ERROR_MAIN_PROCESS_NAME +
-                "The nuc file for HLA-{} gene can't be found in '{}'.".format(hla, _imgt_dir+'/alignments')
-            )
-    # gen
-    for hla, file in _dict_gen.items():
-        if not Exists(file):
-            raise HATK_InputPreparation_Error(
-                std_ERROR_MAIN_PROCESS_NAME +
-                "The gen file for HLA-{} gene can't be found in '{}'.".format(hla, _imgt_dir+'/alignments')
-            )
+    # # prot
+    # for hla, file in _dict_prot.items():
+    #     if not Exists(file):
+    #         raise HATK_InputPreparation_Error(
+    #             std_ERROR_MAIN_PROCESS_NAME +
+    #             "The prot file for HLA-{} gene can't be found in '{}'.".format(hla, _imgt_dir+'/alignments')
+    #         )
+    # # nuc
+    # for hla, file in _dict_nuc.items():
+    #     if not Exists(file):
+    #         raise HATK_InputPreparation_Error(
+    #             std_ERROR_MAIN_PROCESS_NAME +
+    #             "The nuc file for HLA-{} gene can't be found in '{}'.".format(hla, _imgt_dir+'/alignments')
+    #         )
+    # # gen
+    # for hla, file in _dict_gen.items():
+    #     if not Exists(file):
+    #         raise HATK_InputPreparation_Error(
+    #             std_ERROR_MAIN_PROCESS_NAME +
+    #             "The gen file for HLA-{} gene can't be found in '{}'.".format(hla, _imgt_dir+'/alignments')
+    #         )
 
     # 'Nomenclature_2009.txt'
     if not Exists(_p_allelelist_2009):

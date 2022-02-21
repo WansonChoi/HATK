@@ -1,20 +1,54 @@
 #-*- coding: utf-8 -*-
 
 import os, sys, re
-from os.path import join
+from os.path import join, exists
 import numpy as np
 import pandas as pd
 
-from src.util import printDF
+from src.util import Exists, printDF, printDict
 
 
 def getAvailableHLAs(_imgt_dir, _p_data, _hg):
 
-    ## (1) HLA available in sequence files.
+    """
+    """
+
+    ## (1) HLA available in IMGT database with exact 3 files(prot, nuc, gen).
+    """
+    In v3320, for example,
+    HLA-DPA2 doesn't have 'DPA2_prot.txt'.
+    HLA-DPB2 doesn't have 'DPB2_prot.txt'.
+    HLA-DRB3 doesn't have 'DRB3-{prot,nuc}.txt'.
+    HLA-DRB4 doesn't have 'DRB4-{prot,nuc}.txt'.
+    HLA-H doesn't have 'H_prot.txt'.
+    HLA-J doesn't have 'J_prot.txt'.
+    HLA-K doesn't have 'K_prot.txt'.
+    HLA-L doesn't have 'L_prot.txt'.
+    HLA-P doesn't have 'P-{prot,nuc}.txt'.
+    HLA-T doesn't have 'T_prot.txt'.
+    HLA-V doesn't have 'V_prot.txt'.
+    HLA-W doesn't have 'W_prot.txt'.
+    HLA-Y doesn't have 'Y_prot.txt'.
+    
+    """
     l_files = os.listdir(_imgt_dir+'/alignments')
     # print(l_files)
 
-    arr_HLA_avail_files = np.unique([file.split('_')[0] for file in l_files])
+    HLA_all = np.unique([file.split('_')[0] for file in l_files])
+    # Only HLAs of which the exact 3 files are available.
+
+    dict_files_prot = getTargetProtFiles(HLA_all, _imgt_dir, "prot") # Mainly because of DRB1. (DRB_prot.txt)
+    dict_files_nuc = getTargetProtFiles(HLA_all, _imgt_dir, "nuc")
+    dict_files_gen = getTargetProtFiles(HLA_all, _imgt_dir, "gen")
+
+    # printDict(dict_files_prot)
+    # printDict(dict_files_nuc)
+    # printDict(dict_files_gen)
+
+    arr_HLA_avail_files = \
+        [hla for hla in HLA_all if Exists(dict_files_prot[hla]) and Exists(dict_files_nuc[hla]) and Exists(dict_files_gen[hla])]
+
+    arr_HLA_avail_files = np.array(arr_HLA_avail_files)
     # print(arr_HLA_avail_files)
 
 
@@ -45,18 +79,17 @@ def getTargetHLAs(_HLA_req, _HLA_avail_files, _HLA_avail_BP):
 
 
     f1 = np.isin(_HLA_req, _HLA_avail_files)
-    arr_target1 = np.array(_HLA_req)[f1]
     arr_excluded1 = np.array(_HLA_req)[~f1]
-    # print(arr_target1)
     # print(arr_excluded1)
 
-    f2 = np.isin(arr_target1, _HLA_avail_BP)
-    arr_target2 = arr_target1[f2] # 2 is final output so far.
-    arr_excluded2 = arr_target1[~f2]
-    # print(arr_target2)
+    f2 = np.isin(_HLA_req, _HLA_avail_BP)
+    arr_excluded2 = np.array(_HLA_req)[~f2]
     # print(arr_excluded2)
 
-    return arr_target2, arr_excluded1, arr_excluded2
+    arr_excluded_all = np.union1d(arr_excluded1, arr_excluded2)
+    arr_target = np.setdiff1d(_HLA_req, arr_excluded_all)
+
+    return arr_target, arr_excluded1, arr_excluded2
 
 
 def getTargetProtFiles(_HLA_target, _imgt_dir, _type):

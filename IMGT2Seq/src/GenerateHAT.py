@@ -3,9 +3,6 @@
 import os, sys, re
 import pandas as pd
 
-
-HLA_names = ["A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1"]
-
 p_GenePrefix = re.compile(r'^(\w+\*)')
 
 

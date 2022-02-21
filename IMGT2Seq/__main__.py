@@ -14,10 +14,6 @@ std_MAIN_PROCESS_NAME = "\n[IMGT2Seq]: "
 std_ERROR_MAIN_PROCESS_NAME = "\n[IMGT2Seq::ERROR]: "
 std_WARNING_MAIN_PROCESS_NAME = "\n[IMGT2Seq::WARNING]: "
 
-# checkValidPath = \
-#     lambda x: x if isValidPath(x) \
-#                 else RaiseError(HATK_InputPreparation_Error,
-#                                 std_ERROR_MAIN_PROCESS_NAME + "The given file('{}') can't be found.".format(x))
 
 class HATK_IMGT2Seq(object):
 
@@ -106,6 +102,7 @@ class HATK_IMGT2Seq(object):
                       "Which output field format to use wans't given. IMGT2Seq 'overrides' it as '2-field'. "
                       "Please check '--1field', '--2field', ..., '--Ggroup' and '--Pgroup' arguments again.")
 
+            # print(self.__repr__()) # debug
             self.performIMGT2Seq()
             self.findExistingResult()
             print(self.__repr__())
@@ -175,11 +172,15 @@ class HATK_IMGT2Seq(object):
             "- Output directory: {}\n".format(self.out_dir)
 
         str_HLA = \
-            "- HLA(target): {}\n" \
+            "- HLA:\n" \
             "   (requested): {}\n" \
-            "   (excluded1 - No sequence files('{}')): {}\n" \
-            "   (excluded2 - No exon1 start BP information): {}\n" \
-            .format(self.HLA_target, self.HLA_req, self.imgt_dir, self.HLA_excluded1, self.HLA_excluded2)
+            "   (excluded1): {}   (No 3 '*_prot.txt', '*_nuc.txt', and '*_gen.txt' files in '{}')\n" \
+            "   (excluded2): {}   (No exon1 start BP information(in '{}'))\n" \
+            "   (target): {}\n" \
+            .format(self.HLA_req,
+                    self.HLA_excluded1, self.imgt_dir,
+                    self.HLA_excluded2, join(self.data_dir, "HLA_EXON1_START_CODON_POSITIONS_hg{}.txt".format(self.hg)),
+                    list(self.HLA_target))
 
         str_Nfield = \
             "" if self.f_hasPreviousResult else \
