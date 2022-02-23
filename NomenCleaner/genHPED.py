@@ -9,7 +9,7 @@ from src.util import printDF, printDict
 
 
 def genHPED(_hat, _N, _out=None, _HLA_req=("A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1"),
-            _field_format='2-field', _prop_zero=0.1, _seed=-1, _f_hasGenePrefix=True):
+            _field_format='2-field', _prop_zero=0.1, _seed=-1, _f_hasGenePrefix=True, _f_hasFieldSep=True):
 
     """
     Generate a HPED file based on the HAT file. (N rows(samples))
@@ -65,10 +65,16 @@ def genHPED(_hat, _N, _out=None, _HLA_req=("A", "B", "C", "DPA1", "DPB1", "DQA1"
                               r'\d+:\d+[A-Z]?' if _field_format == '2-field' else
                               r'\d+:\d+:\d+[A-Z]?')
 
-        cutField = np.vectorize(lambda x : (p_Nfield.match(x).group() if p_Nfield.match(x) else '0') if x != '0' else x)
+        func = np.vectorize(lambda x : (p_Nfield.match(x).group() if p_Nfield.match(x) else '0') if x != '0' else x)
 
-        df_Right = pd.DataFrame(cutField(df_Right.values), index=df_Right.index, columns=df_Right.columns)
+        df_Right = pd.DataFrame(func(df_Right.values), index=df_Right.index, columns=df_Right.columns)
         printDF("df_Right('{}')".format(_field_format), df_Right)
+
+    # has the field separator?
+    if not _f_hasFieldSep:
+        func = np.vectorize(lambda x: re.sub(r':', '', x))
+        df_Right = pd.DataFrame(func(df_Right.values), index=df_Right.index, columns=df_Right.columns)
+        printDF("df_Right(No field separator", df_Right)
 
     # Gene Prefix
     if _f_hasGenePrefix:
@@ -117,8 +123,8 @@ def sampleAllele(_hla, _arr_HLA, _N, _prop_zero):
     flag_Allele = np.random.choice(2, _N, p=[_prop_zero, 1-_prop_zero]) # either allele or '0'.
     # print(flag_Allele)
 
-    convert2Allele = np.vectorize(lambda x: np.random.choice(_arr_HLA, 1)[0] if x else '0')
-    arr_RETURN = convert2Allele(flag_Allele)
+    func = np.vectorize(lambda x: np.random.choice(_arr_HLA, 1)[0] if x else '0')
+    arr_RETURN = func(flag_Allele)
 
     # print(arr_RETURN)
     return arr_RETURN
@@ -126,7 +132,7 @@ def sampleAllele(_hla, _arr_HLA, _N, _prop_zero):
 
 def setGenePrefix(_df_Right, _HLA_target):
 
-    setGenePrefix_map = np.vectorize(lambda _hla, _allele: '{}*'.format(_hla) + str(_allele) if _allele != '0' else _allele)
+    func = np.vectorize(lambda _hla, _allele: '{}*'.format(_hla) + str(_allele) if _allele != '0' else _allele)
     dict_temp = {col: None for col in _df_Right.columns}
 
     for i in np.arange(len(_HLA_target)):
@@ -134,8 +140,8 @@ def setGenePrefix(_df_Right, _HLA_target):
         idx1 = 2 * i
         idx2 = idx1 + 1
 
-        arr_chr1 = setGenePrefix_map(hla, _df_Right.iloc[:, idx1].values)
-        arr_chr2 = setGenePrefix_map(hla, _df_Right.iloc[:, idx2].values)
+        arr_chr1 = func(hla, _df_Right.iloc[:, idx1].values)
+        arr_chr2 = func(hla, _df_Right.iloc[:, idx2].values)
 
         dict_temp['{}_1'.format(hla)] = arr_chr1
         dict_temp['{}_2'.format(hla)] = arr_chr2
@@ -154,16 +160,19 @@ if __name__ == '__main__':
     - Choose the `field_format` among '1-field', '2-field', '3-field', '4-field', 'Ggroup', or 'Pgroup'
     """
 
-    # hat = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/HATK_rearchitect_NC_20220221/HLA_ALLELE_TABLE.imgt3460.hat"
-    # out = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/HATK_rearchitect_NC_20220221/Dummy.N10.hped"
-    # N = 50
-    # seed = 123
-    # field_format = '2-field'
-    # HLA_req = ("A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1", "DOA", "DOB", "E", "F", "G")
+    hat = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/HATK_rearchitect_NC_20220221/HLA_ALLELE_TABLE.imgt3460.hat"
+    out = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/HATK_rearchitect_NC_20220221/Dummy.N10.hped"
+    N = 50
+    seed = 123
+    field_format = '2-field'
+    f_hasGenePrefix = False
+    f_hasFieldSep = False
+    HLA_req = ("A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1", "DOA", "DOB", "E", "F", "G")
 
     # HAT2Dict(hat)
 
-    [hat, N, field_format, out, seed] = sys.argv[1:6]
-    HLA_req = sys.argv[6:]
+    # [hat, N, field_format, out, seed] = sys.argv[1:6]
+    # HLA_req = sys.argv[6:]
 
-    t = genHPED(hat, N, out, HLA_req, _seed=seed, _field_format=field_format)
+    t = genHPED(hat, N, out, HLA_req, _seed=seed, _field_format=field_format,
+                _f_hasGenePrefix=f_hasGenePrefix, _f_hasFieldSep=f_hasFieldSep)
