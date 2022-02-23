@@ -171,17 +171,6 @@ class HATK_IMGT2Seq(object):
         str_out_dir = \
             "- Output directory: {}\n".format(self.out_dir)
 
-        str_HLA = \
-            "- HLA:\n" \
-            "   (requested): {}\n" \
-            "   (excluded1): {}   (No 3 '*_prot.txt', '*_nuc.txt', and '*_gen.txt' files in '{}')\n" \
-            "   (excluded2): {}   (No exon1 start BP information(in '{}'))\n" \
-            "   (target): {}\n" \
-            .format(self.HLA_req,
-                    self.HLA_excluded1, self.imgt_dir,
-                    self.HLA_excluded2, join(self.data_dir, "HLA_EXON1_START_CODON_POSITIONS_hg{}.txt".format(self.hg)),
-                    list(self.HLA_target))
-
         str_Nfield = \
             "" if self.f_hasPreviousResult else \
             "- Requested Output format field: {}\n".format(
@@ -192,6 +181,17 @@ class HATK_IMGT2Seq(object):
                 "G-group" if self.which_format == 5 else \
                 "P-group" if self.which_format == 6 else None
             )
+
+        str_HLA = \
+            "- HLA:\n" \
+            "   (requested): {}\n" \
+            "   (excluded1): {}   (No 3 '*_prot.txt', '*_nuc.txt', and '*_gen.txt' files in '{}')\n" \
+            "   (excluded2): {}   (No exon1 start BP information(in '{}'))\n" \
+            "   (target): {}\n" \
+            .format(self.HLA_req,
+                    self.HLA_excluded1, self.imgt_dir,
+                    self.HLA_excluded2, join(self.data_dir, "HLA_EXON1_START_CODON_POSITIONS_hg{}.txt".format(self.hg)),
+                    list(self.HLA_target))
 
         str_dict_AA = \
             "- Dictionary(Amino acids)\n" \
@@ -220,8 +220,8 @@ class HATK_IMGT2Seq(object):
             str_imgt_version,
             str_hg,
             str_out_dir,
-            str_HLA,
             str_Nfield,
+            str_HLA,
             str_dict_AA,
             str_dict_SNPS,
             str_HLA_Allele_Table,

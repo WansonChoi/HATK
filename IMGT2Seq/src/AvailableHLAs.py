@@ -105,16 +105,20 @@ def getTargetProtFiles(_HLA_target, _imgt_dir, _type):
     dict_files_type_target = {hla: None for hla in _HLA_target}
 
     for hla in _HLA_target:
-        hla2 = re.sub(r'\d$', '', hla)
         filename1 = "{hla}_{type}.txt".format(hla=hla, type=_type)
-        filename2 = "{hla}_{type}.txt".format(hla=hla2, type=_type) # mainly due to 'DRB_{prot,nuc}.txt' files.
 
         if filename1 in l_files_type:
             dict_files_type_target[hla] = join(_imgt_alignment_dir, filename1)
-        elif filename2 in l_files_type:
-            dict_files_type_target[hla] = join(_imgt_alignment_dir, filename2)
         else:
             dict_files_type_target[hla] = None
+
+        if hla == 'DRB1':# Hard exception handling for HLA-DRB1
+            hla2 = re.sub(r'\d$', '', hla)
+            filename2 = "{hla}_{type}.txt".format(hla=hla2, type=_type) # mainly due to 'DRB_{prot,nuc}.txt' files.
+
+            if filename2 in l_files_type:
+                dict_files_type_target[hla] = join(_imgt_alignment_dir, filename2)
+
 
     # for k, v in dict_files_type_target.items():
     #     print("{}: {}".format(k, v))
