@@ -173,7 +173,7 @@ class HATK_IMGT2Seq(object):
 
         str_Nfield = \
             "" if self.f_hasPreviousResult else \
-            "- Requested Output format field: {}\n".format(
+            "- Requested Output Field format: {}\n".format(
                 "1-field" if self.which_format == 1 else \
                 "2-field" if self.which_format == 2 else \
                 "3-field" if self.which_format == 3 else \

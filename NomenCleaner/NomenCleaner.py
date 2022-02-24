@@ -1,107 +1,43 @@
 # -*- coding: utf-8 -*-
 
 import os, sys, re
-import argparse, textwrap
+from os.path import basename, dirname, exists, isdir, join
 import pandas as pd
 
+std_MAIN_PROCESS_NAME = "\n[%s]: " % basename(__file__)
+std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % basename(__file__)
+std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % basename(__file__)
 
-########## < Core Global Variables > ##########
-
-std_MAIN_PROCESS_NAME = "\n[%s]: " % (os.path.basename(__file__))
-std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % (os.path.basename(__file__))
-std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % (os.path.basename(__file__))
-
-
-HLA_names = ["A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1"]
-header_ped = ["FID", "IID", "PID", "MID", "Sex", "Phe"]
 
 # Patterns
 p_Suffix = re.compile(r'.+[A-Z]$')
 p_Prefix = re.compile(r'^\w+\*')
 
 
-
-class HATK_NomenCleaner(object):
-
-    def __init__(self, _hped, _hat, _imgt, _out, **kwargs):
-
-        """
-
-        """
-
-        if not os.path.exists(_hped):
-            print(std_ERROR_MAIN_PROCESS_NAME + "Given HPED file('{}') doesn't exist.\n"
-                                                "Please check the '--hped' argument again.\n"
-                                                "".format(_hped))
-            sys.exit()
-        else:
-            # Checking the number of columns
-            f_hped = open(_hped, 'r')
-
-            hped_1st_line = f_hped.readline()
-            hped_1st_line = re.split(pattern='\s+', string=hped_1st_line.rstrip('\n'))
-
-            if len(hped_1st_line) != 22:
-                # # of columns of hped file must be 22(6 + 8*2).
-                print(std_ERROR_MAIN_PROCESS_NAME + "The number of columns of given HPED file('{}') must be 22 but it is '{}'.\n"
-                                                    "Please check the number of columns of that HPED file again."
-                                                    "".format(_hped, len(hped_1st_line)))
-                sys.exit()
-
-
-        if not os.path.exists(_hat):
-            print(std_ERROR_MAIN_PROCESS_NAME + "Given HAT(HLA Allel Table) file('{}') doesn't exist.\n"
-                                                "Please check the '--hat")
-
-
-
-        self.chped = NomenCleaner(_hped, _hat, _imgt, _out,
-                                  __oneF=kwargs['__oneF'], __twoF=kwargs['__twoF'], __threeF=kwargs['__threeF'], __fourF=kwargs['__fourF'],
-                                  __Ggroup=kwargs['__Ggroup'], __Pgroup=kwargs['__Pgroup'],
-                                  __f_NoCaption=kwargs["__f_NoCaption"], __leave_NotFound=kwargs["__leave_NotFound"])
-
-
-    def getResult(self):
-        return self.chped
-
-
-
-def NomenCleaner(_hped, _hat, _imgt, _out, __f_NoCaption=False, __leave_NotFound=False, **kwargs):
+def NomenCleaner(_hped, _hat, _out_prefix, _OUTPUT_FORMAT, _f_NoGenePrefix=False, _f_leave_NotFound=False,
+                 _HLA_target=("A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1")):
 
 
     ##### < Output Format > #####
+    if 1 <= _OUTPUT_FORMAT <= 6:
+        Field_Format = \
+            'Maximum 1 field' if _OUTPUT_FORMAT == 1 else \
+            'Maximum 2 fields' if _OUTPUT_FORMAT == 2 else \
+            'Maximum 3 fields' if _OUTPUT_FORMAT == 3 else \
+            'Maximum 4 fields' if _OUTPUT_FORMAT == 4 else \
+            'G code' if _OUTPUT_FORMAT == 5 else \
+            'P code' if _OUTPUT_FORMAT == 6 else ''
 
-    FIELD = ''
+        print(std_MAIN_PROCESS_NAME + "Generating CHPED with {} HLA alleles.".format(Field_Format))
 
-    if kwargs['__oneF']:
-        OUTPUT_FORMAT = 1
-        FIELD = 'Maximum 1 field'
-    elif kwargs['__twoF']:
-        OUTPUT_FORMAT = 2
-        FIELD = 'Maximum 2 fields'
-    elif kwargs['__threeF']:
-        OUTPUT_FORMAT = 3
-        FIELD = 'Maximum 3 fields'
-    elif kwargs['__fourF']:
-        OUTPUT_FORMAT = 4
-        FIELD = 'Maximum 4 fields'
-    elif kwargs['__Ggroup']:
-        OUTPUT_FORMAT = 5
-        FIELD = 'G code'
-    elif kwargs['__Pgroup']:
-        OUTPUT_FORMAT = 6
-        FIELD = 'P code'
     else:
-        # Default mode
-        OUTPUT_FORMAT = 0
+        _OUTPUT_FORMAT = 0
+        print(std_MAIN_PROCESS_NAME +
+              "Generating CHPED with the default mode. (Guess the given output format and transform based on this.)")
 
-
-    if OUTPUT_FORMAT != 0:
-        print(std_MAIN_PROCESS_NAME + "Generating CHPED with {} HLA alleles.".format(FIELD))
 
 
     ##### < Loading Data > #####
-
     # *.hped
     __HPED__ = pd.read_csv(_hped, sep='\s+', header=None, dtype=str)
     # print("__HPED__ :\n{}\n".format(__HPED__.head()))
@@ -110,7 +46,7 @@ def NomenCleaner(_hped, _hat, _imgt, _out, __f_NoCaption=False, __leave_NotFound
     __HAT__ = pd.read_csv(_hat, sep='\s+', header=0, dtype=str, index_col=0)
     # print("__HAT__ :\n{}\n".format(__HAT__.head()))
 
-    d__HAT__ = {HLA_names[i]: __HAT__.loc[HLA_names[i], :] for i in range(len(HLA_names))}
+    d__HAT__ = {_HLA_target[i]: __HAT__.loc[_HLA_target[i], :] for i in range(len(_HLA_target))}
 
     # for k,v in d__HAT__.items():
     #     print("HLA : {}\n{}\n".format(k, v.head()))
@@ -119,8 +55,8 @@ def NomenCleaner(_hped, _hat, _imgt, _out, __f_NoCaption=False, __leave_NotFound
 
     ##### < Main iteration > #####
 
-    f_chped = open(_out+'.chped', 'w')
-    f_chped_log = open(_out+'.chped.log', 'w')
+    f_chped = open(_out_prefix + '.chped', 'w')
+    f_chped_log = open(_out_prefix + '.chped.log', 'w')
 
     count = 0
 
@@ -138,7 +74,7 @@ def NomenCleaner(_hped, _hat, _imgt, _out, __f_NoCaption=False, __leave_NotFound
 
         l_alleles_row = []
 
-        for i in range(len(HLA_names)):
+        for i in range(len(_HLA_target)):
 
             idx1 = 2*i
             idx2 = 2*i + 1
@@ -147,7 +83,7 @@ def NomenCleaner(_hped, _hat, _imgt, _out, __f_NoCaption=False, __leave_NotFound
             # chromosome 1
             if t_alleles[idx1] != '0':
 
-                [t_converted_allele1, LOG_MESSAGE1] = getConvertedAllele2(HLA_names[i], t_alleles[idx1], d__HAT__[HLA_names[i]], OUTPUT_FORMAT, __leave_NotFound)
+                [t_converted_allele1, LOG_MESSAGE1] = getConvertedAllele2(_HLA_target[i], t_alleles[idx1], d__HAT__[_HLA_target[i]], _OUTPUT_FORMAT, _f_leave_NotFound)
 
                 # print("Converted Alleles : {}".format(t_converted_allele1))
                 # print("LOG_MESSAGE :{}\n".format(LOG_MESSAGE1))
@@ -163,7 +99,7 @@ def NomenCleaner(_hped, _hat, _imgt, _out, __f_NoCaption=False, __leave_NotFound
             # chromosome 2
             if t_alleles[idx2] != '0':
 
-                [t_converted_allele2, LOG_MESSAGE2] = getConvertedAllele2(HLA_names[i], t_alleles[idx2], d__HAT__[HLA_names[i]], OUTPUT_FORMAT, __leave_NotFound)
+                [t_converted_allele2, LOG_MESSAGE2] = getConvertedAllele2(_HLA_target[i], t_alleles[idx2], d__HAT__[_HLA_target[i]], _OUTPUT_FORMAT, _f_leave_NotFound)
 
                 # print("Converted Alleles : {}".format(t_converted_allele2))
                 # print("LOG_MESSAGE :{}\n".format(LOG_MESSAGE2))
@@ -175,12 +111,12 @@ def NomenCleaner(_hped, _hat, _imgt, _out, __f_NoCaption=False, __leave_NotFound
 
 
 
-            l_alleles_row.append(('%s*'%(HLA_names[i]) if (not __f_NoCaption and t_converted_allele1 != '0') else '') + t_converted_allele1)
-            l_alleles_row.append(('%s*'%(HLA_names[i]) if (not __f_NoCaption and t_converted_allele2 != '0') else '') + t_converted_allele2)
+            l_alleles_row.append(('%s*'%(_HLA_target[i]) if (not _f_NoGenePrefix and t_converted_allele1 != '0') else '') + t_converted_allele1)
+            l_alleles_row.append(('%s*'%(_HLA_target[i]) if (not _f_NoGenePrefix and t_converted_allele2 != '0') else '') + t_converted_allele2)
 
             ### [2] logging the result
-            f_chped_log.write('\t'.join([t_FID, t_IID, HLA_names[i]+'_1', LOG_MESSAGE1])+'\n')
-            f_chped_log.write('\t'.join([t_FID, t_IID, HLA_names[i]+'_2', LOG_MESSAGE2])+'\n')
+            f_chped_log.write('\t'.join([t_FID, t_IID, _HLA_target[i] + '_1', LOG_MESSAGE1]) + '\n')
+            f_chped_log.write('\t'.join([t_FID, t_IID, _HLA_target[i] + '_2', LOG_MESSAGE2]) + '\n')
 
 
 
@@ -195,7 +131,8 @@ def NomenCleaner(_hped, _hat, _imgt, _out, __f_NoCaption=False, __leave_NotFound
     f_chped.close()
     f_chped_log.close()
 
-    return _out+'.chped'
+
+    return _out_prefix + '.chped', _out_prefix + '.chped.log'
 
 
 
@@ -342,7 +279,7 @@ def getConvertedAllele2(_hla, _allele, _d__HAT__, _OUTPUT_FORMAT, __leave_NotFou
                         trial2_allele = ':'.join([_allele2[:3], _allele2[3:]]) + (_allele_Suffix if _allele_Suffix != -1 else "")
                         Flag_trial2 = sr_TEMP.match(trial2_allele)
 
-                        if Flag_trial2:
+                        if Flag_trial2.any():
                             [__RETURN__, LOG_MESSAGE] = get1stAllele2(trial2_allele, _d__HAT__, _from, _OUTPUT_FORMAT, __leave_NotFound, _allele0=_allele)
                         else:
                             __RETURN__ = _allele if __leave_NotFound else "0"
@@ -369,7 +306,7 @@ def getConvertedAllele2(_hla, _allele, _d__HAT__, _OUTPUT_FORMAT, __leave_NotFou
                         trial2_allele = ':'.join([_allele2[:2], _allele2[2:4], _allele2[4:]]) + (_allele_Suffix if _allele_Suffix != -1 else "")
                         Flag_trial2 = sr_TEMP.match(trial2_allele)
 
-                        if Flag_trial2:
+                        if Flag_trial2.any():
                             [__RETURN__, LOG_MESSAGE] = get1stAllele2(trial2_allele, _d__HAT__, _from, _OUTPUT_FORMAT, __leave_NotFound, _allele0=_allele)
                         else:
                             # (3) 3 + 2 + 2 (+C) = 7
@@ -403,7 +340,7 @@ def getConvertedAllele2(_hla, _allele, _d__HAT__, _OUTPUT_FORMAT, __leave_NotFou
                         trial2_allele = ':'.join([_allele2[:3], _allele2[3:5], _allele2[5:]]) + (_allele_Suffix if _allele_Suffix != -1 else "")
                         Flag_trial2 = sr_TEMP.match(trial2_allele)
 
-                        if Flag_trial2:
+                        if Flag_trial2.any():
                             [__RETURN__, LOG_MESSAGE] = get1stAllele2(trial2_allele, _d__HAT__, _from, _OUTPUT_FORMAT, __leave_NotFound, _allele0=_allele)
                         else:
                             # (3) 3 + 3 + 2
@@ -799,116 +736,3 @@ def FieldCutter(_allele0, _1st_allele, _field_format):
 
 
     return __RETURN__
-
-
-
-
-
-if __name__ == '__main__':
-
-
-    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,
-                                     description=textwrap.dedent('''\
-    #########################################################################################
-
-        < NomenCleaner.py >
-        
-        - Transforms *.hped file to *.chped file.
-        - *.hat file must be given as input file.
-
-
-
-
-
-
-    #########################################################################################
-                                     '''),
-                                     add_help=False)
-
-    parser._optionals.title = "OPTIONS"
-
-    parser.add_argument("-h", "--help", help="\nShow this help message and exit\n\n", action='help')
-
-    # Input (1) : *.ped file
-    PED_TYPE = parser.add_mutually_exclusive_group(required=True)
-    PED_TYPE.add_argument("--hped", help="\nHLA Type Data with raw HLA allele(ex. 0101).\n\n", dest="hped")
-
-    # Input (2) : *.iat file
-    parser.add_argument("-hat", help="\nHLA Allele Table file(*.hat).\n\n", required=True)
-    parser.add_argument("-imgt", help="\nSpecifying the IMGT-HLA version.\n\n", required=True)
-
-    # Ouptut Prefix
-    parser.add_argument("--out", "-o", help="\nOutput file prefix.\n\n", required=True)
-    parser.add_argument("--leave-NotFound",
-                        help="\nLeaving HLA alleles which can't be found in given *.hat file(Novel or Erroneous allele) intact.\n\n",
-                        action='store_true')
-
-    # Output format
-    output_digit_selection = parser.add_mutually_exclusive_group()
-    output_digit_selection.add_argument("--1field", help="\nMake converted HLA alleles have maximum 1 field.\n\n",
-                                        action="store_true", dest="oneF")
-    output_digit_selection.add_argument("--2field", help="\nMake converted HLA alleles have maximum 2 fields.\n\n",
-                                        action="store_true", dest="twoF")
-    output_digit_selection.add_argument("--3field", help="\nMake converted HLA alleles have maximum 3 fields.\n\n",
-                                        action="store_true", dest="threeF")
-    output_digit_selection.add_argument("--4field", help="\nMake converted HLA alleles have maximum 4 fields\n\n",
-                                        action="store_true", dest="fourF")
-    output_digit_selection.add_argument("--Ggroup", help="\nMake converted HLA alleles have G code names.\n\n",
-                                        action="store_true")
-    output_digit_selection.add_argument("--Pgroup", help="\nMake converted HLA alleles have P code names.\n\n",
-                                        action="store_true")
-
-    # Flag to remove HLA gene caption.
-    parser.add_argument("--NoCaption", help="\nMake converted HLA alleles NOT have HLA gene prefix(ex. \"A*\").\n\n", action='store_true')
-
-
-
-    ##### <for Test> #####
-
-    # in OS X
-    # _hped = '/Users/wansun/Dropbox/_Sync_MyLaptop/Projects/HATK/NomenCleanerv3/dummy_freeze/DummyCHPED.10.ruined.nocolon.hped'
-    # _hat = '/Users/wansun/Dropbox/_Sync_MyLaptop/Projects/HATK/NomenCleanerv3/dummy_freeze/HLA_ALLELE_TABLE.imgt3320.hat'
-    # _out = '/Users/wansun/Dropbox/_Sync_MyLaptop/Projects/HATK/NomenCleanerv3/dummy_freeze/DummyCHPED.10.ruined.nocolon.20190927'
-
-    # in Ubuntu
-    # _hped = '/home/wanson/Dropbox/_Sync_MyLaptop/Projects/HATK/NomenCleanerv3/dummy_freeze/DummyCHPED.10.ruined.hped'
-    # _hat = '/home/wanson/Dropbox/_Sync_MyLaptop/Projects/HATK/NomenCleanerv3/dummy_freeze/HLA_ALLELE_TABLE.imgt3320.hat'
-    # _out = '/home/wanson/Dropbox/_Sync_MyLaptop/Projects/HATK/NomenCleanerv3/dummy_freeze/DummyCHPED.10.ruined.20190922'
-
-    # for _output_format in ['DEFAULT', '1field', '2field', '3field', '4field', 'Ggroup', 'Pgroup']:
-    #
-    #     OUT = _out + '.{}'.format(_output_format.upper())
-    #
-    #     if _output_format == 'DEFAULT':
-    #         args = parser.parse_args(['--hped', _hped, '-hat', _hat, '-o', OUT, '-imgt', '3320', "--NoCaption"]) # No field format given.
-    #     else:
-    #         args = parser.parse_args(['--hped', _hped, '-hat', _hat, '-o', OUT, '-imgt', '3320', "--NoCaption", '--{}'.format(_output_format)]) # No field format given.
-    #
-    #     # args = parser.parse_args(['--hped', _hped, '-hat', _hat, '-o', _out, '-imgt', '3320', "--NoCaption", "--4field"]) # No field format given.
-    #     # args = parser.parse_args(['--hped', _hped, '-hat', _hat, '-o', _out, '-imgt', '3320', "--NoCaption", "--3field"]) # No field format given.
-    #     # args = parser.parse_args(['--hped', _hped, '-hat', _hat, '-o', _out, '-imgt', '3320', "--NoCaption", "--2field"]) # No field format given.
-    #     # args = parser.parse_args(['--hped', _hped, '-hat', _hat, '-o', _out, '-imgt', '3320', "--NoCaption", "--1field"]) # No field format given.
-    #     # args = parser.parse_args(['--hped', _hped, '-hat', _hat, '-o', _out, '-imgt', '3320', "--NoCaption", "--Ggroup"]) # No field format given.
-    #     # args = parser.parse_args(['--hped', _hped, '-hat', _hat, '-o', _out, '-imgt', '3320', "--NoCaption", "--Pgroup"]) # No field format given.
-    #
-    #     ##### <for Publication> #####
-    #
-    #     # args = parser.parse_args()
-    #     print(args)
-    #
-    #
-    #     NomenCleaner(args.hped, args.hat, args.imgt, args.out,
-    #                  __f_NoCaption=args.NoCaption, __leave_NotFound=args.leave_NotFound,
-    #                  __oneF=args.oneF, __twoF=args.twoF, __threeF=args.threeF, __fourF=args.fourF, __Ggroup=args.Ggroup, __Pgroup=args.Pgroup)
-
-
-
-    ##### <for Publication> #####
-
-    args = parser.parse_args()
-    print(args)
-
-
-    NomenCleaner(args.hped, args.hat, args.imgt, args.out,
-                 __f_NoCaption=args.NoCaption, __leave_NotFound=args.leave_NotFound,
-                 __oneF=args.oneF, __twoF=args.twoF, __threeF=args.threeF, __fourF=args.fourF, __Ggroup=args.Ggroup, __Pgroup=args.Pgroup)
