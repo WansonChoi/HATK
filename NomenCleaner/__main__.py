@@ -20,7 +20,7 @@ class HATK_NomenCleaner(object):
 
     def __init__(self, _hped, _hat, _out, _F_one, _F_two, _F_three, _F_four, _F_Ggroup, _F_Pgroup,
                  _f_NoGenePrefix=False, _f_leave_NotFound=False,
-                 _HLA_req=("A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1")):
+                 _HLA_req:tuple=None):
 
         """
 
@@ -38,7 +38,7 @@ class HATK_NomenCleaner(object):
         self.out_prefix = self.out.rstrip('.chped') if self.out.endswith('.chped') else self.out
         self.out_prefix = self.out_prefix + (".imgt{}".format(self.imgt) if self.imgt else "")
 
-        self.HLA_req = _HLA_req
+        self.HLA_req = _HLA_req if _HLA_req else self.HPED.HLA_avail # Use HLAs in HPED file if user didn't request any HLA genes.
 
         self.HLA_avail_hped = self.HPED.HLA_avail
         self.HLA_avail_hat = np.unique(np.genfromtxt(self.hat, delimiter='\t', dtype=str, usecols=[0], skip_header=1))
@@ -77,7 +77,7 @@ class HATK_NomenCleaner(object):
 
 
         ### Main Actions ###
-        print(self.__repr__())
+        # print(self.__repr__())
         self.genTempHPED()
 
         self.chped, self.chped_log = \
@@ -212,10 +212,9 @@ if __name__ == '__main__':
                         help="\nLeaving HLA alleles which can't be found in given *.hat file(Novel or Erroneous allele) intact.\n\n",
                         action='store_true')
 
-    parser.add_argument("--HLA", help="\nHLA genes to process.\n\n",
-                        default=['A', 'B', 'C', 'DPA1', 'DPB1', 'DQA1', 'DQB1', 'DRB1'], nargs='+')
+    parser.add_argument("--HLA", help="\nHLA genes to process.\n\n", nargs='+')
 
-    format_selection = parser.add_mutually_exclusive_group()
+    format_selection = parser.add_mutually_exclusive_group(required=True)
     format_selection.add_argument("--1field", help="\nMake converted HLA alleles have maximum 1 field.\n\n", action="store_true", dest="F_one")
     format_selection.add_argument("--2field", help="\nMake converted HLA alleles have maximum 2 fields.\n\n", action="store_true", dest="F_two")
     format_selection.add_argument("--3field", help="\nMake converted HLA alleles have maximum 3 fields.\n\n", action="store_true", dest="F_three")
@@ -234,11 +233,6 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     print(args)
-
-    # NomenCleaner(args.hped, args.hat, args.imgt, args.out,
-    #              __f_NoCaption=args.NoCaption, __leave_NotFound=args.leave_NotFound,
-    #              __oneF=args.oneF, __twoF=args.twoF, __threeF=args.threeF, __fourF=args.fourF, __Ggroup=args.Ggroup,
-    #              __Pgroup=args.Pgroup)
 
     HATK_NomenCleaner(args.hped, args.hat, args.out,
                       args.F_one, args.F_two, args.F_three, args.F_four, args.F_Ggroup, args.F_Pgroup,
