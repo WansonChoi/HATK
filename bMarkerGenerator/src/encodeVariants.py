@@ -1,27 +1,15 @@
 # -*- coding: utf-8 -*-
 
-import os, re
+import os, sys, re
+from os.path import basename, dirname, join
 import argparse, textwrap
 
-
-########## < Core Global Variables > ##########
-
-std_MAIN_PROCESS_NAME = "\n[%s]: " % (os.path.basename(__file__))
-std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % (os.path.basename(__file__))
-std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % (os.path.basename(__file__))
+std_MAIN_PROCESS_NAME = "\n[%s]: " % basename(__file__)
+std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % basename(__file__)
+std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % basename(__file__)
 
 
-def encodeVariants(_ped, _map, _out, __asSmallLetter=True, __addDummyMarker=False):
-
-
-    ### Intermediate path.
-    _out = _out if not _out.endswith('/') else _out.rstrip('/')
-    if bool(os.path.dirname(_out)):
-        INTERMEDIATE_PATH = os.path.dirname(_out)
-        os.makedirs(INTERMEDIATE_PATH, exist_ok=True)
-    else:
-        INTERMEDIATE_PATH = "./"
-
+def encodeVariants(_ped, _map, _out_prefix, _f_asSmallLetter=True):
 
     # Processing line by line with python Generators to save memory
 
@@ -41,9 +29,9 @@ def encodeVariants(_ped, _map, _out, __asSmallLetter=True, __addDummyMarker=Fals
         n_loci = 0
         n_row = 0
 
-        with open(_ped, 'r') as f:
+        with open(_ped, 'r') as f_ped:
 
-            for line in f:
+            for line in f_ped:
 
                 t_line = re.split(r'\s+', line.rstrip('\n'))
                 # print(t_line[6:])
@@ -86,8 +74,8 @@ def encodeVariants(_ped, _map, _out, __asSmallLetter=True, __addDummyMarker=Fals
 
         ########## < [2] Making new .ped file > ##########
 
-        with open(_out + ".ped", 'w') as f_NewPed:
-            f_NewPed.writelines(MakeNewPed(_ped, l_factors, __asSmallLetter, __addDummyMarker))
+        with open(_out_prefix + ".ped", 'w') as f_NewPed:
+            f_NewPed.writelines(MakeNewPed(_ped, l_factors, _f_asSmallLetter))
 
 
 
@@ -95,8 +83,8 @@ def encodeVariants(_ped, _map, _out, __asSmallLetter=True, __addDummyMarker=Fals
 
         ########## < [3] Making new .map file > ##########
 
-        with open(_out + ".map", 'w') as f_NewMap:
-            f_NewMap.writelines(MakeNewMap(_map, l_factors, __addDummyMarker))
+        with open(_out_prefix + ".map", 'w') as f_NewMap:
+            f_NewMap.writelines(MakeNewMap(_map, l_factors))
 
 
 
@@ -104,16 +92,33 @@ def encodeVariants(_ped, _map, _out, __asSmallLetter=True, __addDummyMarker=Fals
 
         ########## < [4] Making *.allelelist file > ##########
 
-        with open(_out + ".factors", 'w') as f_allelelist:
+        with open(_out_prefix + ".factors", 'w') as f_allelelist:
             f_allelelist.writelines(MakeAlleleList(_map, l_factors))
 
 
 
+def MakeNewPed(_ped, _l_factors, _f_asSmallLetter=True):
 
-def divideToBinaryMarkers(_SNP1, _SNP2, _factors, __asSmallLetter=True):
+    count = 0
 
-    _present_ = "p" if __asSmallLetter else "P"
-    _absent_ = "a" if __asSmallLetter else "A"
+    with open(_ped, 'r') as f_ped:
+        for line in f_ped:
+            t_line = re.split(r'\s+', line.rstrip('\n'))
+
+            __ped_info__ = '\t'.join(t_line[:6])
+            __genomic_info__ = '\t'.join([
+                divideToBinaryMarkers(t_line[2 * i + 6], t_line[2 * i + 7], _l_factors[i], _f_asSmallLetter) for i in range(0, len(_l_factors))
+            ])
+
+            __return__ = '\t'.join([__ped_info__, __genomic_info__])
+
+            yield __return__ + "\n"
+
+
+def divideToBinaryMarkers(_SNP1, _SNP2, _factors, _f_asSmallLetter=True):
+
+    _present_ = "p" if _f_asSmallLetter else "P"
+    _absent_ = "a" if _f_asSmallLetter else "A"
 
     Seq = []
 
@@ -192,35 +197,7 @@ def divideToBinaryMarkers(_SNP1, _SNP2, _factors, __asSmallLetter=True):
     return '\t'.join(Seq)
 
 
-
-def MakeNewPed(_p_ped, _l_factors, __asSmallLetter=True, __addDummyMarker=False):
-
-    count = 0
-
-    with open(_p_ped, 'r') as f:
-        for line in f:
-            t_line = re.split(r'\s+', line.rstrip('\n'))
-
-            __ped_info__ = '\t'.join(t_line[:6])
-            __genomic_info__ = '\t'.join([
-                divideToBinaryMarkers(t_line[2 * i + 6], t_line[2 * i + 7], _l_factors[i], __asSmallLetter) for i in range(0, len(_l_factors))
-            ])
-
-            __return__ = '\t'.join([__ped_info__, __genomic_info__])
-
-
-            if __addDummyMarker:
-                # add Dummy Markers.
-                dummy_markers = '\t'.join(['d', 'D'] if bool(count % 2) else ['D', 'd'])
-                __return__ = '\t'.join([__return__, dummy_markers])
-
-
-            yield __return__ + "\n"
-
-
-
-
-def MakeNewMap(_p_map, _l_factors, __addDummyMarker=False):
+def MakeNewMap(_p_map, _l_factors):
 
     count = 0
 
@@ -260,11 +237,6 @@ def MakeNewMap(_p_map, _l_factors, __addDummyMarker=False):
                 yield l # "\n" is included.
 
             count += 1
-
-
-        if __addDummyMarker:
-            # Adding Dummy Marker
-            yield '\t'.join(["6", "dummy_marker", "0", "33999999"]) + "\n"
 
 
 
@@ -312,9 +284,9 @@ if __name__ == "__main__":
 
     parser.add_argument("-h", "--help", help="\nShow this help message and exit\n\n", action='help')
 
-    parser.add_argument("-ped", help="\nThe *.ped file which is generated by 'HLAtoSequences.py'.\n\n", required=True)
-    parser.add_argument("-map", help="\nThe *.map file which is generated by 'HLAtoSequences.py'.\n\n", required=True)
-    parser.add_argument("-o", help="\nOutput file prefix.\n\n", required=True)
+    parser.add_argument("--ped", help="\nThe *.ped file which is generated by 'HLAtoSequences.py'.\n\n", required=True)
+    parser.add_argument("--map", help="\nThe *.map file which is generated by 'HLAtoSequences.py'.\n\n", required=True)
+    parser.add_argument("--out", help="\nOutput file prefix.\n\n", required=True)
 
 
     ##### <for Test> #####
@@ -329,25 +301,6 @@ if __name__ == "__main__":
     # args = parser.parse_args(["-ped", "/Users/wansun/Git_Projects/MakeReference_RECODE_v2/makereference_recode_v2/MODULE_TEST_HAPMAP_CEU_HLA.4field.imgt370.SNPS.ped",
     #                           "-map", "/Users/wansun/Git_Projects/MakeReference_RECODE_v2/makereference_recode_v2/data/MakeReference/HLA_DICTIONARY_SNPS.hg18.imgt370.map",
     #                           "-o", "/Users/wansun/Git_Projects/MakeReference_RECODE_v2/makereference_recode_v2/MODULE_TEST_HAPMAP_CEU_HLA.4field.imgt370.SNPS.enCODED"])
-
-    # (2019. 1. 6.)
-    # args = parser.parse_args(["-ped", "/Users/wansun/Git_Projects/MakeReference_v2/tests/20190106/_1_HLAtoSequences/_Case_HAPMAP_CEU.old.AA.ped",
-    #                           "-map", "/Users/wansun/Git_Projects/MakeReference_v2/tests/20190106/_1_HLAtoSequences/HLA_DICTIONARY_AA.map",
-    #                           "-o", "/Users/wansun/Git_Projects/MakeReference_v2/tests/20190106/_2_encodeVariants/_Case_HAPMAP_CEU.AA.enCODED"])
-
-    # args = parser.parse_args(["-ped", "/Users/wansun/Git_Projects/MakeReference_v2/tests/20190106/_1_HLAtoSequences/_Case_HAPMAP_CEU.old.SNPS.ped",
-    #                           "-map", "/Users/wansun/Git_Projects/MakeReference_v2/tests/20190106/_1_HLAtoSequences/HLA_DICTIONARY_SNPS.map",
-    #                           "-o", "/Users/wansun/Git_Projects/MakeReference_v2/tests/20190106/_2_encodeVariants/_Case_HAPMAP_CEU.SNPS.enCODED"])
-
-    # (2019. 1. 9.)
-    # args = parser.parse_args(["-ped", "/Users/wansun/Git_Projects/MakeReference_v2/tests/20190109/_1_HLAtoSequences/HAPMAP_CEU_HLA.4field.AA.ped",
-    #                           "-map", "/Users/wansun/Git_Projects/MakeReference_v2/tests/20190109/_1_HLAtoSequences/HLA_DICTIONARY_AA.hg18.imgt370.map",
-    #                           "-o", "/Users/wansun/Git_Projects/MakeReference_v2/tests/20190109/_2_encodeVariants/HAPMAP_CEU_HLA.4field.AA.enCODED"])
-
-    # args = parser.parse_args(["-ped", "/Users/wansun/Git_Projects/MakeReference_v2/tests/20190109/_1_HLAtoSequences/HAPMAP_CEU_HLA.4field.SNPS.ped",
-    #                           "-map", "/Users/wansun/Git_Projects/MakeReference_v2/tests/20190109/_1_HLAtoSequences/HLA_DICTIONARY_SNPS.hg18.imgt370.map",
-    #                           "-o", "/Users/wansun/Git_Projects/MakeReference_v2/tests/20190109/_2_encodeVariants/HAPMAP_CEU_HLA.4field.SNPS.enCODED"])
-
 
     ##### <for Publication> #####
 
