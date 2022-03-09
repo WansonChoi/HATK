@@ -10,7 +10,7 @@ std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % basename(__file__)
 std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % basename(__file__)
 
 
-def HLAtoSequences(_chped, _dictionary, _type, _out_prefix, _f_asLump=False,
+def HLAtoSequences(_chped, _dictionary, _type, _out_prefix, _f_asLump=False, _f_hasHeader=True,
                    _HLA_target=("A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1")):
 
     ### Main Variables ###
@@ -69,17 +69,17 @@ def HLAtoSequences(_chped, _dictionary, _type, _out_prefix, _f_asLump=False,
     ##### < [2] Transforming each HLA alleles to corresponding sequences > #####
 
     with open(_out_prefix + ".{}.ped".format(_type), 'w') as f_output:
-        f_output.writelines(GenerateLines(_chped, _type, dict_seq, dict_len, _HLA_target, _f_asLump=_f_asLump))
+        f_output.writelines(GenerateLines(_chped, _type, dict_seq, dict_len, _HLA_target, _f_asLump=_f_asLump, _f_hasHeader=_f_hasHeader))
 
 
 
-def GenerateLines(_chped, _type, _dict_seq, _dict_len, _HLA_target, _f_asLump=False):
+def GenerateLines(_chped, _type, _dict_seq, _dict_len, _HLA_target, _f_asLump=False, _f_hasHeader=True):
 
     with open(_chped, "r") as f_chped:
 
-        # Header
-        l_header = f_chped.readline().split()
-        # print(l_header)
+        if _f_hasHeader:
+            l_header = f_chped.readline().split()
+            # print(l_header)
 
         for line in f_chped:
             # t_line = re.split(r'\s+', line.rstrip('\n'))
