@@ -2,21 +2,20 @@
 
 import os, sys, re
 from os.path import basename, dirname, join
-import argparse, textwrap
-from shutil import which
 
 from bMarkerGenerator.src.encodeVariants import encodeVariants
 from bMarkerGenerator.src.encodeHLA import encodeHLA
 from bMarkerGenerator.src.HLAtoSequences import HLAtoSequences
 from src.PLINK_Bash import Bash_RUN_PLINK
+from NomenCleaner.src.CHPED import CHPED
 
 std_MAIN_PROCESS_NAME = "\n[%s]: " % basename(__file__)
 std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % basename(__file__)
 std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % basename(__file__)
 
 
-def bMarkerGenerator(_chped, _out, _hg, _dictionary_AA, _dictionary_SNPS, _variants=None,
-                     _f_save_intermediates=False, _plink=None):
+def bMarkerGenerator(_CHPED:CHPED, _out, _hg, _dictionary_AA, _dictionary_SNPS, _variants=None, _f_save_intermediates=False,
+                     _plink=None):
 
     ### Main Variables ###
     _out_dir = dirname(_out)
@@ -27,7 +26,7 @@ def bMarkerGenerator(_chped, _out, _hg, _dictionary_AA, _dictionary_SNPS, _varia
     _dictionary_SNPS_seq = _dictionary_SNPS + ".txt"
     _dictionary_SNPS_map = _dictionary_SNPS + ".map"
 
-    _variants2 = join(_out_dir, basename(_variants))
+    _variants2 = join(_out_dir, basename(_variants)) if _variants else None
 
     __SNP__ = None
     __HLA__ = None
@@ -38,31 +37,15 @@ def bMarkerGenerator(_chped, _out, _hg, _dictionary_AA, _dictionary_SNPS, _varia
     plink = "{} --noweb --silent --allow-no-sex --keep-allele-order".format(_plink) # plink = ' '.join([_plink, "--noweb", "--silent"]) - previously (2022.03.02.)
 
 
-    index = 1
-
-
 
     ### Main Actions ###
 
-    EXTRACT_FOUNDERS2 = 0
-    MERGE2 = 0
-    QC = 0
-
-    PREPARE = 0
-    PHASE = 0
-    CLEANUP = 0
-
-    # (2019. 01. 10.) Last three code blocks won't be implemented
-
-
-
     ########## <Making Reference Panel> ##########
-
     print(std_MAIN_PROCESS_NAME + "Making Reference Panel for \"{0}\"\n".format(_out))
 
-    __AA__ = ENCODE_AA(_chped, _dictionary_AA_seq, _dictionary_AA_map, _out, _out_dir, plink, _f_save_intermediates, index) # _out+'.AA.CODED'
-    __HLA__ = ENCODE_HLA(_chped, _hg, _out, plink, _f_save_intermediates, index) # _out+'.HLA'
-    __SNPS__ = ENCODE_SNPS(_chped, _dictionary_SNPS_seq, _dictionary_SNPS_map, _out, _out_dir, plink, _f_save_intermediates, index) # _out+'.SNPS.CODED'
+    __AA__ = ENCODE_AA(_CHPED, _dictionary_AA_seq, _dictionary_AA_map, _out, _out_dir, plink, _f_save_intermediates)  # _out+'.AA.CODED'
+    __HLA__ = ENCODE_HLA(_CHPED, _hg, _out, plink, _f_save_intermediates)  # _out+'.HLA'
+    __SNPS__ = ENCODE_SNPS(_CHPED, _dictionary_SNPS_seq, _dictionary_SNPS_map, _out, _out_dir, plink, _f_save_intermediates)  # _out+'.SNPS.CODED'
 
     # Hadr-coding for test.
     # __AA__ = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/HATK_rearchitect_bMG_20220301/wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18.bmarker.AA.CODED"
@@ -73,708 +56,26 @@ def bMarkerGenerator(_chped, _out, _hg, _dictionary_AA, _dictionary_SNPS, _varia
     # Next parts are implented sligtly differently depending on `_variants`.
 
 
-    print("[{}] Extracting founders.".format(index))
+    print("[6] Extracting founders.")
     __SNP__ = EXTRACT_FOUNDERS(_variants, _variants2, _out_dir, "SNP", plink, _f_save_intermediates) if _variants else None
     __AA__ = EXTRACT_FOUNDERS(__AA__, _out, _out_dir, "AA", plink, _f_save_intermediates)
     __HLA__ = EXTRACT_FOUNDERS(__HLA__, _out, _out_dir, "HLA", plink, _f_save_intermediates)
     __SNPS__ = EXTRACT_FOUNDERS(__SNPS__, _out, _out_dir, "SNPS", plink, _f_save_intermediates)
 
-    print("[{}] Merging SNP, HLA, and amino acid datasets.".format(index))
+    print("[7] Merging SNP, HLA, and amino acid datasets.")
     __MERGED__ = MERGE(__SNP__, __AA__, __HLA__, __SNPS__, _out, _out_dir, plink, _f_save_intermediates)
 
+    print("[8] Performing quality control.")
+    __RETURN__ = QC(__MERGED__, _out, _out_dir, plink, _f_save_intermediates)
 
-    if _variants:
+    print("[9] Making reference panel for HLA-AA,SNPS,HLA and Normal variants(SNPs) is Done!" if _variants else \
+          "[9] Making reference panel for HLA-AA,SNPS,HLA is Done!")
 
-        ### `_variants` is given.
-        # Almost same as original "MakeReference".
+    return __RETURN__
 
-        if EXTRACT_FOUNDERS2:
 
 
-
-            ### (5) --filter-founders to HLA information ( *.{HLA,AA,SNPS}.FOUNDERS )
-            command = ' '.join([plink, "--make-bed", "--bfile", _out+'.HLA', "--filter-founders", "--maf 0.0001", "--out", _out+'.HLA.FOUNDERS'])
-            # print(command)
-            os.system(command)
-            command = ' '.join([plink, "--make-bed", "--bfile", _out+'.SNPS.CODED', "--filter-founders", "--maf 0.0001", "--out", _out+'.SNPS.FOUNDERS'])
-            # print(command)
-            os.system(command)
-            command = ' '.join([plink, "--make-bed", "--bfile", _out+'.AA.CODED', "--filter-founders", "--maf 0.0001", "--out", _out+'.AA.FOUNDERS'])
-            # print(command)
-            os.system(command)
-
-
-
-
-
-            """
-            Generated outputs :
-                (1) --filter-founders to variants data ( *.FOUNDERS )
-                (2) QC ( *.FOUNDERS.{hardy,freq,missing )
-                (3) Stuffs to remove ( remove.snps.hardy, remove.snps.freq, remove.snps.missing, all.remove.snps )
-                (4) Filtering out Quality-controled FOUNDERS ( *.FOUNDERS.QC )
-                (5) --filter-founders to HLA information ( *.{HLA,AA,SNPS}.FOUNDERS )
-                
-            Final outputs :
-                - *.FOUNDERS.QC
-                - *.{HLA,AA,SNPS}.FOUNDERS
-                
-            Outputs to remove :
-                - *.FOUNDERS
-                - *.FOUNDERS.{hardy,freq,missing}
-                - remove.snps.hardy, remove.snps.freq, remove.snps.missing, all.remove.snps
-                
-            """
-
-            # if not _f_save_intermediates:
-            #
-            #     os.system("rm " + (_variants2 + ".FOUNDERS.bed"))
-            #     os.system("rm " + (_variants2 + ".FOUNDERS.bim"))
-            #     os.system("rm " + (_variants2 + ".FOUNDERS.fam"))
-            #     os.system("rm " + (_variants2 + ".FOUNDERS.log"))
-            #     os.system("rm " + (_variants2 + ".FOUNDERS.hardy.*"))
-            #     os.system("rm " + (_variants2 + ".FOUNDERS.freq.*"))
-            #     os.system("rm " + (_variants2 + ".FOUNDERS.missing.*"))
-            #     os.system("rm " + os.path.join(_out_dir, "remove.snps.*"))
-            #     os.system("rm " + os.path.join(_out_dir, "all.remove.snps"))
-            #
-            #     if os.path.exists(_variants2 + ".FOUNDERS.nosex"):
-            #         os.system("rm " + (_variants2 + ".FOUNDERS.nosex"))
-
-
-            index += 1
-
-
-        if MERGE2:
-
-            print("[{}] Merging SNP, HLA, and amino acid datasets.".format(index))
-
-            """
-            echo "[$i] Merging SNP, HLA, and amino acid datasets.";  @ i++
-            echo "$OUTPUT.HLA.FOUNDERS.bed $OUTPUT.HLA.FOUNDERS.bim $OUTPUT.HLA.FOUNDERS.fam" > merge_list
-            echo "$OUTPUT.AA.FOUNDERS.bed $OUTPUT.AA.FOUNDERS.bim $OUTPUT.AA.FOUNDERS.fam" >> merge_list
-            echo "$OUTPUT.SNPS.FOUNDERS.bed $OUTPUT.SNPS.FOUNDERS.bim $OUTPUT.SNPS.FOUNDERS.fam" >> merge_list
-            plink --bfile $_variants.FOUNDERS.QC --merge-list merge_list --make-bed --out $OUTPUT.MERGED.FOUNDERS
-            rm $OUTPUT.HLA.???
-            rm $OUTPUT.AA.CODED.???
-            rm $OUTPUT.SNPS.CODED.???
-            rm merge_list
-    
-            """
-
-            ### (1) Stuffs to merge ( merge_list )
-            TMP_merged_list = os.path.join(_out_dir, "merge_list")
-
-
-            command = ' '.join(["echo", _out + '.HLA.FOUNDERS.bed', _out + '.HLA.FOUNDERS.bim', _out + '.HLA.FOUNDERS.fam', ">", TMP_merged_list])
-            # print(command)
-            os.system(command)
-
-            command = ' '.join(["echo", _out + '.AA.FOUNDERS.bed', _out + '.AA.FOUNDERS.bim', _out + '.AA.FOUNDERS.fam', ">>", TMP_merged_list])
-            # print(command)
-            os.system(command)
-
-            command = ' '.join(["echo", _out + '.SNPS.FOUNDERS.bed', _out + '.SNPS.FOUNDERS.bim', _out + '.SNPS.FOUNDERS.fam', ">>", TMP_merged_list])
-            # print(command)
-            os.system(command)
-
-
-            ### (2) Merging the above stuffs ( *.MERGED.FOUNDERS )
-            command = ' '.join(
-                [plink, "--make-bed", "--bfile", _variants2 + '.FOUNDERS.QC', "--merge-list", TMP_merged_list, "--out",
-                 _out + '.MERGED.FOUNDERS'])
-            # print(command)
-            os.system(command)
-
-
-            """
-            Generated Outputs :
-                (1) Stuffs to merge ( merge_list )
-                (2) Merging the above stuffs ( *.MERGED.FOUNDERS )
-            
-            Final outputs : 
-                - *.MERGED.FOUNDERS
-            
-            Outputs to remove :
-                - *.{AA,HLA,SNPS}.FOUNDERS.{bed,bim,fam}
-                - merge_list
-            
-            
-            """
-
-            if not _f_save_intermediates:
-
-                os.system("rm " + (_out + ".HLA.*"))
-                os.system("rm " + (_out + ".AA.*"))
-                os.system("rm " + (_out + ".SNPS.*"))
-                os.system("rm " + (_variants2 + ".FOUNDERS.QC.*"))
-                os.system("rm " + TMP_merged_list)
-
-
-
-            index += 1
-
-
-        if QC:
-
-            print("[{}] Performing quality control.".format(index))
-
-            """
-            plink --bfile $OUTPUT.MERGED.FOUNDERS --freq --out $OUTPUT.MERGED.FOUNDERS.FRQ
-            awk '{if (NR > 1 && ($5 < 0.0001 || $5 > 0.9999)){print $2}}' $OUTPUT.MERGED.FOUNDERS.FRQ.frq > all.remove.snps
-            awk '{if (NR > 1){if (($3 == "A" && $4 == "P") || ($4 == "A" && $3 == "P")){print $2 "\tP"}}}' $OUTPUT.MERGED.FOUNDERS.FRQ.frq > allele.order
-    
-            # QC: Maximum per-SNP missing > 0.5, MAF > 0.1%
-            plink --bfile $OUTPUT.MERGED.FOUNDERS --reference-allele allele.order --exclude all.remove.snps --geno 0.5 --make-bed --out $OUTPUT
-    
-            # Calculate allele frequencies
-            plink --bfile $OUTPUT --keep-allele-order --freq --out $OUTPUT.FRQ
-            rm $_variants.FOUNDERS.*
-            rm $OUTPUT.MERGED.FOUNDERS.*
-            rm $OUTPUT.*.FOUNDERS.???
-            rm allele.order
-            rm all.remove.snps
-    
-            """
-
-            TMP_all_remove_snps = os.path.join(_out_dir, "all.remove.snps")
-            # TMP_allele_order = os.path.join(_out_dir, "allele.order")
-            TMP_allele_order = _out + ".refallele"
-
-
-            ### (1) Frequency file to use in filtering out some snps ( *.MERGED.FOUNDERS.FRQ )
-            command = ' '.join(
-                [plink, "--freq", "--bfile", _out + '.MERGED.FOUNDERS', "--out", _out + '.MERGED.FOUNDERS.FRQ'])
-            # print(command)
-            os.system(command)
-
-            ### (2) List up SNPs which have extreme allele frequency. ( all.remove.snps )
-            command = ' '.join(["awk", "'{if (NR > 1 && ($5 < 0.0001 || $5 > 0.9999)){print $2}}'",
-                                _out + '.MERGED.FOUNDERS.FRQ.frq', ">", TMP_all_remove_snps])
-            # print(command)
-            os.system(command)
-
-            ### (3) Making reference allele ( allele.order )
-            # command = ' '.join(["awk", '\'{if (NR > 1){if (($3 == "A" && $4 == "P") || ($4 == "A" && $3 == "P")){print $2 "\tP"}}}\'', OUTPUT+'.MERGED.FOUNDERS.FRQ.frq', ">", TMP_allele_order])
-            command = ' '.join(
-                ["awk", '\'{if (NR > 1){if (($3 == "a" && $4 == "p") || ($4 == "a" && $3 == "p")){print $2 "\tp"}}}\'',
-                 _out + '.MERGED.FOUNDERS.FRQ.frq', ">", TMP_allele_order])
-            # print(command)
-            os.system(command)
-
-
-            ### (4) Filtering out SNPs which have extreme allele frequency(The reference panel for association test.) ( *.{bed,bim,fam} )
-            # QC: Maximum per-SNP missing > 0.5, MAF > 0.1%
-            command = ' '.join(
-                [plink, "--bfile", _out + '.MERGED.FOUNDERS', "--a1-allele", TMP_allele_order, "--exclude",
-                 TMP_all_remove_snps, "--geno 0.5", "--make-bed", "--out", _out])
-            # print(command)
-            os.system(command)
-
-
-            ### (5) Allele frequency info. of output reference panel ( *.FRQ )
-            # Calculate allele frequencies
-            command = ' '.join([plink, "--bfile", _out, "--keep-allele-order", "--freq", "--out", _out + '.FRQ'])
-            # print(command)
-            os.system(command)
-
-
-
-
-            """
-            Generated Outputs :
-                (1) Frequency file to use in filtering out some snps ( *.MERGED.FOUNDERS.FRQ )
-                (2) List up SNPs which have extreme allele frequency. ( all.remove.snps )
-                (3) Making reference allele ( allele.order )
-                (4) Filtering out SNPs which have extreme allele frequency(The reference panel for association test.) ( *.{bed,bim,fam} )
-                (5) Allele frequency info. of output reference panel ( *.FRQ )
-
-            Final outputs : 
-                - *.{bed,bim,fam}
-                - *.FRQ
-
-            Outputs to remove :
-                - *.MERGED.FOUNDERS.FRQ
-                - all.remove.snps
-                - allele.order
-                - TMP_allele_order (:= OUTPUT + ".refallele")
-                - OUTPUT.{nosex,log}
-                - *.FRQ.{nosex,log}
-                
-            """
-
-            if not _f_save_intermediates:
-
-                os.system("rm " + (_out + ".MERGED.FOUNDERS.*"))
-                os.system("rm " + (_out + ".FRQ.log"))
-                os.system("rm " + (_out + ".log"))
-                os.system("rm " + TMP_all_remove_snps)
-                os.system("rm " + TMP_allele_order)
-
-                if os.path.exists(_out + ".FRQ.nosex"):
-                    os.system("rm " + (_out + ".FRQ.nosex"))
-                if os.path.exists(_out + ".nosex"):
-                    os.system("rm " + (_out + ".nosex"))
-
-
-
-            index += 1
-
-
-
-        # if PREPARE:
-        #
-        #     print("[{}] Preparing files for Beagle.".format(index))
-        #
-        #     """
-        #     [Source from Buhm Han.]
-        #
-        #     awk '{print $2 " " $4 " " $5 " " $6}' $OUTPUT.bim > $OUTPUT.markers
-        #     plink --bfile $OUTPUT --keep-allele-order --recode --alleleACGT --out $OUTPUT
-        #     awk '{print "M " $2}' $OUTPUT.map > $OUTPUT.dat
-        #     cut -d ' ' -f1-5,7- $OUTPUT.ped > $OUTPUT.nopheno.ped
-        #
-        #     echo "[$i] Converting to beagle format.";  @ i++
-        #     linkage2beagle pedigree=$OUTPUT.nopheno.ped data=$OUTPUT.dat beagle=$OUTPUT.bgl standard=true > $OUTPUT.bgl.log
-        #
-        #
-        #     [Source from Yang.]
-        #
-        #     awk '{print $2 " " $4 " " $5 " " $6}' $OUTPUT.bim > $OUTPUT.markers
-        #     plink --bfile $OUTPUT --keep-allele-order --recode --alleleACGT --out $OUTPUT
-        #     plink --bfile $OUTPUT --recode --transpose --out $OUTPUT
-        #     # awk '{print "M " $2}' $OUTPUT.map > $OUTPUT.dat
-        #     # cut -d ' ' -f1-5,7- $OUTPUT.ped > $OUTPUT.nopheno.ped
-        #
-        #     echo "[$i] Converting to beagle format.";  @ i++
-        #     beagle2vcf -fnmarker $OUTPUT.markers -fnfam $OUTPUT.fam -fngtype $OUTPUT.tped -fnout $OUTPUT.vcf
-        #
-        #     I will make this code block based on source given by Yang. for now.
-        #
-        #     """
-        #
-        #
-        #     command = ' '.join(
-        #         ["awk", '\'{print $2 " " $4 " " $5 " " $6}\'', OUTPUT + '.bim', ">", OUTPUT + '.markers'])
-        #     print(command)
-        #     os.system(command)
-        #
-        #     command = ' '.join(
-        #         [plink, "--bfile", OUTPUT, "--keep-allele-order", "--recode", "--alleleACGT", "--out", OUTPUT])
-        #     print(command)
-        #     os.system(command)
-        #
-        #     command = ' '.join(["awk", '\'{print "M " $2}\'', OUTPUT + '.map', ">", OUTPUT + '.dat'])
-        #     print(command)
-        #     os.system(command)
-        #
-        #     command = ' '.join(["cut -d ' ' -f1-5,7-", OUTPUT + '.ped', ">", OUTPUT + '.nopheno.ped'])
-        #     print(command)
-        #     os.system(command)
-        #
-        #     index += 1
-        #
-        #     print("[{}] Converting to beagle format.".format(index))
-        #
-        #     command = ' '.join([linkage2beagle, "pedigree=" + OUTPUT + '.nopheno.ped', "data=" + OUTPUT + '.dat',
-        #                         "beagle=" + OUTPUT + '.bgl', "standard=true", ">", OUTPUT + '.bgl.log'])
-        #     print(command)
-        #     os.system(command)
-        #
-        #     index += 1
-        #
-        #
-        # if PHASE:
-        #
-        #     print("[{}] Phasing reference using Beagle (see progress in $OUTPUT.bgl.log).".format(index))
-        #
-        #     # Put this part postponed. (2017.11.29. by B. Han.)
-        #     # Anyway introduced phasing by beagle. (2018. 7. 16.)
-        #
-        #     '''
-        #     beagle unphased=$OUTPUT.bgl nsamples=4 niterations=10 missing=0 verbose=true maxwindow=1000 log=$OUTPUT.phasing >> $OUTPUT.bgl.log
-        #
-        #     '''
-        #
-        #     command = ' '.join([beagle, "unphased=" + OUTPUT + '.bgl',
-        #                         "nsamples=4 niterations=10 missing=0 verbose=true maxwindow=1000",
-        #                         "log=" + OUTPUT + '.phasing', ">>", OUTPUT + '.bgl.log'])
-        #     print(command)
-        #     os.system(command)
-        #
-        #
-        #     index += 1
-
-
-        if CLEANUP:
-
-            print("[{}] Removing unnecessary files.".format(index))
-
-            '''
-            rm $OUTPUT.nopheno.ped
-            rm $OUTPUT.bgl.gprobs
-            rm $OUTPUT.bgl.r2
-            rm $OUTPUT.bgl
-            rm $OUTPUT.ped
-            rm $OUTPUT.map
-            rm $OUTPUT.dat
-            rm $OUTPUT.phasing.log
-            '''
-
-            rm_tlist = ('.nopheno.ped', '.bgl.gprobs', '.bgl.r2', '.bgl', '.ped', '.map', '.dat')
-
-            for i in rm_tlist:
-                print("rm " + _out + i)
-                os.system("rm " + _out + i)
-
-            index += 1
-
-
-        print("[{}] Making reference panel for HLA-AA,SNPS,HLA and Normal variants(SNPs) is Done!".format(index))
-
-        __return__ = _out
-
-
-
-    else:
-
-        ### No `_variants` is given.
-        # Only for HLA markers.
-        # "EXTRACT_FOUNDERS" code block is not included.
-
-
-        __HLA__ = None
-        __AA__ = None
-        __SNPS__ = None
-        __MERGED__ = None
-
-
-        if EXTRACT_FOUNDERS:
-
-            print("[{}] Extracting founders.".format(index))
-
-
-            __HLA__ = _out + ".HLA"
-            __AA__ = _out + ".AA.CODED"
-            __SNPS__ = _out + ".SNPS.CODED"
-
-
-            command = ' '.join([plink, "--make-bed", "--bfile", __HLA__, "--filter-founders", "--maf 0.0001", "--out", _out+'.HLA.FOUNDERS'])
-            # print(command)
-            os.system(command)
-            command = ' '.join([plink, "--make-bed", "--bfile", __SNPS__, "--filter-founders", "--maf 0.0001", "--out", _out+'.SNPS.FOUNDERS'])
-            # print(command)
-            os.system(command)
-            command = ' '.join([plink, "--make-bed", "--bfile", __AA__, "--filter-founders", "--maf 0.0001", "--out", _out+'.AA.FOUNDERS'])
-            # print(command)
-            os.system(command)
-
-
-            if not _f_save_intermediates:
-
-                os.system("rm " + _out+".HLA.bed")
-                os.system("rm " + _out+".HLA.bim")
-                os.system("rm " + _out+".HLA.fam")
-                os.system("rm " + _out+".HLA.log")
-
-                os.system("rm " + _out+".SNPS.CODED.bed")
-                os.system("rm " + _out+".SNPS.CODED.bim")
-                os.system("rm " + _out+".SNPS.CODED.fam")
-                os.system("rm " + _out+".SNPS.CODED.log")
-
-                os.system("rm " + _out+".AA.CODED.bed")
-                os.system("rm " + _out+".AA.CODED.bim")
-                os.system("rm " + _out+".AA.CODED.fam")
-                os.system("rm " + _out+".AA.CODED.log")
-
-                if os.path.exists(__HLA__+".nosex"):
-                    os.system("rm " + __HLA__ + ".nosex")
-                if os.path.exists(__SNPS__+".nosex"):
-                    os.system("rm " + __SNPS__ + ".nosex")
-                if os.path.exists(__AA__+".nosex"):
-                    os.system("rm " + __AA__ + ".nosex")
-
-        if MERGE2:
-
-            print("[{}] Merging SNP, HLA, and amino acid datasets.".format(index))
-
-            """
-            echo "[$i] Merging SNP, HLA, and amino acid datasets.";  @ i++
-            echo "$OUTPUT.HLA.FOUNDERS.bed $OUTPUT.HLA.FOUNDERS.bim $OUTPUT.HLA.FOUNDERS.fam" > merge_list
-            echo "$OUTPUT.AA.FOUNDERS.bed $OUTPUT.AA.FOUNDERS.bim $OUTPUT.AA.FOUNDERS.fam" >> merge_list
-            echo "$OUTPUT.SNPS.FOUNDERS.bed $OUTPUT.SNPS.FOUNDERS.bim $OUTPUT.SNPS.FOUNDERS.fam" >> merge_list
-            plink --bfile $_variants.FOUNDERS.QC --merge-list merge_list --make-bed --out $OUTPUT.MERGED.FOUNDERS
-            rm $OUTPUT.HLA.???
-            rm $OUTPUT.AA.CODED.???
-            rm $OUTPUT.SNPS.CODED.???
-            rm merge_list
-    
-            """
-
-            # Output of previous code block.
-            __AA__ = _out+'.AA.FOUNDERS'
-            __HLA__ = _out+'.HLA.FOUNDERS'
-            __SNPS__ = _out+'.SNPS.FOUNDERS'
-
-
-            TMP_merged_list = os.path.join(_out_dir, "merge_list")
-
-
-            command = ' '.join(["echo", __AA__ + '.bed', __AA__ + '.bim', __AA__ + '.fam', ">", TMP_merged_list])
-            # print(command)
-            os.system(command)
-
-            command = ' '.join(["echo", __HLA__ + '.bed', __HLA__ + '.bim', __HLA__ + '.fam', ">>", TMP_merged_list])
-            # print(command)
-            os.system(command)
-
-            command = ' '.join(["echo", __SNPS__ + '.bed', __SNPS__ + '.bim', __SNPS__ + '.fam', ">>", TMP_merged_list])
-            # print(command)
-            os.system(command)
-
-            command = ' '.join([plink, "--make-bed", "--merge-list", TMP_merged_list, "--out", _out + '.MERGED'])
-            # print(command)
-            os.system(command)
-
-
-
-            if not _f_save_intermediates:
-
-                os.system("rm " + __AA__+".bed")
-                os.system("rm " + __AA__+".bim")
-                os.system("rm " + __AA__+".fam")
-                os.system("rm " + __AA__+".log")
-
-                os.system("rm " + __SNPS__+".bed")
-                os.system("rm " + __SNPS__+".bim")
-                os.system("rm " + __SNPS__+".fam")
-                os.system("rm " + __SNPS__+".log")
-
-                os.system("rm " + __HLA__+".bed")
-                os.system("rm " + __HLA__+".bim")
-                os.system("rm " + __HLA__+".fam")
-                os.system("rm " + __HLA__+".log")
-
-                os.system("rm " + TMP_merged_list)
-
-                if os.path.exists(__HLA__+".nosex"):
-                    os.system("rm " + __HLA__ + ".nosex")
-                if os.path.exists(__SNPS__+".nosex"):
-                    os.system("rm " + __SNPS__ + ".nosex")
-                if os.path.exists(__AA__+".nosex"):
-                    os.system("rm " + __AA__ + ".nosex")
-
-
-
-            index += 1
-
-
-        if QC:
-
-            """
-            plink --bfile $OUTPUT.MERGED.FOUNDERS --freq --out $OUTPUT.MERGED.FOUNDERS.FRQ
-            awk '{if (NR > 1 && ($5 < 0.0001 || $5 > 0.9999)){print $2}}' $OUTPUT.MERGED.FOUNDERS.FRQ.frq > all.remove.snps
-            awk '{if (NR > 1){if (($3 == "A" && $4 == "P") || ($4 == "A" && $3 == "P")){print $2 "\tP"}}}' $OUTPUT.MERGED.FOUNDERS.FRQ.frq > allele.order
-        
-            # QC: Maximum per-SNP missing > 0.5, MAF > 0.1%
-            plink --bfile $OUTPUT.MERGED.FOUNDERS --reference-allele allele.order --exclude all.remove.snps --geno 0.5 --make-bed --out $OUTPUT
-        
-            # Calculate allele frequencies
-            plink --bfile $OUTPUT --keep-allele-order --freq --out $OUTPUT.FRQ
-            rm $_variants.FOUNDERS.*
-            rm $OUTPUT.MERGED.FOUNDERS.*
-            rm $OUTPUT.*.FOUNDERS.???
-            rm allele.order
-            rm all.remove.snps
-            
-            """
-
-            print("[{}] Performing quality control.".format(index))
-
-
-            # Output of previous code block.
-            __MERGED__ = _out + '.MERGED'
-            TMP_allele_order = __MERGED__ + ".refallele"
-
-
-            command = "{} --bfile {} --freq --out {}".format(plink, __MERGED__, __MERGED__+'.FRQ')
-            # print(command)
-            os.system(command)
-
-            all_remove_snps = os.path.join(_out_dir, "all.remove.snps")
-            command = "awk '{if (NR > 1 && ($5 < 0.0001 || $5 > 0.9999)){print $2}}' %s > %s" % (__MERGED__+'.FRQ.frq', all_remove_snps)
-            # print(command)
-            os.system(command)
-
-            # command = ' '.join(
-            #     ["awk", '\'{if (NR > 1){if (($5 == "a" && $6 == "p") || ($6 == "a" && $5 == "p")){print $2 "\tp"}}}\'',
-            #      __MERGED__+'.bim', ">", TMP_allele_order])
-            command = 'awk \'{if (NR > 1){if (($3 == "a" && $4 == "p") || ($4 == "a" && $3 == "p")){print $2 "\tp"}}}\' %s > %s' % (__MERGED__+'.FRQ.frq', TMP_allele_order)
-            # print(command)
-            os.system(command)
-
-            # command = ' '.join(
-            #     [plink, "--make-bed", "--bfile", __MERGED__, "--a1-allele", TMP_allele_order,
-            #      "--out", OUTPUT]) # (2019. 01. 10.) Final output as just output prefix(`OUTPUT`)
-            command = ' '.join(
-                [plink, "--make-bed", "--bfile", __MERGED__, "--a1-allele", TMP_allele_order, "--exclude",
-                 all_remove_snps, "--geno 0.5", "--out", _out])
-            # print(command)
-            os.system(command)
-
-            # Calculate allele frequencies
-            command = ' '.join([plink, "--bfile", _out, "--keep-allele-order", "--freq", "--out", _out + '.FRQ'])
-            # print(command)
-            os.system(command)
-
-
-            if not _f_save_intermediates:
-
-                os.system("rm " + __MERGED__+".bed")
-                os.system("rm " + __MERGED__+".bim")
-                os.system("rm " + __MERGED__+".fam")
-                os.system("rm " + __MERGED__+".log")
-
-                os.system("rm " + __MERGED__+".FRQ.frq")
-                os.system("rm " + __MERGED__+".FRQ.log")
-
-                os.system("rm " + TMP_allele_order)
-                os.system("rm " + all_remove_snps)
-                os.system("rm " + _out+".FRQ.log")
-                os.system("rm " + _out+".log")
-
-                if os.path.exists(__MERGED__+'.nosex'):
-                    os.system("rm " + __MERGED__ + ".nosex")
-                if os.path.exists(__MERGED__+'.FRQ.nosex'):
-                    os.system("rm " + __MERGED__ + ".FRQ.nosex")
-                if os.path.exists(_out+".nosex"):
-                    os.system("rm " + _out+".nosex")
-                if os.path.exists(_out+".FRQ.nosex"):
-                    os.system("rm " + _out+".FRQ.nosex")
-
-
-            index += 1
-
-
-        # if PREPARE:
-        #
-        #     print("[{}] Preparing files for Beagle.".format(index))
-        #
-        #     """
-        #     [Source from Buhm Han.]
-        #
-        #     awk '{print $2 " " $4 " " $5 " " $6}' $OUTPUT.bim > $OUTPUT.markers
-        #     plink --bfile $OUTPUT --keep-allele-order --recode --alleleACGT --out $OUTPUT
-        #     awk '{print "M " $2}' $OUTPUT.map > $OUTPUT.dat
-        #     cut -d ' ' -f1-5,7- $OUTPUT.ped > $OUTPUT.nopheno.ped
-        #
-        #     echo "[$i] Converting to beagle format.";  @ i++
-        #     linkage2beagle pedigree=$OUTPUT.nopheno.ped data=$OUTPUT.dat beagle=$OUTPUT.bgl standard=true > $OUTPUT.bgl.log
-        #
-        #
-        #     [Source from Yang.]
-        #
-        #     awk '{print $2 " " $4 " " $5 " " $6}' $OUTPUT.bim > $OUTPUT.markers
-        #     plink --bfile $OUTPUT --keep-allele-order --recode --alleleACGT --out $OUTPUT
-        #     plink --bfile $OUTPUT --recode --transpose --out $OUTPUT
-        #     # awk '{print "M " $2}' $OUTPUT.map > $OUTPUT.dat
-        #     # cut -d ' ' -f1-5,7- $OUTPUT.ped > $OUTPUT.nopheno.ped
-        #
-        #     echo "[$i] Converting to beagle format.";  @ i++
-        #     beagle2vcf -fnmarker $OUTPUT.markers -fnfam $OUTPUT.fam -fngtype $OUTPUT.tped -fnout $OUTPUT.vcf
-        #
-        #     I will make this code block based on source given by Yang. for now.
-        #
-        #     """
-        #
-        #     # *.markers
-        #     command = ' '.join(
-        #         ["awk", '\'{print $2 " " $4 " " $5 " " $6}\'', OUTPUT + '.bim', ">", OUTPUT + '.markers'])
-        #     print(command)
-        #     os.system(command)
-        #
-        #     command = ' '.join(
-        #         [plink, "--bfile", OUTPUT, "--keep-allele-order", "--recode", "--alleleACGT", "--out", OUTPUT])
-        #     print(command)
-        #     os.system(command)
-        #
-        #     # *.dat
-        #     command = ' '.join(["awk", '\'{print "M " $2}\'', OUTPUT + '.map', ">", OUTPUT + '.dat'])
-        #     print(command)
-        #     os.system(command)
-        #
-        #     # *.nopheno.ped
-        #     command = ' '.join(["cut -d ' ' -f1-5,7-", OUTPUT + '.ped', ">", OUTPUT + '.nopheno.ped'])
-        #     print(command)
-        #     os.system(command)
-        #
-        #     print("[{}] Converting to beagle format.".format(index))
-        #
-        #     command = ' '.join(
-        #         [linkage2beagle, "pedigree=" + OUTPUT + '.nopheno.ped', "data=" + OUTPUT + '.dat',
-        #          "beagle=" + OUTPUT + '.bgl', "standard=true", ">", OUTPUT + '.bgl.log'])
-        #     print(command)
-        #     os.system(command)
-        #
-        #
-        #     index += 1
-        #
-        #
-        #
-        # if PHASE:
-        #
-        #     print("[{}] Phasing reference using Beagle (see progress in $OUTPUT.bgl.log).".format(index))
-        #
-        #     # Put this part postponed. (2017.11.29. by B. Han.)
-        #     # Anyway introduced phasing by beagle. (2018. 7. 16.)
-        #
-        #     '''
-        #     beagle unphased=$OUTPUT.bgl nsamples=4 niterations=10 missing=0 verbose=true maxwindow=1000 log=$OUTPUT.phasing >> $OUTPUT.bgl.log
-        #
-        #     '''
-        #
-        #     command = ' '.join(
-        #         [beagle, "unphased=" + OUTPUT + '.bgl',
-        #          "nsamples=4 niterations=10 missing=0 verbose=true maxwindow=1000",
-        #          "log=" + OUTPUT + '.phasing', ">>", OUTPUT + '.bgl.log'])
-        #     print(command)
-        #     os.system(command)
-        #
-        #
-        #     index += 1
-        #
-        #
-        # if CLEANUP:
-        #
-        #     print("[{}] Removing unnecessary files.".format(index))
-        #     '''
-        #     rm $OUTPUT.nopheno.ped
-        #     rm $OUTPUT.bgl.gprobs
-        #     rm $OUTPUT.bgl.r2
-        #     rm $OUTPUT.bgl
-        #     rm $OUTPUT.ped
-        #     rm $OUTPUT.map
-        #     rm $OUTPUT.dat
-        #     rm $OUTPUT.phasing.log
-        #     '''
-        #
-        #     rm_tlist = ('.nopheno.ped', '.bgl.gprobs', '.bgl.r2', '.bgl', '.ped', '.map', '.dat')
-        #
-        #     for i in rm_tlist:
-        #         print("rm " + OUTPUT + ".MERGED" + i) # (2019. 01. 10.) ".MERGED" should be removed.
-        #         os.system("rm " + OUTPUT + ".MERGED" + i)
-        #
-        #     index += 1
-
-        print("[{}] Making reference panel for HLA-AA,SNPS,HLA is Done!".format(index))
-
-
-
-    return _out
-
-
-def ENCODE_AA(_chped, _dictionary_AA_seq, _dictionary_AA_map, _out, _out_dir,
-              plink, _f_save_intermediates, index):
+def ENCODE_AA(_CHPED: CHPED, _dictionary_AA_seq, _dictionary_AA_map, _out, _out_dir, plink, _f_save_intermediates):
     '''
     echo "[$i] Generating amino acid sequences from HLA types.";  @ i++
     ./HLAtoSequences.pl $_chped HLA_DICTIONARY_AA.txt AA > $OUTPUT.AA.ped
@@ -792,27 +93,23 @@ def ENCODE_AA(_chped, _dictionary_AA_seq, _dictionary_AA_map, _out, _out_dir,
     # rm $OUTPUT.AA.???
     '''
 
-    print("[{}] Generating Amino acid(AA)sequences from HLA types.".format(index))
-
+    print("[1] Generating Amino acid(AA)sequences from HLA types.")
     ### (1) Sequence File ( *.AA.{ped,map} ) ###
-    HLAtoSequences(_chped, _dictionary_AA_seq, "AA", _out=_out)
+    HLAtoSequences(_CHPED.chped, _dictionary_AA_seq, "AA", _out, _f_hasHeader=_CHPED.f_hasHeader,
+                   _HLA_target=_CHPED.HLA_avail)
     os.system(' '.join(["cp", _dictionary_AA_map, _out + '.AA.map']))
 
-    index += 1
 
-    print("[{}] Encoding Amino acids positions.".format(index))
-
+    print("[2] Encoding Amino acids positions.")
     ### (2) pre-CODED File ( *.AA.CODED.{ped,map},  *.AA.CODED.factors ) ###
     encodeVariants(_out + '.AA.ped', _out + '.AA.map', _out + '.AA.CODED')  # previously "enCODED".
 
-    index += 1
 
     ### (3) stuffs to remove ( *.AA.TMP.{bed,bim,fam}, to_remove ) ###
-    command = ' '.join(
-        [plink, "--make-bed", "--file", _out+'.AA.CODED', "--missing-genotype 0", "--out", _out+'.AA.TMP'])
+    command = ' '.join([plink, "--make-bed", "--file", _out+'.AA.CODED', "--missing-genotype 0", "--out", _out+'.AA.TMP'])
     # print(command)
     # os.system(command)
-    Bash_RUN_PLINK(command, _out + '.AA.TMP')
+    Bash_RUN_PLINK(command, _out + '.AA.TMP', _f_save_intermediates)
 
     command = ' '.join(
         ["awk", '\'{if ($5 == "0" || $5 == "x" || $6 == "x"){print $2}}\'', _out+'.AA.TMP.bim', "|",
@@ -831,7 +128,7 @@ def ENCODE_AA(_chped, _dictionary_AA_seq, _dictionary_AA_map, _out, _out_dir,
         [plink, "--make-bed", "--bfile", _out+'.AA.TMP', "--exclude", join(_out_dir, "to_remove"), "--out", _out+'.AA.CODED'])
     # print(command)
     # os.system(command)
-    Bash_RUN_PLINK(command, _out+'.AA.CODED')
+    Bash_RUN_PLINK(command, _out + '.AA.CODED', _f_save_intermediates)
 
     """
     Generated outputs :
@@ -867,20 +164,19 @@ def ENCODE_AA(_chped, _dictionary_AA_seq, _dictionary_AA_map, _out, _out_dir,
     return _out + '.AA.CODED'
 
 
-def ENCODE_HLA(_chped, _hg, _out, plink, _f_save_intermediates, index):
+def ENCODE_HLA(_CHPED: CHPED, _hg, _out, plink, _f_save_intermediates):
 
-    print("[{}] Encoding HLA alleles.".format(index))
+    print("[3] Encoding HLA alleles.")
 
     ### (1) Encoded HLA ( *.HLA.{ped,map} ) ###
-    encodeHLA(_chped, _out + ".HLA", _hg)
+    encodeHLA(_CHPED.chped, _out + ".HLA", _hg, _f_hasHeader=_CHPED.f_hasHeader,
+              _HLA_target=_CHPED.HLA_avail)
 
     ### (2) Final Encoded Outputs ( *.HLA.{bed,bim,fam,nosex,log} ) ###
     command = ' '.join([plink, "--make-bed", "--file", _out + '.HLA', "--out", _out + '.HLA'])
     # print(command)
     # os.system(command)
-    Bash_RUN_PLINK(command, _out + '.HLA')
-
-    index += 1
+    Bash_RUN_PLINK(command, _out + '.HLA', _f_save_intermediates)
 
     """
     Generaed outputs :
@@ -901,33 +197,31 @@ def ENCODE_HLA(_chped, _hg, _out, plink, _f_save_intermediates, index):
     return _out+'.HLA'
 
 
-def ENCODE_SNPS(_chped, _dictionary_SNPS_seq, _dictionary_SNPS_map, _out, _out_dir,
-                plink, _f_save_intermediates, index):
+def ENCODE_SNPS(_CHPED: CHPED, _dictionary_SNPS_seq, _dictionary_SNPS_map, _out, _out_dir, plink, _f_save_intermediates):
 
-    print("[{}] Generating DNA(SNPS) sequences from HLA types.".format(index))
+    print("[4] Generating DNA(SNPS) sequences from HLA types.")
 
     ### (1) Sequence File ( *.SNPS.{ped,map} )
-    HLAtoSequences(_chped, _dictionary_SNPS_seq, "SNPS", _out)
+    HLAtoSequences(_CHPED.chped, _dictionary_SNPS_seq, "SNPS", _out, _f_hasHeader=_CHPED.f_hasHeader,
+                   _HLA_target=_CHPED.HLA_avail)
 
     command = ' '.join(["cp", _dictionary_SNPS_map, _out + '.SNPS.map'])
     # print(command)
     os.system(command)
 
-    index += 1
 
-    print("[{}] Encoding SNP positions.".format(index))
+    print("[5] Encoding SNP positions.")
 
     ### (2) pre-CODED File ( *.SNPS.CODED.{ped,map} )
     encodeVariants(_out + '.SNPS.ped', _out + '.SNPS.map', _out + '.SNPS.CODED')
 
-    index += 1
 
     ### (3) Stuffs to remove ( *.SNPS.TMP.{bed,bim,fam}, to_remove )
     command = ' '.join(
         [plink, "--make-bed", "--file", _out + '.SNPS.CODED', "--missing-genotype 0", "--out", _out + '.SNPS.TMP'])
     # print(command)
     # os.system(command)
-    Bash_RUN_PLINK(command, _out + '.SNPS.TMP')
+    Bash_RUN_PLINK(command, _out + '.SNPS.TMP', _f_save_intermediates)
 
     command = ' '.join(
         ["awk", '\'{if ($5 == "0" || $5 == "x" || $6 == "x"){print $2}}\'', _out + '.SNPS.TMP.bim', "|",
@@ -940,7 +234,7 @@ def ENCODE_SNPS(_chped, _dictionary_SNPS_seq, _dictionary_SNPS_map, _out, _out_d
         [plink, "--make-bed", "--bfile", _out + '.SNPS.TMP', "--exclude", join(_out_dir, "to_remove"), "--out", _out + '.SNPS.CODED'])
     # print(command)
     # os.system(command)
-    Bash_RUN_PLINK(command, _out + '.SNPS.CODED')
+    Bash_RUN_PLINK(command, _out + '.SNPS.CODED', _f_save_intermediates)
 
     """
     Generated outputs :
@@ -976,8 +270,26 @@ def ENCODE_SNPS(_chped, _dictionary_SNPS_seq, _dictionary_SNPS_map, _out, _out_d
     return _out + '.SNPS.CODED'
 
 
-def EXTRACT_FOUNDERS(_bfile, _out, _out_dir, _type, plink, _f_save_intermediates,
-                     _maf=-1):
+def EXTRACT_FOUNDERS(_bfile, _out, _out_dir, _type, plink, _f_save_intermediates, _maf=-1):
+
+    """
+    Generated outputs :
+        (1) --filter-founders to variants data ( *.FOUNDERS )
+        (2) QC ( *.FOUNDERS.{hardy,freq,missing )
+        (3) Stuffs to remove ( remove.snps.hardy, remove.snps.freq, remove.snps.missing, all.remove.snps )
+        (4) Filtering out Quality-controled FOUNDERS ( *.FOUNDERS.QC )
+        (5) --filter-founders to HLA information ( *.{HLA,AA,SNPS}.FOUNDERS )
+
+    Final outputs :
+        - *.FOUNDERS.QC
+        - *.{HLA,AA,SNPS}.FOUNDERS
+
+    Outputs to remove :
+        - *.FOUNDERS
+        - *.FOUNDERS.{hardy,freq,missing}
+        - remove.snps.hardy, remove.snps.freq, remove.snps.missing, all.remove.snps
+
+    """
 
     if _type not in ("SNP", "AA", "HLA", "SNPS"): return None
 
@@ -1018,22 +330,22 @@ def EXTRACT_FOUNDERS(_bfile, _out, _out_dir, _type, plink, _f_save_intermediates
                             "--out", _out + '.FOUNDERS'])
         # print(command)
         # os.system(command)
-        Bash_RUN_PLINK(command, _out + '.FOUNDERS')
+        Bash_RUN_PLINK(command, _out + '.FOUNDERS', _f_save_intermediates)
 
         ### (2) QC ( *.FOUNDERS.{hardy,freq,missing )
         # Initial QC on Reference SNP panel
         command = ' '.join([plink, "--bfile", _out + '.FOUNDERS', "--hardy", "--out", _out + '.FOUNDERS.hardy'])
         # print(command)
         # os.system(command)
-        Bash_RUN_PLINK(command, _out + '.FOUNDERS.hardy')
+        Bash_RUN_PLINK(command, _out + '.FOUNDERS.hardy', _f_save_intermediates)
         command = ' '.join([plink, "--bfile", _out + '.FOUNDERS', "--freq", "--out", _out + '.FOUNDERS.freq'])
         # print(command)
         # os.system(command)
-        Bash_RUN_PLINK(command, _out + '.FOUNDERS.freq')
+        Bash_RUN_PLINK(command, _out + '.FOUNDERS.freq', _f_save_intermediates)
         command = ' '.join([plink, "--bfile", _out + '.FOUNDERS', "--missing", "--out", _out + '.FOUNDERS.missing'])
         # print(command)
         # os.system(command)
-        Bash_RUN_PLINK(command, _out + '.FOUNDERS.missing')
+        Bash_RUN_PLINK(command, _out + '.FOUNDERS.missing', _f_save_intermediates)
 
         ### (3) Stuffs to remove ( remove.snps.hardy, remove.snps.freq, remove.snps.missing, all.remove.snps )
         command = ' '.join(["awk", "'{if (NR > 1){print}}'", _out + '.FOUNDERS.hardy.hwe', "|",
@@ -1061,7 +373,7 @@ def EXTRACT_FOUNDERS(_bfile, _out, _out_dir, _type, plink, _f_save_intermediates
                             "--out", __SNP__])
         # print(command)
         # os.system(command)
-        Bash_RUN_PLINK(command, __SNP__)
+        Bash_RUN_PLINK(command, __SNP__, _f_save_intermediates)
 
         # Founders are identified here as individuals with "0"s in mother and father IDs in .fam file
 
@@ -1093,7 +405,7 @@ def EXTRACT_FOUNDERS(_bfile, _out, _out_dir, _type, plink, _f_save_intermediates
                             "--out", __TMP__])
         # print(command)
         # os.system(command)
-        Bash_RUN_PLINK(command, __TMP__)
+        Bash_RUN_PLINK(command, __TMP__, _f_save_intermediates)
 
         if not _f_save_intermediates:
             os.remove(_bfile+'.bed')
@@ -1104,6 +416,21 @@ def EXTRACT_FOUNDERS(_bfile, _out, _out_dir, _type, plink, _f_save_intermediates
 
 
 def MERGE(__SNP__, __AA__, __HLA__, __SNPS__, _out, _out_dir, plink, _f_save_intermediates):
+
+    """
+    Generated Outputs :
+        (1) Stuffs to merge ( merge_list )
+        (2) Merging the above stuffs ( *.MERGED.FOUNDERS )
+
+    Final outputs :
+        - *.MERGED.FOUNDERS
+
+    Outputs to remove :
+        - *.{AA,HLA,SNPS}.FOUNDERS.{bed,bim,fam}
+        - merge_list
+
+    """
+
     """
     echo "[$i] Merging SNP, HLA, and amino acid datasets.";  @ i++
     echo "$OUTPUT.HLA.FOUNDERS.bed $OUTPUT.HLA.FOUNDERS.bim $OUTPUT.HLA.FOUNDERS.fam" > merge_list
@@ -1141,7 +468,7 @@ def MERGE(__SNP__, __AA__, __HLA__, __SNPS__, _out, _out_dir, plink, _f_save_int
     command = ' '.join([plink, "--make-bed", "--merge-list", TMP_merged_list, "--out", __MERGED__])
     # print(command)
     # os.system(command)
-    Bash_RUN_PLINK(command, __MERGED__)
+    Bash_RUN_PLINK(command, __MERGED__, _f_save_intermediates)
 
     if not _f_save_intermediates:
         os.remove(__HLA__+'.bed')
@@ -1166,3 +493,180 @@ def MERGE(__SNP__, __AA__, __HLA__, __SNPS__, _out, _out_dir, plink, _f_save_int
     return __MERGED__
 
 
+def QC(__MERGED__, _out, _out_dir, plink, _f_save_intermediates):
+    """
+    Generated Outputs :
+        (1) Frequency file to use in filtering out some snps ( *.MERGED.FOUNDERS.FRQ )
+        (2) List up SNPs which have extreme allele frequency. ( all.remove.snps )
+        (3) Making reference allele ( allele.order )
+        (4) Filtering out SNPs which have extreme allele frequency(The reference panel for association test.) ( *.{bed,bim,fam} )
+        (5) Allele frequency info. of output reference panel ( *.FRQ )
+
+    Final outputs :
+        - *.{bed,bim,fam}
+        - *.FRQ
+
+    Outputs to remove :
+        - *.MERGED.FOUNDERS.FRQ
+        - all.remove.snps
+        - allele.order
+        - TMP_allele_order (:= OUTPUT + ".refallele")
+        - OUTPUT.{nosex,log}
+        - *.FRQ.{nosex,log}
+
+    """
+    """
+    plink --bfile $OUTPUT.MERGED.FOUNDERS --freq --out $OUTPUT.MERGED.FOUNDERS.FRQ
+    awk '{if (NR > 1 && ($5 < 0.0001 || $5 > 0.9999)){print $2}}' $OUTPUT.MERGED.FOUNDERS.FRQ.frq > all.remove.snps
+    awk '{if (NR > 1){if (($3 == "A" && $4 == "P") || ($4 == "A" && $3 == "P")){print $2 "\tP"}}}' $OUTPUT.MERGED.FOUNDERS.FRQ.frq > allele.order
+
+    # QC: Maximum per-SNP missing > 0.5, MAF > 0.1%
+    plink --bfile $OUTPUT.MERGED.FOUNDERS --reference-allele allele.order --exclude all.remove.snps --geno 0.5 --make-bed --out $OUTPUT
+
+    # Calculate allele frequencies
+    plink --bfile $OUTPUT --keep-allele-order --freq --out $OUTPUT.FRQ
+    rm $_variants.FOUNDERS.*
+    rm $OUTPUT.MERGED.FOUNDERS.*
+    rm $OUTPUT.*.FOUNDERS.???
+    rm allele.order
+    rm all.remove.snps
+
+    """
+
+    # __MERGED__ == '_out + '.MERGED.FOUNDERS'
+
+    TMP_all_remove_snps = join(_out_dir, "all.remove.snps")
+    # TMP_allele_order = os.path.join(_out_dir, "allele.order")
+    TMP_allele_order = _out + ".refallele"
+
+    ### (1) Frequency file to use in filtering out some snps ( *.MERGED.FOUNDERS.FRQ )
+    command = ' '.join([plink, "--freq", "--bfile", _out + '.MERGED.FOUNDERS', "--out", _out + '.MERGED.FOUNDERS.FRQ'])
+    # print(command)
+    # os.system(command)
+    Bash_RUN_PLINK(command, _out + '.MERGED.FOUNDERS.FRQ', _f_save_intermediates)
+
+    ### (2) List up SNPs which have extreme allele frequency. ( all.remove.snps )
+    command = ' '.join(["awk", "'{if (NR > 1 && ($5 < 0.0001 || $5 > 0.9999)){print $2}}'",
+                        _out + '.MERGED.FOUNDERS.FRQ.frq', ">", TMP_all_remove_snps])
+    # print(command)
+    os.system(command)
+
+    ### (3) Making reference allele ( allele.order )
+    # command = ' '.join(["awk", '\'{if (NR > 1){if (($3 == "A" && $4 == "P") || ($4 == "A" && $3 == "P")){print $2 "\tP"}}}\'', OUTPUT+'.MERGED.FOUNDERS.FRQ.frq', ">", TMP_allele_order])
+    command = ' '.join(
+        ["awk", '\'{if (NR > 1){if (($3 == "a" && $4 == "p") || ($4 == "a" && $3 == "p")){print $2 "\tp"}}}\'',
+         _out + '.MERGED.FOUNDERS.FRQ.frq', ">", TMP_allele_order])
+    # print(command)
+    os.system(command)
+
+    ### (4) Filtering out SNPs which have extreme allele frequency(The reference panel for association test.) ( *.{bed,bim,fam} )
+    # QC: Maximum per-SNP missing > 0.5, MAF > 0.1%
+    command = ' '.join(
+        [plink, "--make-bed", "--bfile", _out + '.MERGED.FOUNDERS', "--a1-allele", TMP_allele_order, "--exclude",
+         TMP_all_remove_snps, "--geno 0.5", "--out", _out])
+    # print(command)
+    # os.system(command)
+    Bash_RUN_PLINK(command, _out, _f_save_intermediates)
+
+    ### (5) Allele frequency info. of output reference panel ( *.FRQ )
+    # Calculate allele frequencies
+    command = ' '.join([plink, "--freq", "--bfile", _out, "--out", _out + '.FRQ'])
+    # print(command)
+    # os.system(command)
+    Bash_RUN_PLINK(command, _out + '.FRQ', _f_save_intermediates)
+
+
+    if not _f_save_intermediates:
+
+        os.remove(_out + ".MERGED.FOUNDERS.bed")
+        os.remove(_out + ".MERGED.FOUNDERS.bim")
+        os.remove(_out + ".MERGED.FOUNDERS.fam")
+        os.remove(_out + ".MERGED.FOUNDERS.FRQ.frq")
+
+        os.remove(TMP_all_remove_snps)
+        os.remove(TMP_allele_order)
+
+    return _out+'.bed', _out+'.bim', _out+'.fam', _out+'.FRQ.frq'
+
+# if PREPARE:
+#
+#     print("[{}] Preparing files for Beagle.".format(index))
+#
+#     """
+#     [Source from Buhm Han.]
+#
+#     awk '{print $2 " " $4 " " $5 " " $6}' $OUTPUT.bim > $OUTPUT.markers
+#     plink --bfile $OUTPUT --keep-allele-order --recode --alleleACGT --out $OUTPUT
+#     awk '{print "M " $2}' $OUTPUT.map > $OUTPUT.dat
+#     cut -d ' ' -f1-5,7- $OUTPUT.ped > $OUTPUT.nopheno.ped
+#
+#     echo "[$i] Converting to beagle format.";  @ i++
+#     linkage2beagle pedigree=$OUTPUT.nopheno.ped data=$OUTPUT.dat beagle=$OUTPUT.bgl standard=true > $OUTPUT.bgl.log
+#
+#
+#     [Source from Yang.]
+#
+#     awk '{print $2 " " $4 " " $5 " " $6}' $OUTPUT.bim > $OUTPUT.markers
+#     plink --bfile $OUTPUT --keep-allele-order --recode --alleleACGT --out $OUTPUT
+#     plink --bfile $OUTPUT --recode --transpose --out $OUTPUT
+#     # awk '{print "M " $2}' $OUTPUT.map > $OUTPUT.dat
+#     # cut -d ' ' -f1-5,7- $OUTPUT.ped > $OUTPUT.nopheno.ped
+#
+#     echo "[$i] Converting to beagle format.";  @ i++
+#     beagle2vcf -fnmarker $OUTPUT.markers -fnfam $OUTPUT.fam -fngtype $OUTPUT.tped -fnout $OUTPUT.vcf
+#
+#     I will make this code block based on source given by Yang. for now.
+#
+#     """
+#
+#
+#     command = ' '.join(
+#         ["awk", '\'{print $2 " " $4 " " $5 " " $6}\'', OUTPUT + '.bim', ">", OUTPUT + '.markers'])
+#     print(command)
+#     os.system(command)
+#
+#     command = ' '.join(
+#         [plink, "--bfile", OUTPUT, "--keep-allele-order", "--recode", "--alleleACGT", "--out", OUTPUT])
+#     print(command)
+#     os.system(command)
+#
+#     command = ' '.join(["awk", '\'{print "M " $2}\'', OUTPUT + '.map', ">", OUTPUT + '.dat'])
+#     print(command)
+#     os.system(command)
+#
+#     command = ' '.join(["cut -d ' ' -f1-5,7-", OUTPUT + '.ped', ">", OUTPUT + '.nopheno.ped'])
+#     print(command)
+#     os.system(command)
+#
+#     index += 1
+#
+#     print("[{}] Converting to beagle format.".format(index))
+#
+#     command = ' '.join([linkage2beagle, "pedigree=" + OUTPUT + '.nopheno.ped', "data=" + OUTPUT + '.dat',
+#                         "beagle=" + OUTPUT + '.bgl', "standard=true", ">", OUTPUT + '.bgl.log'])
+#     print(command)
+#     os.system(command)
+#
+#     index += 1
+#
+#
+# if PHASE:
+#
+#     print("[{}] Phasing reference using Beagle (see progress in $OUTPUT.bgl.log).".format(index))
+#
+#     # Put this part postponed. (2017.11.29. by B. Han.)
+#     # Anyway introduced phasing by beagle. (2018. 7. 16.)
+#
+#     '''
+#     beagle unphased=$OUTPUT.bgl nsamples=4 niterations=10 missing=0 verbose=true maxwindow=1000 log=$OUTPUT.phasing >> $OUTPUT.bgl.log
+#
+#     '''
+#
+#     command = ' '.join([beagle, "unphased=" + OUTPUT + '.bgl',
+#                         "nsamples=4 niterations=10 missing=0 verbose=true maxwindow=1000",
+#                         "log=" + OUTPUT + '.phasing', ">>", OUTPUT + '.bgl.log'])
+#     print(command)
+#     os.system(command)
+#
+#
+#     index += 1
