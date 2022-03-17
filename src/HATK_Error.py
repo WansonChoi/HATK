@@ -20,6 +20,12 @@ class HATK_PLINK_Execution_Error(HATK_Error):
     def __init__(self, _msg):
         pass
 
+class HATK_BEAGLE_Execution_Error(HATK_Error):
+    """
+    Error related to BEAGLE bash execution.
+    """
+    def __init__(self, _msg):
+        pass
 
 def RaiseError(_Error, _msg):
     """
