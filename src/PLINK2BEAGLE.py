@@ -1,13 +1,13 @@
 #-*- coding: utf-8 -*-
 
-import os
+import os, sys
 from shutil import which
 
 from src.PLINK_Bash import Bash_RUN_PLINK
 from Phasing.src.BEAGLE_Bash import Bash_BEAGLE
 
-def PLINK2BEAGLE(_bfile, _out_prefix, plink, _linkage2beagle, _java=which("java"), _java_mem='1G',
-                 _f_save_intermediates=False):
+def PLINK2BEAGLE(_bfile, _out_prefix, _linkage2beagle, plink=which("plink"),
+                 _java=which("java"), _java_mem='1G', _f_save_intermediates=False):
 
     ### Main Variables ###
     _bim = _bfile+'.bim'
@@ -25,7 +25,8 @@ def PLINK2BEAGLE(_bfile, _out_prefix, plink, _linkage2beagle, _java=which("java"
     ### Main Actions ###
 
     # *.markers
-    command = ' '.join(["awk", '\'{print $2 " " $4 " " $5 " " $6}\'', _bim, ">", _markers])
+    # command = ' '.join(["awk", '\'{print $2 " " $4 " " $5 " " $6}\'', _bim, ">", _markers])
+    command = ' '.join(["awk", '\'{print $2 " " $4 " " $6 " " $5}\'', _bim, ">", _markers]) # effect allele(a1-allele / ALT allele) as the 4th column. (2022.03.17.)
     # print(command)
     os.system(command)
 
@@ -80,9 +81,11 @@ if __name__ == '__main__':
     
     """
 
-    bfile = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/20220314_BEAGLE/wtccc_filtered_58C_RA.hatk.300+300.imgt3470.header.subset"
-    out_prefix = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/20220314_BEAGLE/wtccc_filtered_58C_RA.hatk.300+300.imgt3470.header.subset.tt"
-    plink = "/home/wansonchoi/miniconda3/envs/HATK/bin/plink"
-    linkage2beagle = "/media/sf_VirtualBox_Share/HATK/dependency/linkage2beagle.jar"
+    # bfile = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/20220314_BEAGLE/wtccc_filtered_58C_RA.hatk.300+300.imgt3470.header.subset"
+    # out_prefix = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/20220314_BEAGLE/wtccc_filtered_58C_RA.hatk.300+300.imgt3470.header.subset.tt"
 
-    PLINK2BEAGLE(bfile, out_prefix, plink, linkage2beagle)
+    bfile = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/20220314_BEAGLE/wtccc_filtered_58C_RA.hatk.300+300.imgt3470.header.subset.chr6.hg18.29-34mb"
+    out_prefix = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/20220314_BEAGLE/wtccc_filtered_58C_RA.hatk.300+300.imgt3470.header.subset.chr6.hg18.29-34mb"
+    l2b = "/home/wansonchoi/sf_VirtualBox_Share/HATK/dependency/linkage2beagle.jar"
+
+    PLINK2BEAGLE(bfile, out_prefix, l2b)

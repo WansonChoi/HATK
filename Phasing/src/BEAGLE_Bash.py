@@ -14,8 +14,8 @@ def Bash_BEAGLE(_command, _out, _f_save_log=False):
 
     except sbp.CalledProcessError:
         raise HATK_BEAGLE_Execution_Error(
-            "Next BEAGLE execution failed. ('{}')".format(_command) + \
-            (" Please refer to its log('{}') file.".format(_out + '.log') if Exists(_out + '.log') else "")
+            "\nNext BEAGLE execution failed. ('{}')".format(_command) + \
+            ("\nPlease refer to its log file. ('{}')".format(_out + '.log') if Exists(_out + '.log') else "")
         )
     else:
         if Exists(_out + '.log') and not _f_save_log: os.remove(_out + '.log')
@@ -29,8 +29,8 @@ def Bash_BEAGLE_Phase(_command, _out, _f_save_log=True):
 
     except sbp.CalledProcessError:
         raise HATK_BEAGLE_Execution_Error(
-            "Next BEAGLE Phasing failed. ('{}')".format(_command) + \
-            (" Please refer to its log('{}') file.".format(_out + '.log') if Exists(_out + '.log') else "")
+            "\nNext BEAGLE Phasing failed. ('{}')".format(_command) + \
+            ("\nPlease refer to its log('{}') file.".format(_out + '.log') if Exists(_out + '.log') else "")
         )
     else:
         if Exists(_out + '.log') and not _f_save_log: os.remove(_out + '.log')

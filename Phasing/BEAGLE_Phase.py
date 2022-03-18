@@ -27,6 +27,9 @@ def GCtrick(_bgl, _markers, _out_dir, _f_save_intermediates=False):
 
     # GCtrick
     _bgl_GCtrick, _markers_GCtrick = Bgl2GC(_bgl, _markers, _bgl_GCtrick, _markers_GCtrick)
+    # G: REF allele / C: ALT allele(effect allele) (2022.03.17.)
+    # Now the markers file is generated as the 4th column is the effect allele. (the 3rd is the REF allele.)
+    # Previously the relationship was reversed. (ex. CookHLA)
 
     # refine BPs
     _markers_GCtrick_refined = redefineBP(_markers_GCtrick, _markers_GCtrick_refined)
@@ -142,10 +145,6 @@ def FixBglHeader(_bgl_gz, _out_gz):
 
 
 
-# def unGCtrick(_bgl_phased_gz, _markers, _out):
-#     return GCtricedBGL2OriginalBGL_2(_bgl_phased_gz, _markers, _out)
-
-# unGCtrick = lambda _bgl_phased_gz, _markers, _out: GCtricedBGL2OriginalBGL_2(_bgl_phased_gz, _markers, _out)
 unGCtrick = GCtricedBGL2OriginalBGL_2
 
 
@@ -176,7 +175,7 @@ def Phasing_wrapper(_bgl, _markers, _out_prefix, _beagle2vcf, _vcf2beagle, _beag
     # _vcf_phased = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/20220314_BEAGLE/remove/wtccc_filtered_58C_RA.hatk.300+300.imgt3470.header.subset.tt.phased.vcf.gz" # for Test (Hard-coding)
     print("beagle4 phasing: {}".format(_vcf_phased))
 
-    return -1
+    # return -1
 
     ## vcf2beagle
     out_prefix_temp = _out_prefix+'.phased'
@@ -257,9 +256,9 @@ if __name__ == '__main__':
 
 
     ## whole implementation
-    bgl = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/20220314_BEAGLE/wtccc_filtered_58C_RA.hatk.300+300.imgt3470.header.subset.tt.bgl"
-    markers = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/20220314_BEAGLE/wtccc_filtered_58C_RA.hatk.300+300.imgt3470.header.subset.tt.markers"
-    out_prefix = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/20220314_BEAGLE/wtccc_filtered_58C_RA.hatk.300+300.imgt3470.header.subset.tt"
+    bgl = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/20220314_BEAGLE/wtccc_filtered_58C_RA.hatk.300+300.imgt3470.header.subset.chr6.hg18.29-34mb.bgl"
+    markers = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/20220314_BEAGLE/wtccc_filtered_58C_RA.hatk.300+300.imgt3470.header.subset.chr6.hg18.29-34mb.markers"
+    out_prefix = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/20220314_BEAGLE/wtccc_filtered_58C_RA.hatk.300+300.imgt3470.header.subset.chr6.hg18.29-34mb"
     beagle2vcf = "/home/wansonchoi/sf_VirtualBox_Share/HATK/dependency/beagle2vcf.jar"
     vcf2beagle = "/home/wansonchoi/sf_VirtualBox_Share/HATK/dependency/vcf2beagle.jar"
 
