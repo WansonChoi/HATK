@@ -27,6 +27,13 @@ class HATK_BEAGLE_Execution_Error(HATK_Error):
     def __init__(self, _msg):
         pass
 
+class HATK_R_Execution_Error(HATK_Error):
+    """
+    Error related to R(Rscript) execution.
+    """
+    def __init__(self, _msg):
+        pass
+
 def RaiseError(_Error, _msg):
     """
     To raise Error with Lambda expression.

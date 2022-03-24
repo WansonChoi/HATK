@@ -228,8 +228,10 @@ for (i in 1:length(testvariants)) {
 
 results = as.data.frame(results)
 
-outfilename = paste(outfile, data.phe.name, paste0(condvar,collapse='+'), "omnibus", sep='.', collapse='.')
-write.table(results, outfilename, quote=F,sep='\t',row.names=F,col.names=c("Variant","deltaDeviance","deltaDF","N","log10_P","Residues"))
+# outfilename = paste(outfile, data.phe.name, paste0(condvar,collapse='+'), "omnibus", sep= '../../HLA_Analysis/src/OmnibusTest', collapse= '../../HLA_Analysis/src/OmnibusTest')
+# write.table(results, outfilename, quote=F,sep='\t',row.names=F,col.names=c("Variant","deltaDeviance","deltaDF","N","log10_P","Residues"))
+
+write.table(results, outfile, quote=F, sep='\t', row.names=F, col.names=c("Variant","deltaDeviance","deltaDF","N","log10_P","Residues"))
 
 
 

@@ -162,7 +162,4 @@ newmatrix[(nrow(notAAmatrix)+1):nrow(newmatrix),] <- as.matrix(AAmatrix)
 newmatrix = as.data.frame(newmatrix)
 
 write.table(newmatrix,paste(output_, "aa", sep = '.') ,col.names=F,row.names=F,quote=F) # (*) args3
-	
-
-
-
+# write.table(newmatrix, output_, col.names=F, row.names=F, quote=F) # (*) args3
