@@ -1,0 +1,199 @@
+#-*- coding: utf-8 -*-
+import os, sys, re
+from os.path import basename, dirname, join, isdir
+from shutil import which
+import numpy as np
+import argparse, textwrap
+
+from HLA_Manhattan.manhattan import Manhattan, Manhattan_OM
+from src.util import Exists, checkFile
+from src.HATK_Error import HATK_InputPreparation_Error, RaiseError
+
+std_MAIN = "\n[Manhattan]: "
+std_ERROR = "\n[Manhattan::ERROR]: "
+std_WARNING = "\n[Manhattan::WARNING]: "
+
+
+class HATK_Manhattan(object):
+
+    # External software
+    Rscript = checkFile(which("Rscript"))
+
+    def __init__(self, _assoc:list, _out_prefix, _hg,
+                 _point_color="#778899", _top_color="#FF0000", _point_size="15", _yaxis_unit="10",
+                 _f_save_intermediates=False):
+
+        """
+        - given assocs are all same type, i.e. all PLINK assoc or all Omnibus assoc
+        - All given assocs exist
+        - How many assocs?
+        """
+
+        ### Main Variables ###
+        self.assoc = [checkFile(item) for item in _assoc]
+        self.N_assoc = len(self.assoc)
+        self.out_prefix = _out_prefix
+        self.out_dir = dirname(self.out_prefix)
+        self.hg = _hg
+
+        self.point_color = _point_color
+        self.top_color = _top_color
+        self.point_size = _point_size
+        self.yaxis_unit = _yaxis_unit
+
+        self.assoc_type = None
+        self.ManhattanPlot = None # Main result
+
+        ### Main Actions ###
+        # Type check of assocs. (is PLINK assoc or Omnibus?)
+        func1 = np.vectorize(lambda x: x.endswith('.assoc.logistic') or x.endswith('.assoc.linear'))
+        isPLINK = np.all(func1(self.assoc))
+        func2 = np.vectorize(lambda x: x.endswith('.omnibus'))
+        isOMNIBUS = np.all(func2(self.assoc))
+
+        if isPLINK:
+            self.assoc_type = "PLINK"
+        elif isOMNIBUS:
+            self.assoc_type = "OMNIBUS"
+        else:
+            raise HATK_InputPreparation_Error(
+                std_ERROR + "Given assoociation test results are not homogenous.\n" +
+                "Please check whether given assoc results are all from either PLINK('*.assoc.{logistic,linear}') or Omnibus Test('*.omnibus')."
+            )
+
+
+        print(self.__repr__())
+        if self.assoc_type == "PLINK":
+            self.ManhattanPlot = Manhattan(self.assoc, self.out_prefix, self.hg,
+                                           _pointcol=self.point_color, _topcol=self.top_color,
+                                           _pointsize=self.point_size, _yaxis_unit=self.yaxis_unit,
+                                           _Rscript=self.Rscript, _f_save_intermediates=_f_save_intermediates)
+        elif self.assoc_type == "OMNIBUS":
+            # self.ManhattanPlot = Manhattan_OM()
+            pass
+
+
+        print(self.__repr__())
+
+
+    def __repr__(self):
+        str_assoc = \
+            "- Association test result files: {}\n".format(self.assoc)
+        str_assoc_type = \
+            "- Assoc test type: {}\n".format(self.assoc_type)
+        str_N_assoc = \
+            "- The number of given assoc results: {}\n".format(self.N_assoc)
+        str_outprefix = \
+            "- Output prefix: {}\n".format(self.out_prefix)
+        str_hg = \
+            "- Human Genome version: {}\n".format(self.hg)
+
+        str_point_color = \
+            "- Point color: {}\n".format(self.point_color)
+        str_top_color = \
+            "- Top color: {}\n".format(self.top_color)
+        str_point_size = \
+            "- Point size: {}\n".format(self.point_size)
+        str_yaxis_unit = \
+            "- Y-axis unit: {}\n".format(self.yaxis_unit)
+
+        str_summary = ''.join([str_assoc, str_assoc_type, str_N_assoc, str_outprefix, str_hg,
+                               str_point_color, str_top_color, str_point_size, str_yaxis_unit])
+        return str_summary
+
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(prog='Manhattan',
+                                     formatter_class=argparse.RawTextHelpFormatter,
+                                     description=textwrap.dedent('''\
+    #################################################################################################
+
+        manhattan.py
+
+        Manhattan Plot.
+
+
+        (Example 1 : hg18 / imgt3320 / single logistic regression result.)
+
+        $ python3 manhattan.py \
+
+
+        (Example 2 : hg18 / imgt3320 / multiple logistic regression result.)
+
+        $ python3 manhattan.py \
+
+    #################################################################################################
+                                             '''),
+                                     add_help=False)
+
+    parser._optionals.title = "OPTIONS"
+
+    parser.add_argument("-h", "--help", help="\nShow this help message and exit\n\n", action='help')
+
+    parser.add_argument("--assoc-result", "-ar", help="\nAssociation test result file(ex. *.assoc.logistic).\n\n",
+                        nargs='+', required=True)
+    # parser.add_argument("--plot-label", "-pl", help="\nPlot Label\n\n", default="")
+    parser.add_argument("--out", help="\nOuput file prefix\n\n", required=True)
+
+    parser.add_argument("--hg", help="\nHuman Genome version(18, 19 or 38)\n\n", choices=["18", "19", "38"],
+                        metavar="hg", required=True)
+
+    parser.add_argument("--point-color", "-pc", help="\nPoint color(ex. \"#778899\").\n\n", default="#778899")
+    parser.add_argument("--top-color", "-tc", help="\nTop signal point color(ex. \"#FF0000\").\n\n",
+                        default="#FF0000")
+
+    parser.add_argument("--point-size", "-ps", help="\nGeneral point size (default: 15).\n\n", default="15")
+    parser.add_argument("--yaxis-unit", "-yau", help="\nY-axis value(-log10(x)) unit (default : 10).\n\n",
+                        default="10")
+
+    # parser.add_argument("--HLA", help="\nHLA gene to plot heatmap.\n\n",
+    #                     choices=['A', 'B', 'C', 'DPA1', 'DPB1', 'DQA1', 'DQB1', 'DRB1'], nargs='+')
+
+    ### for Testing
+
+    # args = parser.parse_args(['-ar', '/Users/wansun/Git_Projects/HATK/MyOmnibusTest2/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.58C_RA.300+300.chr6.hg18.RA.AA_DRB1_96.omnibus',
+    #                           '-hg', '18',
+    #                           '-o', '/Users/wansun/Git_Projects/HATK/MyOmnibusTest2/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.58C_RA.300+300.chr6.hg18.RA.AA_DRB1_96.omnibus',
+    #                           "--HLA", 'A', 'B', 'C', 'DPA1', 'DPB1', 'DQA1', 'DQB1', 'DRB1'])
+
+    ### for Publish
+    args = parser.parse_args()
+    print(args)
+
+    # Manhattan(args.assoc_result, args.out, args.hg, _pointcol=args.point_color, _topcol=args.top_color,
+    #           _pointsize=args.point_size, _yaxis_unit=args.yaxis_unit, _HLA=args.HLA)
+
+    HATK_Manhattan(args.assoc_result, args.out, args.hg, _point_color=args.point_color, _top_color=args.top_color,
+                   _point_size=args.point_size, _yaxis_unit=args.yaxis_unit)
+
+
+# for item in _assoc_result:
+#     if not os.path.exists(item):
+#         print(std_ERROR + "One of the given association result file({}) doesn't exist. Please check it again.\n".format(item))
+#         sys.exit()
+#
+#
+# if not bool(_out):
+#     print(std_ERROR + "Please check '--out' argument again.\n")
+#     sys.exit()
+#
+# if not bool(_hg):
+#     print(std_ERROR + "Please check '-hg' argument again.\n")
+#     sys.exit()
+#
+#
+# isOmnibus = list(map(lambda x : x.endswith('.omnibus'), _assoc_result))
+#
+# if all(isOmnibus):
+#
+#     if not bool(kwargs['_HLA']):
+#         print(std_ERROR + "Which HLA genes to plot must be specified.\n"
+#                                             "Please check the '--HLA' argument again."
+#                                             "")
+#         sys.exit()
+#
+#
+# self.result = Manhattan(_assoc_result, _out, _hg, _pointcol=kwargs['_point_col'], _topcol=kwargs['_top_color'],
+#                         _pointsize=kwargs['_point_size'], _yaxis_unit=kwargs['_yaxis_unit'],
+#                         _p_src=kwargs['_p_src'], _p_data=kwargs['_p_data'], _HLA=kwargs['_HLA'])
