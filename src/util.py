@@ -43,3 +43,10 @@ def get_N_row(_file) -> int:
         count = 0
         for _ in f_file: count +=1
         return count
+
+
+def getColumn(_file, _N_col):
+    with open(_file, 'r') as f_input:
+        for line in f_input:
+            l = line.split()
+            yield l[_N_col]

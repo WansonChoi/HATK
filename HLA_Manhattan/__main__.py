@@ -42,7 +42,7 @@ class HATK_Manhattan(object):
         self.yaxis_unit = _yaxis_unit
 
         self.assoc_type = None
-        self.ManhattanPlot = None # Main result
+        self.ManhattanPlot = [] # Main result
 
         ### Main Actions ###
         # Type check of assocs. (is PLINK assoc or Omnibus?)
@@ -64,14 +64,16 @@ class HATK_Manhattan(object):
 
         print(self.__repr__())
         if self.assoc_type == "PLINK":
-            self.ManhattanPlot = Manhattan(self.assoc, self.out_prefix, self.hg,
-                                           _pointcol=self.point_color, _topcol=self.top_color,
-                                           _pointsize=self.point_size, _yaxis_unit=self.yaxis_unit,
-                                           _Rscript=self.Rscript, _f_save_intermediates=_f_save_intermediates)
+            self.ManhattanPlot = \
+                Manhattan(self.assoc, self.out_prefix, self.hg,
+                          _pointcol=self.point_color, _topcol=self.top_color,
+                          _pointsize=self.point_size, _yaxis_unit=self.yaxis_unit,
+                          _Rscript=self.Rscript, _f_save_intermediates=_f_save_intermediates)
         elif self.assoc_type == "OMNIBUS":
-            # self.ManhattanPlot = Manhattan_OM()
-            pass
-
+            self.ManhattanPlot = \
+                Manhattan_OM(self.assoc, self.out_prefix, self.hg, _pointcol=self.point_color, _topcol=self.top_color,
+                             _pointsize=self.point_size, _yaxis_unit=self.yaxis_unit, _Rscript=self.Rscript,
+                             _f_save_intermediates=_f_save_intermediates)
 
         print(self.__repr__())
 
@@ -97,8 +99,16 @@ class HATK_Manhattan(object):
         str_yaxis_unit = \
             "- Y-axis unit: {}\n".format(self.yaxis_unit)
 
+        str_manhattan = \
+            "- Manhattan plot(s): {}\n".format(
+                self.ManhattanPlot if self.assoc_type == "PLINK" else \
+                ''.join("\n   - {}".format(item) for item in self.ManhattanPlot)
+            )
+
+
         str_summary = ''.join([str_assoc, str_assoc_type, str_N_assoc, str_outprefix, str_hg,
-                               str_point_color, str_top_color, str_point_size, str_yaxis_unit])
+                               str_point_color, str_top_color, str_point_size, str_yaxis_unit,
+                               str_manhattan])
         return str_summary
 
 

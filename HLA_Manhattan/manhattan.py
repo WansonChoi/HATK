@@ -2,12 +2,14 @@
 import os, sys, re
 from os.path import basename, dirname, join
 import subprocess as sbp
+
+import numpy as np
 import pandas as pd
 from shutil import which
 from math import log10
 
 from src.HATK_Error import HATK_R_Execution_Error
-from src.util import Exists
+from src.util import Exists, getColumn
 
 std_MAIN = "\n[%s]: " % basename(__file__)
 std_ERROR = "\n[%s::ERROR]: " % basename(__file__)
@@ -84,21 +86,22 @@ def Manhattan(_assoc_result, _out_prefix, _hg, _pointcol="#778899", _topcol="#FF
     #            _knownGene, _p_src, '> {}'.format(_out+'.log')]
 
     command = \
-        "{Rscript} {src} {assoc} {out} {pointcol} {pointsize} {topcol} {min_pos} {max_pos} {top_label} " \
+        "{Rscript} {src} {assoc} {out_prefix} {pointcol} {pointsize} {topcol} {min_pos} {max_pos} {top_label} " \
         "{yaxis} {yaxis_unit} {knownGene} {p_src}" \
-        .format(Rscript=_Rscript, src=join(_p_src, "manhattan_HLA_HATK.R"), assoc=export_ar, out=_out_prefix, pointcol=_pointcol,
-                pointsize=_pointsize, topcol=_topcol, min_pos=_min_pos, max_pos=_max_pos, top_label=export_TOP_LABEL,
-                yaxis=export_yaxis, yaxis_unit=_yaxis_unit, knownGene=_knownGene, p_src=_p_src)
+        .format(Rscript=_Rscript, src=join(_p_src, "manhattan_HLA_HATK.R"), assoc=export_ar, out_prefix=_out_prefix,
+                pointcol=_pointcol, pointsize=_pointsize, topcol=_topcol, min_pos=_min_pos, max_pos=_max_pos,
+                top_label=export_TOP_LABEL, yaxis=export_yaxis, yaxis_unit=_yaxis_unit, knownGene=_knownGene, p_src=_p_src)
     # print(command)
 
-    return plotManhattan(command, _out_prefix, _f_save_log=_f_save_intermediates)
+    __RETURN__ = plotManhattan(command, _out_prefix, _f_save_intermediates) + ".pdf"
+
+    return __RETURN__
 
 
 
-def Manhattan_OM(_assoc_result, _out_prefix, _hg, _pointcol="#778899", _topcol="#FF0000", _min_pos="29.60E6",
-                 _max_pos="33.2E6", _pointsize="15", _yaxis_unit="10", _p_Rscript=which("Rscript"), _p_src='./src',
-                 _p_data='./data', _HLA=("A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1"),
-                 _f_save_intermediates=False):
+def Manhattan_OM(_assoc_OM_result, _out_prefix, _hg, _pointcol="#778899", _topcol="#FF0000", _min_pos="29.60E6",
+                 _max_pos="33.2E6", _pointsize="15", _yaxis_unit="10", _p_src='HLA_Manhattan/src/',
+                 _p_data='HLA_Manhattan/data', _Rscript=which("Rscript"), _f_save_intermediates=False):
     """
     Manhattan plot for Omnibus test result. (ex. *.omnibus)
     """
@@ -112,14 +115,17 @@ def Manhattan_OM(_assoc_result, _out_prefix, _hg, _pointcol="#778899", _topcol="
     p_Omnibus_AA = re.compile(r'AA_([A-Z0-9]+)_(-?\d+)')
     p_Omnibus_INS = re.compile(r'INS_AA_([A-Z0-9]+)_(-?\d+)x(-?\d+)')
 
-    __RESULTS__ = []
+    # HLA target
+    _HLA_target = getTargetHLA(_assoc_OM_result, p_Omnibus_AA, p_Omnibus_INS)
+
+    __RETURN__ = []
 
 
     ### Main Actions ###
-    for i in range(0, len(_assoc_result)):
+    for i in range(0, len(_assoc_OM_result)):
 
         # Header : [Variant, deltaDeviance, deltaDF, N, log10_P, Residues]
-        t_ar = pd.read_csv(_assoc_result[i], sep='\s+', header=0) \
+        t_ar = pd.read_csv(_assoc_OM_result[i], sep='\s+', header=0) \
                     .dropna()
 
         # print(t_ar['log10_P'].map(lambda x : 10**x))
@@ -156,11 +162,11 @@ def Manhattan_OM(_assoc_result, _out_prefix, _hg, _pointcol="#778899", _topcol="
         # print(t_ar)
 
 
-        for i in range(len(_HLA)):
+        for i in range(len(_HLA_target)):
 
             ### Plotting by each HLA gene.
 
-            t_ar_byHLA = t_ar[t_ar['HLA'] == _HLA[i]]
+            t_ar_byHLA = t_ar[t_ar['HLA'] == _HLA_target[i]]
             # print(t_ar_byHLA.head())
 
             t_ar_byHLA_2 = t_ar_byHLA[['Variant', 'P', 'REL_POS']].sort_values('P')
@@ -186,15 +192,9 @@ def Manhattan_OM(_assoc_result, _out_prefix, _hg, _pointcol="#778899", _topcol="
             # print("maximum y-axis is {0}".format(_yaxis))
 
 
-
-            # Briefing
-
-            _forManhattn = _out_prefix + '.{}.forManhattan.txt'.format(_HLA[i])
+            _forManhattn = _out_prefix + '.{}.forManhattan.txt'.format(_HLA_target[i])
             # print(t_ar_byHLA.sort_values('REL_POS'))
             t_ar_byHLA.sort_values('REL_POS').to_csv(_forManhattn, sep='\t', header=True, index=False)
-
-
-
 
             export_ar = _forManhattn
             export_TOP_LABEL = TOP_LABEL
@@ -209,35 +209,34 @@ def Manhattan_OM(_assoc_result, _out_prefix, _hg, _pointcol="#778899", _topcol="
 
             # print(std_MAIN_PROCESS_NAME + "Plotting Manhattan.\n")
 
-            OUT = _out_prefix + '.{}'.format(_HLA[i])
+            OUT_prefix = _out_prefix + '.{}'.format(_HLA_target[i])
 
-            command = [_p_Rscript, os.path.join(_p_src, "manhattan_HLA_HATK.Omnibus.R"),
-                       export_ar, OUT,
-                       _pointcol, _pointsize, _topcol,
-                       _min_pos, _max_pos, export_TOP_LABEL, export_yaxis, _yaxis_unit,
-                       _p_src, '> {}'.format(OUT + '.log')]
+            # command = [_Rscript, os.path.join(_p_src, "manhattan_HLA_HATK.Omnibus.R"),
+            #            export_ar, OUT_prefix,
+            #            _pointcol, _pointsize, _topcol,
+            #            _min_pos, _max_pos, export_TOP_LABEL, export_yaxis, _yaxis_unit,
+            #            _p_src, '> {}'.format(OUT_prefix + '.log')]
 
-
-            command = ' '.join(command)
+            command = \
+                "{Rscript} {src} {assoc} {out_prefix} {pointcol} {pointsize} {topcol} {min_pos} {max_pos} {top_label} " \
+                "{yaxis} {yaxis_unit} {p_src}" \
+                .format(Rscript=_Rscript, src=join(_p_src, "manhattan_HLA_HATK.Omnibus.R"), assoc=export_ar, out_prefix=OUT_prefix,
+                        pointcol=_pointcol, pointsize=_pointsize, topcol=_topcol, min_pos=_min_pos, max_pos=_max_pos,
+                        top_label=export_TOP_LABEL, yaxis=export_yaxis, yaxis_unit=_yaxis_unit, p_src=_p_src)
             # print(command)
-            r = os.system(command)
 
-            if r == 0 and os.path.exists(OUT+'.pdf'):
-                os.system('rm {}'.format(_forManhattn))
-                __RESULTS__.append(OUT+'.pdf')
-            else:
-                __RESULTS__.append('-1')
+            r = plotManhattan_OM(command, OUT_prefix, _f_save_intermediates, [_forManhattn])
+            __RETURN__.append(r+'.pdf')
 
 
-
-    return __RESULTS__
+    return __RETURN__
 
 
 
-def plotManhattan(_command, _out_prefix, _f_save_log=False):
+def plotManhattan(_command, _out_prefix, _f_save_intermediates=False, _l_to_remove:list=()):
     try:
-        with open(_out_prefix, 'w') as f_out, open(_out_prefix + '.log', 'w') as f_out_log:
-            sbp.run(_command.split(), check=True, stdout=f_out, stderr=f_out_log)
+        with open(_out_prefix + '.log', 'w') as f_out_log:
+            sbp.run(_command.split(), check=True, stdout=f_out_log, stderr=f_out_log)
 
     except sbp.CalledProcessError:
         raise HATK_R_Execution_Error(
@@ -245,5 +244,56 @@ def plotManhattan(_command, _out_prefix, _f_save_log=False):
             ("\nPlease refer to its log file. ('{}')".format(_out_prefix + '.log') if Exists(_out_prefix + '.log') else "")
         )
     else:
-        if Exists(_out_prefix + '.log') and not _f_save_log: os.remove(_out_prefix + '.log')
+        # remove
+        if not _f_save_intermediates:
+            if Exists(_out_prefix + '.log'): os.remove(_out_prefix + '.log')
+            for item in _l_to_remove:
+                if Exists(item): os.remove(item)
+
         return _out_prefix
+
+
+
+def plotManhattan_OM(_command, _out_prefix, _f_save_intermediates=False, _l_to_remove:list=()):
+    try:
+        with open(_out_prefix + '.log', 'w') as f_out_log:
+            sbp.run(_command.split(), check=True, stdout=f_out_log, stderr=f_out_log)
+
+    except sbp.CalledProcessError:
+        # raise HATK_R_Execution_Error(
+        #     "\nFailed to plot the Omnibus Manhattan plot. ('{}')".format(_command) + \
+        #     ("\nPlease refer to its log file. ('{}')".format(_out_prefix + '.log') if Exists(_out_prefix + '.log') else "")
+        # )
+        print(std_ERROR + "\nFailed to plot the Omnibus Manhattan plot. ('{}')".format(_command) + \
+            ("\nPlease refer to its log file. ('{}')".format(_out_prefix + '.log') if Exists(_out_prefix + '.log') else ""))
+    else:
+        # remove
+        if not _f_save_intermediates:
+            if Exists(_out_prefix + '.log'): os.remove(_out_prefix + '.log')
+            for item in _l_to_remove:
+                if Exists(item): os.remove(item)
+
+        return _out_prefix
+
+
+
+def getUniqueHLA(_assoc_OM, _p_Omnibus_AA, _p_Omnibus_INS):
+
+    l_RETURN = []
+
+    for item in getColumn(_assoc_OM, 0):
+        m_Omnibus_AA = _p_Omnibus_AA.match(item)
+        m_Omnibus_INS = _p_Omnibus_INS.match(item)
+
+        if bool(m_Omnibus_AA): l_RETURN.append(m_Omnibus_AA.group(1))
+        elif bool(m_Omnibus_INS): l_RETURN.append(m_Omnibus_INS.group(1))
+        else: pass
+
+    return l_RETURN
+
+def getTargetHLA(_assoc_OM_result, _p_Omnibus_AA, _p_Omnibus_INS):
+    arr_whole_HLA = np.array(
+        [getUniqueHLA(_assoc_OM, _p_Omnibus_AA, _p_Omnibus_INS) for _assoc_OM in _assoc_OM_result]
+    ).flatten()
+
+    return list(np.unique(arr_whole_HLA))
