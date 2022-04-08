@@ -1,5 +1,4 @@
 #-*- coding: utf-8 -*-
-
 import os, sys, re
 from os.path import basename, dirname, exists, isdir, join
 import argparse, textwrap
@@ -17,9 +16,8 @@ std_WARNING_MAIN_PROCESS_NAME = "\n[IMGT2Seq::WARNING]: "
 
 class HATK_IMGT2Seq(object):
 
-    def __init__(self, _imgt, _hg, _out,
-                 _F_one, _F_two, _F_three, _F_four, _F_Ggroup, _F_Pgroup, _imgt_dir,
-                 _no_Indel=False, _MultiP=False, _save_intermediates=False, _no_prime=True, _p_data='./IMGT2Seq/data',
+    def __init__(self, _imgt, _hg, _out, _F_one, _F_two, _F_three, _F_four, _F_Ggroup, _F_Pgroup, _imgt_dir,
+                 _no_Indel=False, _MultiP=False, _f_save_intermediates=False, _no_prime=True, _p_data='./IMGT2Seq/data',
                  _HLA_req=("A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1")):
 
         """
@@ -69,7 +67,7 @@ class HATK_IMGT2Seq(object):
         self.no_indel = _no_Indel
         self.no_prime = _no_prime
         self.multiprocess = _MultiP
-        self.save_intermediates = _save_intermediates
+        self.save_intermediates = _f_save_intermediates
 
         # flags
         self.f_hasPreviousResult = self.findExistingResult()
@@ -152,7 +150,7 @@ class HATK_IMGT2Seq(object):
 
         temp = \
             IMGT2Seq(self.imgt, self.hg, self.out, _imgt_dir=self.imgt_dir, _no_Indel=self.no_indel,
-                     _MultiP=self.multiprocess, _save_intermediates=self.save_intermediates, _p_data="IMGT2Seq/data",
+                     _MultiP=self.multiprocess, _f_save_intermediates=self.save_intermediates, _p_data="IMGT2Seq/data",
                      __Nfield_OUTPUT_FORMAT=self.which_format, _HLA_target=self.HLA_target)
 
 
@@ -318,7 +316,6 @@ if __name__ == "__main__":
 
     ##### < Main function Execution. > #####
 
-
     HATK_IMGT2Seq(args.imgt, args.hg, args.out, args.F_one, args.F_two, args.F_three, args.F_four, args.F_Ggroup,
                   args.F_Pgroup, _imgt_dir=args.imgt_dir, _no_Indel=args.no_indel, _MultiP=args.multiprocess,
-                  _save_intermediates=args.save_intermediates, _HLA_req=args.HLA)
+                  _f_save_intermediates=args.save_intermediates, _HLA_req=args.HLA)

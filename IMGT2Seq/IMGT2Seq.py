@@ -17,8 +17,8 @@ std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % basename(__file__)
 std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % basename(__file__)
 
 
-def IMGT2Seq(_imgt, _hg, _out_dir, _imgt_dir, _no_Indel=False, _MultiP=False, _save_intermediates=False, _no_prime=True,
-             _p_data='./data', __Nfield_OUTPUT_FORMAT=4,
+def IMGT2Seq(_imgt, _hg, _out_dir, _imgt_dir, _no_Indel=False, _MultiP=False, _f_save_intermediates=False,
+             _no_prime=True, _p_data='./data', __Nfield_OUTPUT_FORMAT=4,
              _HLA_target=("A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1")):
 
     ### Main Variables ###
@@ -70,7 +70,7 @@ def IMGT2Seq(_imgt, _hg, _out_dir, _imgt_dir, _no_Indel=False, _MultiP=False, _s
 
             dict_Pool = {_HLA_target[i]: pool.apply_async(ProcessIMGT, (_out_dir, _HLA_target[i], _hg, _imgt,
                                                                         dict_nuc_files[_HLA_target[i]], dict_gen_files[_HLA_target[i]], dict_prot_files[_HLA_target[i]],
-                                                                        _p_data, _no_Indel, _save_intermediates))
+                                                                        _p_data, _no_Indel, _f_save_intermediates))
                          for i in range(0, len(_HLA_target))}
 
             pool.close()
@@ -93,7 +93,7 @@ def IMGT2Seq(_imgt, _hg, _out_dir, _imgt_dir, _no_Indel=False, _MultiP=False, _s
                 dict_temp[hla] = \
                     ProcessIMGT(_out_dir, hla, _hg, _imgt, dict_nuc_files[hla], dict_gen_files[hla],
                                 dict_prot_files[hla], _p_data, _no_Indel=_no_Indel,
-                                _save_intermediates=_save_intermediates)
+                                _save_intermediates=_f_save_intermediates)
         # done.
 
 

@@ -7,6 +7,7 @@ import argparse, textwrap
 from bMarkerGenerator.bMarkerGenerator import bMarkerGenerator
 from src.HATK_Error import HATK_InputPreparation_Error, RaiseError
 from src.util import Exists
+from NomenCleaner.src.CHPED import CHPED
 
 std_MAIN_PROCESS_NAME = "\n[bMarkerGenerator]: "
 std_ERROR_MAIN_PROCESS_NAME = "\n[bMarkerGenerator::ERROR]: "
@@ -26,7 +27,7 @@ class HATK_bMarkerGenertor(object):
         """
 
         ### Main Variables ###
-        self.chped = _chped if Exists(_chped) else RaiseError(HATK_InputPreparation_Error, "Given CHPED file('{}') can't be found".format(_chped))
+        self.CHPED = CHPED(_chped)
         self.out = _out
         self.hg = _hg
 
@@ -47,8 +48,9 @@ class HATK_bMarkerGenertor(object):
         if _result:
             self.setResults(_result)
         else:
-            bMarkerGenerator(self.chped, self.out, self.hg, self.dict_AA_prefix, self.dict_SNPS_prefix, _variants=self.variants,
-                             _f_save_intermediates=self.f_save_intermediates, _plink=self.plink)
+            bMarkerGenerator(self.CHPED, self.out, self.hg, self.dict_AA_prefix, self.dict_SNPS_prefix,
+                             _variants=self.variants, _f_save_intermediates=self.f_save_intermediates,
+                             _plink=self.plink)
 
 
 

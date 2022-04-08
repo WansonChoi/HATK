@@ -16,9 +16,14 @@ def printDF(_df_name, _df):
     print("{}:\n{}".format(_df_name, _df))
 
 
-def printDict(_dict):
+def printDict(_dict, _N=-1):
+    count = 0
     for k, v in _dict.items():
         print("{}: {}".format(k, v))
+
+        if _N > 0:
+            count += 1
+            if count >= _N: break
 
 
 def hasHeader(_file, _pattern=re.compile(r'^FID\s+IID\s+')) -> bool:
