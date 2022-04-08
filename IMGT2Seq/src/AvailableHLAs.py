@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 from src.util import Exists, printDF, printDict
-
+from IMGT2Seq.src.getSeqChunk import getUniqHLA
 
 def getAvailableHLAs(_imgt_dir, _p_data, _hg):
 
@@ -65,6 +65,7 @@ def getAvailableHLAs(_imgt_dir, _p_data, _hg):
     return arr_HLA_avail_files, arr_HLA_avail_BP
 
 
+
 def getTargetHLAs(_HLA_req, _HLA_avail_files, _HLA_avail_BP):
 
     """
@@ -92,38 +93,50 @@ def getTargetHLAs(_HLA_req, _HLA_avail_files, _HLA_avail_BP):
     return arr_target, arr_excluded1, arr_excluded2
 
 
-def getTargetProtFiles(_HLA_target, _imgt_dir, _type):
+
+def getTargetProtFiles(_HLA_target, _imgt_dir, _type) -> dict:
 
     _imgt_alignment_dir = _imgt_dir+'/alignments'
 
     l_files = os.listdir(_imgt_alignment_dir)
 
     l_files_type = [file for file in l_files if file.endswith('_{type}.txt'.format(type=_type))]
-    # print(l_files_prot)
+    # print(l_files_type)
 
 
-    dict_files_type_target = {hla: None for hla in _HLA_target}
+    __RETURN__:dict = {hla: None for hla in _HLA_target}
 
     for hla in _HLA_target:
+
         filename1 = "{hla}_{type}.txt".format(hla=hla, type=_type)
 
         if filename1 in l_files_type:
-            dict_files_type_target[hla] = join(_imgt_alignment_dir, filename1)
+            __RETURN__[hla] = join(_imgt_alignment_dir, filename1)
         else:
-            dict_files_type_target[hla] = None
-
-        if hla == 'DRB1':# Hard exception handling for HLA-DRB1
-            hla2 = re.sub(r'\d$', '', hla)
-            filename2 = "{hla}_{type}.txt".format(hla=hla2, type=_type) # mainly due to 'DRB_{prot,nuc}.txt' files.
-
-            if filename2 in l_files_type:
-                dict_files_type_target[hla] = join(_imgt_alignment_dir, filename2)
+            __RETURN__[hla] = None
 
 
-    # for k, v in dict_files_type_target.items():
+        if hla.startswith('DRB') and (_type == 'prot' or _type == 'nuc'): # Hard exception handling for HLA-DRB*
+
+            _type2 = "Prot" if _type == 'prot' else \
+                     "cDNA" if _type == 'nuc' else \
+                     "gDNA" # "gDNA" is useless.
+
+            filename2 = join(_imgt_alignment_dir, "DRB_{}.txt".format(_type))
+
+            HLA_avail_temp = getUniqHLA(filename2, _type2)
+            # print("HLA_avail_temp: ", HLA_avail_temp)
+
+            if hla in HLA_avail_temp:
+                __RETURN__[hla] = filename2
+            else:
+                __RETURN__[hla] = None
+
+
+    # for k, v in __RETURN__.items():
     #     print("{}: {}".format(k, v))
 
-    return dict_files_type_target
+    return __RETURN__
 
 
 
@@ -133,13 +146,17 @@ if __name__ == '__main__':
     _p_data = "/home/wansonchoi/sf_VirtualBox_Share/HATK/IMGT2Seq/data"
     _hg = "18"
 
-    arr_HLA_avail = getAvailableHLAs(_imgt_dir, _p_data, _hg)
-    arr_HLA_target = \
-        getTargetHLAs(("A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1", "E", "F", "G", "H", "J"),
-                      *arr_HLA_avail)
+    # arr_HLA_avail = getAvailableHLAs(_imgt_dir, _p_data, _hg)
+    # arr_HLA_target = \
+    #     getTargetHLAs(("A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1", "E", "F", "G", "H", "J"),
+    #                   *arr_HLA_avail)
 
-    # target_files_prot = getTargetProtFiles(arr_HLA_target, _imgt_dir, "prot")
+    arr_HLA_target = ['DRB1', 'DRB3', 'DRB4', 'DRB5', 'DRB6', 'DRB9']
+
+    target_files_prot = getTargetProtFiles(arr_HLA_target, _imgt_dir, "prot")
+    print(target_files_prot)
     # target_files_gen = getTargetProtFiles(arr_HLA_target, _imgt_dir, "gen")
-    # target_files_nuc = getTargetProtFiles(arr_HLA_target, _imgt_dir, "nuc")
+    target_files_nuc = getTargetProtFiles(arr_HLA_target, _imgt_dir, "nuc")
+    print(target_files_nuc)
 
 
