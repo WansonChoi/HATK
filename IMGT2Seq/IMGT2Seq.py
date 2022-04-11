@@ -12,9 +12,9 @@ from IMGT2Seq.src.AvailableHLAs import getTargetProtFiles
 from src.util import Exists
 from src.HATK_Error import HATK_InputPreparation_Error
 
-std_MAIN_PROCESS_NAME = "\n[%s]: " % basename(__file__)
-std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % basename(__file__)
-std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % basename(__file__)
+std_MAIN = "\n[%s]: " % basename(__file__)
+std_ERROR = "\n[%s::ERROR]: " % basename(__file__)
+std_WARNING = "\n[%s::WARNING]: " % basename(__file__)
 
 
 def IMGT2Seq(_imgt, _hg, _out_dir, _imgt_dir, _no_Indel=False, _MultiP=False, _f_save_intermediates=False,
@@ -41,7 +41,7 @@ def IMGT2Seq(_imgt, _hg, _out_dir, _imgt_dir, _no_Indel=False, _MultiP=False, _f
     ### Main Actions ###
     if len(_HLA_target) == 0:
         raise HATK_InputPreparation_Error(
-            std_ERROR_MAIN_PROCESS_NAME +
+            std_ERROR +
             "No target HLA to generate a sequence dictionary.\n"
             "Please check the '--HLA' argument again."
         )
@@ -64,7 +64,7 @@ def IMGT2Seq(_imgt, _hg, _out_dir, _imgt_dir, _no_Indel=False, _MultiP=False, _f
 
         if _MultiP > 1: # Parallel
 
-            print(std_MAIN_PROCESS_NAME + "Multiprocessing.")
+            print(std_MAIN + "Multiprocessing.")
 
             pool = mp.Pool(processes=_MultiP)
 
@@ -81,7 +81,7 @@ def IMGT2Seq(_imgt, _hg, _out_dir, _imgt_dir, _no_Indel=False, _MultiP=False, _f
                 try:
                     dict_temp[hla] = dict_Pool[hla].get()
                 except TypeError:
-                    print(std_WARNING_MAIN_PROCESS_NAME +
+                    print(std_WARNING +
                           "Generating sequence information dictionary for HLA-{} failed.".format(hla))
                     dict_temp[hla] = None
                 else:
@@ -106,7 +106,7 @@ def IMGT2Seq(_imgt, _hg, _out_dir, _imgt_dir, _no_Indel=False, _MultiP=False, _f
         for i in range(0, len(_HLA_target)):
 
             if not dict_temp[_HLA_target[i]]:
-                print(std_MAIN_PROCESS_NAME +
+                print(std_MAIN +
                       "Generating sequence information dictionary for HLA-{} failed.".format(_HLA_target[i]))
                 continue
 
@@ -328,27 +328,27 @@ def checkRequiredFiles(_imgt_dir, _dict_prot, _dict_nuc, _dict_gen,
     # 'Nomenclature_2009.txt'
     if not Exists(_p_allelelist_2009):
         raise HATK_InputPreparation_Error(
-            std_ERROR_MAIN_PROCESS_NAME +
+            std_ERROR +
             "The 'Nomenclature_2009.txt' file can't be found in '{}'.".format(_imgt_dir)
         )
 
     # 'Allelelist.txt'
     if not Exists(_p_allelelist):
         raise HATK_InputPreparation_Error(
-            std_ERROR_MAIN_PROCESS_NAME +
+            std_ERROR +
             "The 'Allelelist.txt' file can't be found in '{}'.".format(_imgt_dir)
         )
 
     # 'wmda/hla_nom_g.txt'
     if not Exists(_p_wmda_Ggroup):
         raise HATK_InputPreparation_Error(
-            std_ERROR_MAIN_PROCESS_NAME +
+            std_ERROR +
             "The 'wmda/hla_nom_g.txt' file can't be found in '{}'.".format(_imgt_dir)
         )
 
     # 'wmda/hla_nom_p.txt'
     if not Exists(_p_wmda_Pgroup):
         raise HATK_InputPreparation_Error(
-            std_ERROR_MAIN_PROCESS_NAME +
+            std_ERROR +
             "The 'wmda/hla_nom_p.txt' file can't be found in '{}'.".format(_imgt_dir)
         )

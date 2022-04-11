@@ -42,7 +42,7 @@ def getChunkOffsets(_input, _type="Prot"):
 
 def getChunk(_input, _off_start, _off_end, _type):
 
-    p_max_4field = re.compile(r'\w+\*\d{2,3}(:\d{2,3})*')
+    p_max_4field = re.compile(r'\w+\*\d{2,3}(:\d{2,3})*[A-Z]?')
 
     with open(_input) as f_input:
 

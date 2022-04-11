@@ -9,9 +9,9 @@ from IMGT2Seq.src.AvailableHLAs import getAvailableHLAs, getTargetHLAs
 from src.HATK_Error import RaiseError, HATK_InputPreparation_Error
 from src.util import Exists
 
-std_MAIN_PROCESS_NAME = "\n[IMGT2Seq]: "
-std_ERROR_MAIN_PROCESS_NAME = "\n[IMGT2Seq::ERROR]: "
-std_WARNING_MAIN_PROCESS_NAME = "\n[IMGT2Seq::WARNING]: "
+std_MAIN = "\n[IMGT2Seq]: "
+std_ERROR = "\n[IMGT2Seq::ERROR]: "
+std_WARNING = "\n[IMGT2Seq::WARNING]: "
 
 
 class HATK_IMGT2Seq(object):
@@ -67,7 +67,7 @@ class HATK_IMGT2Seq(object):
         self.no_indel = _no_Indel
         self.no_prime = _no_prime
         self.multiprocess = _MultiP
-        self.save_intermediates = _f_save_intermediates
+        self.f_save_intermediates = _f_save_intermediates
 
         # flags
         self.f_hasPreviousResult = self.findExistingResult()
@@ -75,7 +75,7 @@ class HATK_IMGT2Seq(object):
 
         ### Main Actions ###
         if self.f_hasPreviousResult:
-            print(std_WARNING_MAIN_PROCESS_NAME.lstrip('\n')
+            print(std_WARNING.lstrip('\n')
                   + "Using the previous result in the output directory('{}')\n".format(self.out_dir))
 
             print(self.__repr__())
@@ -96,7 +96,7 @@ class HATK_IMGT2Seq(object):
                 self.which_format = 6
             else:
                 self.which_format = 2
-                print(std_WARNING_MAIN_PROCESS_NAME.lstrip('\n') +
+                print(std_WARNING.lstrip('\n') +
                       "Which output field format to use wans't given. IMGT2Seq 'overrides' it as '2-field'. "
                       "Please check '--1field', '--2field', ..., '--Ggroup' and '--Pgroup' arguments again.")
 
@@ -150,7 +150,7 @@ class HATK_IMGT2Seq(object):
 
         temp = \
             IMGT2Seq(self.imgt, self.hg, self.out, _imgt_dir=self.imgt_dir, _no_Indel=self.no_indel,
-                     _MultiP=self.multiprocess, _f_save_intermediates=self.save_intermediates, _p_data="IMGT2Seq/data",
+                     _MultiP=self.multiprocess, _f_save_intermediates=self.f_save_intermediates, _p_data="IMGT2Seq/data",
                      __Nfield_OUTPUT_FORMAT=self.which_format, _HLA_target=self.HLA_target)
 
 

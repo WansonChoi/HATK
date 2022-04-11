@@ -5,7 +5,7 @@ from os.path import basename, dirname, exists
 import pandas as pd
 import numpy as np
 
-import src.HATK_Error as HATK_Error
+from src.HATK_Error import HATK_InputPreparation_Error, RaiseError
 from src.util import Exists, checkFile, hasHeader, getHeader
 
 std_MAIN = "\n[%s]: " % basename(__file__)
@@ -21,10 +21,9 @@ class Genotype(object):
     def __init__(self, _file_prefix):
 
         ### Main Variables ###
-        self.file_gt = -1
-        self.bed = -1
-        self.bim = -1
-        self.fam = -1
+        self.bed = checkFile(_file_prefix+'.bed', std_ERROR+"Given PLINK BED file('{}') can't be found.".format(_file_prefix+'.bed'))
+        self.bim = checkFile(_file_prefix+'.bim', std_ERROR+"Given PLINK BIM file('{}') can't be found.".format(_file_prefix+'.bim'))
+        self.fam = checkFile(_file_prefix+'.fam', std_ERROR+"Given PLINK FAM file('{}') can't be found.".format(_file_prefix+'.fam'))
 
         self.N_samples = -1
         self.M_markers = -1
@@ -33,36 +32,8 @@ class Genotype(object):
         self.f_hasPheInfo = -1
 
         ### Main Actions ###
-        self.setGenotype(_file_prefix)
         self.checkFAM()
         self.checkBIM()
-
-    # ========== ========== #
-
-    def setGenotype(self, _file_prefix):
-
-        # (1) '*.bed'
-        if exists(_file_prefix+'.bed'):
-            self.bed = _file_prefix+'.bed'
-        else: raise HATK_Error.HATK_InputPreparation_Error(
-            std_ERROR +
-            "The '*.bed' file('{}') can't be found.".format(_file_prefix+'.bed'))
-
-        # (2) '*.bim'
-        if exists(_file_prefix+'.bim'):
-            self.bim = _file_prefix+'.bim'
-        else: raise HATK_Error.HATK_InputPreparation_Error(
-            std_ERROR +
-            "The '*.bim' file('{}') can't be found.".format(_file_prefix + '.bim'))
-
-        # (3) '*.fam'
-        if exists(_file_prefix+'.fam'):
-            self.fam = _file_prefix+'.fam'
-        else: raise HATK_Error.HATK_InputPreparation_Error(
-            std_ERROR +
-            "The '*.fam' file('{}') can't be found.".format(_file_prefix + '.fam'))
-
-        self.file_gt = _file_prefix
 
 
     def checkFAM(self):
@@ -94,11 +65,28 @@ class Genotype(object):
 
     def __repr__(self):
 
-        str_files = "bed: {}\nbim: {}\nfam:{}\n".format(self.bed, self.bim, self.fam)
-        str_shape = "N(Samples): {}\nM(Markers): {}\n".format(self.N_samples, self.M_markers)
-        str_Info = "hasSexInfo: {}\nhasPheInfo: {}\n".format(self.f_hasSexInfo, self.f_hasPheInfo)
+        str_BED = \
+            "- BED: {}\n".format(self.bed)
+        str_BIM = \
+            "- BIM: {}\n".format(self.bim)
+        str_FAM = \
+            "- FAM: {}\n".format(self.fam)
 
-        str_summary = ''.join([str_files, str_shape, str_Info]).rstrip('\n')
+        str_N_samples = \
+            "- # of samples: {}\n".format(self.N_samples)
+        str_M_markers = \
+            "- # of markers: {}\n".format(self.M_markers)
+
+        str_hasSexInfo = \
+            "- has Sex Info?: {}\n".format(self.f_hasSexInfo)
+        str_hasPheInfo = \
+            "- has Phenotype Info?: {}\n".format(self.f_hasPheInfo)
+
+        str_summary = ''.join([
+            str_BED, str_BIM, str_FAM,
+            str_N_samples, str_M_markers,
+            str_hasSexInfo, str_hasPheInfo
+        ]).rstrip('\n')
 
         return str_summary
 
@@ -307,8 +295,8 @@ class CONDITION(object):
 if __name__ == '__main__':
 
     ### Genotype class
-    # gt = Genotype('/media/sf_VirtualBox_Share/UC-CD-HLA/data/Merged/merged')
-    # print(gt)
+    gt = Genotype('/Users/wansonchoi/Git_Projects/HATK/example/wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18')
+    print(gt)
 
     ### Phenotype class
     # pt = PHENO('/media/sf_VirtualBox_Share/UC-CD-HLA/data/Merged/merged.phe')
@@ -331,11 +319,11 @@ if __name__ == '__main__':
     # print(cv)
 
     ### Condition class
-    cond = CONDITION(_condition_list="/home/wansonchoi/sf_VirtualBox_Share/UC-CD-HLA/analysis/02-conditional-5/ToCond_CD.txt")
-    print(cond)
-
-    cond = CONDITION(_condition="AA_DRB1_37_32660037_S,AA_DRB1_37_32660037_N")
-    print(cond)
+    # cond = CONDITION(_condition_list="/home/wansonchoi/sf_VirtualBox_Share/UC-CD-HLA/analysis/02-conditional-5/ToCond_CD.txt")
+    # print(cond)
+    #
+    # cond = CONDITION(_condition="AA_DRB1_37_32660037_S,AA_DRB1_37_32660037_N")
+    # print(cond)
 
 
     pass
