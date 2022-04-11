@@ -19,54 +19,59 @@ class IMGT2Seq_Output(object):
     2. HLA Dictionary
     3. Maptable
     """
-    def __init__(self, _out_dir, _hg, _imgt):
+    def __init__(self, _out_dir, _HLA_req=("A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1")):
 
-        self.hg = _hg
-        self.imgt = _imgt
+        self.hg = getPatterninFiles(_out_dir, re.compile(r'hg(\d+)'))
+        self.imgt = getPatterninFiles(_out_dir, re.compile(r'imgt(\d+)'))
+        self.HLA_req = list(_HLA_req)
 
-        self.HAT = join(_out_dir, "HLA_ALLELE_TABLE.imgt{}.hat".format(_imgt)) \
-            if Exists(join(_out_dir, "HLA_ALLELE_TABLE.imgt{}.hat".format(_imgt))) else None
+        self.HAT = join(_out_dir, "HLA_ALLELE_TABLE.imgt{}.hat".format(self.imgt)) \
+            if Exists(join(_out_dir, "HLA_ALLELE_TABLE.imgt{}.hat".format(self.imgt))) else None
 
-        self.HLA_DICTIONARY = HLA_Dictionary(
-            join(_out_dir, "HLA_DICTIONARY_AA.hg{}.imgt{}.txt".format(_hg, _imgt)),
-            join(_out_dir, "HLA_DICTIONARY_AA.hg{}.imgt{}.map".format(_hg, _imgt)),
-            join(_out_dir, "HLA_DICTIONARY_SNPS.hg{}.imgt{}.txt".format(_hg, _imgt)),
-            join(_out_dir, "HLA_DICTIONARY_SNPS.hg{}.imgt{}.map".format(_hg, _imgt))
+        self.HLA_DICTIONARY = HLA_DICTIONARY(
+            join(_out_dir, "HLA_DICTIONARY_AA.hg{}.imgt{}.txt".format(self.hg, self.imgt)),
+            join(_out_dir, "HLA_DICTIONARY_AA.hg{}.imgt{}.map".format(self.hg, self.imgt)),
+            join(_out_dir, "HLA_DICTIONARY_SNPS.hg{}.imgt{}.txt".format(self.hg, self.imgt)),
+            join(_out_dir, "HLA_DICTIONARY_SNPS.hg{}.imgt{}.map".format(self.hg, self.imgt)),
+            _HLA_req=self.HLA_req
         )
 
         self.HLA_MAPTABLE = {
-            hla: join(_out_dir, "HLA_MAPTABLE_{}.hg{}.imgt{}.txt".format(hla, _hg, _imgt)) \
-                if Exists(join(_out_dir, "HLA_MAPTABLE_{}.hg{}.imgt{}.txt".format(hla, _hg, _imgt))) else None
+            hla: join(_out_dir, "HLA_MAPTABLE_{}.hg{}.imgt{}.txt".format(hla, self.hg, self.imgt)) \
+                if Exists(join(_out_dir, "HLA_MAPTABLE_{}.hg{}.imgt{}.txt".format(hla, self.hg, self.imgt))) else None
             for hla in self.HLA_DICTIONARY.HLA_avail
         }
 
 
     def __bool__(self):
-        # print(Exists(self.HAT))
-        # print(self.HLA_DICTIONARY.__bool__())
-        # print(np.all([Exists(mtable) for mtable in self.HLA_MAPTABLE.values()]))
-        # print(Exists(self.HAT) and self.HLA_DICTIONARY.__bool__() and \
-        #        np.all([Exists(mtable) for mtable in self.HLA_MAPTABLE.values()]))
-        # for mtable in self.HLA_MAPTABLE.values():
-        #     print(mtable)
-        #     print(Exists(mtable))
 
-        return Exists(self.HAT) and self.HLA_DICTIONARY.__bool__() and \
-               bool(np.all([Exists(mtable) for mtable in self.HLA_MAPTABLE.values()]))
-        # bool() -> TypeError: __bool__ should return bool, returned numpy.bool_
+        f_HAT = Exists(self.HAT)
+        # print(f_HAT)
+        f_HLA_DICTIONARY = bool(self.HLA_DICTIONARY)
+        # print(f_HLA_DICTIONARY)
+        f_Maptable = bool(np.all([Exists(mtable) for mtable in self.HLA_MAPTABLE.values()])) # bool() -> TypeError: __bool__ should return bool, returned numpy.bool_
+        # print(f_Maptable)
+
+        return f_HAT and f_HLA_DICTIONARY and f_Maptable
+
 
 
     def __repr__(self):
         str_imgt_version = \
-            "- IMGT version: v{}\n".format(self.imgt)
+            "- IMGT version: {}\n".format("v{}".format(self.imgt) if bool(self.imgt) else None)
         str_hg = \
-            "- Human Genome version: hg{}\n".format(self.hg)
+            "- Human Genome version: {}\n".format("hg{}".format(self.hg) if bool(self.hg) else None)
         str_HLA = \
             "- HLA:\n" \
+            "   (requested): {}\n" \
             "   (available,   AA): {}\n" \
-            "   (available, SNPS): {}\n"\
-                .format(self.HLA_DICTIONARY.HLA_avail_AA, self.HLA_DICTIONARY.HLA_avail_SNPS)
-
+            "   (available, SNPS): {}\n" \
+            "   (available, Both): {}\n" \
+            "   (Is all the requested are in the available?): {}\n" \
+            "   (Not available): {}\n" \
+                .format(self.HLA_req,
+                        self.HLA_DICTIONARY.HLA_avail_AA, self.HLA_DICTIONARY.HLA_avail_SNPS, self.HLA_DICTIONARY.HLA_avail,
+                        self.HLA_DICTIONARY.f_all_avail, self.HLA_DICTIONARY.HLA_Not_avail)
 
         str_HLA_Allele_Table = \
             "- HLA Allele Table:\n" \
@@ -101,25 +106,30 @@ class IMGT2Seq_Output(object):
 
 
 
+class HLA_DICTIONARY(object):
 
-class HLA_Dictionary(object):
+    def __init__(self, _HLA_dict_AA_seq, _HLA_dict_AA_map, _HLA_dict_SNPS_seq, _HLA_dict_SNPS_map,
+                 _HLA_req=("A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1")):
 
-    def __init__(self, _HLA_dict_AA_seq, _HLA_dict_AA_map, _HLA_dict_SNPS_seq, _HLA_dict_SNPS_map):
+        self.HLA_dict_AA_seq = _HLA_dict_AA_seq if Exists(_HLA_dict_AA_seq) else None
+        self.HLA_dict_AA_map = _HLA_dict_AA_map if Exists(_HLA_dict_AA_map) else None
+        self.HLA_avail_AA = getHLAs(self.HLA_dict_AA_seq) if bool(self.HLA_dict_AA_seq) else []
 
-        self.HLA_dict_AA_seq = checkFile(_HLA_dict_AA_seq, std_ERROR+"Given HLA Amino acid sequence dictionary('{}') can't be found.".format(_HLA_dict_AA_seq))
-        self.HLA_dict_AA_map = checkFile(_HLA_dict_AA_map, std_ERROR+"Given HLA Amino acid sequence map dictionary('{}') can't be found.".format(_HLA_dict_AA_map))
-        self.HLA_avail_AA = getHLAs(self.HLA_dict_AA_seq)
-
-        self.HLA_dict_SNPS_seq = checkFile(_HLA_dict_SNPS_seq, std_ERROR+"Given HLA Intragenic DNA sequence dictionary('{}') can't be found.".format(_HLA_dict_SNPS_seq))
-        self.HLA_dict_SNPS_map = checkFile(_HLA_dict_SNPS_map, std_ERROR+"Given HLA Intragenic DNA sequence map dictionary('{}') can't be found.".format(_HLA_dict_SNPS_map))
-        self.HLA_avail_SNPS = getHLAs(self.HLA_dict_SNPS_seq)
+        self.HLA_dict_SNPS_seq = _HLA_dict_SNPS_seq if Exists(_HLA_dict_SNPS_seq) else None
+        self.HLA_dict_SNPS_map = _HLA_dict_SNPS_map if Exists(_HLA_dict_SNPS_map) else None
+        self.HLA_avail_SNPS = getHLAs(self.HLA_dict_SNPS_seq) if bool(self.HLA_dict_SNPS_seq) else []
 
         self.HLA_avail = list(np.intersect1d(self.HLA_avail_AA, self.HLA_avail_SNPS))
+        self.HLA_Not_avail = list(np.setdiff1d(_HLA_req, self.HLA_avail))
+        self.f_all_avail = all(np.isin(_HLA_req, self.HLA_avail))
 
 
     def __bool__(self):
-        return Exists(self.HLA_dict_AA_seq) and Exists(self.HLA_dict_AA_map) and \
-                Exists(self.HLA_dict_SNPS_seq) and Exists(self.HLA_dict_SNPS_map)
+        f_HLA_dict_AA = Exists(self.HLA_dict_AA_seq) and Exists(self.HLA_dict_AA_map)
+        f_HLA_dict_SNPS = Exists(self.HLA_dict_SNPS_seq) and Exists(self.HLA_dict_SNPS_map)
+
+        return f_HLA_dict_AA and f_HLA_dict_SNPS and self.f_all_avail
+
 
 
 def getHLAs(_HLA_dict_seq) -> list:
@@ -127,6 +137,17 @@ def getHLAs(_HLA_dict_seq) -> list:
     l_temp_HLA = [HLA_allele.split('*')[0] for HLA_allele in getColumn(_HLA_dict_seq, 0)]
 
     return list(np.unique(l_temp_HLA))
+
+
+
+def getPatterninFiles(_out_dir, _p):
+
+    l_files = os.listdir(_out_dir)
+
+    for file in l_files:
+        s = _p.search(file)
+        if bool(s):
+            return s.group(1)
 
 
 
@@ -146,7 +167,9 @@ if __name__ == '__main__':
     # print(hla_dict.HLA_avail_SNPS)
     # print(hla_dict.HLA_avail)
 
-    r = IMGT2Seq_Output("/Users/wansonchoi/Git_Projects/HATK/tests/20220409_IMGT2Seq_output", 18, 3470)
+
+    out_dir = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/HATK_rearchitect_IMGT2Seq_20220216"
+    r = IMGT2Seq_Output(out_dir)
     print(r)
     print(bool(r))
 
