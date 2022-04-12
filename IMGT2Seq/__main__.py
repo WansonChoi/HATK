@@ -7,7 +7,8 @@ import numpy as np
 from IMGT2Seq.IMGT2Seq import IMGT2Seq
 from IMGT2Seq.src.AvailableHLAs import getAvailableHLAs, getTargetHLAs
 from src.HATK_Error import RaiseError, HATK_InputPreparation_Error
-from src.util import Exists
+from src.util import Exists, FieldFormat2Label
+from IMGT2Seq.src.IMGT2Seq_Output import IMGT2Seq_Output
 
 std_MAIN = "\n[IMGT2Seq]: "
 std_ERROR = "\n[IMGT2Seq::ERROR]: "
@@ -16,7 +17,8 @@ std_WARNING = "\n[IMGT2Seq::WARNING]: "
 
 class HATK_IMGT2Seq(object):
 
-    def __init__(self, _imgt, _hg, _out, _F_one, _F_two, _F_three, _F_four, _F_Ggroup, _F_Pgroup, _imgt_dir,
+    def __init__(self, _imgt, _hg, _out, _imgt_dir,
+                 _F_one:bool, _F_two:bool, _F_three:bool, _F_four:bool, _F_Ggroup:bool, _F_Pgroup:bool,
                  _no_Indel=False, _MultiP=False, _f_save_intermediates=False, _no_prime=True, _p_data='./IMGT2Seq/data',
                  _HLA_req=("A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1")):
 
@@ -35,9 +37,9 @@ class HATK_IMGT2Seq(object):
         self.version_label = "hg{}.imgt{}".format(self.hg, self.imgt)
 
         self.imgt_dir = _imgt_dir if Exists(_imgt_dir, isdir) \
-            else RaiseError(HATK_InputPreparation_Error, "The given directory for the IMGT database('{}') isn't a directory.".format(_imgt_dir))
+            else RaiseError(HATK_InputPreparation_Error, "Given directory for the IMGT database('{}') isn't a directory.".format(_imgt_dir))
         self.data_dir = _p_data if Exists(_p_data, isdir) \
-            else RaiseError(HATK_InputPreparation_Error, "The given data directory('{}') isn't a directory.".format(_p_data))
+            else RaiseError(HATK_InputPreparation_Error, "Given data directory('{}') isn't a directory.".format(_p_data))
 
         # Requested HLAs
         self.HLA_req = _HLA_req
@@ -45,23 +47,11 @@ class HATK_IMGT2Seq(object):
         self.HLA_target, self.HLA_excluded1, self.HLA_excluded2 = getTargetHLAs(self.HLA_req, *self.HLA_avail)
 
         # Output Field format
-        self.F_one = _F_one
-        self.F_two = _F_two
-        self.F_three = _F_three
-        self.F_four = _F_four
-        self.F_Ggroup = _F_Ggroup
-        self.F_Pgroup = _F_Pgroup
-        self.which_format = None
+        self.which_format = which_format(_F_one, _F_two, _F_three, _F_four, _F_Ggroup, _F_Pgroup)
 
-        # Output results
-        self.__dict_AA__ = None # Prefix
-        self.__dict_AA_seq__ = None
-        self.__dict_AA_map__ = None
-        self.__dict_SNPS__ = None # Prefix
-        self.__dict_SNPS_seq__ = None
-        self.__dict_SNPS_map__ = None
-        self.__HAT__ = None
-        self.__d_MapTable__ = None
+        # Output result
+        self.IMGT2Seq_Output = IMGT2Seq_Output(self.out_dir, self.HLA_target)
+        self.f_hasPreviousResult = bool(self.IMGT2Seq_Output)
 
         # Optional arguments
         self.no_indel = _no_Indel
@@ -69,89 +59,22 @@ class HATK_IMGT2Seq(object):
         self.multiprocess = _MultiP
         self.f_save_intermediates = _f_save_intermediates
 
-        # flags
-        self.f_hasPreviousResult = self.findExistingResult()
-
 
         ### Main Actions ###
+        print(self.__repr__()) # debug
+        print(self.IMGT2Seq_Output)
+        print(bool(self.IMGT2Seq_Output))
+
         if self.f_hasPreviousResult:
-            print(std_WARNING.lstrip('\n')
+            print(std_MAIN.lstrip('\n')
                   + "Using the previous result in the output directory('{}')\n".format(self.out_dir))
 
-            print(self.__repr__())
-
         else:
-
-            if self.F_one:
-                self.which_format = 1
-            elif self.F_two:
-                self.which_format = 2
-            elif self.F_three:
-                self.which_format = 3
-            elif self.F_four:
-                self.which_format = 4
-            elif self.F_Ggroup:
-                self.which_format = 5
-            elif self.F_Pgroup:
-                self.which_format = 6
-            else:
-                self.which_format = 2
-                print(std_WARNING.lstrip('\n') +
-                      "Which output field format to use wans't given. IMGT2Seq 'overrides' it as '2-field'. "
-                      "Please check '--1field', '--2field', ..., '--Ggroup' and '--Pgroup' arguments again.")
-
-            # print(self.__repr__()) # debug
-            self.performIMGT2Seq()
-            self.findExistingResult()
-            print(self.__repr__())
-
-
-    def findExistingResult(self):
-        """
-        Check whether some of the output exists in the output directory folder.
-        When the last output of IMGT2Seq exists in the `outdir` directory, Use that instead of generating a new one redundantly.
-
-        """
-
-        # (1) dict_AA
-        t_dict_AA = join(self.out_dir, "HLA_DICTIONARY_AA.{}".format(self.version_label))
-
-        self.__dict_AA_seq__ = t_dict_AA+".txt" if exists(t_dict_AA+".txt") else None
-        self.__dict_AA_map__ = t_dict_AA+".map" if exists(t_dict_AA+".map") else None
-        self.__dict_AA__ = t_dict_AA if self.__dict_AA_seq__ and self.__dict_AA_map__ else None
-
-        # (2) dict_SNPS
-        t_dict_SNPS = join(self.out_dir, "HLA_DICTIONARY_SNPS.{}".format(self.version_label))
-
-        self.__dict_SNPS_seq__ = t_dict_SNPS+".txt" if exists(t_dict_SNPS+".txt") else None
-        self.__dict_SNPS_map__ = t_dict_SNPS+".map" if exists(t_dict_SNPS+".map") else None
-        self.__dict_SNPS__ = t_dict_SNPS if self.__dict_SNPS_seq__ and self.__dict_SNPS_map__ else None
-
-        # (3) hat
-        t_hat = join(self.out_dir, "HLA_ALLELE_TABLE.imgt{}.hat".format(self.imgt))
-        self.__HAT__ = t_hat if exists(t_hat) else None
-
-        # (4) maptables
-        self.__d_MapTable__ = {hla: None for hla in self.HLA_target}
-
-        for hla in self.HLA_target:
-            t_maptable = join(self.out_dir, "HLA_MAPTABLE_{}.{}.txt".format(hla, self.version_label))
-            self.__d_MapTable__[hla] = t_maptable if exists(t_maptable) else None
-
-
-        return self.__bool__()
-
-
-    def performIMGT2Seq(self):
-        # self.__dict_AA__, self.__dict_SNPS__, self.__HAT__, self.__d_MapTable__ = \
-        #     IMGT2Seq(self.imgt, self.hg, self.out, _imgt_dir=self.imgt_dir, _no_Indel=self.no_indel,
-        #              _MultiP=self.multiprocess, _save_intermediates=self.save_intermediates,
-        #              _p_data="IMGT2Seq/data", __Nfield_OUTPUT_FORMAT=self.which_format)
-
-        temp = \
-            IMGT2Seq(self.imgt, self.hg, self.out, _imgt_dir=self.imgt_dir, _no_Indel=self.no_indel,
-                     _MultiP=self.multiprocess, _f_save_intermediates=self.f_save_intermediates, _p_data="IMGT2Seq/data",
-                     __Nfield_OUTPUT_FORMAT=self.which_format, _HLA_target=self.HLA_target)
+            self.IMGT2Seq_Output = \
+                IMGT2Seq(self.imgt, self.hg, self.out, _imgt_dir=self.imgt_dir, _no_Indel=self.no_indel,
+                         _MultiP=self.multiprocess, _f_save_intermediates=self.f_save_intermediates, _p_data="IMGT2Seq/data",
+                         __Nfield_OUTPUT_FORMAT=self.which_format, _HLA_target=self.HLA_target)
+            # pass
 
 
     def __repr__(self):
@@ -171,14 +94,7 @@ class HATK_IMGT2Seq(object):
 
         str_Nfield = \
             "" if self.f_hasPreviousResult else \
-            "- Requested Output Field format: {}\n".format(
-                "1-field" if self.which_format == 1 else \
-                "2-field" if self.which_format == 2 else \
-                "3-field" if self.which_format == 3 else \
-                "4-field" if self.which_format == 4 else \
-                "G-group" if self.which_format == 5 else \
-                "P-group" if self.which_format == 6 else None
-            )
+            "- Requested Output Field format: {}\n".format(FieldFormat2Label(self.which_format))
 
         str_HLA = \
             "- HLA:\n" \
@@ -195,22 +111,31 @@ class HATK_IMGT2Seq(object):
             "- Dictionary(Amino acids)\n" \
             "   (seq): {}\n" \
             "   (map): {}\n" \
-            .format(self.__dict_AA_seq__, self.__dict_AA_map__)
+            .format(self.IMGT2Seq_Output.HLA_DICTIONARY.HLA_dict_AA_seq,
+                    self.IMGT2Seq_Output.HLA_DICTIONARY.HLA_dict_AA_map)
+            # .format(self.__dict_AA_seq__, self.__dict_AA_map__)
 
         str_dict_SNPS = \
             "- Dictionary(Intragenic SNPs)\n" \
             "   (seq): {}\n" \
             "   (map): {}\n" \
-            .format(self.__dict_SNPS_seq__, self.__dict_SNPS_map__)
+            .format(self.IMGT2Seq_Output.HLA_DICTIONARY.HLA_dict_SNPS_seq,
+                    self.IMGT2Seq_Output.HLA_DICTIONARY.HLA_dict_SNPS_map)
+            # .format(self.__dict_SNPS_seq__, self.__dict_SNPS_map__)
 
         str_HLA_Allele_Table = \
             "- HLA Allele Table:\n" \
-            "   {}\n".format(self.__HAT__)
+            "   {}\n".format(self.IMGT2Seq_Output.HAT)
+            # "   {}\n".format(self.__HAT__)
 
         str_maptable = \
             "- HLA Maptables for Heatmap plot: \n" \
             + ''.join([
-                "   {hla}   : {maptable}\n".format(hla=hla, maptable=self.__d_MapTable__[hla]) for hla in self.HLA_target
+                "   {hla}   : {maptable}\n" \
+                    .format(hla=hla,
+                            maptable=self.IMGT2Seq_Output.HLA_MAPTABLE[hla] if hla in self.IMGT2Seq_Output.HLA_MAPTABLE else None) \
+                for hla in self.HLA_target
+                    # .format(hla=hla, maptable=self.__d_MapTable__[hla]) for hla in self.HLA_target
             ])
 
         str_summary = ''.join([
@@ -230,15 +155,19 @@ class HATK_IMGT2Seq(object):
 
 
     def __bool__(self):
-        return Exists(self.__dict_AA_seq__) and Exists(self.__dict_AA_map__) and \
-               Exists(self.__dict_SNPS_seq__) and Exists(self.__dict_SNPS_map__) and \
-               Exists(self.__HAT__) and \
-               (len(self.__d_MapTable__) == len(self.HLA_target) and np.all([Exists(x) for x in self.__d_MapTable__.values()]))
+        return bool(self.IMGT2Seq_Output)
 
 
-    def getResult(self):
-        return self.__dict_AA__, self.__dict_SNPS__, self.__HAT__, self.__d_MapTable__
 
+def which_format(_F_one:bool, _F_two:bool, _F_three:bool, _F_four:bool, _F_Ggroup:bool, _F_Pgroup:bool) -> int:
+
+    if _F_one: return 1
+    elif _F_two: return 2
+    elif _F_three: return 3
+    elif _F_four: return 4
+    elif _F_Ggroup: return 5
+    elif _F_Pgroup: return 6
+    else: return -1
 
 
 
@@ -316,6 +245,6 @@ if __name__ == "__main__":
 
     ##### < Main function Execution. > #####
 
-    HATK_IMGT2Seq(args.imgt, args.hg, args.out, args.F_one, args.F_two, args.F_three, args.F_four, args.F_Ggroup,
-                  args.F_Pgroup, _imgt_dir=args.imgt_dir, _no_Indel=args.no_indel, _MultiP=args.multiprocess,
+    HATK_IMGT2Seq(args.imgt, args.hg, args.out, args.imgt_dir, args.F_one, args.F_two, args.F_three, args.F_four, args.F_Ggroup,
+                  args.F_Pgroup, _no_Indel=args.no_indel, _MultiP=args.multiprocess,
                   _f_save_intermediates=args.save_intermediates, _HLA_req=args.HLA)

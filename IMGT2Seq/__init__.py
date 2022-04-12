@@ -1,5 +1,5 @@
 #-*- coding: utf-8 -*-
 
 """
-IMGT2Seq
+IMGT2Seq module.
 """

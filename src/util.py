@@ -55,3 +55,13 @@ def getColumn(_file, _N_col):
         for line in f_input:
             l = line.split()
             yield l[_N_col]
+
+
+def FieldFormat2Label(_which_format):
+    if _which_format == 1: return "1-field"
+    elif _which_format == 2: return "2-field"
+    elif _which_format == 3: return "3-field"
+    elif _which_format == 4: return "4-field"
+    elif _which_format == 5: return "G-group"
+    elif _which_format == 6: return "P-group"
+    else: return None

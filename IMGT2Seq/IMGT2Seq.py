@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 import os, sys, re
 from os.path import basename, dirname, exists, join
 import pandas as pd
@@ -11,6 +10,7 @@ from IMGT2Seq.src.ProcessIMGT import ProcessIMGT
 from IMGT2Seq.src.AvailableHLAs import getTargetProtFiles
 from src.util import Exists
 from src.HATK_Error import HATK_InputPreparation_Error
+from IMGT2Seq.src.IMGT2Seq_Output import IMGT2Seq_Output
 
 std_MAIN = "\n[%s]: " % basename(__file__)
 std_ERROR = "\n[%s::ERROR]: " % basename(__file__)
@@ -169,7 +169,8 @@ def IMGT2Seq(_imgt, _hg, _out_dir, _imgt_dir, _no_Indel=False, _MultiP=False, _f
         pass
 
 
-    return _out_prefix_AA, _out_prefix_SNPS, _out_prefix_HAT, d_MapTables
+    # return _out_prefix_AA, _out_prefix_SNPS, _out_prefix_HAT, d_MapTables
+    return IMGT2Seq_Output(_out_dir, _HLA_target)
 
 
 
