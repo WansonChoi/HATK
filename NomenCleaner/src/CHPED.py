@@ -1,51 +1,41 @@
 # -*- coding: utf-8 -*-
-
 import os, sys, re
 from os.path import basename, dirname, exists, isdir, join
 import numpy as np
 import pandas as pd
 
 from src.HATK_Error import HATK_InputPreparation_Error
-from src.util import Exists
+from src.util import Exists, checkFile, FieldFormat2Label
 from NomenCleaner.src.HPED import HPED, hasHeader
 
-std_MAIN_PROCESS_NAME = "\n[%s]: " % basename(__file__)
-std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % basename(__file__)
-std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % basename(__file__)
+std_MAIN = "\n[%s]: " % basename(__file__)
+std_ERROR = "\n[%s::ERROR]: " % basename(__file__)
+std_WARNING = "\n[%s::WARNING]: " % basename(__file__)
 
 
 class CHPED(object):
 
-    def __init__(self, _chped, _Nfield=None):
+    def __init__(self, _chped):
+
         ### Main Variables ###
-        self.chped = None
-        self.Nfield = _Nfield
-
-        self.df_chped = None
-        self.df_chped_Left = None; self.df_chped_Right = None
-
+        self.chped = checkFile(_chped, std_ERROR+"Given CHPED file('{}') can't be found.".format(_chped))
+        self.f_hasHeader = hasHeader(self.chped)
         self.HLA_avail = None
-        # No `self.HLA_target`.
+        self.field_format = None
 
-        self.f_hasHeader = None
+        # DataFrame
+        self.df_chped = None
+        self.df_chped_Left = None
+        self.df_chped_Right = None
+
+        # Flags
         # self.f_hasPrefix = None # All elements(HLA types) have the gene prefix(ex. 'A*').
         # self.f_hasFieldSep = None
         self.isAllCHPEDallele = None
 
+
         ### Main Actions ###
-        self.setCHPED(_chped)
         self.checkCHPED()
-
-
-    def setCHPED(self, _chped):
-        if Exists(_chped):
-            self.chped = _chped
-            self.f_hasHeader = hasHeader(_chped)
-        else:
-            raise HATK_InputPreparation_Error(
-                std_ERROR_MAIN_PROCESS_NAME +
-                "Given CHPED file('{}') can't be found.".format(_chped)
-            )
 
 
     def checkCHPED(self):
@@ -62,14 +52,15 @@ class CHPED(object):
         ## Dimension check(== 6 + N*2)
         if self.df_chped_Right.shape[1] % 2:
             raise HATK_InputPreparation_Error(
-                std_ERROR_MAIN_PROCESS_NAME +
-                "# of columns of the given CHPED is {col_all}(6 + {col_HLA}). It must be even number." \
-                .format(col_all=self.df_chped.shape[1], col_HLA=self.df_chped_Right.shape[1])
+                std_ERROR +
+                "CHPED must have even number of columns(6 + 2*(# of HLA genes)).\n" 
+                "Meanwhile, Given CHPED file('{}') has {} columns." \
+                .format(self.chped, self.df_chped.shape[1])
             )
 
         ## `HLA_avail`
         if self.f_hasHeader:
-            self.HLA_avail = np.unique([re.sub(r'_\d$', '', item) for item in self.df_chped_Right.columns])
+            self.HLA_avail = list(np.unique([re.sub(r'_\d$', '', item) for item in self.df_chped_Right.columns]))
         else:
             self.HLA_avail = getAvailableHLA(self.df_chped_Right)
 
@@ -77,29 +68,29 @@ class CHPED(object):
         self.isAllCHPEDallele = np.all(np.vectorize(isCHPEDallele)(self.df_chped_Right.values))
 
         ## Guess N-field
-        self.Nfield = np.max(np.vectorize(guessNfield)(self.df_chped_Right.values))
-
+        self.field_format = np.max(np.vectorize(guessFieldFormat)(self.df_chped_Right.values))
 
 
     def __repr__(self):
 
-        str_hped = \
+        str_chped = \
             "- CHPED file: {}\n".format(self.chped)
 
         str_hasHeader = \
             "- has Header?: {}\n".format(self.f_hasHeader)
 
         str_HLA = \
-            "- HLA available: {}\n".format(list(self.HLA_avail))
+            "- HLA:\n" \
+            "   (requested): {}\n".format(list(self.HLA_avail))
 
         str_isAllCHPEDallele = \
-            "- Are all alleles are CHPED alleles?: {}\n".format(self.isAllCHPEDallele)
+            "- Are all alleles CHPED allele?: {}\n".format(self.isAllCHPEDallele)
 
         str_Nfield = \
-            "- Field format: {}-field\n".format(self.Nfield)
+            "- Field format: {}\n".format(FieldFormat2Label(self.field_format))
 
         str_summary = ''.join([
-            str_hped,
+            str_chped,
             str_hasHeader,
             str_HLA,
             str_isAllCHPEDallele,
@@ -113,7 +104,30 @@ class CHPED(object):
         return Exists(self.chped)
 
 
-def getAvailableHLA(_df_chped_Right):
+    def subsetCHPED(self, _out_prefix, _HLA_ToExtract:list, _HLA_ToExclude=()):
+
+        _HLA_ToExtract = list(np.setdiff1d(_HLA_ToExtract, _HLA_ToExclude))
+
+        if not self.f_hasHeader:
+            print(std_ERROR + "Given CHPED('{}') can't be subsetted to the HLA genes('{}') "
+                              "because the CHPED doesn't have the header.".format(self.chped, _HLA_ToExtract))
+            return -1
+
+        _out = _out_prefix + '.chped'
+
+        l_target_columns = \
+            ['FID', 'IID', 'PID', 'MID', 'Sex', 'Phe'] + \
+            ['{}_{}'.format(hla, i) for hla in _HLA_ToExtract for i in np.arange(1, 3)]
+
+        df_chped_subset = self.df_chped.loc[:, l_target_columns]
+        # print(df_chped_subset)
+
+        df_chped_subset.to_csv(_out, sep='\t', header=True, index=False)
+        return CHPED(_out)
+
+
+
+def getAvailableHLA(_df_chped_Right) -> list:
 
     l_RETURN = [] # HLA_avail
 
@@ -130,7 +144,7 @@ def getAvailableHLA(_df_chped_Right):
         arr_HLA = np.unique(func(arr_temp))
 
         if len(arr_HLA) > 1:
-            print(std_WARNING_MAIN_PROCESS_NAME +
+            print(std_WARNING +
                   "There are more than two HLA genes('{}') for {}-th and {}-th columns" \
                   .format(arr_HLA, idx1, idx2))
         else:
@@ -140,7 +154,7 @@ def getAvailableHLA(_df_chped_Right):
 
 
 isCHPEDallele = lambda x : bool(re.match(r'\w+\*\d{2,3}(:\d{2,3})*[A-Z]?', x)) if x != '0' else True
-guessNfield = lambda x : len(x.split(':')) if x != '0' else 0
+guessFieldFormat = lambda x : len(x.split(':')) if x != '0' else 0
 
 
 
@@ -152,13 +166,21 @@ if __name__ == '__main__':
     """
 
     # Header
-    _chped = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/20220308_BKreport/wtccc_filtered_58C_RA.hatk.300+300.imgt3470.header.subset.chped"
+    # _chped = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/HATK_rearchitect_NC_20220412/Dummy.N50.imgt3460.3major.header.chped"
+    # _chped = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/HATK_rearchitect_NC_20220412/wtccc_filtered_58C_RA.hatk.300+300.imgt3470.8major.header.chped"
+    _chped = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/HATK_rearchitect_NC_20220412/wtccc_filtered_58C_RA.hatk.300+300.imgt3470.header.chped"
 
-    # w/o Header
-    # _chped = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/20220308_BKreport/wtccc_filtered_58C_RA.hatk.300+300.imgt3470.subset.8major.chped"
+    # no Header
+    # _chped = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/HATK_rearchitect_NC_20220412/wtccc_filtered_58C_RA.hatk.300+300.imgt3470.8major.noheader.chped"
+    # _chped = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/HATK_rearchitect_NC_20220412/Dummy.N50.imgt3460.3major.noheader.chped"
+    # _chped = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/HATK_rearchitect_NC_20220412/wtccc_filtered_58C_RA.hatk.300+300.imgt3470.noheader.chped"
 
     CH = CHPED(_chped)
     print(CH)
+
+    CH2 = CH.subsetCHPED("/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/HATK_rearchitect_NC_20220412/wtccc_filtered_58C_RA.hatk.300+300.imgt3470.header.subset",
+                         _HLA_ToExtract=['A', 'B', 'C'], _HLA_ToExclude=['DRB1'])
+    print(CH2)
 
     # df_chped = pd.read_csv(_chped, sep='\s+', header=None, dtype=str)
     # HLA_avail = getAvailableHLA(df_chped.iloc[:, 6:])

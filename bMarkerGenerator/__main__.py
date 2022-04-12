@@ -6,12 +6,15 @@ import argparse, textwrap
 
 from bMarkerGenerator.bMarkerGenerator import bMarkerGenerator
 from src.HATK_Error import HATK_InputPreparation_Error, RaiseError
-from src.util import Exists
+from src.util import Exists, FieldFormat2Label
+from src.PLINK import Genotype
 from NomenCleaner.src.CHPED import CHPED
+from IMGT2Seq.src.IMGT2Seq_Output import HLA_DICTIONARY
+from bMarkerGenerator.src.bMarker import bMarker
 
-std_MAIN_PROCESS_NAME = "\n[bMarkerGenerator]: "
-std_ERROR_MAIN_PROCESS_NAME = "\n[bMarkerGenerator::ERROR]: "
-std_WARNING_MAIN_PROCESS_NAME = "\n[bMarkerGenerator::WARNING]: "
+std_MAIN = "\n[bMarkerGenerator]: "
+std_ERROR = "\n[bMarkerGenerator::ERROR]: "
+std_WARNING = "\n[bMarkerGenerator::WARNING]: "
 
 
 class HATK_bMarkerGenertor(object):
@@ -19,45 +22,101 @@ class HATK_bMarkerGenertor(object):
     # External software
     plink = which("plink") if Exists(which("plink")) else RaiseError(HATK_InputPreparation_Error, "PLINK can't be found.")
 
-    def __init__(self, _chped, _out, _hg, _dictionary_AA, _dictionary_SNPS, _variants=None,
-                 _f_save_intermediates=False, _result=None):
+    def __init__(self, _chped, _out_prefix, _hg, _dictionary_AA, _dictionary_SNPS, _bfile=None,
+                 _f_save_intermediates=False):
 
         """
 
         """
 
         ### Main Variables ###
-        self.CHPED = CHPED(_chped)
-        self.out = _out
+        self.out_prefix = _out_prefix
+        self.out_dir = dirname(self.out_prefix)
         self.hg = _hg
 
-        self.variants = _variants
+        # PLINK Genotype
+        self.bfile = Genotype(_bfile) if bool(_bfile) else None
 
-        self.dict_AA_prefix = _dictionary_AA
-        self.dict_AA_seq = self.dict_AA_prefix+'.txt' if Exists(self.dict_AA_prefix+'.txt') else RaiseError(HATK_InputPreparation_Error, "Given AA sequence dictionary file('{}') can't be found.".format(self.dict_AA_prefix))
-        self.dict_AA_map = self.dict_AA_prefix+'.map' if Exists(self.dict_AA_prefix+'.map') else RaiseError(HATK_InputPreparation_Error, "Given AA dictionary Map file('{}') can't be found.".format(self.dict_AA_prefix))
+        # CHPED
+        self.CHPED:CHPED = CHPED(_chped)
 
-        self.dict_SNPS_prefix = _dictionary_SNPS
-        self.dict_SNPS_seq = self.dict_SNPS_prefix+'.txt' if Exists(self.dict_SNPS_prefix+'.txt') else RaiseError(HATK_InputPreparation_Error, "Given SNPS sequence dictionary file('{}') can't be found.".format(self.dict_SNPS_prefix))
-        self.dict_SNPS_map = self.dict_SNPS_prefix+'.map' if Exists(self.dict_SNPS_prefix+'.map') else RaiseError(HATK_InputPreparation_Error, "Given SNPS dictionary Map file('{}') can't be found.".format(self.dict_SNPS_prefix))
+        # IMGT2Seq HLA dictionary
+        self.HLA_DICTIONARY:HLA_DICTIONARY = \
+            HLA_DICTIONARY(_dictionary_AA + '.txt', _dictionary_AA + '.map',
+                           _dictionary_SNPS + '.txt', _dictionary_SNPS + '.map',
+                           _HLA_req=self.CHPED.HLA_avail)
 
+        # Output(bmarker)
+        self.bmarker = None
+
+        # Flag
         self.f_save_intermediates = _f_save_intermediates
 
 
         ### Main Actions ###
-        if _result:
-            self.setResults(_result)
-        else:
-            bMarkerGenerator(self.CHPED, self.out, self.hg, self.dict_AA_prefix, self.dict_SNPS_prefix,
-                             _variants=self.variants, _f_save_intermediates=self.f_save_intermediates,
+        print(self.__repr__())
+
+        # Consenting HLA gene set.
+        if self.CHPED.HLA_avail != self.HLA_DICTIONARY.HLA_avail:
+            print(std_MAIN + "Target genes: {}".format(self.HLA_DICTIONARY.HLA_target))
+
+            self.CHPED = self.CHPED.subsetCHPED(join(self.out_dir, basename(_chped)+'.subset'), self.HLA_DICTIONARY.HLA_target)
+            self.HLA_DICTIONARY = self.HLA_DICTIONARY.subsetHLA_DICTIONARY(self.out_dir, self.HLA_DICTIONARY.HLA_target)
+
+            print(std_MAIN + "New CHPED subsetted to the target genes.")
+            print(self.CHPED)
+            print(std_MAIN + "New HLA Dictionary files subsetted to the target genes.")
+            print(self.HLA_DICTIONARY)
+
+
+
+        if not (self.CHPED.field_format == self.HLA_DICTIONARY.field_format):
+            raise HATK_InputPreparation_Error(
+                std_ERROR + "Each field format of CHPED and HLA dictionary files doesn't match.\n"
+                            "-(CHPED): {}\n"
+                            "-(HLA Dictionary): {}"\
+                .format(FieldFormat2Label(self.CHPED.field_format), FieldFormat2Label(self.HLA_DICTIONARY.field_format))
+            )
+
+        self.bmarker = \
+            bMarkerGenerator(self.CHPED, self.out_prefix, self.hg,
+                             self.HLA_DICTIONARY.HLA_dict_AA_seq, self.HLA_DICTIONARY.HLA_dict_AA_map,
+                             self.HLA_DICTIONARY.HLA_dict_SNPS_seq, self.HLA_DICTIONARY.HLA_dict_SNPS_map,
+                             _variants=self.bfile.file_prefix, _f_save_intermediates=self.f_save_intermediates,
                              _plink=self.plink)
 
+        print(self.__repr__())
 
 
 
+    def __repr__(self):
 
-    def setResults(self, _result):
-        pass
+        str_PLINK = \
+            "=====< INPUT(1) - PLINK Genotype >=====\n{}\n".format(self.bfile) if bool(self.bfile) else ""
+
+        str_CHPED = \
+            "\n=====< INPUT(2) - CHPED(HLA type) >=====\n{}\n".format(self.CHPED)
+
+        str_HLA_DICTIONARY = \
+            "\n=====< INPUT(3) - HLA Dictionary(IMGT2Seq) >=====\n{}\n".format(self.HLA_DICTIONARY)
+
+        str_bMG = \
+            "\n< bMarkerGenerator >\n"
+        str_hg = \
+            "- Human Genome version: hg{}\n".format(self.hg)
+        str_out = \
+            "- Output prefix: {}\n".format(self.out_prefix)
+        str_bmarker = \
+            "- Generated bMarker:\n{}\n".format(self.bmarker)
+
+
+        str_summary = ''.join([
+            str_PLINK, str_CHPED, str_HLA_DICTIONARY,
+            str_bMG, str_hg, str_out, str_bmarker
+        ]).rstrip('\n')
+
+        return str_summary
+
 
 
 if __name__ == "__main__":
@@ -84,7 +143,7 @@ if __name__ == "__main__":
 
     parser.add_argument("-h", "--help", help="\nShow this help message and exit\n\n", action='help')
 
-    parser.add_argument("--variants", help="\nInput variants data file(.bed/.bim/.fam)\n\n")
+    parser.add_argument("--bfile", help="\nInput variants data file(.bed/.bim/.fam)\n\n")
     parser.add_argument("--chped", help="\nHLA Type Data(.chped)\n\n", required=True)
     parser.add_argument("--hg", help="\nHuman Genome version(ex. 18, 19)\n\n", choices=["18", "19", "38"], metavar="hg",
                         default="19", required=True)
@@ -116,5 +175,5 @@ if __name__ == "__main__":
     #                  _dictionary_AA=args.dict_AA, _dictionary_SNPS=args.dict_SNPS,
     #                  __save_intermediates=args.save_intermediates)
 
-    HATK_bMarkerGenertor(args.chped, args.out, args.hg, args.dict_AA, args.dict_SNPS, _variants=args.variants,
+    HATK_bMarkerGenertor(args.chped, args.out, args.hg, args.dict_AA, args.dict_SNPS, _bfile=args.bfile,
                          _f_save_intermediates=args.save_intermediates)
