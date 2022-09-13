@@ -38,10 +38,10 @@ class HATK_bMarkerGenertor(object):
         self.bfile = Genotype(_bfile) if bool(_bfile) else None
 
         # CHPED
-        self.CHPED:CHPED = CHPED(_chped)
+        self.CHPED = CHPED(_chped)
 
         # IMGT2Seq HLA dictionary
-        self.HLA_DICTIONARY:HLA_DICTIONARY = \
+        self.HLA_DICTIONARY = \
             HLA_DICTIONARY(_dictionary_AA + '.txt', _dictionary_AA + '.map',
                            _dictionary_SNPS + '.txt', _dictionary_SNPS + '.map',
                            _HLA_req=self.CHPED.HLA_avail)

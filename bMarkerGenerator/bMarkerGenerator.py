@@ -8,23 +8,26 @@ from bMarkerGenerator.src.encodeHLA import encodeHLA
 from bMarkerGenerator.src.HLAtoSequences import HLAtoSequences
 from src.PLINK_Bash import Bash_RUN_PLINK
 from NomenCleaner.src.CHPED import CHPED
+from bMarkerGenerator.src.bMarker import bMarker
 
 std_MAIN_PROCESS_NAME = "\n[%s]: " % basename(__file__)
 std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % basename(__file__)
 std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % basename(__file__)
 
 
-def bMarkerGenerator(_CHPED:CHPED, _out, _hg, _dictionary_AA, _dictionary_SNPS, _variants=None, _f_save_intermediates=False,
+def bMarkerGenerator(_CHPED:CHPED, _out, _hg,
+                     _dictionary_AA_seq, _dictionary_AA_map, _dictionary_SNPS_seq, _dictionary_SNPS_map,
+                     _variants=None, _f_save_intermediates=False,
                      _plink=None):
 
     ### Main Variables ###
     _out_dir = dirname(_out)
 
-    _dictionary_AA_seq = _dictionary_AA + ".txt" # From now on, official extension of HLA sequence information dictionary is ".txt". (2018. 9. 25.)
-    _dictionary_AA_map = _dictionary_AA + ".map"
-
-    _dictionary_SNPS_seq = _dictionary_SNPS + ".txt"
-    _dictionary_SNPS_map = _dictionary_SNPS + ".map"
+    # _dictionary_AA_seq = _dictionary_AA + ".txt" # From now on, official extension of HLA sequence information dictionary is ".txt". (2018. 9. 25.)
+    # _dictionary_AA_map = _dictionary_AA + ".map"
+    #
+    # _dictionary_SNPS_seq = _dictionary_SNPS + ".txt"
+    # _dictionary_SNPS_map = _dictionary_SNPS + ".map"
 
     _variants2 = join(_out_dir, basename(_variants)) if _variants else None
 
@@ -566,14 +569,14 @@ def QC(__MERGED__, _out, _out_dir, plink, _f_save_intermediates):
          TMP_all_remove_snps, "--geno 0.5", "--out", _out])
     # print(command)
     # os.system(command)
-    Bash_RUN_PLINK(command, _out, _f_save_intermediates)
+    Bash_RUN_PLINK(command, _out, _f_save_intermediates, _f_save_log=True)
 
     ### (5) Allele frequency info. of output reference panel ( *.FRQ )
     # Calculate allele frequencies
     command = ' '.join([plink, "--freq", "--bfile", _out, "--out", _out + '.FRQ'])
     # print(command)
     # os.system(command)
-    Bash_RUN_PLINK(command, _out + '.FRQ', _f_save_intermediates)
+    Bash_RUN_PLINK(command, _out + '.FRQ', _f_save_intermediates, _f_save_log=True)
 
 
     if not _f_save_intermediates:
