@@ -96,7 +96,7 @@ class HLA_DICTIONARY(object):
         self.HLA_avail_AA_map = getHLAs_map(self.HLA_dict_AA_map) if bool(self.HLA_dict_AA_map) else []
         self.HLA_avail_AA = list(np.intersect1d(self.HLA_avail_AA_seq, self.HLA_avail_AA_map))
 
-        self.field_format_AA = guessFieldFormat(self.HLA_dict_AA_seq)
+        self.field_format_AA = guessFieldFormat(self.HLA_dict_AA_seq) if bool(self.HLA_avail_AA_seq) else None
 
         ## SNPS dictionary
         self.HLA_dict_SNPS_seq = _HLA_dict_SNPS_seq if Exists(_HLA_dict_SNPS_seq) else None
@@ -106,7 +106,7 @@ class HLA_DICTIONARY(object):
         self.HLA_avail_SNPS_map = getHLAs_map(self.HLA_dict_SNPS_map) if bool(self.HLA_dict_SNPS_map) else []
         self.HLA_avail_SNPS = list(np.intersect1d(self.HLA_avail_SNPS_seq, self.HLA_avail_SNPS_map))
 
-        self.field_format_SNPS = guessFieldFormat(self.HLA_dict_AA_seq)
+        self.field_format_SNPS = guessFieldFormat(self.HLA_dict_SNPS_seq) if bool(self.HLA_avail_SNPS_seq) else None
 
 
         # HLA available
@@ -290,7 +290,15 @@ def subsetDictMap(_HLA_dict_map, _out, _HLA_ToExtract):
     with open(_HLA_dict_map, 'r') as f_HLA_dict_seq, open(_out, 'w') as f_out:
         for line in f_HLA_dict_seq:
             l = line.split()
-            hla = l[1].split('_')[1]
+
+            temp = l[1].split('_')
+
+            type = temp[0]
+
+            if type == "AA" or type == "SNPS":
+                hla = temp[1] # "AA_A_-6_30018365_exon1", "SNPS_A_73_30018382_exon1"
+            else:
+                hla = temp[2] # "INS_AA_A_-6x-5_30018366", "INS_SNPS_A_73x74_30018382"
 
             if hla in _HLA_ToExtract:
                 f_out.write(line)
