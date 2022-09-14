@@ -57,8 +57,8 @@ def ArgRouter(_args):
         """
 
         # `normal_SNPs` => just as prefix.
-        if not _args.variants:
-            _args.variants = _args.input if exists(_args.input + ".bed") and exists(_args.input + ".bim") and exists(_args.input + ".fam") else None
+        if not _args.bfile:
+            _args.bfile = _args.input if exists(_args.input + ".bed") and exists(_args.input + ".bim") and exists(_args.input + ".fam") else None
         if not _args.pheno:
             _args.pheno = _args.input + ".phe" if os.path.exists(
                 _args.input + ".phe") else _args.input + ".pheno" if os.path.exists(_args.input + ".pheno") else None
@@ -70,7 +70,7 @@ def ArgRouter(_args):
             _args.reference_allele = _args.input + ".refallele" if os.path.isfile(
                 _args.input + ".refallele") else _args.input + ".ref" if os.path.exists(_args.input + ".ref") else None
 
-        if not (_args.variants or _args.pheno or _args.covar or _args.reference_allele):
+        if not (_args.bfile or _args.pheno or _args.covar or _args.reference_allele):
             print(
                 std_ERROR_MAIN_PROCESS_NAME + "None of files related to '--variants', '--pheno', '--covar', '--reference-allele' arguments were overriden.\n"
                                               "Please check '--input' argument again.")
@@ -85,13 +85,13 @@ def ArgRouter(_args):
 
     # (2) _args.out
 
-    if not _args.out:
+    if not _args.out_gz:
         print(
             std_ERROR_MAIN_PROCESS_NAME + 'The argument "{0}" has not given. Please check it again.\n'.format("--out"))
         sys.exit()
     else:
-        _args.out = _args.out if not _args.out.endswith('/') else _args.out.rstrip('/')
-        if bool(os.path.dirname(_args.out)): os.makedirs(os.path.dirname(_args.out), exist_ok=True)
+        _args.out_gz = _args.out_gz if not _args.out_gz.endswith('/') else _args.out_gz.rstrip('/')
+        if bool(os.path.dirname(_args.out_gz)): os.makedirs(os.path.dirname(_args.out_gz), exist_ok=True)
 
     # (3) Module Flags
 
@@ -115,7 +115,7 @@ def ArgRouter(_args):
 
         ########## < [0] IMGT2Seq > ##########
 
-        myIMGT2Seq = HATK_IMGT2Seq(_args.imgt, _args.hg, _args.out,
+        myIMGT2Seq = HATK_IMGT2Seq(_args.imgt, _args.hg, _args.out_gz,
                                    _args.oneF, _args.twoF, _args.threeF, _args.fourF, _args.Ggroup, _args.Pgroup,
                                    _no_indel=_args.no_indel, _multiprocess=_args.multiprocess,
                                    _save_intermediates=_args.save_intermediates,
@@ -142,7 +142,7 @@ def ArgRouter(_args):
             print(
                 std_MAIN_PROCESS_NAME + "Given HPED file('{}') is to be processed by NomenCleaner.".format(_args.hped))
 
-            myNomenCleaner = HATK_NomenCleaner(_args.hped, _args.hat, _args.imgt, _args.out,
+            myNomenCleaner = HATK_NomenCleaner(_args.hped, _args.hat, _args.imgt, _args.out_gz,
                                                __oneF=_args.oneF, __twoF=_args.twoF, __threeF=_args.threeF,
                                                __fourF=_args.fourF,
                                                __Ggroup=_args.Ggroup, __Pgroup=_args.Pgroup,
@@ -162,7 +162,7 @@ def ArgRouter(_args):
             print(std_MAIN_PROCESS_NAME + "Given raw HPED file(s)('{}') is/are to be processed by HLA2HPED.".format(
                 _args.rhped))
 
-            myHLA2HPED = HATK_HLA2HPED(_args.rhped, _args.out, _args.platform)
+            myHLA2HPED = HATK_HLA2HPED(_args.rhped, _args.out_gz, _args.platform)
 
             _args.hped = myHLA2HPED.getResult()
 
@@ -174,7 +174,7 @@ def ArgRouter(_args):
             print(std_MAIN_PROCESS_NAME + "Generated HPED file('{}') is to be processed by NomenCleaner.".format(
                 _args.hped))
 
-            myNomenCleaner = HATK_NomenCleaner(_args.hped, _args.hat, _args.imgt, _args.out,
+            myNomenCleaner = HATK_NomenCleaner(_args.hped, _args.hat, _args.imgt, _args.out_gz,
                                                __oneF=_args.oneF, __twoF=_args.twoF, __threeF=_args.threeF,
                                                __fourF=_args.fourF,
                                                __Ggroup=_args.Ggroup, __Pgroup=_args.Pgroup,
@@ -196,13 +196,13 @@ def ArgRouter(_args):
 
         ########## < [2] bMarkerGenerator > ##########
 
-        mybMarkers = HATK_bMarkerGenertor(_args.chped, _args.out, _args.hg, _args.dict_AA, _args.dict_SNPS,
-                                          _variants=_args.variants, __save_intermediates=_args.save_intermediates,
+        mybMarkers = HATK_bMarkerGenertor(_args.chped, _args.out_gz, _args.hg, _args.dict_AA, _args.dict_SNPS,
+                                          _variants=_args.bfile, __save_intermediates=_args.save_intermediates,
                                           _p_src="bMarkerGenerator/src")
 
-        _args.variants = mybMarkers.getReuslt()
+        _args.bfile = mybMarkers.getReuslt()
 
-        if _args.variants == -1:
+        if _args.bfile == -1:
             print(std_ERROR_MAIN_PROCESS_NAME + "Failed to generate Binary Markers for '{}'".format(_args.chped))
             sys.exit()
         else:
@@ -213,7 +213,7 @@ def ArgRouter(_args):
         # HARD_CODING = 'tests/_0_WholeImplementation/20190510_58C_NBS_test/58C_NBS_test'
         # _args.variants = HARD_CODING
 
-        myLogistcRegression = HATK_LogisticRegression(_args.variants, _args.out,
+        myLogistcRegression = HATK_LogisticRegression(_args.bfile, _args.out_gz,
                                                       _phe=_args.pheno, _phe_name=_args.pheno_name,
                                                       _covar=_args.covar, _covar_name=_args.covar_name,
                                                       _condition=_args.condition,
@@ -225,14 +225,14 @@ def ArgRouter(_args):
         if _args.assoc_result[0] == -1:
             print(
                 std_ERROR_MAIN_PROCESS_NAME + "Failed to perform logistic regression test on the Binary Markers('{}').".format(
-                    _args.variants))
+                    _args.bfile))
             sys.exit()
         else:
             print(std_MAIN_PROCESS_NAME + "Logistic Regression result : \n{}".format(myLogistcRegression.getResult()))
 
         ########## < [4] Manhattan Plot > ##########
 
-        myManhattan = HATK_Manhattan(_args.assoc_result, _args.out + ".manhattan", _args.hg,
+        myManhattan = HATK_Manhattan(_args.assoc_result, _args.out_gz + ".manhattan", _args.hg,
                                      _point_col=_args.point_color, _top_color=_args.top_color,
                                      _point_size=_args.point_size, _yaxis_unit=_args.yaxis_unit,
                                      _p_src="HLA_Manhattan/src", _p_data="HLA_Manhattan/data", _HLA=None)
@@ -253,7 +253,7 @@ def ArgRouter(_args):
             t_HLA = HLA_names[i]
             t_maptable = _args.maptable[t_HLA]
 
-            myHeatmap = HATK_Heatmap(t_HLA, _args.out + ".HLA_{}.heatmap".format(t_HLA), t_maptable,
+            myHeatmap = HATK_Heatmap(t_HLA, _args.out_gz + ".HLA_{}.heatmap".format(t_HLA), t_maptable,
                                      _args.assoc_result[0], __save_intermediates=_args.save_intermediates,
                                      _p_src="HLA_Heatmap/src", _p_data="HLA_Heatmap/data")
 
@@ -280,7 +280,7 @@ def ArgRouter(_args):
         if _args.imgt2seq:
 
             ### IMGT2Seq
-            myIMGT2Seq = HATK_IMGT2Seq(_args.imgt, _args.hg, _args.out,
+            myIMGT2Seq = HATK_IMGT2Seq(_args.imgt, _args.hg, _args.out_gz,
                                        _args.oneF, _args.twoF, _args.threeF, _args.fourF, _args.Ggroup, _args.Pgroup,
                                        _no_indel=_args.no_indel, _multiprocess=_args.multiprocess,
                                        _save_intermediates=_args.save_intermediates,
@@ -291,8 +291,8 @@ def ArgRouter(_args):
         elif _args.bmarkergenerator:
 
             ### bMarkerGenerator
-            mybMarkers = HATK_bMarkerGenertor(_args.chped, _args.out, _args.hg, _args.dict_AA, _args.dict_SNPS,
-                                              _variants=_args.variants, __save_intermediates=_args.save_intermediates,
+            mybMarkers = HATK_bMarkerGenertor(_args.chped, _args.out_gz, _args.hg, _args.dict_AA, _args.dict_SNPS,
+                                              _variants=_args.bfile, __save_intermediates=_args.save_intermediates,
                                               _p_src="bMarkerGenerator/src")
 
             print(std_MAIN_PROCESS_NAME + "bMarkerGenerator result(Prefix) : \n{}".format(mybMarkers.getReuslt()))
@@ -300,14 +300,14 @@ def ArgRouter(_args):
         elif _args.hla2hped:
 
             ### HLA2HPED
-            myHLA2HPED = HATK_HLA2HPED(_args.rhped, _args.out, _args.platform)
+            myHLA2HPED = HATK_HLA2HPED(_args.rhped, _args.out_gz, _args.platform)
 
             print(std_MAIN_PROCESS_NAME + "HLA2HPED result : \n{}".format(myHLA2HPED.getResult()))
 
         elif _args.nomencleaner:
 
             ### NomenCleaner
-            myNomenCleaner = HATK_NomenCleaner(_args.hped, _args.hat, _args.imgt, _args.out,
+            myNomenCleaner = HATK_NomenCleaner(_args.hped, _args.hat, _args.imgt, _args.out_gz,
                                                __oneF=_args.oneF, __twoF=_args.twoF, __threeF=_args.threeF,
                                                __fourF=_args.fourF,
                                                __Ggroup=_args.Ggroup, __Pgroup=_args.Pgroup,
@@ -318,7 +318,7 @@ def ArgRouter(_args):
         elif _args.logistic:
 
             ### Logistic Regression
-            myLogistcRegression = HATK_LogisticRegression(_args.variants, _args.out,
+            myLogistcRegression = HATK_LogisticRegression(_args.bfile, _args.out_gz,
                                                           _phe=_args.pheno, _phe_name=_args.pheno_name,
                                                           _covar=_args.covar, _covar_name=_args.covar_name,
                                                           _condition=_args.condition,
@@ -330,7 +330,7 @@ def ArgRouter(_args):
         elif _args.omnibus:
 
             ### Omnibus Test
-            myOminubus = HATK_OmibusTest(_args.out, _args.fam, _phe=_args.pheno, _phe_name=_args.pheno_name,
+            myOminubus = HATK_OmibusTest(_args.out_gz, _args.fam, _phe=_args.pheno, _phe_name=_args.pheno_name,
                                          _covar=_args.covar, _covar_name=_args.covar_name,
                                          _condition=_args.condition, _condition_list=_args.condition_list,
                                          _bgl_phased=_args.phased, _aa=_args.aa)
@@ -338,14 +338,14 @@ def ArgRouter(_args):
         elif _args.metaanalysis:
 
             ### Meta Analysis
-            myMeta = HATK_MetaAnalysis(_args.s1_logistic_result, _args.s2_logistic_result, _args.out,
+            myMeta = HATK_MetaAnalysis(_args.s1_logistic_result, _args.s2_logistic_result, _args.out_gz,
                                        _study1_m=_args.s1_bim, _study2_m=_args.s2_bim)
             print(std_MAIN_PROCESS_NAME + "MetaAnalysis result : \n{}".format(myMeta))
 
         elif _args.heatmap:
 
             ### HLA Heatmap
-            myHeatmap = HATK_Heatmap(_args.HLA, _args.out, _args.maptable, _args.ar,
+            myHeatmap = HATK_Heatmap(_args.HLA, _args.out_gz, _args.maptable, _args.ar,
                                      __save_intermediates=_args.save_intermediates, _p_src="HLA_Heatmap/src",
                                      _p_data="HLA_Heatmap/data")
 
@@ -354,7 +354,7 @@ def ArgRouter(_args):
         elif _args.manhattan:
 
             ### HLA Manhattan
-            myManhattan = HATK_Manhattan(_args.ar, _args.out, _args.hg,
+            myManhattan = HATK_Manhattan(_args.ar, _args.out_gz, _args.hg,
                                          _point_col=_args.point_color, _top_color=_args.top_color,
                                          _point_size=_args.point_size, _yaxis_unit=_args.yaxis_unit,
                                          _p_src="HLA_Manhattan/src", _p_data="HLA_Manhattan/data", _HLA=_args.HLA)

@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 from src.HATK_Error import HATK_InputPreparation_Error, RaiseError
-from src.PLINK import Genotype
+from src.PLINK_Genotype import Genotype
 from src.util import Exists
 
 class bMarker(Genotype):
@@ -121,7 +121,9 @@ class bMarker(Genotype):
 
 if __name__ == '__main__':
 
+    # bmarker = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/HATK_rearchitect_bMG_20220913/wtccc_filtered_58C_RA.hatk.300+300.hg18.chr6.29-34mb"
     bmarker = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/HATK_rearchitect_bMG_20220913/wtccc_filtered_58C_RA.hatk.300+300.hg18.chr6.29-34mb"
+
     r = bMarker(bmarker)
     print(r)
     pass

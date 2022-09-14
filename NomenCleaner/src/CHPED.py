@@ -109,9 +109,12 @@ class CHPED(object):
         _HLA_ToExtract = list(np.setdiff1d(_HLA_ToExtract, _HLA_ToExclude))
 
         if not self.f_hasHeader:
-            print(std_ERROR + "Given CHPED('{}') can't be subsetted to the HLA genes('{}') "
-                              "because the CHPED doesn't have the header.".format(self.chped, _HLA_ToExtract))
-            return -1
+            # print(std_ERROR + "Given CHPED('{}') can't be subsetted to the HLA genes('{}') "
+            #                   "because the CHPED doesn't have the header.".format(self.chped, _HLA_ToExtract))
+            # return -1
+            raise HATK_InputPreparation_Error(
+                std_ERROR + "Given CHPED('{}') can't be subsetted to the HLA genes('{}') "
+                            "because the CHPED doesn't have the header.".format(self.chped, _HLA_ToExtract))
 
         _out = _out_prefix + '.chped'
 

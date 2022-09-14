@@ -7,7 +7,7 @@ import argparse, textwrap
 from bMarkerGenerator.bMarkerGenerator import bMarkerGenerator
 from src.HATK_Error import HATK_InputPreparation_Error, RaiseError
 from src.util import Exists, FieldFormat2Label
-from src.PLINK import Genotype
+from src.PLINK_Genotype import Genotype
 from NomenCleaner.src.CHPED import CHPED
 from IMGT2Seq.src.IMGT2Seq_Output import HLA_DICTIONARY
 from bMarkerGenerator.src.bMarker import bMarker

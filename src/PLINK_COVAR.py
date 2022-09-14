@@ -51,7 +51,7 @@ class COVAR(object):
             # Excluded ones.
             l_excluded = list(np.setdiff1d(self.covar_name_req, self.covar_name_avail))
             if len(l_excluded) > 0:
-                print(std_WARNING + "Next covariates are NOT IN given covariate file: {}".format(l_excluded))
+                print(std_WARNING.lstrip("\n") + "Next covariates are NOT IN given covariate file: {}".format(l_excluded))
 
 
     def __repr__(self):

@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 from NomenCleaner.NomenCleaner import NomenCleaner
-from NomenCleaner.HPED import HPED
+from NomenCleaner.src.HPED import HPED
 from src.HATK_Error import HATK_InputPreparation_Error, RaiseError
 from src.util import Exists
 
@@ -231,6 +231,7 @@ if __name__ == '__main__':
 
     ##### <for Publication> #####
 
+    print(' '.join(sys.argv))
     args = parser.parse_args()
     print(args)
 
