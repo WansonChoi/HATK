@@ -13,7 +13,7 @@ class bMarker(Genotype):
     def __init__(self, _file_prefix):
 
         ### Main Variables ###
-        self.FRQ = join(_file_prefix+'.FRQ.frq') if Exists(join(_file_prefix+'.FRQ.frq')) else None
+        self.FRQ = _file_prefix+'.FRQ.frq' if Exists(_file_prefix+'.FRQ.frq') else None
 
         # SNP marker
         self.m_SNP = -1
@@ -121,7 +121,7 @@ class bMarker(Genotype):
 
 if __name__ == '__main__':
 
-    bmarker = "/home/wansonchoi/sf_VirtualBox_Share/HATK/example/RESULT_EXAMPLE/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18"
+    bmarker = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/HATK_rearchitect_bMG_20220913/wtccc_filtered_58C_RA.hatk.300+300.hg18.chr6.29-34mb"
     r = bMarker(bmarker)
     print(r)
     pass
