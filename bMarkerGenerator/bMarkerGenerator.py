@@ -8,7 +8,7 @@ from bMarkerGenerator.src.encodeHLA import encodeHLA
 from bMarkerGenerator.src.HLAtoSequences import HLAtoSequences
 from src.PLINK_Bash import Bash_RUN_PLINK
 from NomenCleaner.src.CHPED import CHPED
-from bMarkerGenerator.src.bMarker import bMarker
+from bMarkerGenerator.bMarker import bMarker
 
 std_MAIN_PROCESS_NAME = "\n[%s]: " % basename(__file__)
 std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % basename(__file__)
@@ -74,7 +74,7 @@ def bMarkerGenerator(_CHPED:CHPED, _out, _hg,
     print("[9] Making reference panel for HLA-AA,SNPS,HLA and Normal variants(SNPs) is Done!" if _variants else \
           "[9] Making reference panel for HLA-AA,SNPS,HLA is Done!")
 
-    return __RETURN__
+    return bMarker(__RETURN__)
 
 
 
@@ -589,7 +589,8 @@ def QC(__MERGED__, _out, _out_dir, plink, _f_save_intermediates):
         os.remove(TMP_all_remove_snps)
         os.remove(TMP_allele_order)
 
-    return _out+'.bed', _out+'.bim', _out+'.fam', _out+'.FRQ.frq'
+    # return _out+'.bed', _out+'.bim', _out+'.fam', _out+'.FRQ.frq'
+    return _out
 
 # if PREPARE:
 #

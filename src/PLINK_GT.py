@@ -21,6 +21,7 @@ class GT(object):
     def __init__(self, _file_prefix):
 
         ### Main Variables ###
+        self.file_prefix = _file_prefix
         self.bed = checkFile(_file_prefix+'.bed', std_ERROR+"Given PLINK BED file('{}') can't be found.".format(_file_prefix+'.bed'))
         self.bim = checkFile(_file_prefix+'.bim', std_ERROR+"Given PLINK BIM file('{}') can't be found.".format(_file_prefix+'.bim'))
         self.fam = checkFile(_file_prefix+'.fam', std_ERROR+"Given PLINK FAM file('{}') can't be found.".format(_file_prefix+'.fam'))

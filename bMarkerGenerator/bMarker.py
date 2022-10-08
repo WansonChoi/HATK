@@ -5,10 +5,10 @@ import numpy as np
 import pandas as pd
 
 from src.HATK_Error import HATK_InputPreparation_Error, RaiseError
-from src.PLINK_Genotype import Genotype
+from src.PLINK_GT import GT
 from src.util import Exists
 
-class bMarker(Genotype):
+class bMarker(GT):
 
     def __init__(self, _file_prefix):
 
@@ -92,15 +92,15 @@ class bMarker(Genotype):
             "- # of Total markers: {}\n".format(self.M_markers)
 
         str_m_SNP = \
-            "- # of SNPs: {}\n".format(self.m_SNP)
+            "   - # of SNP markers: {}\n".format(self.m_SNP)
         str_m_HLA = \
-            "- # of HLA markers: {}\n".format(self.m_HLA)
+            "   - # of HLA markers: {}\n".format(self.m_HLA)
         str_m_AA = \
-            "- # of Amino acid markers: {}\n".format(self.m_AA)
+            "   - # of Amino acid markers: {}\n".format(self.m_AA)
         str_m_SNPS = \
-            "- # of Intragenic DNA markers: {}\n".format(self.m_SNPS)
+            "   - # of Intragenic DNA markers: {}\n".format(self.m_SNPS)
         str_m_INS = \
-            "- # of Insertion markers: {}\n".format(self.m_INS)
+            "   - # of Insertion markers: {}\n".format(self.m_INS)
 
         str_hasSexInfo = \
             "- has Sex Info?: {}\n".format(self.f_hasSexInfo)
@@ -118,11 +118,14 @@ class bMarker(Genotype):
 
 
 
-
 if __name__ == '__main__':
 
+    ## Linux
     # bmarker = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/HATK_rearchitect_bMG_20220913/wtccc_filtered_58C_RA.hatk.300+300.hg18.chr6.29-34mb"
-    bmarker = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/HATK_rearchitect_bMG_20220913/wtccc_filtered_58C_RA.hatk.300+300.hg18.chr6.29-34mb"
+    # bmarker = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/HATK_rearchitect_bMG_20220913/wtccc_filtered_58C_RA.hatk.300+300.hg18.chr6.29-34mb"
+
+    ## Mac
+    bmarker = "/Users/wansonchoi/Git_Projects/HATK/tests/20221007_bMG/wtccc_filtered_58C_RA.hatk.300+300.hg18.chr6.29-34mb.with38"
 
     r = bMarker(bmarker)
     print(r)

@@ -7,10 +7,9 @@ import argparse, textwrap
 from bMarkerGenerator.bMarkerGenerator import bMarkerGenerator
 from src.HATK_Error import HATK_InputPreparation_Error, RaiseError
 from src.util import Exists, FieldFormat2Label
-from src.PLINK_Genotype import Genotype
+from src.PLINK_GT import GT
 from NomenCleaner.src.CHPED import CHPED
 from IMGT2Seq.src.IMGT2Seq_Output import HLA_DICTIONARY
-from bMarkerGenerator.src.bMarker import bMarker
 
 std_MAIN = "\n[bMarkerGenerator]: "
 std_ERROR = "\n[bMarkerGenerator::ERROR]: "
@@ -35,7 +34,7 @@ class HATK_bMarkerGenertor(object):
         self.hg = _hg
 
         # PLINK Genotype
-        self.bfile = Genotype(_bfile) if bool(_bfile) else None
+        self.bfile = GT(_bfile) if bool(_bfile) else None
 
         # CHPED
         self.CHPED = CHPED(_chped)
