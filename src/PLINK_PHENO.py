@@ -4,7 +4,6 @@ import os, sys, re
 from os.path import basename, dirname, exists
 import pandas as pd
 import numpy as np
-from src.util import asSingleList
 
 from src.HATK_Error import HATK_InputPreparation_Error, RaiseError
 from src.util import Exists, checkFile, hasHeader, getHeader
@@ -109,6 +108,14 @@ def checkPhe(_f_hasHeader, _phe):
         N_samples = df_phe.shape[0]
 
     return pheno_name_avail, N_samples
+
+
+
+def getTargetPheDtype(_l_phe_avail, _l_phe_dtypes:list, _phe_name_target):
+
+    idx = _l_phe_avail.index(_phe_name_target)
+    return _l_phe_dtypes[idx]
+
 
 
 # def writePheSubset(_phe, _out):
