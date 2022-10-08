@@ -1,6 +1,7 @@
 #-*- coding: utf-8 -*-
 import os, sys, re
 from os.path import basename, dirname, exists, isdir, join
+from shutil import which
 
 from src.HATK_Error import HATK_InputPreparation_Error, RaiseError
 
@@ -65,3 +66,14 @@ def FieldFormat2Label(_which_format):
     elif _which_format == 5: return "G-group"
     elif _which_format == 6: return "P-group"
     else: return None
+
+
+def findExec(_cmd, _msg):
+    if Exists(which(_cmd)):
+        return which(_cmd)
+    elif Exists(join("./dependency", _cmd)):
+        return join("./dependency", _cmd)
+    elif Exists(join("../dependency", _cmd)):
+        return join("./dependency", _cmd)
+    else:
+        RaiseError(HATK_InputPreparation_Error, _msg)

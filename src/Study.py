@@ -3,11 +3,13 @@
 import os, sys, re
 from os.path import basename, dirname, exists, join
 
-import src.HATK_Error as HATK_Error
+from src.HATK_Error import HATK_InputPreparation_Error, RaiseError
 from src.PLINK_GT import GT
 from src.PLINK_PHENO import PHENO, getTargetPheDtype
 from src.PLINK_COVAR import COVAR
 from src.PLINK_CONDITION import CONDITION
+from src.PLINK_Bash import getPLINKexec
+from src.util import findExec
 
 std_MAIN = "\n[%s]: " % basename(__file__)
 std_ERROR = "\n[%s::ERROR]: " % basename(__file__)
@@ -22,7 +24,11 @@ class Study(object):
 
     """
 
-    # def __init__(self, _out_prefix, _GT:GT, _pheno_name, _PT:PHENO=None, _CV:COVAR=None, _CD:CONDITION=None):
+    ### External Software ###
+    plink = getPLINKexec()
+    Rscript = findExec("Rscript", std_ERROR+"'Rscript' command can't be found. Please install R.")
+
+
     def __init__(self, _out_prefix, _bfile, _pheno, _pheno_name, _covar=None, _covar_name=None, _condition_list=None):
 
         ### Main Variables ###
@@ -56,9 +62,15 @@ class Study(object):
         str_condition = \
             "=====< CONDITION >=====\n{}\n".format(self.CONDITION) if self.CONDITION else ""
 
+        str_external_soft = \
+            "=====< External Software >=====\n" \
+            "- PLINK: {}\n" \
+            "- R: {}".format(self.plink, self.Rscript)
+
         str_summary = \
             ''.join([str_GT, str_PT, str_pheno_name_target, str_pheno_dtype_target,
-                     str_CV, str_covar_name, str_condition]).rstrip('\n')
+                     str_CV, str_covar_name, str_condition,
+                     str_external_soft]).rstrip('\n')
         return str_summary
 
 
