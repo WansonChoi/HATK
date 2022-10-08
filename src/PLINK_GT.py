@@ -14,54 +14,22 @@ std_WARNING = "\n[%s::WARNING]: " % basename(__file__)
 
 
 
-class Genotype(object):
+class GT(object):
     """
-    A wrapper class to manage PLINK genotype files(*.{bed,bim,fam}).
+    A CONTAINER class to manage PLINK genotype files(*.{bed,bim,fam}).
     """
     def __init__(self, _file_prefix):
 
         ### Main Variables ###
-        self.file_prefix = _file_prefix
         self.bed = checkFile(_file_prefix+'.bed', std_ERROR+"Given PLINK BED file('{}') can't be found.".format(_file_prefix+'.bed'))
         self.bim = checkFile(_file_prefix+'.bim', std_ERROR+"Given PLINK BIM file('{}') can't be found.".format(_file_prefix+'.bim'))
         self.fam = checkFile(_file_prefix+'.fam', std_ERROR+"Given PLINK FAM file('{}') can't be found.".format(_file_prefix+'.fam'))
 
-        self.N_samples = -1
-        self.M_markers = -1
+        self.N_samples, \
+        self.f_hasSexInfo, \
+        self.f_hasPheInfo = checkFAM(self.fam)
 
-        self.f_hasSexInfo = -1
-        self.f_hasPheInfo = -1
-
-        ### Main Actions ###
-        self.checkFAM()
-        self.checkBIM()
-
-
-    def checkFAM(self):
-
-        df_fam = pd.read_csv(self.fam, sep='\s+', header=None, dtype=str)
-        # print("df_fam:\n{}\n".format(df_fam))
-
-        arr_sex = df_fam.iloc[:, 4].values
-        f_hasSexInfo = not np.all( np.logical_or((arr_sex == '-9'), (arr_sex == '0')) )
-        # print(f_hasSexInfo)
-
-        arr_phe = df_fam.iloc[:, 5].values
-        f_hasPheInfo = not np.all( np.logical_or((arr_phe == '-9'), (arr_phe == '0')) )
-        # print(f_hasPheInfo)
-
-        ### Set summary values.
-        self.N_samples = df_fam.shape[0]
-        self.f_hasSexInfo = f_hasSexInfo
-        self.f_hasPheInfo = f_hasPheInfo
-
-
-    def checkBIM(self):
-
-        df_bim = pd.read_csv(self.bim, sep='\s+', header=None, dtype=str)
-
-        ### Set summary values.
-        self.M_markers = df_bim.shape[0]
+        self.M_markers = checkBIM(self.bim)
 
 
     def __repr__(self):
@@ -93,8 +61,39 @@ class Genotype(object):
 
 
 
+def checkFAM(_fam):
+
+    df_fam = pd.read_csv(_fam, sep='\s+', header=None, dtype=str)
+    # print("df_fam:\n{}\n".format(df_fam))
+
+    arr_sex = df_fam.iloc[:, 4].values
+    f_hasSexInfo = not np.all( np.logical_or((arr_sex == '-9'), (arr_sex == '0')) )
+    # print(f_hasSexInfo)
+
+    arr_phe = df_fam.iloc[:, 5].values
+    f_hasPheInfo = not np.all( np.logical_or((arr_phe == '-9'), (arr_phe == '0')) )
+    # print(f_hasPheInfo)
+
+    return df_fam.shape[0], f_hasSexInfo, f_hasPheInfo
+
+
+def checkBIM(_bim):
+
+    df_bim = pd.read_csv(_bim, sep='\s+', header=None, dtype=str)
+
+    return df_bim.shape[0]
+
+
+
 if __name__ == '__main__':
 
     ### Genotype class
-    gt = Genotype('/Users/wansonchoi/Git_Projects/HATK/example/wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18')
+
+    ## Mac
+
+    # _gt = '/Users/wansonchoi/Git_Projects/HATK/example/wtccc_filtered_58C_RA.hatk.300+300.hg18.chr6.29-34mb'
+    _gt = "/Users/wansonchoi/Dropbox/_Sync_MyLaptop/Projects/UC-CD-HLA/data/Merged/merged"
+
+
+    gt = GT(_gt)
     print(gt)
