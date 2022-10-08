@@ -2,50 +2,46 @@
 
 import os, sys, re
 from os.path import basename, dirname, exists, join
-import subprocess
-import pandas as pd
-import numpy as np
 
 import src.HATK_Error as HATK_Error
 import src.PLINK_Bash as PLINK_Bash
-from src.PLINK_Genotype import Genotype
+from src.PLINK_GT import GT
 from src.PLINK_PHENO import PHENO
 from src.PLINK_COVAR import COVAR
 from src.PLINK_CONDITION import CONDITION
 
-from HLA_Manhattan.manhattan import Manhattan
-
-std_MAIN_PROCESS_NAME = "\n[%s]: " % basename(__file__)
-std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % basename(__file__)
-std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % basename(__file__)
+std_MAIN = "\n[%s]: " % basename(__file__)
+std_ERROR = "\n[%s::ERROR]: " % basename(__file__)
+std_WARNING = "\n[%s::WARNING]: " % basename(__file__)
 
 
 
 class Study(object):
 
     """
-    Container class for input PLINK files and association test.
+    A Container class for Association test.
 
     """
 
     ### Class global variables
     plink_exec = PLINK_Bash.getPLINKexec()
 
-    def __init__(self, _out_prefix, _GT:Genotype, _PT:PHENO=None, _CV:COVAR=None, _CD:CONDITION=None):
-    # def __init__(self, _out_prefix, _file_GT=-1, _file_PT=-1, _file_CV=-1, _pheno_name=-1, _covar_name=-1,
-    #              _condition=-1, _condition_list=-1):
+    # def __init__(self, _out_prefix, _GT:GT, _pheno_name, _PT:PHENO=None, _CV:COVAR=None, _CD:CONDITION=None):
+    def __init__(self, _out_prefix, _bfile, _pheno, _pheno_name, _covar=None, _covar_name=None, _condition_list=None):
 
         ### Main Variables ###
-        self.GT = _GT
-        self.PT = _PT
-        self.CV = _CV
-        self.CD = _CD
+        self.GT = GT(_bfile)
+
+        self.PHENO = PHENO(_pheno)
+        self.pheno_name = _pheno_name # (***) must be A SINGLE phenotype name. (1 trait - 1 study instance)
+
+        self.COVAR = COVAR(_covar, _covar_name.split(',')) if isinstance(_covar, str) else None
+        self.covar_name = _covar_name.split(',')
+
+        self.CONDITION = CONDITION(None, _condition_list) if isinstance(_condition_list, str) else None
 
         self.out_prefix = _out_prefix
 
-        """
-        will raise an error if the target phenotype is empty.
-        """
 
     def __repr__(self):
         str_plink_exec = \
@@ -53,42 +49,49 @@ class Study(object):
         str_GT = \
             "=====< GENOTYPE >=====\n{}\n".format(self.GT)
         str_PT = \
-            "=====< PHENOTYPE >=====\n{}\n".format(self.PT)
-        # str_isPheBinary = \
-        #     "[Target Phenotype DataType]: {}\n" \
-        #         .format("Binary(Case-Control)" if self.f_isPheBinary else "Continuous(Quantitative)")
+            "=====< PHENOTYPE >=====\n{}\n".format(self.PHENO)
+        str_pheno_name = \
+            "\n- Target Phenotype: {}\n".format(self.pheno_name)
         str_CV = \
-            "=====< COVARIATE >=====\n{}\n".format(self.CV)
-        # str_covar_name = \
-        #     "[Target Covariate Name(s)]: {}\n".format(self.covar_name)
-        # str_condition = \
-        #     "=====< CONDITION >=====\n" \
-        #     "[Condition(s)]: {}\n" \
-        #     "[Condition List File]: {}\n".format(self.condition, self.condition_list)
+            "=====< COVARIATE >=====\n{}\n".format(self.COVAR) if self.COVAR else ""
+        str_covar_name = \
+            "\n- Target Covariate(s): {}\n".format(self.covar_name) if self.COVAR else ""
+        str_condition = \
+            "=====< CONDITION >=====\n{}\n".format(self.CONDITION) if self.CONDITION else ""
 
         str_summary = \
-            ''.join([str_plink_exec, str_GT, str_PT, str_CV]).rstrip('\n')
+            ''.join([str_plink_exec, str_GT, str_PT, str_pheno_name, str_CV, str_covar_name, str_condition]).rstrip('\n')
         return str_summary
-
-
-    # def __bool__(self): return self.assoc != -1
 
 
 
 if __name__ == '__main__':
 
+    ## LINUX
     # OUT = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/HATK_rearchitect_Study_20220914/wtccc_filtered_58C_RA.hatk.300+300.hg18.chr6.29-34mb.STUDY"
     # GT = Genotype("/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/HATK_rearchitect_bMG_20220913/wtccc_filtered_58C_RA.hatk.300+300.hg18.chr6.29-34mb")
     # print(GT)
     # PT = PHENO("/home/wansonchoi/sf_VirtualBox_Share/HATK/example/wtccc_filtered_58C_RA.hatk.300+300.phe")
     # print(PT)
 
-    OUT = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/HATK_rearchitect_Study_20220914/merged.STUDY"
-    GT = Genotype("/home/wansonchoi/sf_VirtualBox_Share/UC-CD-HLA/data/Merged/merged")
-    PT = PHENO("/home/wansonchoi/sf_VirtualBox_Share/UC-CD-HLA/data/Merged/merged.phe", ["Dis_CD"])
+    # OUT = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/HATK_rearchitect_Study_20220914/merged.STUDY"
+    # GT = GT("/home/wansonchoi/sf_VirtualBox_Share/UC-CD-HLA/data/Merged/merged")
+    # PT = PHENO("/home/wansonchoi/sf_VirtualBox_Share/UC-CD-HLA/data/Merged/merged.phe", ["Dis_CD"])
 
-    r = Study(OUT, GT, PT)
-    print("\nMy Study")
+    ## Mac
+    # OUT = "/Users/wansonchoi/Git_Projects/HATK/tests/20221007_bMG/merged.STUDY"
+    # _bfile = "/Users/wansonchoi/Dropbox/_Sync_MyLaptop/Projects/UC-CD-HLA/data/Merged/merged"
+    # PT = "/Users/wansonchoi/Dropbox/_Sync_MyLaptop/Projects/UC-CD-HLA/data/Merged/merged.phe"
+    # pheno_name = "Dis_CD"
+
+    OUT = "/Users/wansonchoi/Git_Projects/HATK/tests/20221007_bMG/merged.STUDY"
+    _bfile = "/Users/wansonchoi/Dropbox/_Sync_MyLaptop/Projects/UC-CD-HLA/data/Merged/merged"
+    PT = "/Users/wansonchoi/Dropbox/_Sync_MyLaptop/Projects/UC-CD-HLA/data/Merged/merged.phe"
+    pheno_name = "Dis_CD"
+    CV = "/Users/wansonchoi/Dropbox/_Sync_MyLaptop/Projects/UC-CD-HLA/data/Merged/merged.covar"
+    covar_name = "Immunochip2,GWAS"
+
+    r = Study(OUT, _bfile, PT, pheno_name, CV, covar_name)
     print(r)
 
     pass
