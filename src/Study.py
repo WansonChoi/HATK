@@ -32,16 +32,22 @@ class Study(object):
     def __init__(self, _out_prefix, _bfile, _pheno, _pheno_name, _covar=None, _covar_name=None, _condition_list=None):
 
         ### Main Variables ###
+        # (1) Genotype (required)
         self.GT = GT(_bfile)
 
+        # (2) Phenotype (required)
         self.PHENO = PHENO(_pheno)
         self.pheno_name = _pheno_name # (***) must be A SINGLE phenotype name. (1 trait - 1 study instance)
+        if self.pheno_name not in self.PHENO.pheno_name_avail: # Major exception handling.
+            RaiseError(HATK_InputPreparation_Error,
+                       std_ERROR + "Requested phenotype name('{}') is NOT IN the given phenotype file('{}')." \
+                       .format(self.pheno_name, self.PHENO.pheno_name_avail))
         self.pheno_name_dtype = getTargetPheDtype(self.PHENO.pheno_name_avail, self.PHENO.trait_types, self.pheno_name)
 
-        self.COVAR = COVAR(_covar, _covar_name.split(',')) if isinstance(_covar, str) else None
-        self.covar_name = _covar_name.split(',')
-
-        self.CONDITION = CONDITION(None, _condition_list) if isinstance(_condition_list, str) else None
+        # (3) Covariate (optional)
+        self.COVAR = COVAR(_covar, _covar_name.split(','))
+        # (4) Condition (optional)
+        self.CONDITION = CONDITION(None, _condition_list)
 
         self.out_prefix = _out_prefix
 
@@ -58,7 +64,7 @@ class Study(object):
         str_CV = \
             "=====< COVARIATE >=====\n{}\n".format(self.COVAR) if self.COVAR else ""
         str_covar_name = \
-            "\n- Target Covariate(s): {}\n".format(self.covar_name) if self.COVAR else ""
+            "\n- Target Covariate(s): {}\n".format(self.COVAR.covar_name_target) if self.COVAR else ""
         str_condition = \
             "=====< CONDITION >=====\n{}\n".format(self.CONDITION) if self.CONDITION else ""
 

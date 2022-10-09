@@ -12,6 +12,17 @@ Collection of small utility functions
 Exists = lambda x, func=exists: bool(x) and func(x)
 checkFile = lambda x, _msg="" : x if Exists(x) else RaiseError(HATK_InputPreparation_Error, _msg)
 
+def checkFile2(_file, _msg):
+    """
+    To Accept 'None' value.
+
+    In the 'COVAR' and 'CONDITION" class, '_file = None' should be acceptable.
+    """
+    if _file == None or Exists(_file):
+        return _file
+    else:
+        RaiseError(HATK_InputPreparation_Error, _msg)
+
 
 def printDF(_df_name, _df):
     print("{}:\n{}".format(_df_name, _df))
@@ -74,6 +85,6 @@ def findExec(_cmd, _msg):
     elif Exists(join("./dependency", _cmd)):
         return join("./dependency", _cmd)
     elif Exists(join("../dependency", _cmd)):
-        return join("./dependency", _cmd)
+        return join("../dependency", _cmd)
     else:
         RaiseError(HATK_InputPreparation_Error, _msg)

@@ -7,6 +7,10 @@ from src.HATK_Error import HATK_InputPreparation_Error, RaiseError
 from src.util import findExec
 from src.Study import Study
 from bMarkerGenerator.bMarker import bMarker
+if __name__ == '__main__':
+    from doRegression import doRegression
+else:
+    from HLA_Analysis.doRegression import doRegression
 
 std_MAIN = "\n[%s]: " % basename(__file__)
 std_ERROR = "\n[%s::ERROR]: " % basename(__file__)
@@ -69,7 +73,7 @@ class HLA_Study(Study):
         str_CV = \
             "=====< COVARIATE >=====\n{}\n".format(self.COVAR) if self.COVAR else ""
         str_covar_name = \
-            "\n- Target Covariate(s): {}\n".format(self.covar_name) if self.COVAR else ""
+            "\n- Target Covariate(s): {}\n".format(self.COVAR.covar_name_target) if self.COVAR else ""
         str_condition = \
             "=====< CONDITION >=====\n{}\n".format(self.CONDITION) if self.CONDITION else ""
 
@@ -85,11 +89,29 @@ class HLA_Study(Study):
             .format(self.plink, self.Rscript, self.java, self.beagle, self.beagle2vcf, self.vcf2beagle,
                     self.linkage2beagle)
 
+        ## Analysis result
+        str_assoc = \
+            "=====< Assoc >=====\n{}\n".format(self.assoc) if self.assoc else ""
+
+
         str_summary = \
             ''.join([str_GT, str_PT, str_pheno_name, str_pheno_dtype_target,
                      str_CV, str_covar_name, str_condition,
-                     str_external_soft]).rstrip('\n')
+                     str_external_soft,
+                     str_assoc]).rstrip('\n')
         return str_summary
+
+
+    def doRegression(self):
+        self.assoc = \
+            doRegression(self.plink, self.out_prefix+'.Regr', self.bmarker.file_prefix, self.PHENO.phe, self.pheno_name,
+                         self.pheno_name_dtype, self.COVAR.file, ','.join(self.COVAR.covar_name_target),
+                         self.CONDITION.condition_list)
+    def doPhasing(self): pass
+    def doManhattanPlot(self): pass
+    def doHeatmapPlot(self): pass
+    def doOmnibusTest(self): pass
+
 
 
 
@@ -98,15 +120,20 @@ if __name__ == '__main__':
     ## Linux
 
     ## Mac
-    OUT = "/Users/wansonchoi/Git_Projects/HATK/tests/20221007_bMG/merged.STUDY"
+    _out = "/Users/wansonchoi/Git_Projects/HATK/tests/20221007_bMG/asdf.doRegr"
     _bfile = "/Users/wansonchoi/Dropbox/_Sync_MyLaptop/Projects/UC-CD-HLA/data/Merged/merged"
-    PT = "/Users/wansonchoi/Dropbox/_Sync_MyLaptop/Projects/UC-CD-HLA/data/Merged/merged.phe"
-    pheno_name = "Dis_CD"
-    CV = "/Users/wansonchoi/Dropbox/_Sync_MyLaptop/Projects/UC-CD-HLA/data/Merged/merged.covar"
-    covar_name = "Immunochip2,GWAS"
+    _phe = "/Users/wansonchoi/Dropbox/_Sync_MyLaptop/Projects/UC-CD-HLA/data/Merged/merged.phe"
+    _phe_name = "Dis_CD"
+    _phe_type = "Binary"
+    _covar = "/Users/wansonchoi/Dropbox/_Sync_MyLaptop/Projects/UC-CD-HLA/data/Merged/merged.covar"
+    _covar_name = "GWAS"
 
-    r = HLA_Study(OUT, _bfile, PT, pheno_name, CV, covar_name)
+    r = HLA_Study(_out, _bfile, _phe, _phe_name, _covar, _covar_name)
+
+    r.doRegression()
     print(r)
+
+
 
 
     pass
