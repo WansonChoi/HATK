@@ -21,3 +21,4 @@ tests/
 *.ipynb
 *.sh
 .Rproj.user
+scratch.*.py
