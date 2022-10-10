@@ -10,6 +10,7 @@ from bMarkerGenerator.bMarker import bMarker
 from HLA_Manhattan.__main__ import HATK_Manhattan
 from HLA_Analysis.doRegression import doRegression
 from HLA_Analysis.doManhattanPlot_assoc import doManhattanPlot_assoc
+from HLA_Analysis.doHeatmap import doHeatmap
 
 std_MAIN = "\n[%s]: " % basename(__file__)
 std_ERROR = "\n[%s::ERROR]: " % basename(__file__)
@@ -66,6 +67,8 @@ class HLA_Study(Study):
     def __repr__(self):
         str_hg = \
             "Human Genome Build: hg{}\n".format(self.hg)
+        str_out_prefix = \
+            "Output prefix: {}\n".format(self.out_prefix)
         str_GT = \
             "=====< Binary Markers(Genotype) >=====\n{}\n".format(self.bmarker)
         str_PT = \
@@ -102,7 +105,7 @@ class HLA_Study(Study):
 
 
         str_summary = \
-            ''.join([str_hg, str_GT, str_PT, str_pheno_name, str_pheno_dtype_target,
+            ''.join([str_hg, str_out_prefix, str_GT, str_PT, str_pheno_name, str_pheno_dtype_target,
                      str_CV, str_covar_name, str_condition,
                      str_external_soft,
                      str_assoc, str_manhattan_assoc]).rstrip('\n')
@@ -117,6 +120,8 @@ class HLA_Study(Study):
     def doManhattanPlot_assoc(self):
         self.manhattan_assoc = \
             doManhattanPlot_assoc(self.ASSOC, self.hg, self.f_save_intermediates)
-    def doHeatmapPlot(self): pass
+    def doHeatmapPlot(self):
+        self.Heatmap = \
+            doHeatmap(self.ASSOC,)
     def doPhasing(self): pass
     def doOmnibusTest(self): pass

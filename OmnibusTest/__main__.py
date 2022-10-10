@@ -120,11 +120,11 @@ def Omnibus_Test(_out_prefix, _fam, _aa, _PHENO: PHENO, _COVAR: COVAR, _COND: CO
     print(std_MAIN + "Performing Omnibus Test.")
 
     # Phenotype info.
-    _phe = _PHENO.file
+    _phe = _PHENO.phe
     _phe_name = _PHENO.pheno_name_target[0]
     # Covariate info.
     if _COVAR:
-        _covar = _COVAR.file
+        _covar = _COVAR.phe
         _covar_name = _COVAR.covar_name_target
     else:
         _covar = "NA"

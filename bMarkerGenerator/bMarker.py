@@ -32,9 +32,9 @@ class bMarker(GT):
 
         self.l_HLA_target = []
 
-
         ### Main Actions ###
-        self.checkBIM()
+        self.m_total, self.m_SNP, self.m_HLA, self.m_AA, self.m_SNPS, self.m_INS, self.l_HLA_target = checkBIM(self.bim)
+
 
 
     def __repr__(self):
@@ -84,9 +84,6 @@ class bMarker(GT):
 
     def asOldMarkerLabel(self): return 0 # Later. Modify marker labels in bim file (ex. HLA_A*01:01 => HLA_A_0101)
     def asNewMarkerLabel(self): return 0 # Later. Modify marker labels in bim file (ex. HLA_A_0101 => HLA_A*01:01)
-    def checkBIM(self):
-        self.m_total, self.m_SNP, self.m_HLA, self.m_AA, self.m_SNPS, self.m_INS, self.l_HLA_target = \
-        checkBIM(self.bim)
 
 
 

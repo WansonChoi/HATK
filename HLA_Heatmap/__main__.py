@@ -5,7 +5,7 @@ import argparse, textwrap
 from shutil import which
 
 from HLA_Heatmap.heatmap import HEATMAP
-from src.util import Exists, checkFile
+from src.util import Exists, checkFile, findExec
 from src.HATK_Error import HATK_InputPreparation_Error, RaiseError
 
 std_MAIN = "\n[Heatmap]: "
@@ -16,7 +16,7 @@ std_WARNING = "\n[Heatmap::WARNING]: "
 class HATK_Heatmap(object):
 
     # External software
-    Rscript = checkFile(which("Rscript"))
+    Rscript = findExec("Rscript", std_ERROR+"'Rscript' command can't be found. Please install R.")
 
     def __init__(self, _HLA:list, _out_prefix, _maptable, _assoc_result, _f_save_intermediates=False):
         ### Main Variables ###

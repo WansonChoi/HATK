@@ -30,7 +30,7 @@ class GT(object):
         self.f_hasSexInfo, \
         self.f_hasPheInfo = checkFAM(self.fam)
 
-        self.M_markers = checkBIM(self.bim)
+        self.m_total = checkBIM(self.bim)
 
 
     def __repr__(self):
@@ -45,7 +45,7 @@ class GT(object):
         str_N_samples = \
             "- # of samples: {}\n".format(self.N_samples)
         str_M_markers = \
-            "- # of markers: {}\n".format(self.M_markers)
+            "- # of markers: {}\n".format(self.m_total)
 
         str_hasSexInfo = \
             "- has Sex Info?: {}\n".format(self.f_hasSexInfo)

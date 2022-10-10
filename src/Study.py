@@ -49,7 +49,7 @@ class Study(object):
         self.pheno_name_dtype = getTargetPheDtype(self.PHENO.pheno_name_avail, self.PHENO.trait_types, self.pheno_name)
 
         # (3) Covariate (optional)
-        self.COVAR = COVAR(_covar, _covar_name.split(','))
+        self.COVAR = COVAR(_covar, _covar_name.split(',') if isinstance(_covar_name, str) else [])
         # (4) Condition (optional)
         self.CONDITION = CONDITION(None, _condition_list)
 
@@ -57,6 +57,10 @@ class Study(object):
 
 
     def __repr__(self):
+        str_hg = \
+            "Human Genome Build: hg{}\n".format(self.hg)
+        str_out_prefix = \
+            "Output prefix: {}\n".format(self.out_prefix)
         str_GT = \
             "=====< GENOTYPE >=====\n{}\n".format(self.GT)
         str_PT = \
@@ -78,7 +82,7 @@ class Study(object):
             "- R: {}".format(self.plink, self.Rscript)
 
         str_summary = \
-            ''.join([str_GT, str_PT, str_pheno_name_target, str_pheno_dtype_target,
+            ''.join([str_hg, str_out_prefix, str_GT, str_PT, str_pheno_name_target, str_pheno_dtype_target,
                      str_CV, str_covar_name, str_condition,
                      str_external_soft]).rstrip('\n')
         return str_summary
