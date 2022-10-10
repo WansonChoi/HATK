@@ -29,9 +29,13 @@ class Study(object):
     Rscript = findExec("Rscript", std_ERROR+"'Rscript' command can't be found. Please install R.")
 
 
-    def __init__(self, _out_prefix, _bfile, _pheno, _pheno_name, _covar=None, _covar_name=None, _condition_list=None):
+    def __init__(self, _out_prefix, _hg, _bfile, _pheno, _pheno_name, _covar=None, _covar_name=None, _condition_list=None,
+                 _f_save_intermediates=False):
 
         ### Main Variables ###
+        self.hg = str(_hg)
+        self.f_save_intermediates = _f_save_intermediates
+
         # (1) Genotype (required)
         self.GT = GT(_bfile)
 
@@ -106,8 +110,9 @@ if __name__ == '__main__':
     pheno_name = "Dis_UC"
     CV = "/Users/wansonchoi/Dropbox/_Sync_MyLaptop/Projects/UC-CD-HLA/data/Merged/merged.covar"
     covar_name = "Immunochip2,GWAS"
+    hg = 18
 
-    r = Study(OUT, _bfile, PT, pheno_name, CV, covar_name)
+    r = Study(OUT, hg, _bfile, PT, pheno_name, CV, covar_name)
     print(r)
 
     pass

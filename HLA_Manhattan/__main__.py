@@ -6,7 +6,7 @@ import numpy as np
 import argparse, textwrap
 
 from HLA_Manhattan.manhattan import Manhattan, Manhattan_OM
-from src.util import Exists, checkFile
+from src.util import Exists, checkFile, findExec
 from src.HATK_Error import HATK_InputPreparation_Error, RaiseError
 
 std_MAIN = "\n[Manhattan]: "
@@ -17,7 +17,7 @@ std_WARNING = "\n[Manhattan::WARNING]: "
 class HATK_Manhattan(object):
 
     # External software
-    Rscript = checkFile(which("Rscript"))
+    Rscript = findExec("Rscript", std_ERROR+"'Rscript' command can't be found. Please install R.")
 
     def __init__(self, _assoc:list, _out_prefix, _hg,
                  _point_color="#778899", _top_color="#FF0000", _point_size="15", _yaxis_unit="10",
@@ -62,7 +62,7 @@ class HATK_Manhattan(object):
             )
 
 
-        print(self.__repr__())
+        # print(self.__repr__())
         if self.assoc_type == "PLINK":
             self.ManhattanPlot = \
                 Manhattan(self.assoc, self.out_prefix, self.hg,
@@ -75,7 +75,7 @@ class HATK_Manhattan(object):
                              _pointsize=self.point_size, _yaxis_unit=self.yaxis_unit, _Rscript=self.Rscript,
                              _f_save_intermediates=_f_save_intermediates)
 
-        print(self.__repr__())
+        # print(self.__repr__())
 
 
     def __repr__(self):
@@ -119,19 +119,8 @@ if __name__ == "__main__":
                                      description=textwrap.dedent('''\
     #################################################################################################
 
-        manhattan.py
-
         Manhattan Plot.
 
-
-        (Example 1 : hg18 / imgt3320 / single logistic regression result.)
-
-        $ python3 manhattan.py \
-
-
-        (Example 2 : hg18 / imgt3320 / multiple logistic regression result.)
-
-        $ python3 manhattan.py \
 
     #################################################################################################
                                              '''),
@@ -176,34 +165,3 @@ if __name__ == "__main__":
 
     HATK_Manhattan(args.assoc_result, args.out, args.hg, _point_color=args.point_color, _top_color=args.top_color,
                    _point_size=args.point_size, _yaxis_unit=args.yaxis_unit)
-
-
-# for item in _assoc_result:
-#     if not os.path.exists(item):
-#         print(std_ERROR + "One of the given association result file({}) doesn't exist. Please check it again.\n".format(item))
-#         sys.exit()
-#
-#
-# if not bool(_out):
-#     print(std_ERROR + "Please check '--out' argument again.\n")
-#     sys.exit()
-#
-# if not bool(_hg):
-#     print(std_ERROR + "Please check '-hg' argument again.\n")
-#     sys.exit()
-#
-#
-# isOmnibus = list(map(lambda x : x.endswith('.omnibus'), _assoc_result))
-#
-# if all(isOmnibus):
-#
-#     if not bool(kwargs['_HLA']):
-#         print(std_ERROR + "Which HLA genes to plot must be specified.\n"
-#                                             "Please check the '--HLA' argument again."
-#                                             "")
-#         sys.exit()
-#
-#
-# self.result = Manhattan(_assoc_result, _out, _hg, _pointcol=kwargs['_point_col'], _topcol=kwargs['_top_color'],
-#                         _pointsize=kwargs['_point_size'], _yaxis_unit=kwargs['_yaxis_unit'],
-#                         _p_src=kwargs['_p_src'], _p_data=kwargs['_p_data'], _HLA=kwargs['_HLA'])

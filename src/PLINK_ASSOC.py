@@ -42,6 +42,9 @@ class ASSOC(object):
         return str_summary
 
 
+    def __bool__(self): return Exists(self.assoc)
+
+
 def sort_assoc(_assoc, _out, _top_N=5):
 
     df_assoc = pd.read_csv(_assoc, sep='\s+', header=0)

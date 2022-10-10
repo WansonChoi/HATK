@@ -7,10 +7,9 @@ from src.HATK_Error import HATK_InputPreparation_Error, RaiseError
 from src.util import findExec
 from src.Study import Study
 from bMarkerGenerator.bMarker import bMarker
-if __name__ == '__main__':
-    from doRegression import doRegression
-else:
-    from HLA_Analysis.doRegression import doRegression
+from HLA_Manhattan.__main__ import HATK_Manhattan
+from HLA_Analysis.doRegression import doRegression
+from HLA_Analysis.doManhattanPlot_assoc import doManhattanPlot_assoc
 
 std_MAIN = "\n[%s]: " % basename(__file__)
 std_ERROR = "\n[%s::ERROR]: " % basename(__file__)
@@ -42,10 +41,12 @@ class HLA_Study(Study):
                   "(2) Locate it in the 'dependency/' folder.")
 
 
-    def __init__(self, _out_prefix, _bfile, _pheno, _pheno_name, _covar=None, _covar_name=None, _condition_list=None):
+    def __init__(self, _out_prefix, _hg, _bfile, _pheno, _pheno_name, _covar=None, _covar_name=None, _condition_list=None,
+                 _f_save_intermediates=False):
 
         ### Init. of super class ###
-        super().__init__(_out_prefix, _bfile, _pheno, _pheno_name, _covar, _covar_name, _condition_list)
+        super().__init__(_out_prefix, _hg, _bfile, _pheno, _pheno_name, _covar, _covar_name, _condition_list,
+                         _f_save_intermediates)
 
 
         ### Main Variables ###
@@ -53,15 +54,18 @@ class HLA_Study(Study):
         self.bgl_phased = None
 
         # results
-        self.assoc = None
+        self.ASSOC = None
         self.omnibus = None
 
-        self.manhattan = None
+        self.manhattan_assoc = None
+        self.manhattan_omnibus = None
         self.Heatmap = None
 
 
 
     def __repr__(self):
+        str_hg = \
+            "Human Genome Build: hg{}\n".format(self.hg)
         str_GT = \
             "=====< Binary Markers(Genotype) >=====\n{}\n".format(self.bmarker)
         str_PT = \
@@ -91,49 +95,28 @@ class HLA_Study(Study):
 
         ## Analysis result
         str_assoc = \
-            "=====< Assoc >=====\n{}\n".format(self.assoc) if self.assoc else ""
+            "=====< Assoc >=====\n{}\n".format(self.ASSOC) if self.ASSOC else ""
+
+        str_manhattan_assoc = \
+            "=====< Manhattan(Assoc) >=====\n{}\n".format(self.manhattan_assoc) if self.manhattan_assoc else ""
 
 
         str_summary = \
-            ''.join([str_GT, str_PT, str_pheno_name, str_pheno_dtype_target,
+            ''.join([str_hg, str_GT, str_PT, str_pheno_name, str_pheno_dtype_target,
                      str_CV, str_covar_name, str_condition,
                      str_external_soft,
-                     str_assoc]).rstrip('\n')
+                     str_assoc, str_manhattan_assoc]).rstrip('\n')
         return str_summary
 
 
     def doRegression(self):
-        self.assoc = \
+        self.ASSOC = \
             doRegression(self.plink, self.out_prefix+'.Regr', self.bmarker.file_prefix, self.PHENO.phe, self.pheno_name,
                          self.pheno_name_dtype, self.COVAR.file, ','.join(self.COVAR.covar_name_target),
                          self.CONDITION.condition_list)
-    def doPhasing(self): pass
-    def doManhattanPlot(self): pass
+    def doManhattanPlot_assoc(self):
+        self.manhattan_assoc = \
+            doManhattanPlot_assoc(self.ASSOC, self.hg, self.f_save_intermediates)
     def doHeatmapPlot(self): pass
+    def doPhasing(self): pass
     def doOmnibusTest(self): pass
-
-
-
-
-if __name__ == '__main__':
-
-    ## Linux
-
-    ## Mac
-    _out = "/Users/wansonchoi/Git_Projects/HATK/tests/20221007_bMG/asdf.doRegr"
-    _bfile = "/Users/wansonchoi/Dropbox/_Sync_MyLaptop/Projects/UC-CD-HLA/data/Merged/merged"
-    _phe = "/Users/wansonchoi/Dropbox/_Sync_MyLaptop/Projects/UC-CD-HLA/data/Merged/merged.phe"
-    _phe_name = "Dis_CD"
-    _phe_type = "Binary"
-    _covar = "/Users/wansonchoi/Dropbox/_Sync_MyLaptop/Projects/UC-CD-HLA/data/Merged/merged.covar"
-    _covar_name = "GWAS"
-
-    r = HLA_Study(_out, _bfile, _phe, _phe_name, _covar, _covar_name)
-
-    r.doRegression()
-    print(r)
-
-
-
-
-    pass
