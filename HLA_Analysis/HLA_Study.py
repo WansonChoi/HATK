@@ -111,12 +111,19 @@ class HLA_Study(Study):
         str_manhattan_assoc = \
             "=====< Manhattan(Assoc) >=====\n{}\n".format(self.manhattan_assoc) if self.manhattan_assoc else ""
 
+        str_Heatmap = \
+            "=====< Heatmap >===== \n" \
+            "- pdfs: \n" \
+            + ''.join([
+                "   {hla}   : {pdf}\n".format(hla=hla, pdf=pdf) for hla, pdf in self.Heatmap_pdfs.items()
+            ]) if self.Heatmap_pdfs else ""
+
 
         str_summary = \
             ''.join([str_hg, str_out_prefix, str_GT, str_PT, str_pheno_name, str_pheno_dtype_target,
                      str_CV, str_covar_name, str_condition, str_IMGT2Seq,
                      str_external_soft,
-                     str_assoc, str_manhattan_assoc]).rstrip('\n')
+                     str_assoc, str_manhattan_assoc, str_Heatmap]).rstrip('\n')
         return str_summary
 
 
