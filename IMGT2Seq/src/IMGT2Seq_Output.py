@@ -21,6 +21,8 @@ class IMGT2Seq_Output(object):
     """
     def __init__(self, _out_dir, _HLA_target=("A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1")):
 
+        self.out_dir = _out_dir
+
         self.hg = getPatterninFiles(_out_dir, re.compile(r'hg(\d+)'))
         self.imgt = getPatterninFiles(_out_dir, re.compile(r'imgt(\d+)'))
         self.HLA_target = list(_HLA_target)
@@ -32,7 +34,8 @@ class IMGT2Seq_Output(object):
             join(_out_dir, "HLA_DICTIONARY_AA.hg{}.imgt{}.txt".format(self.hg, self.imgt)),
             join(_out_dir, "HLA_DICTIONARY_AA.hg{}.imgt{}.map".format(self.hg, self.imgt)),
             join(_out_dir, "HLA_DICTIONARY_SNPS.hg{}.imgt{}.txt".format(self.hg, self.imgt)),
-            join(_out_dir, "HLA_DICTIONARY_SNPS.hg{}.imgt{}.map".format(self.hg, self.imgt)), _HLA_req=self.HLA_target)
+            join(_out_dir, "HLA_DICTIONARY_SNPS.hg{}.imgt{}.map".format(self.hg, self.imgt)),
+            _HLA_req=self.HLA_target)
 
         self.HLA_MAPTABLE = {
             hla: join(_out_dir, "HLA_MAPTABLE_{}.hg{}.imgt{}.txt".format(hla, self.hg, self.imgt)) \
@@ -54,6 +57,8 @@ class IMGT2Seq_Output(object):
 
 
     def __repr__(self):
+        str_imgt_out_dir = \
+            "- IMGT output directory: {}\n".format(self.out_dir)
         str_imgt_version = \
             "- IMGT version: {}\n".format("v{}".format(self.imgt) if bool(self.imgt) else None)
         str_hg = \
@@ -73,6 +78,7 @@ class IMGT2Seq_Output(object):
 
 
         str_summary = ''.join([
+            str_imgt_out_dir,
             str_imgt_version, str_hg, str_HLA_Allele_Table,
             str_HLA_DICTIONARY, str_maptable
         ]).rstrip('\n')
@@ -226,7 +232,13 @@ def getHLAs_seq(_HLA_dict_seq) -> list:
 
 def getHLAs_map(_HLA_dict_map) -> list:
 
-    l_temp_HLA = [label.split('_')[1] for label in getColumn(_HLA_dict_map, 1)]
+    func = lambda x: 2 if x.startswith('INS') else 1
+    """
+    - AA_'A'_-6_30018365_exon1, SNPS_'A'_73_30018382_exon1 => idx: 1
+    - INS_AA_'A'_-6x-5_30018366, INS_SNPS_'A'_73x74_30018382 => idx: 2
+    """
+
+    l_temp_HLA = [label.split('_')[func(label)] for label in getColumn(_HLA_dict_map, 1)]
 
     return list(np.unique(l_temp_HLA))
 
@@ -309,23 +321,22 @@ def subsetDictMap(_HLA_dict_map, _out, _HLA_ToExtract):
 
 if __name__ == '__main__':
 
-    HLA_Dictionary_AA_prefix = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/HATK_rearchitect_IMGT2Seq_20220411/HLA_DICTIONARY_AA.hg18.imgt3470"
-    # HLA_Dictionary_AA_seq = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/HATK_rearchitect_IMGT2Seq_20220216/HLA_DICTIONARY_AA.hg18.imgt3320.txt"
-    HLA_Dictionary_SNPS_prefix = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/HATK_rearchitect_IMGT2Seq_20220411/HLA_DICTIONARY_SNPS.hg18.imgt3470"
+    # HLA_Dictionary_AA_prefix = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/HATK_rearchitect_IMGT2Seq_20220411/HLA_DICTIONARY_AA.hg18.imgt3470"
+    # HLA_Dictionary_SNPS_prefix = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/HATK_rearchitect_IMGT2Seq_20220411/HLA_DICTIONARY_SNPS.hg18.imgt3470"
 
     # r_AA = getHLAs(HLA_Dictionary_AA_prefix+'.txt')
     # print(r_AA)
     # r_SNPS = getHLAs(HLA_Dictionary_SNPS_prefix+'.txt')
     # print(r_SNPS)
 
-    hla_dict = HLA_DICTIONARY(HLA_Dictionary_AA_prefix+'.txt', HLA_Dictionary_AA_prefix+'.map',
-                              HLA_Dictionary_SNPS_prefix+'.txt', HLA_Dictionary_SNPS_prefix+'.map')
-    print(hla_dict)
-
-    hla_dict2 = \
-        hla_dict.subsetHLA_DICTIONARY('/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/HATK_rearchitect_IMGT2Seq_20220411',
-                                      ['A', 'B', 'C'], ['DRB1'])
-    print(hla_dict2)
+    # hla_dict = HLA_DICTIONARY(HLA_Dictionary_AA_prefix+'.txt', HLA_Dictionary_AA_prefix+'.map',
+    #                           HLA_Dictionary_SNPS_prefix+'.txt', HLA_Dictionary_SNPS_prefix+'.map')
+    # print(hla_dict)
+    #
+    # hla_dict2 = \
+    #     hla_dict.subsetHLA_DICTIONARY('/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/HATK_rearchitect_IMGT2Seq_20220411',
+    #                                   ['A', 'B', 'C'], ['DRB1'])
+    # print(hla_dict2)
 
     # out_dir = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/HATK_rearchitect_IMGT2Seq_20220216"
     # r = IMGT2Seq_Output(out_dir)
@@ -344,4 +355,11 @@ if __name__ == '__main__':
     # print(r)
     # r = subsetDictMap(HLA_Dictionary_SNPS_prefix+'.map', HLA_Dictionary_SNPS_prefix+'.map.subset', ['A', 'B', 'C'])
     # print(r)
+
+    ###########
+    # (2022.10.11.)
+    out_dir = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/HATK_rearchitect_IMGT2Seq_20220913_2field"
+    imgt_output = IMGT2Seq_Output(out_dir, ['A', 'B', 'C', 'DMA', 'DMB', 'DOA', 'DOB', 'DPA1', 'DPB1', 'DQA1', 'DQB1', 'DRA', 'DRB1', 'E', 'F', 'G', 'MICB'])
+    print(imgt_output)
+
     pass

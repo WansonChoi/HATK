@@ -4,9 +4,10 @@ import os, sys, re
 from os.path import basename, dirname, exists, join
 
 from src.HATK_Error import HATK_InputPreparation_Error, RaiseError
-from src.util import findExec
+from src.util import findExec, Exists
 from src.Study import Study
 from bMarkerGenerator.bMarker import bMarker
+from IMGT2Seq.src.IMGT2Seq_Output import IMGT2Seq_Output
 from HLA_Manhattan.__main__ import HATK_Manhattan
 from HLA_Analysis.doRegression import doRegression
 from HLA_Analysis.doManhattanPlot_assoc import doManhattanPlot_assoc
@@ -43,7 +44,8 @@ class HLA_Study(Study):
 
 
     def __init__(self, _out_prefix, _hg, _bfile, _pheno, _pheno_name, _covar=None, _covar_name=None, _condition_list=None,
-                 _f_save_intermediates=False):
+                 _f_save_intermediates=False,
+                 _imgt_out_dir=None, _assoc=None, _bgl_phased=None):
 
         ### Init. of super class ###
         super().__init__(_out_prefix, _hg, _bfile, _pheno, _pheno_name, _covar, _covar_name, _condition_list,
@@ -52,6 +54,8 @@ class HLA_Study(Study):
 
         ### Main Variables ###
         self.bmarker = bMarker(_bfile) # binary markers for HLA fine-mapping.
+        self.imgt_output = IMGT2Seq_Output(_imgt_out_dir, self.bmarker.l_HLA_target) if Exists(_imgt_out_dir) else None
+
         self.bgl_phased = None
 
         # results
@@ -61,6 +65,7 @@ class HLA_Study(Study):
         self.manhattan_assoc = None
         self.manhattan_omnibus = None
         self.Heatmap = None
+        self.Heatmap_pdfs = None
 
 
 
@@ -84,6 +89,9 @@ class HLA_Study(Study):
         str_condition = \
             "=====< CONDITION >=====\n{}\n".format(self.CONDITION) if self.CONDITION else ""
 
+        str_IMGT2Seq = \
+            "=====< IMGT2Seq(Dict, HAT, Maptable) >=====\n{}\n".format(self.imgt_output) if self.imgt_output else ""
+
         str_external_soft = \
             "=====< External Software >=====\n" \
             "- PLINK: {}\n" \
@@ -106,7 +114,7 @@ class HLA_Study(Study):
 
         str_summary = \
             ''.join([str_hg, str_out_prefix, str_GT, str_PT, str_pheno_name, str_pheno_dtype_target,
-                     str_CV, str_covar_name, str_condition,
+                     str_CV, str_covar_name, str_condition, str_IMGT2Seq,
                      str_external_soft,
                      str_assoc, str_manhattan_assoc]).rstrip('\n')
         return str_summary
@@ -121,7 +129,7 @@ class HLA_Study(Study):
         self.manhattan_assoc = \
             doManhattanPlot_assoc(self.ASSOC, self.hg, self.f_save_intermediates)
     def doHeatmapPlot(self):
-        self.Heatmap = \
-            doHeatmap(self.ASSOC,)
+        self.Heatmap, self.Heatmap_pdfs = \
+            doHeatmap(self.ASSOC, self.bmarker, self.imgt_output)
     def doPhasing(self): pass
     def doOmnibusTest(self): pass

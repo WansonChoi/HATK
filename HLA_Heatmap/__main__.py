@@ -59,6 +59,9 @@ class HATK_Heatmap(object):
         return str_summary
 
 
+    def __bool__(self): return Exists(self.Heatmap)
+
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog='Heatmap',

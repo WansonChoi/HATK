@@ -411,7 +411,7 @@ def HEATMAP(_HLA, _out_prefix, _maptable, _assoc_result, _f_save_intermediates=F
         __alleleP__ = sr_log10P*sr_OR
         __alleleP__.index = df_No1Field.loc[:, "HLA1"]
 
-        print(__alleleP__)
+        # print(__alleleP__)
 
 
         """
