@@ -5,9 +5,12 @@ import subprocess as sbp
 from shutil import which
 import argparse, textwrap
 
-from src.util import Exists, checkFile
+from src.util import Exists, checkFile, findExec
 from src.HATK_Error import HATK_InputPreparation_Error, HATK_R_Execution_Error, RaiseError
-from src.PLINK import PHENO, COVAR, CONDITION
+from src.PLINK_PHENO import PHENO, getTargetPheDtype
+from src.PLINK_COVAR import COVAR
+from src.PLINK_CONDITION import CONDITION
+
 
 std_MAIN = "\n[OmnibusTest]: "
 std_ERROR = "\n[OmnibusTest::ERROR]: "
@@ -17,9 +20,9 @@ std_WARNING = "\n[OmnibusTest::WARNING]: "
 class HATK_OmibusTest():
 
     # External software
-    Rscript = checkFile(which("Rscript"))
+    Rscript = findExec("Rscript", std_ERROR+"'Rscript' command can't be found. Please install R.")
 
-    def __init__(self, _out_prefix, _bfile, _pheno, _pheno_name:list, _aa=None, _bgl_phased=None,
+    def __init__(self, _out_prefix, _bfile, _pheno, _pheno_name, _aa=None, _bgl_phased=None,
                  _covar=None, _covar_name=None, _condition=None, _condition_list=None,
                  _f_save_intermediates=False):
 
@@ -31,7 +34,18 @@ class HATK_OmibusTest():
         self.aa = _aa
         self.bgl_phased = _bgl_phased
 
-        self.PHENO = PHENO(_pheno, _pheno_name)
+        self.PHENO = PHENO(_pheno)
+        self.phe_name = _pheno_name
+        if self.phe_name not in self.PHENO.pheno_name_avail:
+            RaiseError(HATK_InputPreparation_Error,
+                       std_ERROR + "Requested phenotype name('{}') is NOT IN the given phenotype file('{}')." \
+                       .format(self.phe_name, self.PHENO.pheno_name_avail))
+        self.phe_name_dtype = getTargetPheDtype(self.PHENO.pheno_name_avail, self.PHENO.trait_types, self.phe_name)
+        if self.phe_name_dtype != "Binary":
+            RaiseError(HATK_InputPreparation_Error,
+                       std_ERROR + "Currently, the Omnibus test only works with Binary traits. "
+                                   "Given phenotype('{}') is Continuous.".format(self.phe_name))
+
         self.COVAR = COVAR(_covar, _covar_name) if _covar and _covar_name else None
         self.CONDITION = CONDITION(_condition, _condition_list) if bool(_condition) != bool(_condition_list) else None
 
@@ -39,32 +53,24 @@ class HATK_OmibusTest():
 
 
         ### Main Actions ###
-        # print(self.__repr__())
-
-        # Phenotype check.
-        if self.PHENO.N_pheno_name_target != 1:
-            if self.PHENO.N_pheno_name_target == 0:
-                str_temp = "Given phenotype('{}') is NOT IN given phenotype file('{}').".format(_pheno_name, _pheno)
-            else:
-                str_temp = "The Omnibus test takes only one phenotype name per test. ('{}')".format(self.PHENO.pheno_name_target)
-
-            raise HATK_InputPreparation_Error(std_ERROR + str_temp)
 
         # '*.aa'
-        if (not self.aa) and self.bgl_phased: # '*.aa' not given.
+        if _aa:
+            self.aa = _aa
+        elif _bgl_phased:
             self.aa = getPhasedAACalls(self.fam, self.bgl_phased, self.out_prefix, self.Rscript, _f_save_intermediates)
-        if not (self.aa or self.bgl_phased): # Both not given.
+        else:
             RaiseError(HATK_InputPreparation_Error,
-                       std_ERROR + "Phased information is required. Please check '--bgl-phased' and '--aa' arguments again.")
+                           std_ERROR + "Phased information is required. Please check '--bgl-phased' and '--aa' arguments again.")
+
 
         # Omnibus Test
-        self.OMNIBUS = Omnibus_Test(self.out_prefix, self.fam, self.aa, self.PHENO, self.COVAR, self.CONDITION,
+        self.OMNIBUS = Omnibus_Test(self.out_prefix, self.phe_name, self.fam, self.aa, self.PHENO, self.COVAR, self.CONDITION,
                                     self.Rscript, _f_save_intermediates)
-        print(self.__repr__())
 
 
     def __repr__(self):
-        str_main = "\n< Summary of the Omnibus Test >\n"
+        # str_main = "\n< Summary of the Omnibus Test >\n"
         str_out_prefix = \
             "- Output prefix: {}\n".format(self.out_prefix)
         str_fam = \
@@ -72,7 +78,7 @@ class HATK_OmibusTest():
         str_bgl_phased = \
             "- Phased beagle file: {}\n".format(self.bgl_phased)
         str_aa = \
-            "- Preprocessed phased beagle file: {}\n".format(self.aa)
+            "- Preprocessed phased beagle file('*.aa'): {}\n".format(self.aa)
         str_OMNIBUS = \
             "- Omnibus test Result: {}\n".format(self.OMNIBUS)
 
@@ -84,15 +90,18 @@ class HATK_OmibusTest():
             "[ PLINK Condition file ]\n{}\n".format(self.CONDITION) if self.CONDITION else ""
 
 
-        str_summary = ''.join([str_main, str_out_prefix, str_fam, str_bgl_phased, str_aa, str_OMNIBUS,
+        str_summary = ''.join([str_out_prefix, str_fam, str_bgl_phased, str_aa, str_OMNIBUS,
                                str_PHENO, str_COVAR, str_CONDITION]).rstrip('\n')
         return str_summary
+
+
+    def __bool__(self): return Exists(self.OMNIBUS)
 
 
 
 def getPhasedAACalls(_fam, _bgl_phased, _out_prefix, _Rscript, _f_save_intermediates=False):
 
-    print(std_MAIN + "Preprocessing given phased beagle file('{}').".format(_bgl_phased))
+    print(std_MAIN.lstrip("\n") + "Preprocessing given phased beagle file('{}').".format(_bgl_phased))
 
     command = "{Rscript} {src} {bgl_phased} {fam} {out}" \
                 .format(Rscript=_Rscript, src="OmnibusTest/src/AllCC_Get_Phased_AA_Calls.R", bgl_phased=_bgl_phased,
@@ -114,17 +123,17 @@ def getPhasedAACalls(_fam, _bgl_phased, _out_prefix, _Rscript, _f_save_intermedi
 
 
 
-def Omnibus_Test(_out_prefix, _fam, _aa, _PHENO: PHENO, _COVAR: COVAR, _COND: CONDITION, _Rscript=which("Rscript"),
+def Omnibus_Test(_out_prefix, _phe_name, _fam, _aa, _PHENO:PHENO, _COVAR:COVAR, _COND:CONDITION, _Rscript=which("Rscript"),
                  _f_save_intermediates=False):
 
-    print(std_MAIN + "Performing Omnibus Test.")
+    print(std_MAIN.lstrip("\n") + "Performing Omnibus Test.")
 
     # Phenotype info.
     _phe = _PHENO.phe
-    _phe_name = _PHENO.pheno_name_target[0]
+
     # Covariate info.
     if _COVAR:
-        _covar = _COVAR.phe
+        _covar = _COVAR.file
         _covar_name = _COVAR.covar_name_target
     else:
         _covar = "NA"
@@ -192,8 +201,7 @@ if __name__ == '__main__':
                         nargs='+')
 
     parser.add_argument("--pheno", help="\nSpecify phenotype information file (Plink v1.9).\n\n")
-    parser.add_argument("--pheno-name", help="\nSpecify the column name in phenotype file which you will use.\n\n",
-                        nargs='+')
+    parser.add_argument("--pheno-name", help="\nSpecify the column name in phenotype file which you will use.\n\n")
 
     CondVars = parser.add_mutually_exclusive_group()
     CondVars.add_argument("--condition", help="\nSpecify a single variant ID to condition(i.e. To set it as covariate).\n\n")

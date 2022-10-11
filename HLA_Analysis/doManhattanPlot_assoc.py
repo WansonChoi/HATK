@@ -16,7 +16,7 @@ std_WARNING = "\n[%s::WARNING]: " % basename(__file__)
 def doManhattanPlot_assoc(_ASSOC:ASSOC, _hg, _out_prefix=None, _f_save_intermediates=False):
 
     if not _ASSOC:
-        print(std_WARNING + "No assoc file was found. Please perform association test first.".format(_ASSOC))
+        print(std_WARNING + "No assoc file was found. Please perform association test first. Skipping Manhattan plot.")
         return None
 
     out_prefix = _out_prefix if _out_prefix else _ASSOC.assoc + '.manhattan'

@@ -12,6 +12,8 @@ from HLA_Manhattan.__main__ import HATK_Manhattan
 from HLA_Analysis.doRegression import doRegression
 from HLA_Analysis.doManhattanPlot_assoc import doManhattanPlot_assoc
 from HLA_Analysis.doHeatmap import doHeatmap
+from HLA_Analysis.doOmnibusTest import doOmnibusTest
+from HLA_Analysis.doManhattanPlot_OM import doManhattanPlot_OM
 
 std_MAIN = "\n[%s]: " % basename(__file__)
 std_ERROR = "\n[%s::ERROR]: " % basename(__file__)
@@ -45,7 +47,7 @@ class HLA_Study(Study):
 
     def __init__(self, _out_prefix, _hg, _bfile, _pheno, _pheno_name, _covar=None, _covar_name=None, _condition_list=None,
                  _f_save_intermediates=False,
-                 _imgt_out_dir=None, _assoc=None, _bgl_phased=None):
+                 _imgt_out_dir=None, _assoc=None, _bgl_phased=None, _aa=None):
 
         ### Init. of super class ###
         super().__init__(_out_prefix, _hg, _bfile, _pheno, _pheno_name, _covar, _covar_name, _condition_list,
@@ -56,7 +58,8 @@ class HLA_Study(Study):
         self.bmarker = bMarker(_bfile) # binary markers for HLA fine-mapping.
         self.imgt_output = IMGT2Seq_Output(_imgt_out_dir, self.bmarker.l_HLA_target) if Exists(_imgt_out_dir) else None
 
-        self.bgl_phased = None
+        self.bgl_phased = _bgl_phased
+        self.aa = _aa
 
         # results
         self.ASSOC = None
@@ -118,12 +121,22 @@ class HLA_Study(Study):
                 "   {hla}   : {pdf}\n".format(hla=hla, pdf=pdf) for hla, pdf in self.Heatmap_pdfs.items()
             ]) if self.Heatmap_pdfs else ""
 
+        str_Omnibus = \
+            "=====< Omnibus Test >=====\n{}\n".format(self.omnibus) if self.omnibus else ""
+
+        str_manhattan_omnibus = \
+            "=====< Manhattan(Omnibus) >=====\n" \
+            "- pdfs: \n" \
+            + ''.join([
+                "   - {}\n".format(item) for item in self.manhattan_omnibus.ManhattanPlot
+            ]) if self.manhattan_omnibus else ""
+
 
         str_summary = \
             ''.join([str_hg, str_out_prefix, str_GT, str_PT, str_pheno_name, str_pheno_dtype_target,
                      str_CV, str_covar_name, str_condition, str_IMGT2Seq,
                      str_external_soft,
-                     str_assoc, str_manhattan_assoc, str_Heatmap]).rstrip('\n')
+                     str_assoc, str_manhattan_assoc, str_Heatmap, str_Omnibus, str_manhattan_omnibus]).rstrip('\n')
         return str_summary
 
 
@@ -134,9 +147,14 @@ class HLA_Study(Study):
                          self.CONDITION.condition_list)
     def doManhattanPlot_assoc(self):
         self.manhattan_assoc = \
-            doManhattanPlot_assoc(self.ASSOC, self.hg, self.f_save_intermediates)
+            doManhattanPlot_assoc(self.ASSOC, self.hg, _f_save_intermediates=self.f_save_intermediates)
     def doHeatmapPlot(self):
         self.Heatmap, self.Heatmap_pdfs = \
             doHeatmap(self.ASSOC, self.bmarker, self.imgt_output)
     def doPhasing(self): pass
-    def doOmnibusTest(self): pass
+    def doOmnibusTest(self):
+        self.omnibus = doOmnibusTest(self.out_prefix+".OM", self.bmarker, self.PHENO, self.pheno_name, self.COVAR, self.CONDITION,
+                                     self.bgl_phased, self.aa, self.f_save_intermediates)
+    def doManhattanPlot_omnibus(self):
+        self.manhattan_omnibus = \
+            doManhattanPlot_OM(self.omnibus, self.hg, _f_save_intermediates=self.f_save_intermediates)
