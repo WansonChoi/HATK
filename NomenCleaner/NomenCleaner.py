@@ -2,6 +2,7 @@
 
 import os, sys, re
 from os.path import basename, dirname, exists, isdir, join
+import numpy as np
 import pandas as pd
 
 std_MAIN_PROCESS_NAME = "\n[%s]: " % basename(__file__)
@@ -57,6 +58,10 @@ def NomenCleaner(_hped, _hat, _out_prefix, _OUTPUT_FORMAT, _f_NoGenePrefix=False
 
     f_chped = open(_out_prefix + '.chped', 'w')
     f_chped_log = open(_out_prefix + '.chped.log', 'w')
+
+    # Now must write a header (2022. 10. 12.)
+    f_chped.write('\t'.join(["FID", "IID", "PID", "MID", "Sex", "Phe"] +
+                            list(np.array([(hla+'_1', hla+'_2') for hla in _HLA_target]).flatten())) + "\n")
 
     count = 0
 

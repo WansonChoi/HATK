@@ -29,7 +29,7 @@ class Study(object):
     Rscript = findExec("Rscript", std_ERROR+"'Rscript' command can't be found. Please install R.")
 
 
-    def __init__(self, _out_prefix, _hg, _bfile, _pheno, _pheno_name, _covar=None, _covar_name=None, _condition_list=None,
+    def __init__(self, _out_prefix, _hg, _bfile, _pheno, _pheno_name, _pheno_name_dtype=None, _covar=None, _covar_name=None, _condition_list=None,
                  _f_save_intermediates=False):
 
         ### Main Variables ###
@@ -46,7 +46,8 @@ class Study(object):
             RaiseError(HATK_InputPreparation_Error,
                        std_ERROR + "Requested phenotype name('{}') is NOT IN the given phenotype file('{}')." \
                        .format(self.pheno_name, self.PHENO.pheno_name_avail))
-        self.pheno_name_dtype = getTargetPheDtype(self.PHENO.pheno_name_avail, self.PHENO.trait_types, self.pheno_name)
+        self.pheno_name_dtype = _pheno_name_dtype if _pheno_name_dtype else \
+                                getTargetPheDtype(self.PHENO.pheno_name_avail, self.PHENO.trait_types, self.pheno_name)
 
         # (3) Covariate (optional)
         self.COVAR = COVAR(_covar, _covar_name.split(',') if isinstance(_covar_name, str) else [])

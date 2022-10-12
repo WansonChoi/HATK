@@ -69,6 +69,18 @@ def getColumn(_file, _N_col):
             yield l[_N_col]
 
 
+def which_format(_F_one:bool, _F_two:bool, _F_three:bool, _F_four:bool, _F_Ggroup:bool, _F_Pgroup:bool) -> int:
+
+    if _F_one: return 1
+    elif _F_two: return 2
+    elif _F_three: return 3
+    elif _F_four: return 4
+    elif _F_Ggroup: return 5
+    elif _F_Pgroup: return 6
+    else:
+        return 2 # 2-field as default
+
+
 def FieldFormat2Label(_which_format):
     if _which_format == 1: return "1-field"
     elif _which_format == 2: return "2-field"

@@ -6,7 +6,7 @@ import argparse, textwrap
 
 from bMarkerGenerator.bMarkerGenerator import bMarkerGenerator
 from src.HATK_Error import HATK_InputPreparation_Error, RaiseError
-from src.util import Exists, FieldFormat2Label
+from src.util import Exists, FieldFormat2Label, findExec
 from src.PLINK_GT import GT
 from NomenCleaner.src.CHPED import CHPED
 from IMGT2Seq.src.IMGT2Seq_Output import HLA_DICTIONARY
@@ -19,7 +19,7 @@ std_WARNING = "\n[bMarkerGenerator::WARNING]: "
 class HATK_bMarkerGenertor(object):
 
     # External software
-    plink = which("plink") if Exists(which("plink")) else RaiseError(HATK_InputPreparation_Error, "PLINK can't be found.")
+    plink = findExec("plink", std_ERROR+"'plink' command can't be found. Please install PLINK.")
 
     def __init__(self, _chped, _out_prefix, _hg, _dictionary_AA, _dictionary_SNPS, _bfile=None,
                  _f_save_intermediates=False):
@@ -44,6 +44,13 @@ class HATK_bMarkerGenertor(object):
             HLA_DICTIONARY(_dictionary_AA + '.txt', _dictionary_AA + '.map',
                            _dictionary_SNPS + '.txt', _dictionary_SNPS + '.map',
                            _HLA_req=self.CHPED.HLA_avail)
+        """
+        Intersection between HLA gene sets from CHPED and HLA_DICTIONARY is needed for bMG.
+        
+        This intersection is acquired in the above 'HLA_DICTIONARY' class with the '_HLA_req' argument.
+        
+        In the end, `HLA_DICTIONARY.HLA_target` variable will contain the intersected HLA genes.
+        """
 
         # Output(bmarker)
         self.bmarker = None
@@ -53,19 +60,28 @@ class HATK_bMarkerGenertor(object):
 
 
         ### Main Actions ###
-        print(self.__repr__())
+        # print(self.__repr__())
 
         # Consenting HLA gene set.
         if self.CHPED.HLA_avail != self.HLA_DICTIONARY.HLA_avail:
-            print(std_MAIN + "Target genes: {}".format(self.HLA_DICTIONARY.HLA_target))
+            print(std_WARNING +
+                  "Available HLA gene sets of given CHPED and HLA_DICTIONARY are different.\n"
+                  "   (CHPED): {}\n"
+                  "   (HLA_DICT): {}".format(self.CHPED.HLA_avail, self.HLA_DICTIONARY.HLA_avail))
+            print(std_WARNING.lstrip("\n") +
+                  "Next intersected HLA gene set will be used\n"
+                  "   (Intersected): {}".format(self.HLA_DICTIONARY.HLA_target))
+            """
+            `HLA_DICTIONARY.HLA_target` is the result of intersection between CHPED and HLA_DICTIONARY.
+            """
 
             self.CHPED = self.CHPED.subsetCHPED(join(self.out_dir, basename(_chped)+'.subset'), self.HLA_DICTIONARY.HLA_target)
             self.HLA_DICTIONARY = self.HLA_DICTIONARY.subsetHLA_DICTIONARY(self.out_dir, self.HLA_DICTIONARY.HLA_target)
 
-            print(std_MAIN + "New CHPED subsetted to the target genes.")
-            print(self.CHPED)
-            print(std_MAIN + "New HLA Dictionary files subsetted to the target genes.")
-            print(self.HLA_DICTIONARY)
+            # print(std_MAIN + "New CHPED subsetted to the target genes.")
+            # print(self.CHPED)
+            # print(std_MAIN + "New HLA Dictionary files subsetted to the target genes.")
+            # print(self.HLA_DICTIONARY)
 
 
 
@@ -84,7 +100,7 @@ class HATK_bMarkerGenertor(object):
                              _variants=self.bfile.file_prefix, _f_save_intermediates=self.f_save_intermediates,
                              _plink=self.plink)
 
-        print(self.__repr__())
+        # print(self.__repr__())
 
 
 

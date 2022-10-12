@@ -179,6 +179,7 @@ def Phasing_wrapper(_bgl, _markers, _out_prefix, _beagle2vcf, _vcf2beagle, _beag
 
     ## Phase
     print("[3] beagle4 phasing: ")
+    print("(It can take some time.)", end='\r')
     _vcf_phased = _out_prefix+'.phased'
     _vcf_phased = Beagle_Phase(_vcf_GCtrick, _vcf_phased, _beagle, _java_mem, _nthreads, _f_save_intermediates)
     # _vcf_phased = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/20220314_BEAGLE/remove/wtccc_filtered_58C_RA.hatk.300+300.imgt3470.header.subset.tt.phased.vcf.gz" # for Test (Hard-coding)
@@ -204,7 +205,7 @@ def Phasing_wrapper(_bgl, _markers, _out_prefix, _beagle2vcf, _vcf2beagle, _beag
     print("[6] unGCtrick: ")
     __RETURN__ = _out_prefix+'.bgl.phased'
     __RETURN__ = unGCtrick(_bgl_phased_gz1, _markers, __RETURN__)
-    print("   - {}".format(__RETURN__))
+    print("   - {}\n".format(__RETURN__))
 
 
     if not _f_save_intermediates:

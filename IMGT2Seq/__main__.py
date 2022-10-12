@@ -7,7 +7,7 @@ import numpy as np
 from IMGT2Seq.IMGT2Seq import IMGT2Seq
 from IMGT2Seq.src.AvailableHLAs import getAvailableHLAs, getTargetHLAs
 from src.HATK_Error import RaiseError, HATK_InputPreparation_Error
-from src.util import Exists, FieldFormat2Label
+from src.util import Exists, FieldFormat2Label, which_format
 from IMGT2Seq.src.IMGT2Seq_Output import IMGT2Seq_Output
 
 std_MAIN = "\n[IMGT2Seq]: "
@@ -20,7 +20,7 @@ class HATK_IMGT2Seq(object):
     def __init__(self, _imgt, _hg, _out, _imgt_dir,
                  _F_one:bool, _F_two:bool, _F_three:bool, _F_four:bool, _F_Ggroup:bool, _F_Pgroup:bool,
                  _no_Indel=False, _MultiP=False, _f_save_intermediates=False, _no_prime=True, _p_data='./IMGT2Seq/data',
-                 _HLA_req=("A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1")):
+                 _HLA_req=None):
 
         """
         Either (1) generate a new Dictionary files or (2) find existing dictionaries.
@@ -34,7 +34,7 @@ class HATK_IMGT2Seq(object):
         self.out = _out
 
         self.out_dir = self.out if isdir(self.out) else dirname(self.out)
-        self.version_label = "hg{}.imgt{}".format(self.hg, self.imgt)
+        # self.version_label = "hg{}.imgt{}".format(self.hg, self.imgt)
 
         self.imgt_dir = _imgt_dir if Exists(_imgt_dir, isdir) \
             else RaiseError(HATK_InputPreparation_Error, "Given directory for the IMGT database('{}') isn't a directory.".format(_imgt_dir))
@@ -44,7 +44,15 @@ class HATK_IMGT2Seq(object):
         # Requested HLAs
         self.HLA_req = _HLA_req
         self.HLA_avail = getAvailableHLAs(self.imgt_dir, self.data_dir, self.hg)
-        self.HLA_target, self.HLA_excluded1, self.HLA_excluded2 = getTargetHLAs(self.HLA_req, *self.HLA_avail)
+        if _HLA_req:
+            self.HLA_target, self.HLA_excluded1, self.HLA_excluded2 = \
+                getTargetHLAs(self.HLA_req, *self.HLA_avail)
+        else:
+            # If no HLA_req, then take all available.
+            self.HLA_target = list(np.intersect1d(*self.HLA_avail))
+            self.HLA_excluded1 = list(np.setdiff1d(self.HLA_avail[0], self.HLA_target))
+            self.HLA_excluded2 = list(np.setdiff1d(self.HLA_avail[1], self.HLA_target))
+
 
         # Output Field format
         self.which_format = which_format(_F_one, _F_two, _F_three, _F_four, _F_Ggroup, _F_Pgroup)
@@ -58,10 +66,10 @@ class HATK_IMGT2Seq(object):
 
         ### Main Actions ###
         self.IMGT2Seq_Output = \
-            IMGT2Seq(self.imgt, self.hg, self.out, _imgt_dir=self.imgt_dir, _no_Indel=self.no_indel,
+            IMGT2Seq(self.imgt, self.hg, self.out_dir, _imgt_dir=self.imgt_dir, _no_Indel=self.no_indel,
                      _MultiP=self.multiprocess, _f_save_intermediates=self.f_save_intermediates, _p_data="IMGT2Seq/data",
                      __Nfield_OUTPUT_FORMAT=self.which_format, _HLA_target=self.HLA_target)
-        print(self.__repr__()) # debug
+        # print(self.__repr__()) # debug
 
 
     def __repr__(self):
@@ -290,15 +298,6 @@ class HATK_IMGT2Seq(object):
 
 
 
-def which_format(_F_one:bool, _F_two:bool, _F_three:bool, _F_four:bool, _F_Ggroup:bool, _F_Pgroup:bool) -> int:
-
-    if _F_one: return 1
-    elif _F_two: return 2
-    elif _F_three: return 3
-    elif _F_four: return 4
-    elif _F_Ggroup: return 5
-    elif _F_Pgroup: return 6
-    else: return -1
 
 
 

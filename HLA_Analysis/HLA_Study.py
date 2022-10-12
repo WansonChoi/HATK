@@ -46,13 +46,13 @@ class HLA_Study(Study):
                   "(2) Locate it in the 'dependency/' folder.")
 
 
-    def __init__(self, _out_prefix, _hg, _bfile, _pheno, _pheno_name, _covar=None, _covar_name=None, _condition_list=None,
+    def __init__(self, _out_prefix, _hg, _bfile, _pheno, _pheno_name, _pheno_name_dtype=None, _covar=None, _covar_name=None, _condition_list=None,
                  _f_save_intermediates=False,
                  _imgt_out_dir=None, _assoc=None, _bgl_phased=None, _aa=None,
                  _java_mem='1G', _nthreads=1):
 
         ### Init. of super class ###
-        super().__init__(_out_prefix, _hg, _bfile, _pheno, _pheno_name, _covar, _covar_name, _condition_list,
+        super().__init__(_out_prefix, _hg, _bfile, _pheno, _pheno_name, _pheno_name_dtype, _covar, _covar_name, _condition_list,
                          _f_save_intermediates)
 
 

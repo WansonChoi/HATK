@@ -9,7 +9,7 @@ import pandas as pd
 from NomenCleaner.NomenCleaner import NomenCleaner
 from NomenCleaner.src.HPED import HPED
 from src.HATK_Error import HATK_InputPreparation_Error, RaiseError
-from src.util import Exists
+from src.util import Exists, which_format, FieldFormat2Label
 
 std_MAIN_PROCESS_NAME = "\n[NomenCleaner]: "
 std_ERROR_MAIN_PROCESS_NAME = "\n[NomenCleaner::ERROR]: "
@@ -33,10 +33,13 @@ class HATK_NomenCleaner(object):
             else RaiseError(HATK_InputPreparation_Error, std_ERROR_MAIN_PROCESS_NAME + "Given HAT file('{}') can't be found.".format(_hat))
         self.imgt = re.search('imgt(\d+)', basename(self.hat)).group(1) if bool(re.search('imgt(\d+)', basename(self.hat))) else None
 
+        # Output Field format
+        self.which_format = which_format(_F_one, _F_two, _F_three, _F_four, _F_Ggroup, _F_Pgroup) # 2 as default.
 
         self.out = _out
         self.out_prefix = self.out.rstrip('.chped') if self.out.endswith('.chped') else self.out
-        self.out_prefix = self.out_prefix + (".imgt{}".format(self.imgt) if self.imgt else "")
+        self.out_prefix = self.out_prefix + (".imgt{}".format(self.imgt) if self.imgt else "") \
+                            + (".{}".format(re.sub(r'-', '', FieldFormat2Label(self.which_format))))
 
         self.HLA_req = _HLA_req if _HLA_req else self.HPED.HLA_avail # Use HLAs in HPED file if user didn't request any HLA genes.
 
@@ -49,20 +52,6 @@ class HATK_NomenCleaner(object):
                             ("A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1")
 
 
-        # Output Field format
-        self.F_one = _F_one
-        self.F_two = _F_two
-        self.F_three = _F_three
-        self.F_four = _F_four
-        self.F_Ggroup = _F_Ggroup
-        self.F_Pgroup = _F_Pgroup
-        self.which_format = 1 if self.F_one else \
-                            2 if self.F_two else \
-                            3 if self.F_three else \
-                            4 if self.F_four else \
-                            5 if self.F_Ggroup else \
-                            6 if self.F_Pgroup else \
-                            RaiseError(HATK_InputPreparation_Error, "Wrong Output Field Format.")
 
         # Optional Flags
         self.f_NoGenePrefix = _f_NoGenePrefix
@@ -85,7 +74,7 @@ class HATK_NomenCleaner(object):
                          _f_NoGenePrefix=self.f_NoGenePrefix, _f_leave_NotFound=self.f_leave_NotFound,
                          _HLA_target=self.HLA_target)
 
-        print(self.__repr__())
+        # print(self.__repr__())
 
 
     def genTempHPED(self):

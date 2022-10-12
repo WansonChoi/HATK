@@ -106,6 +106,15 @@ if __name__ == "__main__":
     # parser.add_argument("--yaxis-unit", "-yau", help="\nY-axis value(-log10(x)) unit (default : 10).\n\n", default="10")
 
 
+    # java
+    parser.add_argument("--java-mem", "-mem",
+                        help="\nHeap memory size for each BEAGLE implementation (default: 2g).\n\n", default="2g")
+
+    parser.add_argument("--nthreads", "-nth",
+                        help="\nThe number of threads for each BEAGLE implementation (default: 1).\n\n", default=1,
+                        type=int)
+
+
 
 
 
@@ -122,6 +131,7 @@ if __name__ == "__main__":
                               args.pheno, args.pheno_name, args.pheno_name_dtype,
                               args.covar, args.covar_name, None, args.condition_list,
                               args.F_one, args.F_two, args.F_three, args.F_four, args.F_Ggroup, args.F_Pgroup,
-                              args.multiprocess, args.save_intermediates)
+                              _MultiP=args.multiprocess, _java_mem=args.java_mem, _nthreads=args.nthreads,
+                              _f_save_intermediates=args.save_intermediates)
 
     print(hStudy_all)
