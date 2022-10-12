@@ -8,17 +8,41 @@ import argparse, textwrap
 from Phasing.BEAGLE_Phase import Phasing_wrapper, VCF2BEAGLE
 # from Phasing.src.BEAGLE import BEAGLE
 from src.PLINK2BEAGLE import PLINK2BEAGLE
+from src.util import Exists, findExec
 
-std_MAIN_PROCESS_NAME = "\n[Phasing]: "
-std_ERROR_MAIN_PROCESS_NAME = "\n[Phasing::ERROR]: "
-std_WARNING_MAIN_PROCESS_NAME = "\n[Phasing::WARNING]: "
+std_MAIN = "\n[Phasing]: "
+std_ERROR = "\n[Phasing::ERROR]: "
+std_WARNING = "\n[Phasing::WARNING]: "
 
 class HATK_Phasing(object):
 
+    """
+    An action class for HLA fine-mapping analysis.
+    """
+
+
+    ### External Software ###
+    plink = findExec("plink", std_ERROR+"'plink' command can't be found. Please install it.")
+
+    beagle = findExec("beagle", std_ERROR+"'beagle' command can't be found. Please install it.")
+    java = findExec("java", std_ERROR+"'java' command can't be found. Please install it.")
+
+    beagle2vcf = findExec("beagle2vcf.jar",
+        std_ERROR+"'beagle2vcf.jar' module can't be found.\n"
+                  "Please (1) Download that jar file from 'https://faculty.washington.edu/browning/beagle_utilities/beagle2vcf.jar' AND \n"
+                  "(2) Locate it in the 'dependency/' folder.")
+    vcf2beagle = findExec("vcf2beagle.jar",
+        std_ERROR+"'vcf2beagle.jar' module can't be found.\n"
+                  "Please (1) Download that jar file from 'https://faculty.washington.edu/browning/beagle_utilities/vcf2beagle.jar' AND \n"
+                  "(2) Locate it in the 'dependency/' folder.")
+    linkage2beagle = findExec("linkage2beagle.jar",
+        std_ERROR+"'linkage2beagle.jar' module can't be found.\n"
+                  "Please (1) Download that jar file from 'https://faculty.washington.edu/browning/beagle_utilities/linkage2beagle.jar' AND \n"
+                  "(2) Locate it in the 'dependency/' folder.")
+
+
     def __init__(self, _out, _bfile=None, _vcf=None, _bgl=None, _markers=None,
-                 _linkage2beagle="dependency/linkage2beagle.jar", _beagle2vcf="dependency/beagle2vcf.jar",
-                 _vcf2beagle="dependency/vcf2beagle.jar", _beagle=which("beagle"), _plink=which("plink"),
-                 _java=which("java"), _java_mem='1G', _nthreads=1, _f_save_intermediates=False, _f_gzip=True):
+                 _java_mem='1G', _nthreads=1, _f_save_intermediates=False, _f_gzip=True):
 
         """
         Input must be in beagle file format anyway.
@@ -40,7 +64,7 @@ class HATK_Phasing(object):
         ### Setting BEAGLE input.
         if self.input_file_format == "PLINK":
             self.bgl, self.markers = PLINK2BEAGLE(_bfile, self.out_prefix +".P2B",
-                                                  _linkage2beagle, _plink, _java, _java_mem, _f_save_intermediates)
+                                                  self.linkage2beagle, self.plink, self.java, _java_mem, _f_save_intermediates)
         elif self.input_file_format== "VCF":
             # use 'VCF2BEAGLE'
             pass
@@ -50,12 +74,12 @@ class HATK_Phasing(object):
 
         ### Phasing (Main)
         self.bgl_phased = \
-            Phasing_wrapper(self.bgl, self.markers, self.out_prefix, _beagle2vcf, _vcf2beagle, _beagle,
-                            _java, _java_mem, _nthreads, _f_save_intermediates, _f_gzip)
+            Phasing_wrapper(self.bgl, self.markers, self.out_prefix, self.beagle2vcf, self.vcf2beagle, self.beagle,
+                            self.java, _java_mem, _nthreads, _f_save_intermediates, _f_gzip)
 
 
-        print(self.markers)
-        print(self.bgl_phased)
+        # print(self.markers)
+        # print(self.bgl_phased)
 
 
 def getInputFileFormat(_bfile, _vcf, _beagle, _markers):

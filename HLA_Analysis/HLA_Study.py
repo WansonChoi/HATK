@@ -14,6 +14,7 @@ from HLA_Analysis.doManhattanPlot_assoc import doManhattanPlot_assoc
 from HLA_Analysis.doHeatmap import doHeatmap
 from HLA_Analysis.doOmnibusTest import doOmnibusTest
 from HLA_Analysis.doManhattanPlot_OM import doManhattanPlot_OM
+from HLA_Analysis.doPhasing import doPhasing
 
 std_MAIN = "\n[%s]: " % basename(__file__)
 std_ERROR = "\n[%s::ERROR]: " % basename(__file__)
@@ -47,7 +48,8 @@ class HLA_Study(Study):
 
     def __init__(self, _out_prefix, _hg, _bfile, _pheno, _pheno_name, _covar=None, _covar_name=None, _condition_list=None,
                  _f_save_intermediates=False,
-                 _imgt_out_dir=None, _assoc=None, _bgl_phased=None, _aa=None):
+                 _imgt_out_dir=None, _assoc=None, _bgl_phased=None, _aa=None,
+                 _java_mem='1G', _nthreads=1):
 
         ### Init. of super class ###
         super().__init__(_out_prefix, _hg, _bfile, _pheno, _pheno_name, _covar, _covar_name, _condition_list,
@@ -64,11 +66,15 @@ class HLA_Study(Study):
         # results
         self.ASSOC = None
         self.omnibus = None
+        self.Phase = None
 
         self.manhattan_assoc = None
         self.manhattan_omnibus = None
         self.Heatmap = None
         self.Heatmap_pdfs = None
+
+        self.java_mem = _java_mem
+        self.nthreads = _nthreads
 
 
 
@@ -151,7 +157,8 @@ class HLA_Study(Study):
     def doHeatmapPlot(self):
         self.Heatmap, self.Heatmap_pdfs = \
             doHeatmap(self.ASSOC, self.bmarker, self.imgt_output)
-    def doPhasing(self): pass
+    def doPhasing(self):
+        self.Phase, self.bgl_phased = doPhasing(self)
     def doOmnibusTest(self):
         self.omnibus = doOmnibusTest(self.out_prefix+".OM", self.bmarker, self.PHENO, self.pheno_name, self.COVAR, self.CONDITION,
                                      self.bgl_phased, self.aa, self.f_save_intermediates)

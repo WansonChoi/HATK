@@ -13,6 +13,10 @@ from Phasing.src.GCtrick.bgl2GC_trick_bgl import Bgl2GC
 from Phasing.src.GCtrick.GC_tricked_bgl2ori_bgl import GCtricedBGL2OriginalBGL_2
 from src.util import Exists
 
+std_MAIN = "\n[%s]: " % basename(__file__)
+std_ERROR = "\n[%s::ERROR]: " % basename(__file__)
+std_WARNING = "\n[%s::WARNING]: " % basename(__file__)
+
 
 def GCtrick(_bgl, _markers, _out_dir, _f_save_intermediates=False):
 
@@ -156,43 +160,51 @@ def Phasing_wrapper(_bgl, _markers, _out_prefix, _beagle2vcf, _vcf2beagle, _beag
     _out_dir = dirname(_out_prefix)
 
     ### Main Actions ###
+    print(std_MAIN + "Phasing.")
 
     ## GCtrick
+    print("[1] GCtrick: ")
     _bgl_GCtrick, _markers_GCtrick_refined = GCtrick(_bgl, _markers, _out_dir, _f_save_intermediates)
-    print("GCtrick:\n   - {}\n   - {}".format(_bgl_GCtrick, _markers_GCtrick_refined))
+    print("   - {}\n"
+          "   - {}".format(_bgl_GCtrick, _markers_GCtrick_refined))
 
 
     ## beagle2vcf
+    print("[2] beagle2vcf: ")
     _vcf_GCtrick = \
         BEAGLE2VCF(_bgl_GCtrick, _markers_GCtrick_refined, _out_prefix+'.vcf', _beagle2vcf, _java, _java_mem,
                    _f_save_intermediates, _f_gzip)
-    print("beagle2vcf: {}".format(_vcf_GCtrick))
+    print("   - {}".format(_vcf_GCtrick))
 
 
     ## Phase
+    print("[3] beagle4 phasing: ")
     _vcf_phased = _out_prefix+'.phased'
     _vcf_phased = Beagle_Phase(_vcf_GCtrick, _vcf_phased, _beagle, _java_mem, _nthreads, _f_save_intermediates)
     # _vcf_phased = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/20220314_BEAGLE/remove/wtccc_filtered_58C_RA.hatk.300+300.imgt3470.header.subset.tt.phased.vcf.gz" # for Test (Hard-coding)
-    print("beagle4 phasing: {}".format(_vcf_phased))
+    print("   - {}".format(_vcf_phased))
 
     # return -1
 
     ## vcf2beagle
+    print("[4] vcf2beagle: ")
     out_prefix_temp = _out_prefix+'.phased'
     _bgl_phased_gz0 = VCF2BEAGLE(_vcf_phased, out_prefix_temp, _vcf2beagle, _java, _java_mem)
-    print("vcf2beagle: {}".format(_bgl_phased_gz0))
+    print("   - {}".format(_bgl_phased_gz0))
 
 
     ## FixBglHeader
+    print("[5] FixBglHeader: ")
     out_prefix_temp = _out_prefix+'.phased.bgl.header.GCtrick.gz'
     _bgl_phased_gz1 = FixBglHeader(_bgl_phased_gz0, out_prefix_temp)
-    print("FixBglHeader: {}".format(_bgl_phased_gz1))
+    print("   - {}".format(_bgl_phased_gz1))
 
 
     ## unGCtrick
+    print("[6] unGCtrick: ")
     __RETURN__ = _out_prefix+'.bgl.phased'
     __RETURN__ = unGCtrick(_bgl_phased_gz1, _markers, __RETURN__)
-    print("unGCtrick: {}".format(__RETURN__))
+    print("   - {}".format(__RETURN__))
 
 
     if not _f_save_intermediates:
