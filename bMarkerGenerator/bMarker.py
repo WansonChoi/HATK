@@ -6,13 +6,21 @@ import pandas as pd
 
 from src.HATK_Error import HATK_InputPreparation_Error, RaiseError
 from src.PLINK_GT import GT
-from src.util import Exists
+from src.PLINK_Bash import Bash_RUN_PLINK
+from src.util import Exists, findExec
 from bMarkerGenerator.checkBIM import checkBIM
+
+std_MAIN = "\n[%s]: " % basename(__file__)
+std_ERROR = "\n[%s::ERROR]: " % basename(__file__)
+std_WARNING = "\n[%s::WARNING]: " % basename(__file__)
 
 
 class bMarker(GT):
 
-    def __init__(self, _file_prefix):
+    plink = findExec("plink", std_ERROR+"'plink' command can't be found. Please install PLINK.")
+
+    def __init__(self, _file_prefix,
+                 _f_save_intermediates=False):
 
         ### Init. of super class ###
         super().__init__(_file_prefix)
@@ -31,6 +39,8 @@ class bMarker(GT):
         self.m_INS = -1
 
         self.l_HLA_target = []
+
+        self.f_save_intermediates = _f_save_intermediates
 
         ### Main Actions ###
         self.m_total, self.m_SNP, self.m_HLA, self.m_AA, self.m_SNPS, self.m_INS, self.l_HLA_target = checkBIM(self.bim)
@@ -85,6 +95,23 @@ class bMarker(GT):
     def asOldMarkerLabel(self): return 0 # Later. Modify marker labels in bim file (ex. HLA_A*01:01 => HLA_A_0101)
     def asNewMarkerLabel(self): return 0 # Later. Modify marker labels in bim file (ex. HLA_A_0101 => HLA_A*01:01)
 
+    def genFRQ(self, _out_prefix=None, _f_save_log=False):
+        self.FRQ = genFRQ(self, _out_prefix, _f_save_log)
+
+
+def genFRQ(_bMARKER:bMarker, _out_prefix=None, _f_save_log=False):
+
+    out_prefix = _out_prefix if _out_prefix else _bMARKER.file_prefix+".FRQ"
+
+    command = [_bMARKER.plink, "--freq",
+               "--allow-no-sex", "--keep-allele-order",
+               "--bfile {}".format(_bMARKER.file_prefix),
+               "--out {}".format(out_prefix)]
+
+    FRQ = Bash_RUN_PLINK(' '.join(command), out_prefix, _f_save_intermediates=_bMARKER.f_save_intermediates,
+                         _f_save_log=_f_save_log)
+    return FRQ + ".frq"
+
 
 
 if __name__ == '__main__':
@@ -92,11 +119,13 @@ if __name__ == '__main__':
     ## Linux
     # bmarker = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/HATK_rearchitect_bMG_20220913/wtccc_filtered_58C_RA.hatk.300+300.hg18.chr6.29-34mb"
     # bmarker = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/HATK_rearchitect_bMG_20220913/wtccc_filtered_58C_RA.hatk.300+300.hg18.chr6.29-34mb"
+    bmarker = "/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/HATK_rearchitect_CookHLA_REF_20221012/wtccc.58C+RA_REF"
 
     ## Mac
-    bmarker = "/Users/wansonchoi/Git_Projects/HATK/tests/20221007_bMG/wtccc_filtered_58C_RA.hatk.300+300.hg18.chr6.29-34mb.with38"
+    # bmarker = "/Users/wansonchoi/Git_Projects/HATK/tests/20221007_bMG/wtccc_filtered_58C_RA.hatk.300+300.hg18.chr6.29-34mb.with38"
 
     r = bMarker(bmarker)
+    r.genFRQ()
     print(r)
     pass
 

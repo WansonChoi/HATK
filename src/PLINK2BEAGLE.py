@@ -7,7 +7,7 @@ from src.PLINK_Bash import Bash_RUN_PLINK
 from Phasing.src.BEAGLE_Bash import Bash_BEAGLE
 
 def PLINK2BEAGLE(_bfile, _out_prefix, _linkage2beagle, plink=which("plink"),
-                 _java=which("java"), _java_mem='1G', _f_save_intermediates=False):
+                 _java=which("java"), _java_mem='1G', _f_save_intermediates=False, _f_CookHLA_REF=False):
 
     ### Main Variables ###
     _bim = _bfile+'.bim'
@@ -25,8 +25,10 @@ def PLINK2BEAGLE(_bfile, _out_prefix, _linkage2beagle, plink=which("plink"),
     ### Main Actions ###
 
     # *.markers
-    # command = ' '.join(["awk", '\'{print $2 " " $4 " " $5 " " $6}\'', _bim, ">", _markers])
-    command = ' '.join(["awk", '\'{print $2 " " $4 " " $6 " " $5}\'', _bim, ">", _markers]) # effect allele(a1-allele / ALT allele) as the 4th column. (2022.03.17.)
+    if _f_CookHLA_REF:
+        command = ' '.join(["awk", '\'{print $2 " " $4 " " $5 " " $6}\'', _bim, ">", _markers])
+    else:
+        command = ' '.join(["awk", '\'{print $2 " " $4 " " $6 " " $5}\'', _bim, ">", _markers]) # effect allele(a1-allele / ALT allele) as the 4th column. (2022.03.17.)
     # print(command)
     os.system(command)
 

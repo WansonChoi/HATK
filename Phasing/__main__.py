@@ -1,6 +1,7 @@
 #-*- coding: utf-8 -*-
 
 import os, sys, re
+import shutil
 from os.path import basename, dirname, join, exists
 from shutil import which
 import argparse, textwrap
@@ -42,7 +43,7 @@ class HATK_Phasing(object):
 
 
     def __init__(self, _out, _bfile=None, _vcf=None, _bgl=None, _markers=None,
-                 _java_mem='1G', _nthreads=1, _f_save_intermediates=False, _f_gzip=True):
+                 _java_mem='1G', _nthreads=1, _f_save_intermediates=False, _f_gzip=True, _f_CookHLA_REF=False):
 
         """
         Input must be in beagle file format anyway.
@@ -64,7 +65,8 @@ class HATK_Phasing(object):
         ### Setting BEAGLE input.
         if self.input_file_format == "PLINK":
             self.bgl, self.markers = PLINK2BEAGLE(_bfile, self.out_prefix +".P2B",
-                                                  self.linkage2beagle, self.plink, self.java, _java_mem, _f_save_intermediates)
+                                                  self.linkage2beagle, self.plink, self.java, _java_mem,
+                                                  _f_save_intermediates, _f_CookHLA_REF)
         elif self.input_file_format== "VCF":
             # use 'VCF2BEAGLE'
             pass
@@ -77,9 +79,14 @@ class HATK_Phasing(object):
             Phasing_wrapper(self.bgl, self.markers, self.out_prefix, self.beagle2vcf, self.vcf2beagle, self.beagle,
                             self.java, _java_mem, _nthreads, _f_save_intermediates, _f_gzip)
 
+        self.markers = shutil.copy(self.markers, self.markers.rstrip(".P2B.markers") + ".markers")
 
         # print(self.markers)
         # print(self.bgl_phased)
+
+    def remove_P2B_input(self):
+        if Exists(self.out_prefix + ".P2B.bgl"): os.remove(self.out_prefix + ".P2B.bgl")
+        if Exists(self.out_prefix + ".P2B.markers"): os.remove(self.out_prefix + ".P2B.markers")
 
 
 def getInputFileFormat(_bfile, _vcf, _beagle, _markers):
