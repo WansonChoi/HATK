@@ -112,14 +112,7 @@ make.fancy.locus.plot.bottom <- function(chr, min.pos, max.pos, pathToTheGeneBui
     ##
 
     genelist <- read.table(pathToTheGeneBuild, header=T)
-    
-    # ### (2018. 9. 24.) Modified to work with pure "knownGene.txt" file distributed by UCSC Annotation Database.
-    # genelist <- read.table(pathToTheGeneBuild, header=F, sep = '\t')
-    # colnames(genelist) = c("bin", "name", "chrom", "strand", "txStart", "txEnd", "cdsStart", "cdsEnd", "exonCount", "exonStarts", "exonEnds", "score", "name2", "cdsStartStat", "cdsEndStat", "exonFrames")
-    
-    # # colnames for "knownGene"  
-    # c("name", "chrom", "strand", "txStart", "txEnd", "cdsStart", "cdsEnd", "exonCount", "exonStarts", "exonEnds", "proteinID", "alignID")
-    
+
     genelist <- subset(genelist, genelist$chrom == paste("chr", chr, sep=""))
     genes.in.locus <- subset(genelist, (genelist$txStart > min.pos & genelist$txStart < max.pos ) | (genelist$txEnd > min.pos & genelist$txEnd < max.pos))
     genes.in.locus <- genes.in.locus[,c("txStart", "txEnd", "name2")]
@@ -143,16 +136,19 @@ make.fancy.locus.plot.bottom <- function(chr, min.pos, max.pos, pathToTheGeneBui
     j=1
     for ( i in 1:nrow(genes.in.locus) ) {
         genename = genes.in.locus[i,]$GENE
-        # if (genename %in% strsplit("HLA-A HLA-C HLA-B TNF HLA-DRA HLA-DRB1 HLA-DQA1 HLA-DQB1 HLA-DPA1 HLA-DPB1", " ")[[1]]) {
-        if (genename %in% strsplit("HLA-A HLA-C HLA-B HLA-DRB1 HLA-DQA1 HLA-DQB1 HLA-DPA1 HLA-DPB1", " ")[[1]]) {
-            genecols = strsplit("#00ab34 #c800a0 #7100c8 #c80000 #567200 #ecbd00 #FF0000 #0033F2"," ")[[1]]
-            # genecols = strsplit("#BF00EF black #00C418 black black #FF0000 black black black #0033F2"," ")[[1]]
+
+        # (2022. 10. 15.)
+        str_target_HLA_genes = "HLA-F HLA-G HLA-H HLA-A HLA-E HLA-C HLA-B MICA MICB TNF HLA-DRA HLA-DRB1 HLA-DQA1 HLA-DQB1 HLA-DOB HLA-DMB HLA-DMA HLA-DOA HLA-DPA1 HLA-DPB1"
+        str_target_HLA_genes_colors = "black black black #BF00EF black black #00C418 black black black black #FF0000 black black black black black black black #0033F2"
+        genetips_target_HLA_genes = c("downleft", "upleft", "downright", "upright", "downleft", "upleft", "downleft", "upright", "downright","upright", "downleft", "upleft", "upright", "downleft", "downleft", "downleft", "upright", "upright", "downright", "upright")
+
+        if (genename %in% strsplit(str_target_HLA_genes, " ")[[1]]) {
+            genecols = strsplit(str_target_HLA_genes_colors," ")[[1]]
 
             ## genecols = rep("black", 8)
             genetextcols = rep("black", 20)
 
-            # genetips = c("upleft", "upleft", "upright", "downleft", "downleft", "upleft", "upright", "downright", "upright", "downright")
-            genetips = c("upleft", "upleft", "upright", "upleft", "upright", "downright", "upright", "downright")
+            genetips = genetips_target_HLA_genes
             tiplen.y = boxheight / 2
             tiplen.x = (max.pos-min.pos)/75
             pickcol = genecols[j]
@@ -162,8 +158,18 @@ make.fancy.locus.plot.bottom <- function(chr, min.pos, max.pos, pathToTheGeneBui
             gene.foot = gene.y-geneboxheight/2
             lines(rep(gene.center,2), c(gene.head, gene.foot), lwd=0.7, col=pickcol)
             k = 1.7
-            textcex = 1.1
             textoffset = 0
+
+            # (2022. 10. 15.)
+            if(genename %in% c("HLA-DRA", "HLA-DOB", "HLA-DMB", "HLA-DMA", "HLA-DOA")){ # belongs to HLA gene rich area.
+                textcex = 0.4
+                genename = strsplit(as.character(genename), "-")[[1]][2]
+
+            }else{
+                textcex = 0.9
+            }
+
+
             if (genename == "HLA-DQA1" || genename == "HLA-DQB1") {
                 textoffset = -1 ## To avoid overlap.
             }
