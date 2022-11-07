@@ -1,132 +1,42 @@
 #-*- coding: utf-8 -*-
-
-
 import os, sys, re
-import argparse, textwrap
+from os.path import basename, dirname, join
 import pandas as pd
 from math import log10
 from shutil import which
 
-
-# Paths
-p_Rscript = which("Rscript")
-
-
-
-########## < Core Global Variables > ##########
-
-std_MAIN_PROCESS_NAME = "\n[%s]: " % (os.path.basename(__file__))
-std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % (os.path.basename(__file__))
-std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % (os.path.basename(__file__))
+std_MAIN = "\n[%s]: " % basename(__file__)
+std_ERROR = "\n[%s::ERROR]: " % basename(__file__)
+std_WARNING = "\n[%s::WARNING]: " % basename(__file__)
 
 
-class HATK_Heatmap(object):
-
-    def __init__(self, _HLA, _out, _p_maptable, _p_assoc_result, *args, **kwargs):
-
-
-        if not _HLA:
-            print(std_ERROR_MAIN_PROCESS_NAME + "Please check '--HLA' argument again.")
-            sys.exit()
-
-        if isinstance(_HLA, list) and len(_HLA) == 1:
-            _HLA = _HLA.pop()
-        elif isinstance(_HLA, list) and len(_HLA) > 1:
-            print(std_WARNING_MAIN_PROCESS_NAME + "Only 1 HLA gene can be used.\n"
-                                                  "Only the 1st HLA gene('{}') will be used for Heatmap plot and the other(s)('{}') will be discarded."
-                                                  "".format(_HLA[0], ', '.join(_HLA[1:])))
-            _HLA = _HLA[0]
-
-        if not _out:
-            print(std_ERROR_MAIN_PROCESS_NAME + "Please check '--out' argument again.")
-            sys.exit()
-
-        if not _p_maptable:
-            print(std_ERROR_MAIN_PROCESS_NAME + "Please check '--maptable' argument again.")
-            sys.exit()
-
-
-        t_single_assoc_result = None
-
-        if not _p_assoc_result:
-            print(std_ERROR_MAIN_PROCESS_NAME + "Please check '--assoc-result/-ar' argument again.")
-            sys.exit()
-        else:
-            # Supposed to be a list with only one element
-            if isinstance(_p_assoc_result, list):
-
-                if len(_p_assoc_result) > 1:
-                    print(std_WARNING_MAIN_PROCESS_NAME + "More than 1 association test results were given.\n"
-                                                          "Only 1st item will be used to plot HLA Heatmap.")
-
-                t_single_assoc_result = _p_assoc_result[0]
-
-            elif isinstance(_p_assoc_result, str):
-
-                t_single_assoc_result = _p_assoc_result
-
-
-        self.result = HEATMAP(_HLA, _out, _p_maptable, t_single_assoc_result,
-                              __save_intermediates=kwargs["__save_intermediates"], _p_src=kwargs["_p_src"],
-                              _p_data=kwargs["_p_data"])
-
-
-        self.removeIntermediates(_out)
-
-
-
-
-    def getResult(self):
-        return self.result
-
-
-    def removeIntermediates(self, _out):
-
-        # *.log
-        if os.path.exists(_out+'.log'):
-            os.system("rm {}".format(_out+'.log'))
-
-
-
-
-def HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_result, __save_intermediates=False, _p_Rscript=p_Rscript,
-            _p_src="./src", _p_data="./data"):
+def HEATMAP(_HLA, _out_prefix, _maptable, _assoc_result, _f_save_intermediates=False, _Rscript=which("Rscript"),
+            _p_src="./HLA_Heatmap/src", _p_data="./HLA_Heatmap/data"):
 
     """
 
     This script is replacement of '7_prepare.R'.
-    The main job of that script is to subset and filter HLA marker data given as file '6_table.txt' which is equivalent to HLA marker dicitionary file.
+    The main job of that script is to subset and filter HLA marker data given as file '6_table.txt' which is equivalent to HLA marker dictionary file.
 
     Finally, after this script implemented, 3 data file will be made.
 
         (1) *_map.txt
         (2) *_assoc.txt
         (3) *_alleleP.txt
-
-
-    (2018. 8. 20.)
-    The argument "_4field" and "_oldv" are deprecated.
-
     """
 
-    ########## < Core Variables > ##########
-
+    ### Main Variables ###
     H_MARKERS = pd.DataFrame()
     __MAPTABLE__ = None
     __ASSOC_RESULT__ = pd.DataFrame()
     __ASSOC_RESULT_AA__ = pd.DataFrame()
     __ASSOC_RESULT_HLA__ = pd.DataFrame()
 
-
-    # Intermediate path.
-    _out = _out if not _out.endswith('/') else _out.rstrip('/')
-    if bool(os.path.dirname(_out)): os.makedirs(os.path.dirname(_out), exist_ok=True)
-
-
     _p_heatmapR = os.path.join(_p_src, "8b_plot_WS.R")
 
 
 
+    ### Main Actions ###
     ##### < Control Flags > #####
 
     LOADING_MAPTABLE = 1
@@ -147,7 +57,7 @@ def HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_result, __save_intermediates=
 
         # print(std_MAIN_PROCESS_NAME + "[0-1] Loading 'Maptable' file. ({})\n".format(_p_maptable))
 
-        H_MARKERS = pd.read_csv(_p_maptable, sep='\s+', header=[0, 1, 2], index_col=0).filter(regex=_hla_name + "\*", axis=0)
+        H_MARKERS = pd.read_csv(_maptable, sep='\s+', header=[0, 1, 2], index_col=0).filter(regex=_HLA + "\*", axis=0)
         # filter() due to the case of "DRB2", "DRB3", etc.
 
         # print(H_MARKERS.head())
@@ -161,11 +71,11 @@ def HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_result, __save_intermediates=
 
         # print(std_MAIN_PROCESS_NAME + "[0-2] Loading 'Association Test Result' file of AA and HLA markers. (Dropping 'NA')\n")
 
-        __ASSOC_RESULT__ = pd.read_csv(_p_assoc_result, header=0, sep='\s+', usecols=["SNP", "A1", "OR", "P"]).dropna() # dropna() introduced (2019. 07. 02.)
+        __ASSOC_RESULT__ = pd.read_csv(_assoc_result, header=0, sep='\s+', usecols=["SNP", "A1", "OR", "P"]).dropna() # dropna() introduced (2019. 07. 02.)
         # print(__ASSOC_RESULT__.head())
 
-        p_AA = re.compile(r"^AA_{0}_".format(_hla_name))
-        p_HLA = re.compile(r"^HLA_{0}".format(_hla_name))
+        p_AA = re.compile(r"^AA_{0}_".format(_HLA))
+        p_HLA = re.compile(r"^HLA_{0}".format(_HLA))
 
         f_AA = __ASSOC_RESULT__.loc[:, "SNP"].str.match(p_AA)
         f_HLA = __ASSOC_RESULT__.loc[:, "SNP"].str.match(p_HLA)
@@ -180,11 +90,11 @@ def HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_result, __save_intermediates=
 
         # Checking subsetted logistic regression result.
         if __ASSOC_RESULT_AA__.shape[0] == 0:
-            print(std_ERROR_MAIN_PROCESS_NAME + "Given association result file({}) doesn't contain any Amino Acid markers. Please check it again.\n".format(_p_assoc_result))
+            print(std_ERROR + "Given association result file({}) doesn't contain any Amino Acid markers. Please check it again.\n".format(_assoc_result))
             return -1
 
         if __ASSOC_RESULT_HLA__.shape[0] == 0:
-            print(std_ERROR_MAIN_PROCESS_NAME + "Given association result file({}) doesn't contain any HLA allele markers. Please check it again.\n".format(_p_assoc_result))
+            print(std_ERROR + "Given association result file({}) doesn't contain any HLA allele markers. Please check it again.\n".format(_assoc_result))
             return -1
 
 
@@ -238,7 +148,7 @@ def HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_result, __save_intermediates=
         t_assoc_AA_MARKERS = __ASSOC_RESULT_AA__.loc[:, "SNP"]
         # print(t_maptable_columns.head())
 
-        p_relPOS = re.compile(r'^AA_{}_(-?\d+)_\d+_.+'.format(_hla_name))
+        p_relPOS = re.compile(r'^AA_{}_(-?\d+)_\d+_.+'.format(_HLA))
         t_assoc_relPOS = t_assoc_AA_MARKERS.str.extract(p_relPOS, expand=False)
 
         flag_valid_relPOS = t_maptable_columns.isin(t_assoc_relPOS).tolist()
@@ -588,9 +498,9 @@ def HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_result, __save_intermediates=
 
 
 
-        __MAPTABLE__.to_csv(_out+'.map.txt', sep='\t', header=True, index=True)
-        __alleleP__.to_csv(_out+".alleleP.txt", sep='\t', header=True, index=True)
-        __NEW_ASSOC__.to_csv(_out+".assoc.txt", sep='\t', header=True, index=True)
+        __MAPTABLE__.to_csv(_out_prefix + '.map.txt', sep='\t', header=True, index=True)
+        __alleleP__.to_csv(_out_prefix + ".alleleP.txt", sep='\t', header=True, index=True)
+        __NEW_ASSOC__.to_csv(_out_prefix + ".assoc.txt", sep='\t', header=True, index=True)
 
 
 
@@ -614,116 +524,37 @@ def HEATMAP(_hla_name, _out, _p_maptable, _p_assoc_result, __save_intermediates=
 
         """
 
-        command = ' '.join([p_Rscript,
+        command = ' '.join([_Rscript,
                             _p_heatmapR,
-                            _out+".map.txt",
-                            _out+".assoc.txt",
-                            _out+".alleleP.txt",
-                            _hla_name,
-                            _out,
-                            '2>{LOG} 1>/dev/null'.format(LOG=(_out+'.heatmap.log'))])
+                            _out_prefix + ".map.txt",
+                            _out_prefix + ".assoc.txt",
+                            _out_prefix + ".alleleP.txt",
+                            _HLA,
+                            _out_prefix,
+                            '2>{LOG} 1>/dev/null'.format(LOG=(_out_prefix + '.heatmap.log'))])
                             # '2>{LOG}'.format(LOG=(_out+'.heatmap.log'))])
 
         # print(command)
         os.system(command)
 
 
-    if not __save_intermediates:
+    if not _f_save_intermediates:
 
         l_remove = [".map.txt", ".alleleP.txt", ".assoc.txt"]
         l_remove.append(".heatmap.log")
 
         for item in l_remove:
 
-            command = ' '.join(["rm", _out+item])
+            command = ' '.join(["rm", _out_prefix + item])
             # print(command)
             os.system(command)
 
 
 
-    __RESULTS__ = _out + ".pdf"
+    __RESULTS__ = _out_prefix + ".pdf"
 
     if os.path.exists(__RESULTS__):
-        return _out + ".pdf"
+        return _out_prefix + ".pdf"
     else:
-        print(std_ERROR_MAIN_PROCESS_NAME + "Heatmap failed. ('{}')".format(_out+'.pdf'))
+        print(std_ERROR + "Heatmap failed. ('{}')".format(_out_prefix + '.pdf'))
         return -1
-
-
-if __name__ == "__main__" :
-
-    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,
-                                     description=textwrap.dedent('''\
-    #################################################################################################
-    
-        heatmap.py
-    
-        - Originally, Plotting heatmap entailed too many steps based on bash, python and R. Now it is
-        integrated to this python script. It will be used in "HLA_Analysis.py" script.
-    
-    #################################################################################################
-                                     '''),
-                                     add_help=False)
-
-
-    parser._optionals.title = "OPTIONS"
-
-    parser.add_argument("-h", "--help", help="\nShow this help message and exit\n\n", action='help')
-
-    parser.add_argument("-o", help="\nOutput file name prefix.\n\n", required=True)
-
-    parser.add_argument("--HLA", help="\nHLA gene to plot heatmap.\n\n", choices = ['A', 'B', 'C', 'DPA1', 'DPB1', 'DQA1', 'DQB1', 'DRB1'])
-    parser.add_argument("--maptable", "-mt", help="\nMarker Dictionary file(Maptable) generated by 'IMGTt2Sequence'.\n\n")
-
-    parser.add_argument("--assoc-result", "-ar", help="\nAssociation test result file(ex. *.assoc.logistic).\n\n", required=True)
-
-    parser.add_argument("--save-intermediates", help="\nSave intermediate files.\n\n", action='store_true')
-
-
-
-
-    ##### < for Test > #####
-
-    # (2018. 10. 29.) HATK Integration test
-    # args = parser.parse_args(["--HLA", "DQB1",
-    #                           "-mt", "/Users/wansun/Git_Projects/HLA_Heatmap/data/HLA_MAPTABLE_DQB1.hg19.imgt3320.txt",
-    #                           "-o", "tests/T1D_DQB1_test",
-    #                           "-ar", "/Users/wansun/Git_Projects/HLA_Heatmap/data/example/20190327_WTCCC_T1D.assoc.logistic",
-    #                           "--save-intermediates"
-    #                           ])
-
-    # args = parser.parse_args(["--HLA", "DQB1",
-    #                           "-mt", "/Users/wansun/Git_Projects/HLA_Heatmap/data/HLA_MAPTABLE_DQB1.hg19.imgt3320.txt",
-    #                           "-o", "tests/T1D_DQB1_test",
-    #                           "-ar", "/Users/wansun/Git_Projects/HLA_Heatmap/data/example/20190327_WTCCC_T1D.assoc.logistic",
-    #                           "--as4field",
-    #                           "--save-intermediates"
-    #                           ])
-
-    # args = parser.parse_args(["--HLA", "DRB1",
-    #                       "-mt", "data/HLA_MAPTABLE_DRB1.hg19.imgt3320.txt",
-    #                       "-o", "tests/WTCCC_RA_DRB1/WTCCC_RA_DRB1",
-    #                       "-ar", "/Users/wansun/Git_Projects/HLA_Heatmap/data/example/20190327_WTCCC_RA.assoc.logistic",
-    #                       "--save-intermediates"
-    #                       ])
-
-    # args = parser.parse_args(["--HLA", "A",
-    #                           "-mt", "/Users/wansun/Git_Projects/HATK/tests/_0_wholeProcess/d20190701/HLA_MAPTABLE_A.hg19.imgt3320.txt",
-    #                           "-o", "/Users/wansun/Git_Projects/HATK/tests/_0_wholeProcess/d20190701/Heatmap_Test_A",
-    #                           "-ar", "/Users/wansun/Git_Projects/HATK/tests/_0_wholeProcess/d20190701/20190701_wtccc_filtered_58C_RA.hatk.58C_RA.300+300.assoc.logistic",
-    #                           "--save-intermediates"
-    #                           ])
-
-
-
-    ##### < for Publish > #####
-
-    args = parser.parse_args()
-    print(args)
-
-
-    ##### < Additional Argument Processing. > #####
-
-    # main function execution.
-    HEATMAP(_hla_name=args.HLA, _out=args.o, _p_maptable=args.maptable, _p_assoc_result=args.assoc_result,
-            __save_intermediates=args.save_intermediates)

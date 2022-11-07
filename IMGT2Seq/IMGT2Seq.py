@@ -1,357 +1,53 @@
 # -*- coding: utf-8 -*-
-
 import os, sys, re
+from os.path import basename, dirname, exists, join
 import pandas as pd
-import argparse, textwrap
-from glob import glob
 import multiprocessing as mp
 
-if __name__ == '__main__':
-    from src.GenerateHAT import GenerateHAT
-    from src.ProcessIMGT import ProcessIMGT
-    from src.NfieldDictionary import NfieldDictionary
-else:
-    from IMGT2Seq.src.NfieldDictionary import NfieldDictionary
-    from IMGT2Seq.src.GenerateHAT import GenerateHAT
-    from IMGT2Seq.src.ProcessIMGT import ProcessIMGT
-
-
-########## < Core Global Varialbes > ##########
-
-std_MAIN_PROCESS_NAME = "\n[%s]: " % (os.path.basename(__file__))
-std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % (os.path.basename(__file__))
-std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % (os.path.basename(__file__))
-
-HLA_names = ["A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1"]
-raw_HLA_names = ["A", "B", "C", "DPA", "DPB", "DQA", "DQB", "DRB"]
-
-
-class HATK_IMGT2Seq(object):
-
-    def __init__(self, _imgt, _hg, _out, *args, **kwargs):
-
-
-        """
-
-        Either (1) generate a new Dictionary files or (2) find existing dictionaries.
-
-        """
-
-
-        if not _imgt:
-            print(std_ERROR_MAIN_PROCESS_NAME + "IMGT version information wasn't given.\n"
-                                                "Please check '-imgt' argument again.")
-            sys.exit()
-
-        if not _hg:
-            print(std_ERROR_MAIN_PROCESS_NAME + "HG(Human Genome) version information wasn't given.\n"
-                                                "Please check '-hg' argument again.")
-            sys.exit()
-
-        if not kwargs['_imgt_dir']:
-            print(std_ERROR_MAIN_PROCESS_NAME + "Path to IMGT/HLA raw data directory wasn't given.\n"
-                                                "Please check '--imgt-dir' argument again.")
-            sys.exit()
-        else:
-            if not os.path.isdir(kwargs['_imgt_dir']):
-                print(std_ERROR_MAIN_PROCESS_NAME + "Given directory('{}') for IMGT-HLA raw data is not a directory.\n"
-                                                    "Please check '--imgt-dir' argument again.".format(kwargs['_imgt_dir']))
-                sys.exit()
-
-
-        ########## < Assigning arguments > ##########
-
-        self.imgt = _imgt
-        self.hg = _hg
-        self.out = _out
-
-        # Main Outputs
-        self.__dict_AA__ = None
-        self.__dict_SNPS__ = None
-        self.__HAT__ = None
-        self.__d_MapTable__ = None
-
-        # Flags to check
-        self.f__dict_AA__ = False
-        self.f__dict_SNPS__ = False
-        self.f__HAT__ = False
-        self.f__d_MapTable__ = False
-
-        # Optional arguments
-        self.no_indel = kwargs["_no_indel"]
-        self.multiprocess = kwargs["_multiprocess"]
-        self.save_intermediates = kwargs["_save_intermediates"]
-        self.imgt_dir = kwargs["_imgt_dir"]
-
-        # Summary string
-        self.summary_string = ""
-
-
-        dir_path = os.path.dirname(self.out)
-        version_label = "hg{}.imgt{}".format(self.hg, self.imgt)
-
-
-
-
-        ########## < Checking existing results > ##########
-
-        # (1) dict_AA
-        dict_AA_txt = os.path.join(dir_path, "HLA_DICTIONARY_AA.{}.txt".format(version_label))
-        dict_AA_map = os.path.join(dir_path, "HLA_DICTIONARY_AA.{}.map".format(version_label))
-
-        if os.path.exists(dict_AA_txt) and os.path.exists(dict_AA_map):
-            self.__dict_AA__ = os.path.join(dir_path, "HLA_DICTIONARY_AA.{}".format(version_label))
-            self.f__dict_AA__ = True
-
-        # (2) dict_SNPS
-        dict_SNPS_txt = os.path.join(dir_path, "HLA_DICTIONARY_SNPS.{}.txt".format(version_label))
-        dict_SNPS_map = os.path.join(dir_path, "HLA_DICTIONARY_SNPS.{}.map".format(version_label))
-
-        if os.path.exists(dict_SNPS_txt) and os.path.exists(dict_SNPS_map):
-            self.__dict_SNPS__ = os.path.join(dir_path, "HLA_DICTIONARY_SNPS.{}".format(version_label))
-            self.f__dict_SNPS__ = True
-
-        # (3) hat
-        hat = os.path.join(dir_path, "HLA_ALLELE_TABLE.imgt{}.hat".format(self.imgt))
-
-        if os.path.exists(hat):
-            self.__HAT__ = hat
-            self.f__HAT__ = True
-
-        # (4) maptables
-        self.__d_MapTable__ = {hla_name: None for hla_name in HLA_names}
-
-        f_temp = True
-
-        for hla_name in HLA_names:
-            t_maptable = os.path.join(dir_path, "HLA_MAPTABLE_{}.{}.txt".format(hla_name, version_label))
-            if os.path.exists(t_maptable):
-                self.__d_MapTable__[hla_name] = t_maptable
-            else:
-                f_temp = False
-
-        self.f__d_MapTable__ = f_temp
-
-
-
-        # Output Field format
-        oneF = args[0]
-        twoF = args[1]
-        threeF = args[2]
-        fourF = args[3]
-        Ggroup = args[4]
-        Pgroup = args[5]
-
-        Nfield_OUTPUT_FORMAT = 1 if oneF else 2 if twoF else 3 if threeF else 4
-
-        if oneF:
-            Nfield_OUTPUT_FORMAT = 1
-        elif twoF:
-            Nfield_OUTPUT_FORMAT = 2
-        elif threeF:
-            Nfield_OUTPUT_FORMAT = 3
-        else:
-            Nfield_OUTPUT_FORMAT = 4
-
-            if Ggroup or Pgroup:
-                print(std_WARNING_MAIN_PROCESS_NAME + "Given '--{}' argument will be overridden to '--4field'.".format('Ggroup' if Ggroup else 'Pgroup'))
-
-
-        ### Checking results
-        # print(std_MAIN_PROCESS_NAME + "Arguments for HLA Dictionary")
-        # for k, v in self.__dict__.items():
-        #     print("{} : {}".format(k, v))
-
-
-        # if (self.f__dict_AA__ and self.f__dict_SNPS__ and self.f__HAT__ and self.f__d_MapTable__):
-        #
-        #     ### All of previously generated dictionary files are available.
-        #
-        #     self.summary_string = \
-        #         ''.join([self.summary_string,
-        #                  "< IMGT2Sequence(Using existing results) >\n" \
-        #                  "- HLA Amino Acids : {}\n" \
-        #                  "- HLA SNPs : {}\n" \
-        #                  "- HLA Allele Table : {}\n" \
-        #                  "- Maptables for heatmap : \n" \
-        #                  "   A   : {A}\n" \
-        #                  "   B   : {B}\n" \
-        #                  "   C   : {C}\n" \
-        #                  "   DPA1: {DPA1}\n" \
-        #                  "   DPB1: {DPB1}\n" \
-        #                  "   DQA1: {DQA1}\n" \
-        #                  "   DQB1: {DQB1}\n" \
-        #                  "   DRB1: {DRB1}\n".format(self.__dict_AA__, self.__dict_SNPS__, self.__HAT__, **self.__d_MapTable__)
-        #                  ])
-        #
-        # else:
-        #
-        #     ### Not all of previously generated dictionary files are available.
-
-
-        ### No more using existing result.
-        self.__dict_AA__, self.__dict_SNPS__, self.__HAT__, self.__d_MapTable__ = \
-            IMGT2Seq(self.imgt, self.hg, self.out, _imgt_dir=self.imgt_dir, _no_Indel=self.no_indel,
-                     _MultiP=self.multiprocess, _save_intermediates=self.save_intermediates,
-                     _p_data="IMGT2Seq/data", __Nfield_OUTPUT_FORMAT=Nfield_OUTPUT_FORMAT)
-
-
-        self.f__dict_AA__ = True
-        self.f__dict_SNPS__ = True
-        self.f__HAT__ = True
-        self.f__d_MapTable__ = True
-
-
-        self.summary_string = \
-            ''.join([self.summary_string,
-                     "< IMGT2Sequence(Newly generated.) >\n" \
-                     "- HLA Amino Acids : {}\n" \
-                     "- HLA SNPs : {}\n" \
-                     "- HLA Allele Table : {}\n" \
-                     "- Maptables for heatmap : \n" \
-                     "   A   : {A}\n" \
-                     "   B   : {B}\n" \
-                     "   C   : {C}\n" \
-                     "   DPA1: {DPA1}\n" \
-                     "   DPB1: {DPB1}\n" \
-                     "   DQA1: {DQA1}\n" \
-                     "   DQB1: {DQB1}\n" \
-                     "   DRB1: {DRB1}\n".format(self.__dict_AA__, self.__dict_SNPS__, self.__HAT__, **self.__d_MapTable__)
-                     ])
-
-
-
-    def __bool__(self):
-        return (self.f__dict_AA__ and self.f__dict_SNPS__ and self.f__HAT__ and self.f__d_MapTable__)
-
-
-    def __str__(self):
-        return self.summary_string
-
-
-    def getResult(self):
-        return [self.__dict_AA__, self.__dict_SNPS__, self.__HAT__, self.__d_MapTable__]
-
-
-
-
-
-def IMGT2Seq(_imgt, _hg, _out, _imgt_dir, _no_Indel=False, _MultiP=False, _save_intermediates=False, _no_prime=True,
-             _p_data='./data', __Nfield_OUTPUT_FORMAT=4):
-
-
-    ### Dictionaries for Raw files.
-    TARGET_prot_files = {}
-    TARGET_nuc_files = {}
-    TARGET_gen_files = {}
-
-
-
-    ### raw MapTables
-    d_MapTables = {}
-
-
-
-    ### OUTPUT prefix
-    # Preparing intermediate paths.
-    _out = _out if not _out.endswith('/') else _out.rstrip('/')
-    if bool(os.path.dirname(_out)):
-        INTERMEDIATE_PATH = os.path.dirname(_out)
-        os.makedirs(INTERMEDIATE_PATH, exist_ok=True)
-
-
-    _OUTPUT_AA_RETURN = os.path.join(INTERMEDIATE_PATH, 'HLA_DICTIONARY_AA.hg{0}.imgt{1}'.format(_hg, _imgt))
-    _OUTPUT_SNPS_RETURN = os.path.join(INTERMEDIATE_PATH, 'HLA_DICTIONARY_SNPS.hg{0}.imgt{1}'.format(_hg, _imgt))
-    _OUTPUT_HAT = os.path.join(INTERMEDIATE_PATH, 'HLA_ALLELE_TABLE')
-
-
-
-    ########## < Dependency Checking > ##########
-
-    # IMGTHLA directory
-    IMGTHLA_directory = _imgt_dir
-
-    if not os.path.isdir(IMGTHLA_directory):
-        print(std_ERROR_MAIN_PROCESS_NAME + "Given IMGT-HLA directory \"{0}\" can't be found!".format(IMGTHLA_directory))
-        sys.exit()
-
-
-
-    ##### < "*_nuc.txt", "*_prot.txt", "*_gen.txt" > #####
-
-    files_in_alignments = glob(IMGTHLA_directory + '/alignments/*')
-
-    for i in range(0, len(HLA_names)):
-
-        ### <*_prot.txt, *_nuc.txt>
-        found_prot = list(filter(re.compile("/" + raw_HLA_names[i] + "_prot.txt").search, files_in_alignments))
-        found_nuc = list(filter(re.compile("/" + raw_HLA_names[i] + "_nuc.txt").search, files_in_alignments))
-
-        if len(found_prot) == 1:
-            # When found exactly.
-            TARGET_prot_files[HLA_names[i]] = found_prot.pop()
-            TARGET_nuc_files[HLA_names[i]] = found_nuc.pop()
-
-        else:
-            # If not, then try same job to the names with number "1".
-            found_prot = list(filter(re.compile("/" + HLA_names[i] + "_prot.txt").search, files_in_alignments))
-            found_nuc = list(filter(re.compile("/" + HLA_names[i] + "_nuc.txt").search, files_in_alignments))
-
-            if len(found_prot) == 1:
-                # When found exactly in 2nd trial.
-                TARGET_prot_files[HLA_names[i]] = found_prot.pop()
-                TARGET_nuc_files[HLA_names[i]] = found_nuc.pop()
-            else:
-                # Not found finally.
-                print(std_ERROR_MAIN_PROCESS_NAME + "\"{0}_prot.txt\" or \"{0}_nuc.txt\" file can't be found.".format(HLA_names[i]))
-                sys.exit()
-
-        ### <*_gen.txt>
-
-        found_gen = list(filter(re.compile("/" + raw_HLA_names[i] + "_gen.txt").search, files_in_alignments))
-
-        if len(found_gen) == 1:
-            # When found exactly.
-            TARGET_gen_files[HLA_names[i]] = found_gen.pop()
-        else:
-            # If not, then try same job to the names with number "1".
-            found_gen = list(filter(re.compile("/" + HLA_names[i] + "_gen.txt").search, files_in_alignments))
-
-            if len(found_gen) == 1:
-                # When found exactly in 2nd trial.
-                TARGET_gen_files[HLA_names[i]] = found_gen.pop()
-            else:
-                # Not found finally.
-                print(std_ERROR_MAIN_PROCESS_NAME + "\"{0}_gen.txt\" file can't be found.".format(HLA_names[i]))
-                sys.exit()
-
-
-
-    ##### < "Allelelist.txt", "hla_nom_g.txt", "hla_nom_p.txt" > #####
-
-    t_allelelist_2009 = os.path.join(IMGTHLA_directory, "Nomenclature_2009.txt")
-    t_allelelist = os.path.join(IMGTHLA_directory, "Allelelist.txt")
-    t_p_Group = os.path.join(IMGTHLA_directory, "wmda/hla_nom_g.txt")
-    t_p_Proup = os.path.join(IMGTHLA_directory, "wmda/hla_nom_p.txt")
-
-
-    if not os.path.exists(t_allelelist_2009):
-        print(std_ERROR_MAIN_PROCESS_NAME + "'Nomenclature_2009.txt' file can't be found.\n")
-        sys.exit()
-
-    if not os.path.exists(t_allelelist):
-        print(std_ERROR_MAIN_PROCESS_NAME + "'Allelelist.txt' file can't be found.\n")
-        sys.exit()
-
-    if not os.path.exists(t_p_Group):
-        print(std_ERROR_MAIN_PROCESS_NAME + "'wmda/hla_nom_g.txt' file can't be found.\n")
-        sys.exit()
-
-    if not os.path.exists(t_p_Proup):
-        print(std_ERROR_MAIN_PROCESS_NAME + "'wmda/hla_nom_p.txt' file can't be found.\n")
-        sys.exit()
-
-
+from IMGT2Seq.src.NfieldDictionary import NfieldDictionary
+from IMGT2Seq.src.GenerateHAT import GenerateHAT
+from IMGT2Seq.src.ProcessIMGT import ProcessIMGT
+from IMGT2Seq.src.AvailableHLAs import getTargetProtFiles
+from src.util import Exists
+from src.HATK_Error import HATK_InputPreparation_Error
+from IMGT2Seq.src.IMGT2Seq_Output import IMGT2Seq_Output
+
+std_MAIN = "\n[%s]: " % basename(__file__)
+std_ERROR = "\n[%s::ERROR]: " % basename(__file__)
+std_WARNING = "\n[%s::WARNING]: " % basename(__file__)
+
+
+def IMGT2Seq(_imgt, _hg, _out_dir, _imgt_dir, _no_Indel=False, _MultiP=False, _f_save_intermediates=False,
+             _no_prime=True, _p_data='./data', __Nfield_OUTPUT_FORMAT=4,
+             _HLA_target=("A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1")):
+
+    ### Main Variables ###
+    dict_prot_files = getTargetProtFiles(_HLA_target, _imgt_dir, "prot")
+    dict_nuc_files = getTargetProtFiles(_HLA_target, _imgt_dir, "nuc")
+    dict_gen_files = getTargetProtFiles(_HLA_target, _imgt_dir, "gen")
+
+    d_MapTables = {hla: None for hla in _HLA_target}
+
+    p_allelelist_2009 = join(_imgt_dir, "Nomenclature_2009.txt")
+    p_allelelist = join(_imgt_dir, "Allelelist.txt")
+    p_wmda_Ggroup = join(_imgt_dir, "wmda/hla_nom_g.txt")
+    p_wmda_Pgroup = join(_imgt_dir, "wmda/hla_nom_p.txt")
+
+    _out_prefix_AA = join(_out_dir, 'HLA_DICTIONARY_AA.hg{0}.imgt{1}'.format(_hg, _imgt))
+    _out_prefix_SNPS = join(_out_dir, 'HLA_DICTIONARY_SNPS.hg{0}.imgt{1}'.format(_hg, _imgt))
+    _out_prefix_HAT = join(_out_dir, 'HLA_ALLELE_TABLE')
+
+
+    ### Main Actions ###
+    if len(_HLA_target) == 0:
+        raise HATK_InputPreparation_Error(
+            std_ERROR +
+            "No target HLA to generate a sequence dictionary.\n"
+            "Please check the '--HLA' argument again."
+        )
+
+    checkRequiredFiles(_imgt_dir, dict_prot_files, dict_nuc_files, dict_gen_files, p_allelelist_2009,
+                       p_allelelist, p_wmda_Ggroup, p_wmda_Pgroup) # Dependency check
 
 
     _1_MAKING_DICTIONARY = 1
@@ -364,6 +60,42 @@ def IMGT2Seq(_imgt, _hg, _out, _imgt_dir, _no_Indel=False, _MultiP=False, _save_
         ########## < 1. Making HLA Dictionary. > ##########
 
         # print(std_MAIN_PROCESS_NAME + "[1] Making HLA dictionary file.")
+        dict_temp = {hla: None for hla in _HLA_target}
+
+        if _MultiP > 1: # Parallel
+
+            print(std_MAIN + "Multiprocessing.")
+
+            pool = mp.Pool(processes=_MultiP)
+
+            dict_Pool = {_HLA_target[i]: pool.apply_async(ProcessIMGT, (_out_dir, _HLA_target[i], _hg, _imgt,
+                                                                        dict_nuc_files[_HLA_target[i]], dict_gen_files[_HLA_target[i]], dict_prot_files[_HLA_target[i]],
+                                                                        _p_data, _no_Indel, _f_save_intermediates))
+                         for i in range(0, len(_HLA_target))}
+
+            pool.close()
+            pool.join()
+
+
+            for hla in _HLA_target:
+                try:
+                    dict_temp[hla] = dict_Pool[hla].get()
+                except TypeError:
+                    print(std_WARNING +
+                          "Generating sequence information dictionary for HLA-{} failed.".format(hla))
+                    dict_temp[hla] = None
+                else:
+                    pass
+
+        else: # Sequential
+
+            for hla in _HLA_target:
+                dict_temp[hla] = \
+                    ProcessIMGT(_out_dir, hla, _hg, _imgt, dict_nuc_files[hla], dict_gen_files[hla],
+                                dict_prot_files[hla], _p_data, _no_Indel=_no_Indel,
+                                _save_intermediates=_f_save_intermediates)
+        # done.
+
 
         l_df_Seqs_AA = []
         l_df_forMAP_AA = []
@@ -371,47 +103,27 @@ def IMGT2Seq(_imgt, _hg, _out, _imgt_dir, _no_Indel=False, _MultiP=False, _save_
         l_df_Seqs_SNPS = []
         l_df_forMAP_SNPS = []
 
+        for i in range(0, len(_HLA_target)):
+
+            if not dict_temp[_HLA_target[i]]:
+                print(std_MAIN +
+                      "Generating sequence information dictionary for HLA-{} failed.".format(_HLA_target[i]))
+                continue
 
 
-        if _MultiP > 1:
-
-            print(std_MAIN_PROCESS_NAME + "Multiprocessing.")
-
-            pool = mp.Pool(processes=_MultiP)
-
-            dict_Pool = {HLA_names[i]: pool.apply_async(ProcessIMGT, (_out, HLA_names[i], _hg, _imgt,
-                                                                      TARGET_nuc_files[HLA_names[i]], TARGET_gen_files[HLA_names[i]], TARGET_prot_files[HLA_names[i]],
-                                                                      _p_data, _no_Indel, _save_intermediates))
-                         for i in range(0, len(HLA_names))}
-
-            pool.close()
-            pool.join()
-
-
-        for i in range(0, len(HLA_names)):
-
-            if _MultiP > 1:
-
-                t_df_Seqs_SNPS, t_df_Seqs_AA, t_df_forMAP_SNPS, t_df_forMAP_AA, t_MAPTABLE = dict_Pool[HLA_names[i]].get()
-
-            else:
-                t_df_Seqs_SNPS, t_df_Seqs_AA, t_df_forMAP_SNPS, t_df_forMAP_AA, t_MAPTABLE \
-                    = ProcessIMGT(_out, HLA_names[i], _hg, _imgt,
-                                  TARGET_nuc_files[HLA_names[i]], TARGET_gen_files[HLA_names[i]], TARGET_prot_files[HLA_names[i]],
-                                  _p_data, _no_Indel=_no_Indel, _save_intermediates=_save_intermediates)
-
+            t_df_Seqs_SNPS, t_df_Seqs_AA, t_df_forMAP_SNPS, t_df_forMAP_AA, t_MAPTABLE = dict_temp[_HLA_target[i]]
 
 
             # Dictionary AA.
             l_df_Seqs_AA.append(t_df_Seqs_AA)
-            l_df_forMAP_AA.append(MakeMap(HLA_names[i], "AA", t_df_forMAP_AA))
+            l_df_forMAP_AA.append(MakeMap(_HLA_target[i], "AA", t_df_forMAP_AA))
 
             # Dictionary SNPS.
             l_df_Seqs_SNPS.append(t_df_Seqs_SNPS)
-            l_df_forMAP_SNPS.append(MakeMap(HLA_names[i], "SNPS", t_df_forMAP_SNPS))
+            l_df_forMAP_SNPS.append(MakeMap(_HLA_target[i], "SNPS", t_df_forMAP_SNPS))
 
             # raw MapTable
-            d_MapTables[HLA_names[i]] = t_MAPTABLE
+            d_MapTables[_HLA_target[i]] = t_MAPTABLE
 
 
         # Amino acid sequence dictionaries
@@ -426,18 +138,19 @@ def IMGT2Seq(_imgt, _hg, _out, _imgt_dir, _no_Indel=False, _MultiP=False, _save_
         ### Finalizing all output.
 
         # Exporting AA dictionary.
-        HLA_DICTIONARY_AA.to_csv(_OUTPUT_AA_RETURN + ".txt", sep='\t', header=False, index=True)
-        HLA_DICTIONARY_AA_map.to_csv(_OUTPUT_AA_RETURN + ".map", sep='\t', header=False, index=False)
+        HLA_DICTIONARY_AA.to_csv(_out_prefix_AA + ".txt", sep='\t', header=False, index=True)
+        HLA_DICTIONARY_AA_map.to_csv(_out_prefix_AA + ".map", sep='\t', header=False, index=False)
 
         # Exporting SNPS dictionary.
-        HLA_DICTIONARY_SNPS.to_csv(_OUTPUT_SNPS_RETURN+".txt", sep='\t', header=False, index=True)
-        HLA_DICTIONARY_SNPS_map.to_csv(_OUTPUT_SNPS_RETURN+".map", sep='\t', header=False, index=False)
+        HLA_DICTIONARY_SNPS.to_csv(_out_prefix_SNPS+".txt", sep='\t', header=False, index=True)
+        HLA_DICTIONARY_SNPS_map.to_csv(_out_prefix_SNPS+".map", sep='\t', header=False, index=False)
 
 
 
         if 0 < __Nfield_OUTPUT_FORMAT < 4:
 
-            NfieldDictionary(_OUTPUT_AA_RETURN + ".txt", _OUTPUT_SNPS_RETURN+".txt", d_MapTables, __Nfield_OUTPUT_FORMAT)
+            NfieldDictionary(_out_prefix_AA + ".txt", _out_prefix_SNPS+".txt", d_MapTables, __Nfield_OUTPUT_FORMAT,
+                             _HLA_target=_HLA_target)
 
 
 
@@ -445,7 +158,8 @@ def IMGT2Seq(_imgt, _hg, _out, _imgt_dir, _no_Indel=False, _MultiP=False, _save_
 
         ########## < 2. Making *.hat file. > ##########
 
-        _OUTPUT_HAT = GenerateHAT(t_allelelist_2009, t_allelelist, t_p_Group, t_p_Proup, _imgt, _OUTPUT_HAT)
+        _out_prefix_HAT = \
+            GenerateHAT(p_allelelist_2009, p_allelelist, p_wmda_Ggroup, p_wmda_Pgroup, _imgt, _out_prefix_HAT)
 
 
 
@@ -455,7 +169,8 @@ def IMGT2Seq(_imgt, _hg, _out, _imgt_dir, _no_Indel=False, _MultiP=False, _save_
         pass
 
 
-    return [_OUTPUT_AA_RETURN, _OUTPUT_SNPS_RETURN, _OUTPUT_HAT, d_MapTables]
+    # return _out_prefix_AA, _out_prefix_SNPS, _out_prefix_HAT, d_MapTables
+    return IMGT2Seq_Output(_out_dir, _HLA_target)
 
 
 
@@ -586,75 +301,55 @@ def MakeMap(_hla, _type, _df_forMAP, _no_prime=True):
     return df_MAP
 
 
+def checkRequiredFiles(_imgt_dir, _dict_prot, _dict_nuc, _dict_gen,
+                       _p_allelelist_2009, _p_allelelist, _p_wmda_Ggroup, _p_wmda_Pgroup):
 
+    # # prot
+    # for hla, file in _dict_prot.items():
+    #     if not Exists(file):
+    #         raise HATK_InputPreparation_Error(
+    #             std_ERROR_MAIN_PROCESS_NAME +
+    #             "The prot file for HLA-{} gene can't be found in '{}'.".format(hla, _imgt_dir+'/alignments')
+    #         )
+    # # nuc
+    # for hla, file in _dict_nuc.items():
+    #     if not Exists(file):
+    #         raise HATK_InputPreparation_Error(
+    #             std_ERROR_MAIN_PROCESS_NAME +
+    #             "The nuc file for HLA-{} gene can't be found in '{}'.".format(hla, _imgt_dir+'/alignments')
+    #         )
+    # # gen
+    # for hla, file in _dict_gen.items():
+    #     if not Exists(file):
+    #         raise HATK_InputPreparation_Error(
+    #             std_ERROR_MAIN_PROCESS_NAME +
+    #             "The gen file for HLA-{} gene can't be found in '{}'.".format(hla, _imgt_dir+'/alignments')
+    #         )
 
-if __name__ == "__main__":
+    # 'Nomenclature_2009.txt'
+    if not Exists(_p_allelelist_2009):
+        raise HATK_InputPreparation_Error(
+            std_ERROR +
+            "The 'Nomenclature_2009.txt' file can't be found in '{}'.".format(_imgt_dir)
+        )
 
-    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,
-                                     description=textwrap.dedent('''\
-    ###########################################################################################
+    # 'Allelelist.txt'
+    if not Exists(_p_allelelist):
+        raise HATK_InputPreparation_Error(
+            std_ERROR +
+            "The 'Allelelist.txt' file can't be found in '{}'.".format(_imgt_dir)
+        )
 
-        IMGT2Sequence.py
+    # 'wmda/hla_nom_g.txt'
+    if not Exists(_p_wmda_Ggroup):
+        raise HATK_InputPreparation_Error(
+            std_ERROR +
+            "The 'wmda/hla_nom_g.txt' file can't be found in '{}'.".format(_imgt_dir)
+        )
 
-
-
-    ###########################################################################################
-                                     '''),
-                                     add_help=False
-                                     )
-
-    parser._optionals.title = "OPTIONS"
-
-    parser.add_argument("-h", "--help", help="\nShow this help message and exit\n\n", action='help')
-    parser.add_argument("-hg", help="\nHuman Genome version(18, 19 or 38)\n\n", choices=["18", "19", "38"],
-                        metavar="hg", required=True)
-    parser.add_argument("-o", help="\nOutput File Prefix\n\n", metavar="OUTPUT", required=True)
-
-    parser.add_argument("-imgt", help="\nIMGT-HLA data version(ex. 370, 3300)\n\n", metavar="IMGT_Version",
-                        required=True)
-
-    parser.add_argument("--no-indel", help="\nExcluding indel in HLA sequence outputs.\n\n", action='store_true')
-    parser.add_argument("--multiprocess", help="\nSetting off parallel multiprocessing.\n\n", type=int, choices=[2,3,4,5,6,7,8], nargs='?', default=1, const=8)
-    parser.add_argument("--save-intermediates", help="\nDon't remove intermediate files.\n\n", action='store_true')
-    parser.add_argument("--imgt-dir", help="\nIn case User just want to specify the directory of IMGT data folder.\n\n", required=True)
-
-
-
-
-    ##### < for Test > #####
-
-    ## in Ubuntu
-    # out = '/home/wansonchoi/Projects/HATK/tests/MyIMGT2Seq_fixed2/20191211'
-    # imgt_dir = '/home/wansonchoi/Projects/HATK/example/IMGTHLA3320'
-
-    ## in OS X
-    # out = '/Users/wansun/Git_Projects/HATK/tests/_1_IMGT2Sequence/20190924/test'
-    # imgt_dir = '/Users/wansun/Dropbox/_Sync_MyLaptop/Projects/IMGTHLA/IMGTHLA3320'
-
-    # hg18 / imgt3320
-    # args = parser.parse_args(["-hg", "18",
-    #                           "-o", out,
-    #                           "-imgt", "3320",
-    #                           "--imgt-dir", imgt_dir,
-    #                           '--save-intermediates'])
-
-    # hg18 / imgt3320
-    # args = parser.parse_args(["-hg", "18",
-    #                           "-o", out,
-    #                           "-imgt", "3320",
-    #                           "--imgt-dir", imgt_dir,
-    #                           '--save-intermediates',
-    #                           '--multiprocess'])
-
-
-
-    ##### < for Publish > #####
-
-    args = parser.parse_args()
-    print(args)
-
-
-    ##### < Main function Execution. > #####
-
-    IMGT2Seq(_imgt=args.imgt, _hg=args.hg, _out=args.o, _imgt_dir=args.imgt_dir, _no_Indel=args.no_indel,
-             _MultiP=args.multiprocess, _save_intermediates=args.save_intermediates)
+    # 'wmda/hla_nom_p.txt'
+    if not Exists(_p_wmda_Pgroup):
+        raise HATK_InputPreparation_Error(
+            std_ERROR +
+            "The 'wmda/hla_nom_p.txt' file can't be found in '{}'.".format(_imgt_dir)
+        )

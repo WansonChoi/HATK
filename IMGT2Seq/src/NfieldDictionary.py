@@ -4,10 +4,8 @@ import os, sys, re
 import pandas as pd
 
 
-HLA_names = ["A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1"]
-
-
-def NfieldDictionary(_AA_dict, _SNP_dict, _maptable, _OUTPUT_FORMAT, _out=None):
+def NfieldDictionary(_AA_dict, _SNP_dict, _maptable, _OUTPUT_FORMAT, _out=None,
+                     _HLA_target = ("A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1")):
 
     if not (0 < _OUTPUT_FORMAT < 4):
         print("Bizzare output format({})".format(_OUTPUT_FORMAT))
@@ -31,7 +29,7 @@ def NfieldDictionary(_AA_dict, _SNP_dict, _maptable, _OUTPUT_FORMAT, _out=None):
     # print("_SNP_dict :\n{}\n".format(df_SNP.head()))
 
 
-    d_df_maptable = {HLA_names[i]: pd.read_csv(_maptable[HLA_names[i]], '\s+', header=[0,1,2]) for i in range(len(HLA_names))}
+    d_df_maptable = {_HLA_target[i]: pd.read_csv(_maptable[_HLA_target[i]], '\s+', header=[0, 1, 2]) for i in range(len(_HLA_target))}
 
     # for k, v in d_df_maptable.items():
     #     print("HLA : {}\n{}\n".format(k, v.head()))
@@ -86,11 +84,11 @@ def NfieldDictionary(_AA_dict, _SNP_dict, _maptable, _OUTPUT_FORMAT, _out=None):
     _maptable_new = {}
 
     # for i in range(1):
-    for i in range(len(HLA_names)):
+    for i in range(len(_HLA_target)):
 
         # print("HLA : {}\n{}".format(HLA_names[i], d_df_maptable[HLA_names[i]].head()))
 
-        sr_Allele = d_df_maptable[HLA_names[i]].iloc[:, 0]
+        sr_Allele = d_df_maptable[_HLA_target[i]].iloc[:, 0]
         # print(sr_Allele.head())
 
         if sr_Allele.str.match(p_Field).all():
@@ -98,15 +96,15 @@ def NfieldDictionary(_AA_dict, _SNP_dict, _maptable, _OUTPUT_FORMAT, _out=None):
             sr_Allele_cutted = sr_Allele.map(lambda x : p_Field.match(x).group())
             f_dup = sr_Allele_cutted.duplicated()
             # print("sr_Allele_cutted :\n{}".format(sr_Allele_cutted))
-            df_maptable = pd.concat([sr_Allele_cutted, d_df_maptable[HLA_names[i]].iloc[:, 1:]], axis=1).loc[~f_dup, :]
+            df_maptable = pd.concat([sr_Allele_cutted, d_df_maptable[_HLA_target[i]].iloc[:, 1:]], axis=1).loc[~f_dup, :]
             # print(df_maptable.head(70))
 
             if _out:
-                df_maptable.to_csv(_out+'.maptable_{}.{}field.txt'.format(HLA_names[i], _OUTPUT_FORMAT), sep='\t',
+                df_maptable.to_csv(_out +'.maptable_{}.{}field.txt'.format(_HLA_target[i], _OUTPUT_FORMAT), sep='\t',
                                    header=True, index=False)
-                _maptable_new[HLA_names[i]] = _out+'.maptable_{}.{}field.txt'.format(HLA_names[i], _OUTPUT_FORMAT)
+                _maptable_new[_HLA_target[i]] = _out + '.maptable_{}.{}field.txt'.format(_HLA_target[i], _OUTPUT_FORMAT)
             else:
-                df_maptable.to_csv(_maptable[HLA_names[i]], sep='\t', header=True, index=False)
+                df_maptable.to_csv(_maptable[_HLA_target[i]], sep='\t', header=True, index=False)
 
 
 

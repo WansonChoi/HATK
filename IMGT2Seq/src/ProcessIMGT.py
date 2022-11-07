@@ -1,80 +1,38 @@
 # -*- coding: utf-8 -*-
 
 import os, sys, re, subprocess
+from os.path import basename, dirname, exists, join
 import pandas as pd
 import argparse, textwrap
 
+from src.util import printDF
 
-########## < Core Global Varialbes > ##########
-
-std_MAIN_PROCESS_NAME = "\n[%s]: " % (os.path.basename(__file__))
-std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % (os.path.basename(__file__))
-std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % (os.path.basename(__file__))
-
-HLA_names = ["A", "B", "C", "DPA1", "DPB1", "DQA1", "DQB1", "DRB1"]
-isREVERSE = {'A': False, 'C': True, 'B': True, 'DRB1': True, 'DQA1': False, 'DQB1': True, 'DPA1': True, 'DPB1': False}
+std_MAIN_PROCESS_NAME = "\n[%s]: " % basename(__file__)
+std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % basename(__file__)
+std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % basename(__file__)
 
 
+def ProcessIMGT(_out_dir, _hla, _hg, _imgt, _nuc, _gen, _prot,
+                _p_data, _no_Indel=False, _save_intermediates=False, _no_prime=True):
+
+    print(std_MAIN_PROCESS_NAME + "Generating sequence information dictionary for HLA-{}.".format(_hla))
+
+    ### Main Variables ###
+    exon1_offset = None
+    isREVERSE = None
 
 
-
-def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc, _gen, _prot, _p_data,
-                _no_Indel=False, _save_intermediates=False, _no_prime=True):
-
-    print(std_MAIN_PROCESS_NAME + "Generating sequence information dictionary for HLA {}.".format(_hla))
-
-
-    ########## < Core Variables > ##########
-
-    ### Paths
-    p_data = _p_data
-    # print(p_data)
-
-
-    ########## < Argument Checking. > ##########
-
-    # Preparing intermediate paths.
-    _out = _out if not _out.endswith('/') else _out.rstrip('/')
-    if bool(os.path.dirname(_out)):
-        INTERMEDIATE_PATH = os.path.dirname(_out)
-        os.makedirs(INTERMEDIATE_PATH, exist_ok=True)
-
-
-
-    # if _nuc == "Not_given" or _prot == "Not_given" or _gen == "Not_given":
-    if not (_nuc and _prot and _gen):
-        print(std_ERROR_MAIN_PROCESS_NAME + "{0}_prot.txt, {0}_gen.txt or {0}_nuc.txt files can't be found. Please check it again.\n".format(_hla))
-        sys.exit()
-
-
-
-    ### "HLA_INTEGRATED_POSITIONS" file
-
-    HLA_INTEGRATED_POSITIONS_filename = os.path.join(p_data, "HLA_INTEGRATED_POSITIONS_hg{0}.txt".format(_hg))
-
-    if not os.path.exists(HLA_INTEGRATED_POSITIONS_filename):
-        print(std_ERROR_MAIN_PROCESS_NAME + "\"{0}\" not found!".format(HLA_INTEGRATED_POSITIONS_filename))
-        sys.exit()
-
-    # print(HLA_INTEGRATED_POSITIONS_filename)
-
-
-
-
-
-    ########## < Loading necessary Data. > ##########
+    ### Main Actions ###
 
     # (2018/1/17) Preparing HLA position information(exon, intron, etc.)
+    p_HLA_exon1_info = join(_p_data, "HLA_EXON1_START_CODON_POSITIONS_hg{}.txt".format(_hg))
 
-    HLA_INTEGRATED_POS = pd.read_csv(HLA_INTEGRATED_POSITIONS_filename, sep='\t', header=None, usecols = [0, 1, 2, 3],
-                                       names=['HLA', 'start', 'end', 'Type', "Direction"], index_col=0).loc[_hla, :]
-    # print("\nLoaded HLA information table.\n")
-    # print(HLA_INTEGRATED_POS.head())
+    df_HLA_exon1_info = \
+        pd.read_csv(p_HLA_exon1_info, sep='\s+', header=None, names=['HLA', 'direction', 'BP_start'], index_col=0, dtype=str)
+    # printDF("df_HLA_exon1_info", df_HLA_exon1_info.loc[[_hla], :])
 
-    sr_temp = HLA_INTEGRATED_POS.loc[:, "Type"]
-    exon1_offset = HLA_INTEGRATED_POS.loc[sr_temp == "exon1", "start"].iat[0] # `exon1_offset` will be used in generating SNPS dictionary.
-    # print("\nStarting point of genomic position of HLA-{0} is {1}\n".format(_hla, exon1_offset))
-
+    exon1_offset = int(df_HLA_exon1_info.loc[_hla, 'BP_start']) # `exon1_offset` will be used in generating SNPS dictionary.
+    isREVERSE = True if df_HLA_exon1_info.loc[_hla, 'direction'] == '-' else False
 
 
     ########## < Control Flags. > ##########
@@ -87,12 +45,6 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc, _gen, _prot, _p_data,
     _6_GENERATING_forMAP = 1
 
 
-
-
-    ########## < Main > ##########
-
-
-
     if _1_LOADING_GEN:
 
 
@@ -101,21 +53,21 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc, _gen, _prot, _p_data,
 
         # Raw Markers
         df_raw_Markers_gen, start_offset_gen = LoadRawSeq2(_gen, _hla, "gen")
-        # df_raw_Markers_gen.to_csv(_out+".HLA_{0}.gen.raw.markers.txt".format("A"), sep='\t', header=False, index=True)
-        # print("1")
         # print(df_raw_Markers_gen.head())
 
         # Raw Sequences
         df_raw_Seqs_gen = get_DF_rawSeqs(df_raw_Markers_gen)
-        # df_raw_Seqs_gen.to_csv(_out+".HLA_{0}.gen.raw.seqs.txt".format(_hla), sep='\t', header=False, index=True)
-        # print("2")
         # print(df_raw_Seqs_gen.head())
 
         # Raw Seqeunces splitted (for Exon checking)
         df_raw_Seqs_splitted_gen = df_raw_Seqs_gen.str.split('\|', expand=True)
-        # print("3")
         # print(df_raw_Seqs_splitted_gen.head())
 
+        if _save_intermediates:
+            df_raw_Markers_gen.to_csv(_out_dir+"/HLA_{0}.gen.raw.markers.txt".format(_hla), sep='\t',
+                                      header=False, index=True)
+            df_raw_Seqs_gen.to_csv(_out_dir+"/HLA_{0}.gen.raw.seqs.txt".format(_hla), sep='\t', header=False,
+                                   index=True)
 
 
 
@@ -161,21 +113,21 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc, _gen, _prot, _p_data,
 
         # File Writing
         if _save_intermediates:
-            df_Seqs_splited_noIndel_gen.to_csv(_out+".HLA_{0}.gen.seqs.noindel.splitted.txt".format(_hla), sep='\t', header=True, index=True) # **
+            df_Seqs_splited_noIndel_gen.to_csv(_out_dir + "/HLA_{0}.gen.seqs.noindel.splitted.txt".format(_hla), sep='\t', header=True, index=True) # **
 
 
 
 
         ### Consenting with AA map file. ###
 
-        l_genomic_positions = getPositionInfo_SNPS("gen", df_Seqs_splited_noIndel_gen, _hla, isREVERSE[_hla], exon1_offset,
+        l_genomic_positions = getPositionInfo_SNPS("gen", df_Seqs_splited_noIndel_gen, _hla, isREVERSE, exon1_offset,
                                                    _has_Indel=(not _no_Indel))
-        l_relative_positions = getPositionInfo_SNPS("rel", df_Seqs_splited_noIndel_gen, _hla, isREVERSE[_hla],
+        l_relative_positions = getPositionInfo_SNPS("rel", df_Seqs_splited_noIndel_gen, _hla, isREVERSE,
                                                     _has_Indel=(not _no_Indel))
 
 
         df_Markers_NoIndel_gen = SeqsToMarkers(df_Seqs_splited_noIndel_gen, l_genomic_positions, l_relative_positions)
-        # df_Markers_NoIndel_gen.to_csv(_out + ".HLA_{0}.gen.markers.noindel.HARD_DEBUGGING.txt".format(_hla), sep='\t', header=True, index=True)
+        # df_Markers_NoIndel_gen.to_csv(_out_dir + "/HLA_{0}.gen.markers.noindel.HARD_DEBUGGING.txt".format(_hla), sep='\t', header=True, index=True)
 
         if _no_Indel:
 
@@ -184,7 +136,7 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc, _gen, _prot, _p_data,
 
             # File Writing
             if _save_intermediates:
-                df_Markers_NoIndel_gen.to_csv(_out+".HLA_{0}.gen.markers.noindel.txt".format(_hla), sep='\t', header=True, index=True)
+                df_Markers_NoIndel_gen.to_csv(_out_dir + "/HLA_{0}.gen.markers.noindel.txt".format(_hla), sep='\t', header=True, index=True)
 
 
         # Filtering only exon columns in `df_Markers_NoIndel_gen`
@@ -195,8 +147,8 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc, _gen, _prot, _p_data,
         # print("Only exons")
         # print(df_Markers_onlyExons.head())
 
-        # df_Markers_onlyExons.to_csv(_out+".HLA_{0}.gen.onlyexons.markers.HARD_DEBUGGING.txt".format(_hla), sep='\t', header=True, index=True)
-        # df_Markers_onlyExons.columns.to_frame(index=False).to_csv(_out+".HLA_{0}.gen.precursor_AA_forMAP_TO_FRAME.noindel.HARD_DEBUGGING.txt".format(_hla), sep='\t', header=True, index=False) # for debugging
+        # df_Markers_onlyExons.to_csv(_out_dir+"/HLA_{0}.gen.onlyexons.markers.HARD_DEBUGGING.txt".format(_hla), sep='\t', header=True, index=True)
+        # df_Markers_onlyExons.columns.to_frame(index=False).to_csv(_out_dir+"/HLA_{0}.gen.precursor_AA_forMAP_TO_FRAME.noindel.HARD_DEBUGGING.txt".format(_hla), sep='\t', header=True, index=False) # for debugging
 
         # precursor_AA_forMAP = df_Markers_onlyExons.columns.to_frame(index=False) # original
         precursor_AA_forMAP = df_Markers_onlyExons.columns.to_frame(index=False).reindex(["SNP_rel_pos", "SNP_gen_pos", "Type"], axis=1) # Bug fixed(2019. 12. 27.)
@@ -204,7 +156,7 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc, _gen, _prot, _p_data,
 
         # File Writing
         if _save_intermediates:
-            precursor_AA_forMAP.to_csv(_out+".HLA_{0}.gen.precursor_AA_forMAP.noindel.txt".format(_hla), sep='\t', header=True, index=False)
+            precursor_AA_forMAP.to_csv(_out_dir + "/HLA_{0}.gen.precursor_AA_forMAP.noindel.txt".format(_hla), sep='\t', header=True, index=False)
 
 
 
@@ -222,7 +174,7 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc, _gen, _prot, _p_data,
 
             # File Writing
             if _save_intermediates:
-                df_Seqs_splited_Indel_gen.to_csv(_out+".HLA_{0}.gen.seqs.indel.splitted.txt".format(_hla), sep='\t', header=True, index=True) # **
+                df_Seqs_splited_Indel_gen.to_csv(_out_dir + "/HLA_{0}.gen.seqs.indel.splitted.txt".format(_hla), sep='\t', header=True, index=True) # **
 
                 """
                 `df_Seqs_splited_Indel_gen`
@@ -251,9 +203,9 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc, _gen, _prot, _p_data,
 
 
 
-        l_genomic_positions = getPositionInfo_SNPS("gen", df_temp, _hla, isREVERSE[_hla], exon1_offset,
+        l_genomic_positions = getPositionInfo_SNPS("gen", df_temp, _hla, isREVERSE, exon1_offset,
                                                    _has_Indel=(not _no_Indel))
-        l_relative_positions = getPositionInfo_SNPS("rel", df_temp, _hla, isREVERSE[_hla],
+        l_relative_positions = getPositionInfo_SNPS("rel", df_temp, _hla, isREVERSE,
                                                     _has_Indel=(not _no_Indel))
 
 
@@ -279,7 +231,7 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc, _gen, _prot, _p_data,
             # print(df_Markers_gen.head())
 
             if _save_intermediates:
-                df_Markers_gen.to_csv(_out + ".HLA_{0}.gen.markers.filt.indel.txt".format(_hla), sep='\t', header=True, index=True)
+                df_Markers_gen.to_csv(_out_dir + "/HLA_{0}.gen.markers.filt.indel.txt".format(_hla), sep='\t', header=True, index=True)
 
 
 
@@ -288,9 +240,9 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc, _gen, _prot, _p_data,
         if _save_intermediates:
 
             if not _no_Indel:
-                df_Markers_gen.to_csv(_out + ".HLA_{0}.gen.markers.indel.txt".format(_hla), sep='\t', header=True, index=True) # ***
+                df_Markers_gen.to_csv(_out_dir + "/HLA_{0}.gen.markers.indel.txt".format(_hla), sep='\t', header=True, index=True) # ***
             else:
-                df_Markers_gen.to_csv(_out + ".HLA_{0}.gen.markers.noindel.txt".format(_hla), sep='\t', header=True, index=True)  # ***
+                df_Markers_gen.to_csv(_out_dir + "/HLA_{0}.gen.markers.noindel.txt".format(_hla), sep='\t', header=True, index=True)  # ***
 
 
         ### precursor which will be used in making map file.
@@ -303,9 +255,9 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc, _gen, _prot, _p_data,
         if _save_intermediates:
 
             if not _no_Indel:
-                precursor_SNPS_forMAP.to_csv(_out + ".HLA_{0}.gen.precursor_SNPS_forMAP.indel.txt".format(_hla), sep='\t', header=True, index=False) # ***
+                precursor_SNPS_forMAP.to_csv(_out_dir + "/HLA_{0}.gen.precursor_SNPS_forMAP.indel.txt".format(_hla), sep='\t', header=True, index=False) # ***
             else:
-                precursor_SNPS_forMAP.to_csv(_out + ".HLA_{0}.gen.precursor_SNPS_forMAP.noindel.txt".format(_hla), sep='\t', header=True, index=False)  # ***
+                precursor_SNPS_forMAP.to_csv(_out_dir + "/HLA_{0}.gen.precursor_SNPS_forMAP.noindel.txt".format(_hla), sep='\t', header=True, index=False)  # ***
 
 
 
@@ -317,9 +269,9 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc, _gen, _prot, _p_data,
         if _save_intermediates:
 
             if not _no_Indel:
-                df_Seqs_gen.to_csv(_out+".HLA_{0}.gen.seqs.indel.txt".format(_hla), sep='\t', header=False, index=True) # ***
+                df_Seqs_gen.to_csv(_out_dir + "/HLA_{0}.gen.seqs.indel.txt".format(_hla), sep='\t', header=False, index=True) # ***
             else:
-                df_Seqs_gen.to_csv(_out+".HLA_{0}.gen.seqs.noindel.txt".format(_hla), sep='\t', header=False, index=True) # ***
+                df_Seqs_gen.to_csv(_out_dir + "/HLA_{0}.gen.seqs.noindel.txt".format(_hla), sep='\t', header=False, index=True) # ***
 
 
         # print("\ndf_Markers_gen\n")
@@ -340,12 +292,12 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc, _gen, _prot, _p_data,
 
         # Raw Markers
         df_raw_Markers_nuc, start_offset_nuc = LoadRawSeq2(_nuc, _hla, "nuc")
-        # df_raw_Markers_nuc.to_csv(_out + ".HLA_{0}.nuc.raw.markers.txt".format(_hla), sep='\t', header=False, index=True)
+        # df_raw_Markers_nuc.to_csv(_out_dir + "/HLA_{0}.nuc.raw.markers.txt".format(_hla), sep='\t', header=False, index=True)
         # print(df_raw_Markers_nuc.head())
 
         # Raw Seqeunces
         df_raw_Seqs_nuc = get_DF_rawSeqs(df_raw_Markers_nuc)
-        # df_raw_Seqs_nuc.to_csv(_out + ".HLA_{0}.nuc.raw.seqs.txt".format(_hla), sep='\t', header=False, index=True)
+        # df_raw_Seqs_nuc.to_csv(_out_dir + "/HLA_{0}.nuc.raw.seqs.txt".format(_hla), sep='\t', header=False, index=True)
         # print(df_raw_Seqs_nuc.head())
 
         # Raw Seqeunces splitted (for Exon checking)
@@ -353,7 +305,7 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc, _gen, _prot, _p_data,
 
         df_raw_Seqs_splitted_nuc.columns = pd.Index(["exon" + str(i + 1) for i in range(0, df_raw_Seqs_splitted_nuc.shape[1])])
         df_raw_Seqs_splitted_nuc.index.name = "Alleles"
-        # df_raw_Seqs_splitted_nuc.to_csv(_out + ".HLA_{0}.nuc.raw.seqs.splitted.txt".format(_hla), sep='\t', header=True, index=True)
+        # df_raw_Seqs_splitted_nuc.to_csv(_out_dir + "/HLA_{0}.nuc.raw.seqs.splitted.txt".format(_hla), sep='\t', header=True, index=True)
 
         # print("\nRaw seqs(with Indels) of nuc splitted.\n")
         # print(df_raw_Seqs_splitted_nuc.head())
@@ -371,7 +323,7 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc, _gen, _prot, _p_data,
 
         # File Writing
         if _save_intermediates:
-            df_Seqs_splited_noIndel_nuc.to_csv(_out + ".HLA_{0}.nuc.seqs.noindel.splitted.txt".format(_hla), sep='\t', header=True, index=True)  # Exporting 2 for nuc
+            df_Seqs_splited_noIndel_nuc.to_csv(_out_dir + "/HLA_{0}.nuc.seqs.noindel.splitted.txt".format(_hla), sep='\t', header=True, index=True)  # Exporting 2 for nuc
 
         # No more processing to *_nuc.txt file is needed.
 
@@ -404,7 +356,7 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc, _gen, _prot, _p_data,
 
             # File Writing
             if _save_intermediates:
-                df_Seqs_IndelProcessed_prot.to_csv(_out + ".HLA_{0}.prot.seqs.noindel.txt".format(_hla), sep='\t', header=False, index=True)
+                df_Seqs_IndelProcessed_prot.to_csv(_out_dir + "/HLA_{0}.prot.seqs.noindel.txt".format(_hla), sep='\t', header=False, index=True)
 
         else:
 
@@ -412,13 +364,13 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc, _gen, _prot, _p_data,
 
             # File Writing
             if _save_intermediates:
-                df_Seqs_IndelProcessed_prot.to_csv(_out + ".HLA_{0}.prot.seqs.indel.txt".format(_hla), sep='\t', header=False, index=True)
+                df_Seqs_IndelProcessed_prot.to_csv(_out_dir + "/HLA_{0}.prot.seqs.indel.txt".format(_hla), sep='\t', header=False, index=True)
 
 
         ### Making final outputs.
 
         # Making columns for final outputs.
-        l_relative_positions, l_genomic_positions, l_type = getPositionInfo_AA(df_Seqs_IndelProcessed_prot.iat[0], isREVERSE[_hla], int(start_offset_nuc),
+        l_relative_positions, l_genomic_positions, l_type = getPositionInfo_AA(df_Seqs_IndelProcessed_prot.iat[0], isREVERSE, int(start_offset_nuc),
                                                                                _has_Indel=(not _no_Indel), _df_precursor_map=precursor_AA_forMAP)
 
         # print("\ngenomic positions")
@@ -444,16 +396,16 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc, _gen, _prot, _p_data,
         # File Writing
         if _save_intermediates:
             if _no_Indel:
-                df_Markers_prot.to_csv(_out + ".HLA_{0}.prot.markers.noindel.txt".format(_hla), sep='\t', header=True, index=True)
-                precursor2_AA_forMAP.to_csv(_out + ".HLA_{0}.prot.precursor2_AA_forMAP.noindel.txt".format(_hla), sep='\t', header=True, index=False)
+                df_Markers_prot.to_csv(_out_dir + "/HLA_{0}.prot.markers.noindel.txt".format(_hla), sep='\t', header=True, index=True)
+                precursor2_AA_forMAP.to_csv(_out_dir + "/HLA_{0}.prot.precursor2_AA_forMAP.noindel.txt".format(_hla), sep='\t', header=True, index=False)
             else:
-                df_Markers_prot.to_csv(_out + ".HLA_{0}.prot.markers.indel.txt".format(_hla), sep='\t', header=True, index=True)
-                precursor2_AA_forMAP.to_csv(_out + ".HLA_{0}.prot.precursor2_AA_forMAP.indel.txt".format(_hla), sep='\t', header=True, index=False)
+                df_Markers_prot.to_csv(_out_dir + "/HLA_{0}.prot.markers.indel.txt".format(_hla), sep='\t', header=True, index=True)
+                precursor2_AA_forMAP.to_csv(_out_dir + "/HLA_{0}.prot.precursor2_AA_forMAP.indel.txt".format(_hla), sep='\t', header=True, index=False)
 
 
 
         # Maptable in Heatmap. (2018. 10. 26.)
-        __MAPTABLE__ = os.path.join(INTERMEDIATE_PATH, "HLA_MAPTABLE_{0}.hg{1}.imgt{2}.txt".format(_hla, _hg, _imgt))
+        __MAPTABLE__ = join(_out_dir, "HLA_MAPTABLE_{0}.hg{1}.imgt{2}.txt".format(_hla, _hg, _imgt))
         df_Markers_prot.to_csv(__MAPTABLE__, sep='\t', header=True, index=True)
 
 
@@ -499,15 +451,15 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc, _gen, _prot, _p_data,
 
         # File Writing
         if _save_intermediates:
-            final_AA_forMAP.to_csv(_out + ".HLA_{0}.prot.forMAP.txt".format(_hla), sep='\t', header=True, index=False)
-            final_SNPS_forMAP.to_csv(_out + ".HLA_{0}.gen.forMAP.txt".format(_hla), sep='\t', header=True, index=False)
+            final_AA_forMAP.to_csv(_out_dir + "/HLA_{0}.prot.forMAP.txt".format(_hla), sep='\t', header=True, index=False)
+            final_SNPS_forMAP.to_csv(_out_dir + "/HLA_{0}.gen.forMAP.txt".format(_hla), sep='\t', header=True, index=False)
 
 
 
 
     ### Complementing reverse strand.
 
-    if isREVERSE[_hla]:
+    if isREVERSE:
 
         """
         (2018. 9. 17.)
@@ -519,7 +471,7 @@ def ProcessIMGT(_out, _hla, _hg, _imgt, _nuc, _gen, _prot, _p_data,
 
         # File Writing
         if _save_intermediates:
-            df_Seqs_gen.to_csv(_out + ".HLA_{0}.gen.complementSeqs.txt".format(_hla), sep='\t', header=False, index=True)
+            df_Seqs_gen.to_csv(_out_dir + "/HLA_{0}.gen.complementSeqs.txt".format(_hla), sep='\t', header=False, index=True)
 
 
 
@@ -569,7 +521,7 @@ def LoadRawSeq2(_nuc_filename, _hla,  _type):
     line_number_marks = line_number_marks.decode('UTF-8').rstrip('\n').split('\n')
     line_number_marks = [int(item.split(':')[0]) - 1 for item in line_number_marks]
 
-    # print("\nMarks is {0}".format(line_number_marks))
+    # print("\nMarks is {0}".format (line_number_marks))
 
     # Classification based on file type 2
     if _type == "nuc":
@@ -1420,5 +1372,5 @@ if __name__ == "__main__":
 
 
     # main function execution
-    ProcessIMGT(_out=args.o, _hla=args.HLA, _hg=args.hg, _imgt=args.imgt, _nuc=args.nuc, _gen=args.gen, _prot=args.prot,
-                _no_Indel=args.no_Indel)
+    ProcessIMGT(_out_dir=args.o, _hla=args.HLA, _hg=args.hg, _imgt=args.imgt, _nuc=args.nuc, _gen=args.gen,
+                _prot=args.prot,  _no_Indel=args.no_Indel)
