@@ -1,4 +1,4 @@
-# HLA Analysis Toolkit (HATK)
+# HLA Analysis Toolkit (HATK; v2.0)
 
 ## (1) Introduction
 
@@ -105,18 +105,19 @@ We strongly recommend using the latest version of 'Anaconda(or Miniconda)' to se
 
 ## (3) Usage example
 
-```
-$ python3 HATK.py \
-    --variants example/wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18 \
-    --hped example/wtccc_filtered_58C_RA.hatk.300+300.hped \
-    --2field \
+``` 
+python HATK.py \
+    --hg 18 \
+    --hped example/wtccc_filtered_58C_RA.hatk.300+300.hped2 \
+    --bfile example/wtccc_filtered_58C_RA.hatk.300+300.hg18.chr6.29-34mb \ # "--variants" in the v1.
     --pheno example/wtccc_filtered_58C_RA.hatk.300+300.phe \
     --pheno-name RA \
-    --out MyHLAStudy/RESULT_EXAMPLE_wtccc_filtered_58C_RA.hatk.300+300.chr6.hg18 \
     --imgt 3320 \
-    --hg 18 \
-    --imgt-dir example/IMGTHLA3320 \
-    --multiprocess 2
+    --imgt-dir example/IMGTHLA3320/ \
+    --multiprocess 8 \
+    --out HATKv2_wholeImple/wtccc_58C+RA.hg18.chr6.29-34mb.ALL' \
+    --java-mem 4g \
+    --nthreads 4
 ```
 
 This command will implement (1) IMGT2Seq, (2) NomenCleaner, (3) bMarkerGenerator, (4) HLA_Analyzer(Association Test - logistic regression), (5) Manhattan Plot and (6) Heatmap Plot, which are the minimal components for HLA fine-mapping analysis.
