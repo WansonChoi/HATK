@@ -13,35 +13,19 @@ Ultimately, HATK aims to perform an association test targeted to the HLA region.
 
 ![README_Main_Pipeline_WorkFlow](docs/img/README_Main_Pipeline_WorkFlow.png)
 
-<br>
-<br>
 
+<br>
+<br>
 
 
 ## (2) Installation
 
-First, Prepare OS X(Mac) or Linux operating system. HATK currently doesn't support Windows. It was checked that HATK can work in the next specific operating systems.
-
-- Linux : 
-    - Ubuntu 19.04(Disco Dingo)
-    - Ubuntu 18.04.3 LTS(Bionic Beaver)
-    - CentOS_7
-    - Linux Mint 19.2 Cinnamon(Tina)
-- OS X : 
-    - Catalina(**with Bash NOT Zsh**)
-    - Mojave
-
-    In case of using Catalina OS X, **Make sure your default shell is 'Bash($)' not 'Zsh(%)'**. To change the default shell to Bash, Please reference this blog(https://www.howtogeek.com/444596/how-to-change-the-default-shell-to-bash-in-macos-catalina/).
-
-<br>
-
-Then, Download this project in somewhere directory of your OS X or Linux system. It will be assumed that 'git' command is already installed in your system.
+First, Prepare OS X(Mac) or Linux operating system. HATK currently doesn't support Windows. Then, Download this project in somewhere directory of your OS X or Linux system. It will be assumed that 'git' command is already installed in your system.
 
 ```
 $ git clone https://github.com/WansonChoi/HATK.git
 $ cd HATK
 ```
-<br>
 
 We strongly recommend using the latest version of 'Anaconda(or Miniconda)' to set up HATK.
 
@@ -51,11 +35,12 @@ We strongly recommend using the latest version of 'Anaconda(or Miniconda)' to se
     - Anaconda : (https://www.anaconda.com/)
     - Miniconda : (https://docs.conda.io/en/latest/miniconda.html)
 
-<br>
+> (Tip) Personally, I recommend Miniconda instead of Anaconda. Anaconda installs more packages(i.e. more storage uptake) which
+> users might not need at all.
 
-2. Create a new independent Python virtual environment with the given YML file.
+2. Create a new independent Python virtual environment for HATK with the given YML file.
 
-	By using 'HATK_LINUX.yml' or 'HATK_OSX.yml' file in the project folder **depending on your operating system**, Create a new Python virtual environment.
+	By using the 'HATK_LINUX.yml' or 'HATK_OSX.yml' file in the project folder **depending on your operating system**, Create a new Python virtual environment.
     
 	```
 	$ conda env create -f HATK_OSX.yml          ## OS X(Mac)
@@ -67,37 +52,15 @@ We strongly recommend using the latest version of 'Anaconda(or Miniconda)' to se
 	If the new virtual environment has been succuessfully installed, then activate it.
 
 	```
-	$ conda activate HATK
+	$ conda activate HATK    # HATK will be implemented in this virtual environment.
 	```
 
 
-    HATK will be implemented in this virtual environment. 
-
-<!-- <br>
-
-3. Install 'R' statistical programming language and the next three R libraries.
-
-    - gplots
-    - RColorBrewer
-    - shape
-
-    These 3 libraries are required to plot Heatmap. Otherwise, Heatmap will fail.
-
-    ```
-    $ Rscript -e "install.packages(c('gplots', 'RColorBrewer', 'shape'), dependencies=TRUE, repos='https://cran.cnr.berkeley.edu/')"
-    ```
-
-    > (Tip) You can use another CRAN repository. Choose the one located near to your country. (https://cran.r-project.org/mirrors.html) -->
+> (Tip) Type '_conda deactivate_' command if you want to go back to the previous environment. (https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#deactivating-an-environment)
 
 
+> (Tip) Type '_conda env remove -n HATK_' command if you want to remove this newly created virtual environment for HATK forever. (https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#removing-an-environment)
 
-<br>
-
-
-> (Tip) Type '_conda acitvate base_' on your command line if you want to go back to your original Python system setting. (https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#deactivating-an-environment)
-
-
-> (Tip) Type '_conda env remove -n HATK_' in your command line if you want to remove this newly created virtual environment for HATK forever in your Anaconda. (https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#removing-an-environment)
 
 <br>
 <br>
@@ -120,18 +83,26 @@ python HATK.py \
     --nthreads 4
 ```
 
-This command will implement (1) IMGT2Seq, (2) NomenCleaner, (3) bMarkerGenerator, (4) HLA_Analyzer(Association Test - logistic regression), (5) Manhattan Plot and (6) Heatmap Plot, which are the minimal components for HLA fine-mapping analysis.
+This command will implement (1) IMGT2Seq, (2) NomenCleaner, (3) bMarkerGenerator, 
+(4) Association Test(e.g. logistic regression), (5) Manhattan Plot, (6) Heatmap Plot, (7) Phasing, and 
+(8) Omnibus test.
 
-Each module of HATK can be implemented repectively. **The README files of each of those modules are prepared in 'docs/' folder.** Those files include more detailed explanation and respective usage examples.
+You can run each module independently. **The README files of each module are prepared in the 'Wiki' section of this repository.** 
+The Wiki includes more detailed explanation and usage examples.
 
-> **Check which Human Genome version, e.g. hg18, hg19 or hg38, is being used in your study**. HATK dosen't take responsibility for the case where different Human Genome versions are used. For example, SNP array data with 'hg19' and passing '18' to '-hg' argument.
+> **Check which Human Genome version, e.g. hg18, hg19 or hg38, is being used in your study**. 
+> HATK will not be responsible for misuse/mismatch of Human Genome version. 
+> (ex. Passing genotype data of 'hg19' to the '--bfile' and '18' to the '--hg' argument.) 
+
 
 <br>
 <br>
+
 
 ## (4) Citation
 HATK: HLA analysis toolkit - Wanson Choi, Yang Luo, Soumya Raychaudhuri, Buhm Han
 (https://academic.oup.com/bioinformatics/advance-article/doi/10.1093/bioinformatics/btaa684/5879278)
+
 
 <br>
 <br>
@@ -167,6 +138,9 @@ and etc.
 The core engine modules("HLAtoSequences.py", "encodeVariants.py", "encodeHLA.py") are reworked urgently to solve the memroy usage problem(It was found to use maximum 64G RAM apporximately maybe due to Pandas).
 
 The rework was primarily done in the work with Yang Luo in the repository of "MakeReference_v2" and the finalized rework outputs are applied to this project.
+
+(2022. 11. 07.)
+The v2 was merged to the main branch.
 -->
 
 
