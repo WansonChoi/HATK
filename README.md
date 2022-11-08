@@ -20,23 +20,27 @@ Ultimately, HATK aims to perform an association test targeted to the HLA region.
 
 ## (2) Installation
 
-First, Prepare OS X(Mac) or Linux operating system. HATK currently doesn't support Windows. Then, Download this project in somewhere directory of your OS X or Linux system. It will be assumed that 'git' command is already installed in your system.
+First, Prepare OS X(Mac) or Linux operating system. HATK currently doesn't support Windows. 
+
+Then, Download this project in somewhere directory of your OS X or Linux system. It will be assumed that 'git' command is already installed in your system.
 
 ```
 $ git clone https://github.com/WansonChoi/HATK.git
 $ cd HATK
 ```
 
-We strongly recommend using the latest version of 'Anaconda(or Miniconda)' to set up HATK.
+<br>
 
+We strongly recommend using 'Anaconda(or Miniconda)' to set up HATK.
 
-1. install Anaconda or Miniconda.
+1. Install Anaconda or Miniconda.
 
     - Anaconda : (https://www.anaconda.com/)
     - Miniconda : (https://docs.conda.io/en/latest/miniconda.html)
 
-> (Tip) Personally, I recommend Miniconda instead of Anaconda. Anaconda installs more packages(i.e. more storage uptake) which
-> users might not need at all.
+	Miniconda is a minimal version of Anaconda with fewer default packages. I recommend Miniconda if you want less storage uptake.
+
+<br>
 
 2. Create a new independent Python virtual environment for HATK with the given YML file.
 
@@ -47,7 +51,13 @@ We strongly recommend using the latest version of 'Anaconda(or Miniconda)' to se
 	$ conda env create -f HATK_LINUX.yml        ## Linux
 	```
 	
-	The above command will generate a new Python virtual environment named 'HATK', which contains dependent Python packages, R and R libraries, independent to your original Python system. For more detailed explanation about Anaconda's managing Python virtual environment, Please check this reference(https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#create-env-file-manually).
+	The above command will generate a new Python virtual environment named 'HATK', which contains dependent Python packages, R and R libraries, independent to your original Python system. 
+	
+	For more detailed explanation about how Anaconda manages Python virtual environment, Please check this reference(https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#create-env-file-manually).
+
+<br>
+
+3. Activate the HATK environment.
 
 	If the new virtual environment has been succuessfully installed, then activate it.
 
@@ -56,10 +66,10 @@ We strongly recommend using the latest version of 'Anaconda(or Miniconda)' to se
 	```
 
 
-> (Tip) Type '_conda deactivate_' command if you want to go back to the previous environment. (https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#deactivating-an-environment)
+> (Tip) Type '_conda deactivate_' if you want to go back to the previous environment. (https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#deactivating-an-environment)
 
 
-> (Tip) Type '_conda env remove -n HATK_' command if you want to remove this newly created virtual environment for HATK forever. (https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#removing-an-environment)
+> (Tip) Type '_conda env remove -n HATK_' if you want to remove this newly created virtual environment for HATK forever. (https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#removing-an-environment)
 
 
 <br>
@@ -90,9 +100,7 @@ This command will implement (1) IMGT2Seq, (2) NomenCleaner, (3) bMarkerGenerator
 You can run each module independently. **The README files of each module are prepared in the 'Wiki' section of this repository.** 
 The Wiki includes more detailed explanation and usage examples.
 
-> **Check which Human Genome version, e.g. hg18, hg19 or hg38, is being used in your study**. 
-> HATK will not be responsible for misuse/mismatch of Human Genome version. 
-> (ex. Passing genotype data of 'hg19' to the '--bfile' and '18' to the '--hg' argument.) 
+**Check which Human Genome version(i.e. hg18, 19, or 38) is being used in your study**. HATK will not be responsible for misuse/mismatch of Human Genome version. (ex. Passing genotype data of 'hg19' to the '--bfile' and '18' to the '--hg' argument.) 
 
 
 <br>
