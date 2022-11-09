@@ -100,14 +100,29 @@ This command will implement (1) IMGT2Seq, (2) NomenCleaner, (3) bMarkerGenerator
 You can run each module independently. **The README files of each module are prepared in the 'Wiki' section of this repository.** 
 The Wiki includes more detailed explanation and usage examples.
 
-**Check which Human Genome version(i.e. hg18, 19, or 38) is being used in your study**. HATK will not be responsible for misuse/mismatch of Human Genome version. (ex. Passing genotype data of 'hg19' to the '--bfile' and '18' to the '--hg' argument.) 
+**Check which Human Genome version(i.e. hg18, 19, or 38) is being used in your study**. 
+HATK will not be responsible for misuse/mismatch of Human Genome versions. 
+(ex. Passing hg19 genotype data to the '--bfile' and '18' to the '--hg' argument.) 
 
 
 <br>
 <br>
 
 
-## (4) Citation
+## (4) Version 2.0
+In the version 2, HATK provides HLA fine-mapping to Non-Classical HLA genes(ex. _HLA-MICA/B_, _-V_, _-E_, or _-G_, etc.), too.
+
+Also, For CookHLA users, HATKv2 provides a module to generate a custom reference panel that can be directly used in CookHLA(https://github.com/WansonChoi/CookHLA).
+
+For more detail, Please refer to the Wiki.
+
+
+
+<br>
+<br>
+
+
+## (5) Citation
 HATK: HLA analysis toolkit - Wanson Choi, Yang Luo, Soumya Raychaudhuri, Buhm Han
 (https://academic.oup.com/bioinformatics/advance-article/doi/10.1093/bioinformatics/btaa684/5879278)
 
@@ -116,7 +131,7 @@ HATK: HLA analysis toolkit - Wanson Choi, Yang Luo, Soumya Raychaudhuri, Buhm Ha
 <br>
 
 
-## (5) License
+## (6) License
 
 The HATK Software Code is freely available for non-commercial academic research use. If you would like to obtain a license to the Code for commercial use, please contact Wanson Choi (WC) at wansonchoi@snu.ac.kr and Buhm Han (BH) at buhm.han@snu.ac.kr. WE (WC and BH) MAKE NO REPRESENTATIONS OR WARRANTIES WHATSOEVER, EITHER EXPRESS OR IMPLIED, WITH RESPECT TO THE CODE PROVIDED HERE UNDER. IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE WITH RESPECT TO CODE ARE EXPRESSLY DISCLAIMED. THE CODE IS FURNISHED "AS IS" AND "WITH ALL FAULTS" AND DOWNLOADING OR USING THE CODE IS UNDERTAKEN AT YOUR OWN RISK. TO THE FULLEST EXTENT ALLOWED BY APPLICABLE LAW, IN NO EVENT SHALL WE BE LIABLE, WHETHER IN CONTRACT, TORT, WARRANTY, OR UNDER ANY STATUTE OR ON ANY OTHER BASIS FOR SPECIAL, INCIDENTAL, INDIRECT, PUNITIVE, MULTIPLE OR CONSEQUENTIAL DAMAGES SUSTAINED BY YOU OR ANY OTHER PERSON OR ENTITY ON ACCOUNT OF USE OR POSSESSION OF THE CODE, WHETHER OR NOT FORESEEABLE AND WHETHER OR NOT WE HAVE BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES, INCLUDING WITHOUT LIMITATION DAMAGES ARISING FROM OR RELATED TO LOSS OF USE, LOSS OF DATA, DOWNTIME, OR FOR LOSS OF REVENUE, PROFITS, GOODWILL, BUSINESS OR OTHER FINANCIAL LOSS.
 
