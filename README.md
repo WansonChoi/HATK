@@ -112,7 +112,9 @@ HATK will not be responsible for misuse/mismatch of Human Genome versions.
 ## (4) Version 2.0
 In the version 2, HATK provides HLA fine-mapping to Non-Classical HLA genes(ex. _HLA-MICA/B_, _-V_, _-E_, or _-G_, etc.), too.
 
-Also, For CookHLA users, HATKv2 provides a module to generate a custom reference panel that can be directly used in CookHLA(https://github.com/WansonChoi/CookHLA).
+Also, For CookHLA users, HATKv2 provides a module to generate a custom reference panel that can be directly used in **CookHLA**(https://github.com/WansonChoi/CookHLA).
+
+(Citation) S. Cook, W. Choi, H. Lim, Y. Luo, K. Kim, X. Jia, S. Raychaudhuri and B. Han, CookHLA: Accurate Imputation of Human Leukocyte Antigens. (https://www.nature.com/articles/s41467-021-21541-5)
 
 For more detail, Please refer to the Wiki.
 
