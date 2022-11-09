@@ -98,7 +98,7 @@ This command will implement (1) IMGT2Seq, (2) NomenCleaner, (3) bMarkerGenerator
 (8) Omnibus test.
 
 You can run each module independently. **The README files of each module are prepared in the 'Wiki' section of this repository.** 
-The Wiki includes more detailed explanation and usage examples.
+The Wiki includes more detailed explanation and usage examples. (You can find the v1 README files in 'docs/' folder, too. The Wiki is currently under construction for the v2. (2022. 10. ~))
 
 **Check which Human Genome version(i.e. hg18, 19, or 38) is being used in your study**. 
 HATK will not be responsible for misuse/mismatch of Human Genome versions. 
