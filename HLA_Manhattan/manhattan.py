@@ -148,12 +148,13 @@ def Manhattan_OM(_assoc_OM_result, _out_prefix, _hg, _pointcol="#778899", _topco
                 df_INS.iloc[:, 0],
                 df_INS.iloc[:, [1,2]].apply(lambda x : str(x.astype(int).mean()), axis=1)
             ], axis=1)
+
+            df_INS.columns = ['HLA', 'REL_POS']
+            # print("df_INS :\n{}\n".format(df_INS))
+
         else:
             df_INS = pd.DataFrame([]) # Null DataFrame
 
-        df_INS.columns = ['HLA', 'REL_POS']
-
-        # print("df_INS :\n{}\n".format(df_INS))
 
         df_HLA_RelPos = pd.concat([df_AA, df_INS], axis=0).sort_index()
         df_HLA_RelPos['REL_POS'] = df_HLA_RelPos['REL_POS'].map(lambda x : float(x)) # as float
