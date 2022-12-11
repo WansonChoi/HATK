@@ -195,7 +195,7 @@ def ligateRightEnd(_dict_joined_between):
             allele_max = allele
             LEN_max = len(seq)
 
-    print("(Max Seq):\n{}: {}".format(allele_max, LEN_max))
+    # print("(Max Seq):\n{}: {}".format(allele_max, LEN_max))
 
 
 
@@ -259,8 +259,8 @@ def substituteBase(_dict_ligated):
             return _base_ref
         elif _base_virtual == '*':
             return 'x'
-        elif _base_ref == '|':
-            return _base_ref # Only when 'gen' and 'nuc'.
+        elif _base_ref == '|':  # Only when 'gen' and 'nuc'.
+            return _base_ref
         else:
             return _base_virtual
 
@@ -323,8 +323,8 @@ def splitByVerticalBar(_dict_substituted):
 
     ### reference seq. (the 1st seq, practically.)
     ref_allele, ref_seq = next(iter(_dict_substituted.items()))
-    print("ref allele: {}".format(ref_allele))
-    print("ref seq: {}".format(ref_seq))
+    # print("ref allele: {}".format(ref_allele))
+    # print("ref seq: {}".format(ref_seq))
 
     iter_vbars = list(re.finditer(r'\|', ref_seq))
     N_vbar = len(iter_vbars)
@@ -368,8 +368,8 @@ def splitByVerticalBar(_dict_substituted):
     l_str_strat = [0] + l_vbar_end
     l_str_end = l_vbar_start + [len(ref_seq)]
     l_str_pos = list(zip(l_str_strat, l_str_end))
-    print(l_str_pos)
-    print(len(l_str_pos))
+    # print(l_str_pos)
+    # print(len(l_str_pos))
 
     if len(l_str_pos) != len(l_annots):
         print("Length mismatch")
@@ -377,7 +377,7 @@ def splitByVerticalBar(_dict_substituted):
 
     ### split and gather
     for annot, s, e in zip(l_annots, l_str_strat, l_str_end):
-        print("{}: {}-{}".format(annot, s, e))
+        # print("{}: {}-{}".format(annot, s, e))
 
         dict_temp = {}
 
@@ -406,8 +406,8 @@ def processIndel(_dict_substituted):
 
     ### reference seq. (the 1st seq, practically.)
     ref_allele, ref_seq = next(iter_dict_ligated)
-    print("ref allele: {}".format(ref_allele))
-    print("ref seq: {}".format(ref_seq))
+    # print("ref allele: {}".format(ref_allele))
+    # print("ref seq: {}".format(ref_seq))
 
     """
     '.'s in ref seq. are INSERTIONs essentially because those '.'s are not allocated the relative position.
@@ -487,9 +487,6 @@ def join_between_annots(_l_annot, _dict_IndelProcessed):
     return 0
 
 
-def getRefSeq(_dict, _HLA):
-    return 0
-
 
 if __name__ == '__main__':
 
@@ -497,134 +494,4 @@ if __name__ == '__main__':
     A module to chop *_{gen,nuc,prot}.txt file.
     """
 
-    # A, gen
-    # gen = "/home/wansonchoi/sf_VirtualBox_Share/IMGTHLA3500/alignments/A_gen.txt"
-    # gen = "/Users/wansonchoi/Dropbox/_Sync_MyLaptop/Projects/IMGTHLA/IMGTHLA3500/alignments/A_gen.txt"
-
-    # DQB1, gen
-    # gen = "/home/wansonchoi/sf_VirtualBox_Share/IMGTHLA3500/alignments/DQB1_gen.txt"
-    gen = "/Users/wansonchoi/Dropbox/_Sync_MyLaptop/Projects/IMGTHLA/IMGTHLA3500/alignments/DQB1_gen.txt"
-
-    print("\n\n< Load gen raw seq. >")
-    dict_chunks_gen = chopAlignmentFile(gen)
-
-    print("\n\n< Join seqs within chunks >")
-    l_joined_within = join_within_chunks_Prot(dict_chunks_gen)
-
-    print("\n\n< Join seqs between chunks >")
-    dict_joined_between = join_between_chunks_Prot(l_joined_within)
-    printDict(dict_joined_between, 10)
-
-    print("\n\n< Ligate the right end. >")
-    dict_ligated = ligateRightEnd(dict_joined_between)
-    printDict(dict_ligated, 10)
-
-    print("\n\n< Substitute bases. >")
-    dict_substituted = substituteBase(dict_ligated)
-    printDict(dict_substituted, 10)
-
-    print("\n\n< split by the vertical bar('|')(functional annot.). >")
-    l_annots, dict_split = splitByVerticalBar(dict_substituted)
-    for annot in l_annots:
-        print("{}:".format(annot))
-        printDict(dict_split[annot], 10)
-
-
-    print("\n\n< Processing Indel for each annotated seqs. >")
-    dict_Indel_Processed = processIndel_gen(l_annots, dict_split)
-    for annot in l_annots:
-        print("[{}]:".format(annot))
-        print("(before):")
-        printDict(dict_split[annot], 10)
-        print("(after):")
-        printDict(dict_Indel_Processed[annot], 10)
-
-
-
-    print("\n\n< Join betw. annots. (Final step for gen seq dictionary) >")
-
-
-    """
-    (Gen)
-    - Load raw sequences.
-    - Get relative position start in the 1st chunk.
-
-    간단하게 생각해서, finditer를 쓰려면 전에 ligateRightEnd를 해야함.
-    만약 '|'로 partition을 한 seq들에 대해 prot처럼 처리하는걸 반복한다고 하더라도 ligateRightEnd는 앞서서 해야한다는 거지.
-    만약 '|'로 partition을 한다고 하더라도 ref seq상의 '|'만 있으면 되긴 함. (과거에 df처럼 처리하던 것과 달리 ref seq에만 finditer하면 돼서.)
-        - 다시 말해 substitute할때도 '|'이어야 할 부분을 'x'로 채워놔도, ref seq상의 '|'의 position으로 partition하면 노상관.
-        
-    사실 이런식면 ligateRightEnd랑 substituteBase까지 똑같이하고 ProcessIndel만 '|'로 잘라서 하면 되는거기도 함.
-    
-    
-
-    """
-
-    """
-    (One exception to consider)
-    seq1: ACGT|TCGGAA
-    seq2: (blank)
-    
-    After ligation
-    
-    seq1: ACGT'|'TCGGAA
-    seq2: xxxx'x'xxxxxx
-    
-    => 're.sub' function shouldn't be used.
-    
-    (deprecated)
-    """
-
-    """
-    
-    """
-
-    sys.exit()
-
-    # A, prot
-    # prot = "/home/wansonchoi/sf_VirtualBox_Share/IMGTHLA3480/alignments/A_prot.txt"
-    prot = "/Users/wansonchoi/Dropbox/_Sync_MyLaptop/Projects/IMGTHLA/IMGTHLA3500/alignments/A_prot.txt"
-
-    print("\n\n< Load raw seq. >")
-    dict_chunks = chopAlignmentFile(prot)
-
-    print("\n\n< Join seqs within chunks >")
-    l_joined_within = join_within_chunks_Prot(dict_chunks)
-    for i in range(len(l_joined_within)):
-        print("{}th chunk:".format(i))
-        printDict(l_joined_within[i], 5)
-
-    print("\n\n< Join seqs between chunks >")
-    dict_joined_between = join_between_chunks_Prot(l_joined_within)
-    printDict(dict_joined_between, 10)
-    # print(dict_joined_between['A*03:437Q'])
-    # print("{} vs. {}".format(len(dict_joined_between['A*01:01:01:01']), len(dict_joined_between['A*03:437Q'])))
-
-    print("\n\n< Ligate the right end. >")
-    dict_ligated = ligateRightEnd(dict_joined_between)
-    printDict(dict_ligated, 10)
-
-    print("\n\n< Substitute bases. >")
-    dict_substituted = substituteBase(dict_ligated)
-    printDict(dict_substituted, 10)
-
-    print("\n\n< Process Indel. >")
-    dict_IndexProcessed = processIndel(dict_substituted)
-
-    nuc = "/home/wansonchoi/sf_VirtualBox_Share/IMGTHLA3480/alignments/A_nuc.txt"
-
-
-    """
-    (Prot)
-    - Load raw sequences.
-    - Join seqs within chunks.
-    - Join seqs between chunks.
-    
-    - Ligate right end.
-    - Substitute '-'(dash), '*', and 'x'.
-    - Process indel.
-
-    - Extract the ref. seq for MAP file generation.
-
-
-    """
+    pass
