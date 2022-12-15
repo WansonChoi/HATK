@@ -7,15 +7,32 @@ import argparse, textwrap
 
 from src.util import printDF
 
-std_MAIN_PROCESS_NAME = "\n[%s]: " % basename(__file__)
-std_ERROR_MAIN_PROCESS_NAME = "\n[%s::ERROR]: " % basename(__file__)
-std_WARNING_MAIN_PROCESS_NAME = "\n[%s::WARNING]: " % basename(__file__)
+std_MAIN = "\n[%s]: " % basename(__file__)
+std_ERROR = "\n[%s::ERROR]: " % basename(__file__)
+std_WARNING = "\n[%s::WARNING]: " % basename(__file__)
 
 
 def ProcessIMGT(_out_dir, _hla, _hg, _imgt, _nuc, _gen, _prot,
                 _p_data, _no_Indel=False, _save_intermediates=False, _no_prime=True):
 
-    print(std_MAIN_PROCESS_NAME + "Generating sequence information dictionary for HLA-{}.".format(_hla))
+    print(std_MAIN + "Generating sequence information dictionary for HLA-{}.".format(_hla))
+
+    """
+    New 'processIMGT.py'
+    
+    _hg, _imgt
+    
+    for hla in HLA_avail:
+        processGen -> dict_joined_annot, df_Map0_SNPS
+        
+        processNuc -> start rel_pos of AA
+        
+        processProt -> dict_joined, df_Map0_AA
+        
+        processMapTable (based on the returns of `processProt`).
+    
+    """
+
 
     ### Main Variables ###
     exon1_offset = None

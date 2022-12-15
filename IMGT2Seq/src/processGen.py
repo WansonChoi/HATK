@@ -44,28 +44,29 @@ def processGen(_gen, _hla, _BP_start:int, _direction:str, _ref_allele:str,
 
 
     ### (Map) allocate BP
-    _ref_allele = getRefSeq(_hla, _ref_allele, dict_Indel_Processed)
+    _ref_allele = getRefSeq_gen(_hla, _ref_allele, dict_Indel_Processed)
     dict_ref_seq = {annot: dict_Indel_Processed[annot][_ref_allele] for annot in l_annots}
     # printDict(dict_ref_seq)
 
-    # Hard coding for test
-    export_dict_refseq(dict_ref_seq, "/Users/wansonchoi/Git_Projects/HATK/tests/refseq_DQB1.txt")
+    df_Map0_SNPS = allocateBP_gen(dict_ref_seq, _BP_start, _direction, _hla) # will be used to make AA Map0 file.
+    print(df_Map0_SNPS)
+
+    # export for testing
+    df_Map0_SNPS.to_csv("/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/df_Map0_SNPS.txt", sep='\t', header=True, index=False)
 
 
+    ### Join betw. annots. (Final step for gen seq dictionary)
+    dict_RETURN = modules.join_between_annots(l_annots, dict_Indel_Processed)
+    printDict(dict_RETURN, 20)
 
-    ###
-
-
-    # print("\n\n< Join betw. annots. (Final step for gen seq dictionary) >")
-
-    return 0
+    return dict_RETURN, df_Map0_SNPS
 
 
-def getRefSeq(_hla, _ref_allele, _dict_Indel_Processed):
+def getRefSeq_gen(_hla, _ref_allele, _dict_Indel_Processed):
 
     _ref_allele = "{}*{}".format(_hla, _ref_allele)
 
-    _dict_5prime = next(iter(_dict_Indel_Processed.values()))
+    _dict_5prime = next(iter(_dict_Indel_Processed.values())) # `_dict_Indel_Processed` of gen is a dictionary of dictionaries.
 
     if _ref_allele in _dict_5prime.keys():
         return _ref_allele
@@ -76,12 +77,9 @@ def getRefSeq(_hla, _ref_allele, _dict_Indel_Processed):
 
 def allocateBP_gen(_dict_ref_seq, _BP_start:int, _direction:str, _hla):
 
-    l_SNPS_labels = []
-
     l_rel_pos = []
     l_gen_pos = []
     l_annot = []
-
 
     iter_dict_ref_seq = iter(_dict_ref_seq.items())
 
@@ -107,8 +105,6 @@ def allocateBP_gen(_dict_ref_seq, _BP_start:int, _direction:str, _hla):
             l_gen_pos.append(INS_gen_pos)
             l_annot.append(annot)
 
-            l_SNPS_labels.append(INS_label)
-
         else:
 
             label = "SNPS_{HLA}_{REL_POS}_{GEN_POS}_{ANNOT}" \
@@ -118,7 +114,6 @@ def allocateBP_gen(_dict_ref_seq, _BP_start:int, _direction:str, _hla):
             l_gen_pos.append(temp_gen_pos)
             l_annot.append(annot)
 
-            l_SNPS_labels.append(label)
 
             temp_rel_pos += -1
             temp_gen_pos += (-1 if _direction == '+' else 1)
@@ -126,7 +121,6 @@ def allocateBP_gen(_dict_ref_seq, _BP_start:int, _direction:str, _hla):
     l_rel_pos = list(reversed(l_rel_pos))
     l_gen_pos = list(reversed(l_gen_pos))
     l_annot = list(reversed(l_annot))
-    l_SNPS_labels = list(reversed(l_SNPS_labels))
 
 
     ### Rest parts. (exon1 ~ 3_prime)
@@ -154,8 +148,6 @@ def allocateBP_gen(_dict_ref_seq, _BP_start:int, _direction:str, _hla):
                 l_gen_pos.append(int(round((last_gen_pos + temp_gen_pos) / 2)))
                 l_annot.append(annot)
 
-                l_SNPS_labels.append(INS_label)
-
             else:
 
                 label = "SNPS_{HLA}_{REL_POS}_{GEN_POS}_{ANNOT}" \
@@ -165,7 +157,6 @@ def allocateBP_gen(_dict_ref_seq, _BP_start:int, _direction:str, _hla):
                 l_gen_pos.append(temp_gen_pos)
                 l_annot.append(annot)
 
-                l_SNPS_labels.append(label)
 
                 temp_rel_pos += 1
                 temp_gen_pos += (1 if _direction == '+' else -1)
@@ -181,10 +172,11 @@ def allocateBP_gen(_dict_ref_seq, _BP_start:int, _direction:str, _hla):
 
 
     df_RETURN = pd.DataFrame([
-        [rel_pos, gen_pos, annot, base, label] for rel_pos, gen_pos, annot, base, label in  \
-                zip(l_rel_pos, l_gen_pos, l_annot, ''.join(list(_dict_ref_seq.values())), l_SNPS_labels)
-    ], columns=['SNPS_rel_pos', 'SNPS_gen_pos', 'annot', 'base', 'Label'])
-    print(df_RETURN)
+        [rel_pos, gen_pos, annot, base] for rel_pos, gen_pos, annot, base in  \
+                zip(l_rel_pos, l_gen_pos, l_annot, ''.join(list(_dict_ref_seq.values())))
+    ], columns=['SNPS_rel_pos', 'SNPS_gen_pos', 'Type', 'base'])
+
+    df_RETURN.to_csv("/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/df_Map0_SNPS.txt", sep='\t', header=True, index=False)
 
     return df_RETURN
 
@@ -207,20 +199,20 @@ if __name__ == '__main__':
     # gen = "/Users/wansonchoi/Dropbox/_Sync_MyLaptop/Projects/IMGTHLA/IMGTHLA3500/alignments/A_gen.txt"
 
     # DQB1, gen
-    # gen = "/home/wansonchoi/sf_VirtualBox_Share/IMGTHLA3500/alignments/DQB1_gen.txt"
-    gen = "/Users/wansonchoi/Dropbox/_Sync_MyLaptop/Projects/IMGTHLA/IMGTHLA3500/alignments/DQB1_gen.txt"
+    gen = "/home/wansonchoi/sf_VirtualBox_Share/IMGTHLA3500/alignments/DQB1_gen.txt"
+    # gen = "/Users/wansonchoi/Dropbox/_Sync_MyLaptop/Projects/IMGTHLA/IMGTHLA3500/alignments/DQB1_gen.txt"
 
-    # r = processGen(gen, 'DQB1', 32742362, '-', '05:01:01:01')
+    r = processGen(gen, 'DQB1', 32742362, '-', '05:01:01:01')
 
 
-    dict_ref_seq = {}
-    with open("/Users/wansonchoi/Git_Projects/HATK/tests/refseq_DQB1.txt", 'r') as f_refseq:
-        for line in f_refseq:
-            l = line.split()
-            dict_ref_seq[l[0]] = l[1]
-
-    # printDict(dict_ref_seq)
-    allocateBP_gen(dict_ref_seq, 32742362, '-', "DQB1")
+    # dict_ref_seq = {}
+    # with open("/Users/wansonchoi/Git_Projects/HATK/tests/refseq_DQB1.txt", 'r') as f_refseq:
+    #     for line in f_refseq:
+    #         l = line.split()
+    #         dict_ref_seq[l[0]] = l[1]
+    #
+    # # printDict(dict_ref_seq)
+    # allocateBP_gen(dict_ref_seq, 32742362, '-', "DQB1")
 
 
     """

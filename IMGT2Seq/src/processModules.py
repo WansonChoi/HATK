@@ -483,8 +483,14 @@ def processIndel_gen(_l_annots, _dict_split):
 
 def join_between_annots(_l_annot, _dict_IndelProcessed):
 
+    dict_RETURN = {allele: None for allele in _dict_IndelProcessed[_l_annot[0]].keys()}
 
-    return 0
+    for allele in _dict_IndelProcessed[_l_annot[0]].keys():
+        dict_RETURN[allele] = ''.join([_dict_IndelProcessed[annot][allele] for annot in _l_annot])
+
+    return dict_RETURN
+
+
 
 
 
