@@ -1,4 +1,4 @@
-# HLA Analysis Toolkit (HATK; v2.0)
+# HLA Analysis Toolkit (HATK; v2.0(beta))
 
 ## (1) Introduction
 
