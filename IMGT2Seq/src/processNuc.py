@@ -7,6 +7,8 @@ import pandas as pd
 from src.util import printDict
 import IMGT2Seq.src.processModules as modules
 
+from Bio import pairwise2
+from Bio.Seq import Seq
 
 def processNuc(_nuc, _hla, _ref_allele:str, _p_data="IMGT2Seq/data"):
 
@@ -327,11 +329,88 @@ def makeMap0_SNPS(_ref_seq, _hla, _p_data):
     return df_Map0_SNPS
 
 
+def mergeMap0s(_df_Map0_AA, _df_Map0_SNPS):
+
+    print(_df_Map0_AA)
+    print(_df_Map0_SNPS)
+
+    ## df_Map0_AA_3times
+    df_Map0_AA_3times = pd.DataFrame([
+        [rel_pos, codon, residue, type] \
+
+        for rel_pos, codon, residue, type in zip(
+            _df_Map0_AA.iloc[:, 0],
+            _df_Map0_AA.iloc[:, 1],
+            _df_Map0_AA.iloc[:, 2],
+            _df_Map0_AA.iloc[:, 3]
+        ) \
+
+        for _ in range(3) # repeat 3 times
+    ], columns=_df_Map0_AA.columns)
+    print("df_Map0_AA_3times:\n{}\n".format(df_Map0_AA_3times))
+
+    df_merge0 = _df_Map0_SNPS.merge(df_Map0_AA_3times, on=['Codon', 'residue'])
+    print("df_merge0:\n{}\n".format(df_merge0))
+
+    df_merge0.to_csv("/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/df_Map0_AA+SNPS.nuc.txt", sep='\t', header=True, index=True)
+
+    return 0
+
+def BioSeq_test():
+
+    df_Map0_AA = pd.read_csv("/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/df_Map0_AA.txt", sep='\s+', header=0, dtype=str)
+    print(df_Map0_AA)
+    df_Map0_AA_nuc = pd.read_csv("/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/df_Map0_AA.nuc.txt", sep='\s+', header=0, dtype=str)
+    print(df_Map0_AA_nuc)
+
+    seq_AA = Seq(''.join(df_Map0_AA.iloc[:, 1].tolist()))
+    print(seq_AA)
+    seq_AA_nuc = Seq(''.join(df_Map0_AA_nuc.iloc[:, 2].tolist()))
+    print(seq_AA_nuc)
+
+    alignments = pairwise2.align.globalxx(seq_AA, seq_AA_nuc)
+    for match in alignments:
+        print(match)
+        print(pairwise2.format_alignment(*match))
+
+    return 0
+
+def BioSeq_test_SNPS():
+
+    df_Map0_SNPS = pd.read_csv("/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/df_Map0_SNPS.txt", sep='\s+', header=0, dtype=str)
+    df_Map0_SNPS = df_Map0_SNPS[df_Map0_SNPS['Type'].str.match('exon')]
+    print(df_Map0_SNPS)
+
+    df_Map0_SNPS_nuc = pd.read_csv("/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/df_Map0_SNPS.nuc.txt", sep='\s+', header=0, dtype=str)
+    print(df_Map0_SNPS_nuc)
+
+    seq_SNPS = Seq(''.join(df_Map0_SNPS.iloc[:, 3].tolist()))
+    print(seq_SNPS)
+    seq_SNPS_nuc = Seq(''.join(df_Map0_SNPS_nuc.iloc[:, 1].tolist()))
+    print(seq_SNPS_nuc)
+
+    alignments = pairwise2.align.globalmx(seq_SNPS, seq_SNPS_nuc, 100, 10)
+    for match in alignments:
+        print(match)
+        print(pairwise2.format_alignment(*match))
+
+    return 0
+
 if __name__ == '__main__':
 
     # nuc = "/Users/wansonchoi/Dropbox/_Sync_MyLaptop/Projects/IMGTHLA/IMGTHLA3500/alignments/DQB1_nuc.txt"
     nuc = "/home/wansonchoi/sf_VirtualBox_Share/IMGTHLA3500/alignments/DQB1_nuc.txt"
 
-    processNuc(nuc, "DQB1", "05:01:01:01", _p_data="/home/wansonchoi/sf_VirtualBox_Share/HATK/IMGT2Seq/data")
+    # processNuc(nuc, "DQB1", "05:01:01:01", _p_data="/home/wansonchoi/sf_VirtualBox_Share/HATK/IMGT2Seq/data")
 
+    ### mergeMap0s
+    # df_merged = mergeMap0s(
+    #     pd.read_csv('/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/df_Map0_AA.nuc.txt', sep='\s+', header=0, dtype=str),
+    #     pd.read_csv('/home/wansonchoi/sf_VirtualBox_Share/HATK/tests/df_Map0_SNPS.nuc.txt', sep='\s+', header=0, dtype=str)
+    # )
+
+
+    ###
+    # BioSeq_test()
+    BioSeq_test_SNPS()
     pass
